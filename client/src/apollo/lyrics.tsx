@@ -2,7 +2,7 @@ import { gql } from '@apollo/client'
 
 export const ALL_LYRICS = gql`
   query AllLyrics {
-    allLyrics {
+    lyrics {
       id
       hashtag_count
       hashtags

@@ -16,14 +16,14 @@ export const LyricList = () => {
     return <h2>Error...</h2>
   }
 
-  console.log(data.allLyrics)
+  console.log(data.lyrics)
 
   return (
     <VStack spacing={2} mt={4}>
-      {data?.allLyrics.map((lyric: any) => (
+      {data?.lyrics.map((lyric: any) => (
         <LyricItem key={lyric.id} {...lyric} />
       ))}
-      <TotalCount count={data?.allLyrics.length} />
+      <TotalCount count={data?.lyrics.length} />
     </VStack>
   )
 }

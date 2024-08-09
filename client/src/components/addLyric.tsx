@@ -2,16 +2,6 @@ import { useState } from 'react'
 import { Button, Input, FormControl } from '@chakra-ui/react'
 import { useMutation } from '@apollo/client'
 import { ADD_LYRIC, ALL_LYRICS } from '@/apollo/lyrics'
-import { text } from 'stream/consumers'
-
-interface CreateLyricInput {
-  text: string
-  is_reaction: boolean
-  paragraph_count: number
-  word_count: number
-  hashtag_count: number
-  hashtags: string[]
-}
 
 export const AddLyric = () => {
   const [lyric, setLyric] = useState('')
@@ -47,7 +37,7 @@ export const AddLyric = () => {
   const handleAddLyric = () => {
     if (lyric.trim().length > 0) {
       createLyric({
-          variables: {
+        variables: {
           text: lyric,
           is_reaction: false,
           paragraph_count: countParagraphs(lyric),

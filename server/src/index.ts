@@ -1,5 +1,5 @@
 // Плагины для сервера
-import { Elysia, t } from 'elysia'
+import { Elysia } from 'elysia'
 import { yoga } from '@elysiajs/graphql-yoga'
 import { cors } from '@elysiajs/cors'
 
