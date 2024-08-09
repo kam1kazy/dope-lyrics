@@ -1,13 +1,14 @@
 {
   "name": "dope-lyrics",
   "version": "0.1.0",
+  "type": "module",
   "private": true,
   "scripts": {
     "start": "concurrently \"yarn dev\" \"yarn server\"",
     "dev": "next dev",
     "build": "next build",
     "lint": "next lint",
-    "server": "json-graphql-server db.tsx --port 4000"
+    "server": "bun run ../server/src/index.ts"
   },
   "dependencies": {
     "@apollo/client": "^3.11.3",
@@ -16,8 +17,10 @@
     "@chakra-ui/react": "^2.8.2",
     "@emotion/react": "^11.13.0",
     "@emotion/styled": "^11.13.0",
+    "elysia": "^1.1.5",
     "framer-motion": "^11.3.21",
     "graphql": "^16.9.0",
+    "http": "^0.0.1-security",
     "next": "14.2.5",
     "react": "^18",
     "react-dom": "^18"
