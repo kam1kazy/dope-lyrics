@@ -7,8 +7,12 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
+model Lyric {
   id        Int     @id @default(autoincrement())
-  username  String  @unique
-  password  String
+  text      String
+  is_reaction Boolean
+  paragraph_count Int
+  word_count Int
+  hashtag_count Int
+  hashtags String[]
 }
