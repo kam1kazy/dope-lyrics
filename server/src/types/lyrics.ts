@@ -4,6 +4,6 @@ export interface LyricType {
   paragraph_count: number
   word_count: number
   hashtag_count: number
-  hashtags: string[]
+  hashtags: number[]
   userId: number
 }

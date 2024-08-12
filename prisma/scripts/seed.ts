@@ -1,22 +1,22 @@
 import { PrismaClient } from '@prisma/client'
+
+// Типы
+import { UserType } from '../../server/src/types/user'
+import { HashtagType } from '../../server/src/types/hashtags'
 import { LyricType } from '../../server/src/types/lyrics'
-import { lyrics } from '../data'
+
+// Дата для примера
+import { lyrics, user, hashtags } from '../data'
 
 const db = new PrismaClient()
 
-const seed = async (lyrics: LyricType[]) => {
-  const user = await db.user.create({
-    data: {
-      email: 'example@example.com',
-      password: 'password',
-      name: 'Example User',
-    },
-  })
-
-  // await db.lyric.createMany({ data: lyrics })
+const seed = async (user: UserType, hashtags: HashtagType[], lyrics: LyricType[]) => {
+  await db.user.create({ data: user })
+  await db.hashtag.createMany({ data: hashtags })
+  await db.lyric.createMany({ data: lyrics })
 }
 
-seed(lyrics)
+seed(user[0], hashtags, lyrics)
   .then(() => console.log('Data seeded successfully'))
   .catch((error) => console.log("Data couldn't be seeded", error))
   .finally(() => {
