@@ -3,8 +3,15 @@ export const typeDefinitions = /* GraphQL */ `
   type User {
     id: Int!
     email: String!
+    password: string
     name: String
-    lyrics: [Lyrics!]!
+  }
+  # Hashtag
+  type Hashtag {
+    id: Int!
+    text: String!
+    userId: Int!
+    lyricId: Int!
   }
 
   # Lyrics
@@ -15,26 +22,12 @@ export const typeDefinitions = /* GraphQL */ `
     paragraph_count: Int!
     word_count: Int!
     hashtag_count: Int!
-    hashtags: [String!]!
+    hashtags: [Int!]!
+    userId: Int!
   }
 
   type Query {
     lyrics: [Lyrics!]!
-  }
-
-  # Hashtag
-  type Hashtag {
-    id: Int!
-    text: String!
-  }
-
-  type LyricHashtag {
-    id: Int!
-    lyricID: Int!
-    hashtagID: Int!
-  }
-
-  type Query {
     hashtags: [Hashtag!]!
   }
 `
