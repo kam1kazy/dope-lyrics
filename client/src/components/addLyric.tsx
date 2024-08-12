@@ -1,3 +1,5 @@
+'use client'
+
 import { useState } from 'react'
 import { Button, Input, FormControl } from '@chakra-ui/react'
 import { useMutation } from '@apollo/client'
