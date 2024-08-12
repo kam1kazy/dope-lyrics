@@ -60,6 +60,7 @@ node_modules/
 jspm_packages/
 .next
 .idea
+.DS_Store
 
 # Snowpack dependency directory (https://snowpack.dev/)
 

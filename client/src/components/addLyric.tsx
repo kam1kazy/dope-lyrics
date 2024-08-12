@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Button, Input, FormControl } from '@chakra-ui/react'
 import { useMutation } from '@apollo/client'
-import { ADD_LYRIC, ALL_LYRICS } from '@/apollo/lyrics'
+import { ADD_LYRIC, ALL_LYRICS } from '@/server/lyrics'
 
 export const AddLyric = () => {
   const [lyric, setLyric] = useState('')

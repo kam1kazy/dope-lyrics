@@ -3,7 +3,7 @@ import { useQuery } from '@apollo/client'
 
 import { LyricItem } from './lyricItem'
 import { TotalCount } from './totalCount'
-import { ALL_LYRICS } from '@/apollo/lyrics'
+import { ALL_LYRICS } from '@/server/lyrics'
 
 export const LyricList = () => {
   const { loading, error, data } = useQuery(ALL_LYRICS)
