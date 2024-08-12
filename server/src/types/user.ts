@@ -4,5 +4,5 @@ export interface UserType {
   id: number
   email: string
   password: string
-  lyrics: LyricType[]
+  name: string
 }

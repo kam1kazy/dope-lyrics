@@ -1,12 +1,10 @@
 import { PrismaClient } from '@prisma/client'
-import { LyricType } from './types/lyrics'
+const prisma = new PrismaClient()
 
-const db = new PrismaClient()
+export type GraphQLContext = {
+  prisma: PrismaClient
+}
 
-// export type GraphQLContext = {
-//   prisma: PrismaClient
-// }
-
-export function createContext() {
-  return { prisma: PrismaClient }
+export async function createContext(): Promise<GraphQLContext> {
+  return { prisma }
 }

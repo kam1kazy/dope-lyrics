@@ -1,29 +1,24 @@
 // Плагины для сервера
 import { Elysia, t } from 'elysia'
-import { yoga } from '@elysiajs/graphql-yoga'
 import { cors } from '@elysiajs/cors'
 
-// Локальные подключения
-import { typeDefinitions } from './graphql/schema'
-
+// GraphQL
+import { yoga } from '@elysiajs/graphql-yoga'
 import { resolvers } from './graphql/resolvers'
-import { lyrics } from './graphql/data'
+import { typeDefinitions } from './graphql/querys'
+
+// Типы
+import { createContext } from './context'
 
 const app = new Elysia()
   .use(cors())
   .use(
     yoga({
       typeDefs: typeDefinitions,
-      context: () => {
-        return { lyrics }
-      },
+      context: createContext,
       resolvers,
     })
   )
-  .get('/', () => {
-    lyrics
-  })
-
   .listen(4000)
 
 export { app }

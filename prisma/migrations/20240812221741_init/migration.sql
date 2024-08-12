@@ -17,6 +17,7 @@ CREATE TABLE "Lyric" (
     "word_count" INTEGER NOT NULL,
     "hashtag_count" INTEGER NOT NULL,
     "hashtags" TEXT[],
+    "userId" INTEGER NOT NULL,
 
     CONSTRAINT "Lyric_pkey" PRIMARY KEY ("id")
 );
@@ -43,12 +44,3 @@ CREATE UNIQUE INDEX "Hashtag_text_key" ON "Hashtag"("text");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "LyricHashtag_lyricId_hashtagId_key" ON "LyricHashtag"("lyricId", "hashtagId");
-
--- AddForeignKey
-ALTER TABLE "Lyric" ADD CONSTRAINT "Lyric_id_fkey" FOREIGN KEY ("id") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "LyricHashtag" ADD CONSTRAINT "LyricHashtag_lyricId_fkey" FOREIGN KEY ("lyricId") REFERENCES "Lyric"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "LyricHashtag" ADD CONSTRAINT "LyricHashtag_hashtagId_fkey" FOREIGN KEY ("hashtagId") REFERENCES "Hashtag"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

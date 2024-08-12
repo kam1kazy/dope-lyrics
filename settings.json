@@ -1,8 +1,0 @@
-{
-  "files.exclude": {
-    "**/.*": true,
-    "**/.env": true,
-    "**/.htaccess": true,
-    "**/.gitignore": true
-  }
-}

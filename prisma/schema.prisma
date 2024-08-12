@@ -12,32 +12,27 @@ model User {
   email    String
   password String
   name     String?
-  lyrics   Lyric[]
 }
 
 model Lyric {
-  id              Int            @id @default(autoincrement())
+  id              Int      @id @default(autoincrement())
   text            String
   is_reaction     Boolean
   paragraph_count Int
   word_count      Int
   hashtag_count   Int
   hashtags        String[]
-  user            User           @relation(fields: [id], references: [id])
-  LyricHashtag    LyricHashtag[]
+  userId          Int
 }
 
 model Hashtag {
-  id     Int            @id @default(autoincrement())
-  text   String         @unique
-  lyrics LyricHashtag[]
+  id   Int    @id @default(autoincrement())
+  text String @unique
 }
 
 model LyricHashtag {
-  id        Int     @id @default(autoincrement())
-  lyric     Lyric   @relation(fields: [lyricId], references: [id])
+  id        Int @id @default(autoincrement())
   lyricId   Int
-  hashtag   Hashtag @relation(fields: [hashtagId], references: [id])
   hashtagId Int
 
   @@unique([lyricId, hashtagId])

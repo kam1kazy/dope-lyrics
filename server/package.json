@@ -1,15 +1,13 @@
 {
-  "name": "app",
-  "version": "1.0.50",
+  "name": "dope-lyrics-server",
+  "version": "0.1.0",
+  "license": "MIT",
+  "private": true,
   "scripts": {
     "dev": "bun --watch src/index.ts",
     "build": "bun build src/index.ts",
     "start": "NODE_ENV=production bun src/index.ts",
-    "test": "bun test",
-    "seed": "bunx prisma db seed"
-  },
-  "prisma": {
-    "seed": "bun src/prisma/seed.ts"
+    "test": "bun test"
   },
   "dependencies": {
     "@elysiajs/cors": "^1.1.0",
