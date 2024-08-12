@@ -1,4 +1,14 @@
+import { lyrics } from './data'
 export const typeDefinitions = /* GraphQL */ `
+  # Users
+  type User {
+    id: Int!
+    email: String!
+    name: String
+    lyrics: [Lyrics!]!
+  }
+
+  # Lyrics
   type Lyrics {
     id: Int!
     text: String!
@@ -11,5 +21,20 @@ export const typeDefinitions = /* GraphQL */ `
 
   type Query {
     lyrics: [Lyrics!]!
+  }
+
+  # Hashtag
+  type Hashtag {
+    id: Int!
+    text: String!
+    lyrics: [Lyrics!]!
+  }
+
+  type LyricHashtag {
+    id: Int!
+    lyric: [Lyrics!]!
+    lyricID: Int!
+    hashtag: [Hashtag!]!
+    hashtagID: Int!
   }
 `

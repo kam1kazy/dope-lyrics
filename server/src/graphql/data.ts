@@ -1,8 +1,6 @@
-import { Lyric } from './../types/lyrics'
+import { LyricType } from './../types/lyrics'
 
-type Lyrics = Lyric
-
-export const lyrics: Lyrics[] = [
+export const lyrics: LyricType[] = [
   {
     id: 1,
     text: 'Привет, мир!',

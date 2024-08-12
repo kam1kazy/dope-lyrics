@@ -7,12 +7,38 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id       Int     @id @default(autoincrement())
+  email    String
+  password String
+  name     String?
+  lyrics   Lyric[]
+}
+
 model Lyric {
-  id        Int     @id @default(autoincrement())
-  text      String
-  is_reaction Boolean
+  id              Int            @id @default(autoincrement())
+  text            String
+  is_reaction     Boolean
   paragraph_count Int
-  word_count Int
-  hashtag_count Int
-  hashtags String[]
+  word_count      Int
+  hashtag_count   Int
+  hashtags        String[]
+  user            User           @relation(fields: [id], references: [id])
+  LyricHashtag    LyricHashtag[]
+}
+
+model Hashtag {
+  id     Int            @id @default(autoincrement())
+  text   String         @unique
+  lyrics LyricHashtag[]
+}
+
+model LyricHashtag {
+  id        Int     @id @default(autoincrement())
+  lyric     Lyric   @relation(fields: [lyricId], references: [id])
+  lyricId   Int
+  hashtag   Hashtag @relation(fields: [hashtagId], references: [id])
+  hashtagId Int
+
+  @@unique([lyricId, hashtagId])
 }

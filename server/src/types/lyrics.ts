@@ -1,4 +1,4 @@
-export interface Lyric {
+export interface LyricType {
   id: number
   text: string
   is_reaction: boolean
