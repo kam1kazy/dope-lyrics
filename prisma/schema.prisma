@@ -29,5 +29,5 @@ model Hashtag {
   id      Int    @id @default(autoincrement())
   text    String @unique
   userId  Int
-  lyricId Int
+  lyricId Int?
 }
