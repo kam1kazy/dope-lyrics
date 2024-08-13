@@ -16,11 +16,13 @@
     "@graphql-tools/load": "^8.0.2",
     "@graphql-tools/schema": "^10.0.4",
     "elysia": "latest",
+    "gramio": "^0.0.47",
     "graphql-tools": "^9.0.1",
     "ts": "^0.2.2"
   },
   "devDependencies": {
-    "bun-types": "latest"
+    "bun-types": "latest",
+    "typescript": "^5.5.4"
   },
   "module": "src/index.js"
 }
