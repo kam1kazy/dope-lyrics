@@ -1,5 +1,5 @@
 [build]
-  command = "cd client && bun run start"
+  command = "bun run dev"
   publish = "client/public"
 
 [functions]

@@ -5,7 +5,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "seed": "bunx prisma db seed"
+    "dev": "concurrently 'cd server && bun run start' 'cd client && bun run dev'",
+    "build": "concurrently 'cd server && bun run dev' 'cd client && bun run build'",
+    "client": "cd client && bun run dev",
+    "server": "cd server && bun run start",
+    "seed": "bunx prisma db seed",
+    "netlify": "netlify functions:serve"
   },
   "prisma": {
     "seed": "bun prisma/scripts/seed.ts"
@@ -14,6 +19,7 @@
     "@prisma/client": "^5.18.0"
   },
   "devDependencies": {
+    "netlify-cli": "^17.34.1",
     "prisma": "^5.18.0"
   },
   "compileOptions": {

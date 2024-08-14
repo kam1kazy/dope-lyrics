@@ -3,14 +3,25 @@
 
 need run?
 
+first start:
 - bunx prisma migrate dev --name init
-- cd client
-- bun run start
+- bun run dev
+
+other build:
+- bun run dev
 
 # stack
 
-bun.sh
-elysia.jx
-graphql yoga
-prisma
-next.js
+bun.sh 
+elysia.jx 
+graphql yoga 
+prisma 
+next.js 
+
+# Commands 
+
+Открыть базу данных:
+bunx prisma studio  
+
+Сбросить миграции, сделать посев (seed)
+bunx prisma migrate dev --name init

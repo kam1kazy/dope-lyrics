@@ -1,4 +1,3 @@
-import { user } from './../../../prisma/data'
 export const typeDefinitions = /* GraphQL */ `
   # Users
   type User {

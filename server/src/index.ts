@@ -7,7 +7,7 @@ import { yoga } from '@elysiajs/graphql-yoga'
 import { resolvers } from './graphql/resolvers'
 import { typeDefinitions } from './graphql/querys'
 
-// Типы
+// Контекст Prisma
 import { createContext } from './context'
 
 const app = new Elysia()
