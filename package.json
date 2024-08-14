@@ -6,8 +6,8 @@
   "type": "module",
   "scripts": {
     "dev": "concurrently 'cd server && bun run start' 'cd client && bun run dev'",
-    "build": "concurrently 'cd server && bun run dev' 'cd client && bun run build'",
     "client": "cd client && bun run dev",
+    "build": "cd client && bun run build",
     "server": "cd server && bun run start",
     "seed": "bunx prisma db seed",
     "netlify": "netlify functions:serve"
@@ -16,6 +16,7 @@
     "seed": "bun prisma/scripts/seed.ts"
   },
   "dependencies": {
+    "@netlify/functions": "^2.8.1",
     "@prisma/client": "^5.18.0"
   },
   "devDependencies": {

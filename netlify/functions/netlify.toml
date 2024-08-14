@@ -1,9 +1,15 @@
 [build]
-  command = "bun run dev"
+  command = "bun run server && bun run build"
   publish = "client/public"
 
 [functions]
   server = "bun run server"
+  directory = "netlify/functions"
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
 
 [context.production]
   command = "bun run start"
