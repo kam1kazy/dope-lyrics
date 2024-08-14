@@ -9,8 +9,7 @@
     "client": "cd client && bun run dev",
     "build": "cd client && bun run build",
     "server": "cd server && bun run start",
-    "seed": "bunx prisma db seed",
-    "netlify": "netlify functions:serve"
+    "seed": "bunx prisma db seed"
   },
   "prisma": {
     "seed": "bun prisma/scripts/seed.ts"

@@ -10,6 +10,10 @@ import { typeDefinitions } from './graphql/querys'
 // Контекст Prisma
 import { createContext } from './context'
 
+const isProduction = process.env.VERCEL_ENV === 'production'
+
+const port = isProduction ? undefined : 4000
+
 const app = new Elysia()
   .use(cors())
   .use(
@@ -19,7 +23,7 @@ const app = new Elysia()
       resolvers,
     })
   )
-  .listen(4000)
+  .listen(port)
 
 export { app }
 
