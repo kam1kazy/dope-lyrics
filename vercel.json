@@ -1,0 +1,13 @@
+{
+    "version": 2,
+    "builds": [
+        {
+            "src": "client/next.config.js",
+            "use": "@vercel/static-build"
+        },
+        {
+            "src": "server/index.ts",
+            "use": "@vercel/node"
+        }
+    ]
+}
