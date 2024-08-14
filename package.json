@@ -19,6 +19,7 @@
     "@prisma/client": "^5.18.0"
   },
   "devDependencies": {
+    "concurrently": "^8.2.2",
     "netlify-cli": "^17.34.1",
     "prisma": "^5.18.0"
   },
