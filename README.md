@@ -1,8 +1,9 @@
 
 # dope-lyrics
 
-run?
+need run?
 
+- bunx prisma migrate dev --name init
 - cd client
 - bun run start
 

@@ -27,7 +27,7 @@ CREATE TABLE "Hashtag" (
     "id" SERIAL NOT NULL,
     "text" TEXT NOT NULL,
     "userId" INTEGER NOT NULL,
-    "lyricId" INTEGER NOT NULL,
+    "lyricId" INTEGER,
 
     CONSTRAINT "Hashtag_pkey" PRIMARY KEY ("id")
 );

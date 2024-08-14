@@ -5,7 +5,7 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "start": "concurrently 'bun run build' 'bun run server'",
+    "start": "concurrently 'bun run server' 'bun run build'",
     "dev": "concurrently 'bun run dev' 'bun run server'",
     "build": "next build",
     "lint": "next lint",

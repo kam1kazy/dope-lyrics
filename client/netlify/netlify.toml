@@ -1,0 +1,14 @@
+[build]
+  command = "cd client && bun run build"
+  publish = "client/public"
+
+[functions]
+  server = "bun run ../server/src/index.ts"
+
+[context.production]
+  command = "cd client && bun run build"
+  functions = ["server"]
+
+[context.deploy-preview]
+  command = "cd client && bun run build"
+  functions = ["server"]
