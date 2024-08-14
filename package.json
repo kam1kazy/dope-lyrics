@@ -5,9 +5,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "concurrently 'cd server && bun run start' 'cd client && bun run dev'",
+    "dev": "concurrently 'cd client && bun run build && next export' 'cd server && bun run start'",
     "client": "cd client && bun run dev",
-    "build": "cd client && bun run build",
+    "build": "cd client && bun run build && next export",
     "server": "cd server && bun run start",
     "seed": "bunx prisma db seed"
   },

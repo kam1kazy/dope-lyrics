@@ -11,7 +11,6 @@ import { typeDefinitions } from './graphql/querys'
 import { createContext } from './context'
 
 const isProduction = process.env.VERCEL_ENV === 'production'
-
 const port = isProduction ? undefined : 4000
 
 const app = new Elysia()
@@ -23,6 +22,7 @@ const app = new Elysia()
       resolvers,
     })
   )
+  .get('/', () => 'Dope server -> OK')
   .listen(port)
 
 export { app }
