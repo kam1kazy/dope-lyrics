@@ -5,8 +5,8 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "start": "concurrently 'bun run dev' 'bun run server'",
-    "dev": "next dev",
+    "start": "concurrently 'bun run build' 'bun run server'",
+    "dev": "concurrently 'bun run dev' 'bun run server'",
     "build": "next build",
     "lint": "next lint",
     "server": "bun run ../server/src/index.ts"
