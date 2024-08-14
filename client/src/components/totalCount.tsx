@@ -1,5 +1,3 @@
-import { ALL_LYRICS } from '@/server/lyrics'
-import { useQuery } from '@apollo/client'
 import { Flex } from '@chakra-ui/react'
 
 export interface TotalCountProps {
