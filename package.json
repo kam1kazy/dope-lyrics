@@ -10,7 +10,7 @@
     "build": "cd client && bun run build && next export",
     "server": "cd server && bun run start",
     "seed": "bunx prisma db seed",
-    "deploy": "bun run prisma && cd server && bun install && bun run dev && cd .. & cd client && bun install && bun run start"
+    "deploy": "bun run prisma && cd server && bun install && bun run start"
   },
   "prisma": {
     "seed": "bun prisma/scripts/seed.ts"

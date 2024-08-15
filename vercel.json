@@ -1,6 +1,6 @@
 {
     "cleanUrls": true,
-    "installCommand": "bun install && cd server && bun install",
+    "installCommand": "bun install && bun run deploy",
     "buildCommand": "bun run build",
     "rewrites": [
         {
