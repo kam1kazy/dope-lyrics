@@ -1,6 +1,7 @@
 // Плагины для сервера
 import { Elysia, t } from 'elysia'
 import { cors } from '@elysiajs/cors'
+import { swagger } from '@elysiajs/swagger'
 
 // GraphQL
 import { yoga } from '@elysiajs/graphql-yoga'
@@ -22,7 +23,12 @@ const app = new Elysia()
       resolvers,
     })
   )
-  .get('/', () => 'Dope server -> OK')
+  .use(swagger())
+  .get('/', () => 'Dope server -> OK', {
+    detail: {
+      tags: ['Dope server'],
+    },
+  })
   .listen(port)
 
 export { app }
