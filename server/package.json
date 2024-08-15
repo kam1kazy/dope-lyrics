@@ -6,12 +6,13 @@
   "scripts": {
     "dev": "bun --watch src/index.ts",
     "build": "bun build --watch src/index.ts",
-    "start": "bun run prisma && bunx prisma migrate dev --schema && bunx prisma migrate deploy && prisma db seed && NODE_ENV=production bun src/index.ts",
+    "start": "bun run prisma && prisma db seed && NODE_ENV=production bun src/index.ts",
     "test": "bun test",
     "seed": "bunx prisma db seed",
     "prisma": "prisma generate"
   },
   "prisma": {
+    "generate": "prisma generate",
     "seed": "bun prisma/scripts/seed.ts"
   },
   "dependencies": {
