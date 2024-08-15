@@ -9,7 +9,7 @@
         }
     ],
     "functions": {
-        "server/src/index.ts": {
+        "src/index.ts": {
             "maxDuration": 60
         }
     }
