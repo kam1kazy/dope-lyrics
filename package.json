@@ -9,7 +9,7 @@
     "client": "cd client && bun run dev",
     "server": "cd server && bun run start",
     "seed": "bunx prisma db seed",
-    "deploy": "bun run prisma && cd server && bun install && bun run start"
+    "deploy": "cd server && bun run prisma && bun run start"
   },
   "dependencies": {
     "@netlify/functions": "^2.8.1"
