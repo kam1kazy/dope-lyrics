@@ -1,6 +1,6 @@
-import { HashtagType } from '../server/src/types/hashtags'
-import { LyricType } from '../server/src/types/lyrics'
-import { UserType } from '../server/src/types/user'
+import { HashtagType } from '../src/types/hashtags'
+import { LyricType } from '../src/types/lyrics'
+import { UserType } from '../src/types/user'
 
 export const user: UserType[] = [
   {

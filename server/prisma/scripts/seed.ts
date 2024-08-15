@@ -1,9 +1,9 @@
 import { PrismaClient } from '@prisma/client'
 
 // Типы
-import { UserType } from '../../server/src/types/user'
-import { HashtagType } from '../../server/src/types/hashtags'
-import { LyricType } from '../../server/src/types/lyrics'
+import { UserType } from '../../src/types/user'
+import { HashtagType } from '../../src/types/hashtags'
+import { LyricType } from '../../src/types/lyrics'
 
 // Дата для примера
 import { lyrics, user, hashtags } from '../data'

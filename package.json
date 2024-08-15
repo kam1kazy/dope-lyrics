@@ -7,22 +7,16 @@
   "scripts": {
     "dev": "concurrently 'cd client && bun run dev' 'cd server && bun run start'",
     "client": "cd client && bun run dev",
-    "build": "cd client && bun run build && next export",
     "server": "cd server && bun run start",
     "seed": "bunx prisma db seed",
     "deploy": "bun run prisma && cd server && bun install && bun run start"
   },
-  "prisma": {
-    "seed": "bun prisma/scripts/seed.ts"
-  },
   "dependencies": {
-    "@netlify/functions": "^2.8.1",
-    "@prisma/client": "^5.18.0"
+    "@netlify/functions": "^2.8.1"
   },
   "devDependencies": {
     "concurrently": "^8.2.2",
-    "netlify-cli": "^17.34.1",
-    "prisma": "^5.18.0"
+    "netlify-cli": "^17.34.1"
   },
   "compileOptions": {
     "paths": {
