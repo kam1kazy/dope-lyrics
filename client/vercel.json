@@ -1,21 +1,10 @@
 {
     "version": 2,
-    "buildCommand": "bun run build",
-    "builds": [
+    "buildCommand": "next build",
+    "rewrites": [
         {
-            "src": "client/next.config.js",
-            "use": "@vercel/static-build"
-        },
-        {
-            "src": "server/index.ts",
-            "use": "@vercel/node",
-            "type": "typescript"
-        }
-    ],
-    "routes": [
-        {
-            "src": "/(.*)",
-            "dest": "/server/index.ts"
+            "source": "/(.*)",
+            "destination": "/index.html"
         }
     ]
 }
