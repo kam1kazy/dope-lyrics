@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "bun --watch src/index.ts",
     "build": "bun build --watch src/index.ts",
-    "start": "bun run prisma && bunx prisma migrate dev --name init && NODE_ENV=production bun src/index.ts",
+    "start": "bun run prisma && bunx prisma migrate deploy && NODE_ENV=production bun src/index.ts",
     "test": "bun test",
     "seed": "bunx prisma db seed",
     "prisma": "prisma generate"
