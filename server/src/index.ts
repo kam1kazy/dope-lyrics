@@ -12,7 +12,7 @@ import { typeDefinitions } from './graphql/querys'
 import { createContext } from './context'
 
 const isProduction = process.env.VERCEL_ENV === 'production'
-const port = isProduction ? undefined : 4000
+const port: number = isProduction ? 4000 : 4000 // assign a default value
 
 const app = new Elysia()
   .use(cors())
@@ -31,6 +31,6 @@ const app = new Elysia()
   })
   .listen(port)
 
-export { app }
+export type App = typeof app
 
 console.log(`🦊 Elysia is running at http://${app.server?.hostname}:${app.server?.port}/graphql`)

@@ -1,16 +1,16 @@
 {
-    "version": 2,
-    "builds": [
+    "cleanUrls": true,
+    "installCommand": "bun install",
+    "buildCommand": "bun run build:vercel",
+    "rewrites": [
         {
-            "src": "src/index.ts",
-            "use": "@vercel/node",
-            "type": "typescript"
+            "source": "/(.*)",
+            "destination": "server/src/index.ts"
         }
     ],
-    "routes": [
-        {
-            "src": "/(.*)",
-            "dest": "src/index.ts"
+    "functions": {
+        "server/src/index.ts": {
+            "maxDuration": 60
         }
-    ]
+    }
 }
