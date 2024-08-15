@@ -7,7 +7,8 @@
         },
         {
             "src": "server/index.ts",
-            "use": "@vercel/node"
+            "use": "@vercel/node",
+            "type": "typescript"
         }
     ],
     "routes": [
