@@ -1,0 +1,11 @@
+{
+    "cleanUrls": true,
+    "installCommand": "bun install && cd server && bun install",
+    "buildCommand": "bun run build",
+    "rewrites": [
+        {
+            "source": "/(.*)",
+            "destination": "server/src/graphql"
+        }
+    ]
+}
