@@ -1,9 +1,8 @@
 {
     "cleanUrls": true,
     "framework": "nextjs",
-    "buildCommand": "bun run build",
     "installCommand": "bun install",
-    "outputDirectory": "out",
+    "buildCommand": "next build",
     "rewrites": [
         {
             "source": "out/(.*)",
