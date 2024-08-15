@@ -59,8 +59,6 @@ build/Release
 node_modules/
 jspm_packages/
 .next
-.idea
-.DS_Store
 
 # Snowpack dependency directory (https://snowpack.dev/)
 
@@ -177,3 +175,5 @@ dist
 # Finder (MacOS) folder config
 .DS_Store
 .vercel
+.netlify
+.idea

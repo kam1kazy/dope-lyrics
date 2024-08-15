@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "bun --watch src/index.ts",
     "build": "bun build --watch src/index.ts",
-    "start": "NODE_ENV=production bun src/index.ts --static out",
+    "start": "NODE_ENV=production bun src/index.ts",
     "test": "bun test",
     "prisma": "prisma generate"
   },
