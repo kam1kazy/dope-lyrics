@@ -8,7 +8,6 @@
     "dev": "concurrently 'cd client && bun run dev' 'cd server && bun run start'",
     "client": "cd client && bun run dev",
     "server": "cd server && bun run start",
-    "seed": "bunx prisma db seed",
     "deploy": "cd server && bun run prisma && bun run start"
   },
   "dependencies": {
