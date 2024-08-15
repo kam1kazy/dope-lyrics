@@ -1,7 +1,7 @@
 {
     "cleanUrls": true,
     "installCommand": "bun install",
-    "buildCommand": "bun run build:vercel",
+    "buildCommand": "bun run build",
     "rewrites": [
         {
             "source": "/(.*)",
