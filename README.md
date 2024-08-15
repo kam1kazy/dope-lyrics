@@ -12,10 +12,10 @@ Try the tool: [Кликай чтобы затестить](https://dope-lyrics.v
 
 # 🌟 stack
 
-`bun.sh`, 
-`elysia.jx`, 
-`@elysia/graphql-yoga`, 
-`prisma`, 
+`bun.sh` 
+`elysia.jx` 
+`@elysia/graphql-yoga` 
+`prisma` 
 `next.js`
 
 ## 🛠️ Установка
