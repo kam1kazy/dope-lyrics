@@ -1,9 +1,12 @@
 {
-    "version": 2,
+    "cleanUrls": true,
+    "framework": "nextjs",
     "buildCommand": "next build",
+    "installCommand": "bun run install",
+    "outputDirectory": "out",
     "rewrites": [
         {
-            "source": "/(.*)",
+            "source": "out/(.*)",
             "destination": "/index.html"
         }
     ]
