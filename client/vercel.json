@@ -1,15 +1,21 @@
 {
     "version": 2,
+    "buildCommand": "bun run build",
     "builds": [
         {
-            "src": "pages/**/*.{js,ts,jsx,tsx}",
+            "src": "client/next.config.js",
             "use": "@vercel/static-build"
+        },
+        {
+            "src": "server/index.ts",
+            "use": "@vercel/node",
+            "type": "typescript"
         }
     ],
     "routes": [
         {
             "src": "/(.*)",
-            "dest": "pages/$1"
+            "dest": "/server/index.ts"
         }
     ]
 }
