@@ -5,12 +5,7 @@
     "rewrites": [
         {
             "source": "/(.*)",
-            "destination": "src/index.ts"
+            "destination": "/graphql"
         }
-    ],
-    "functions": {
-        "src/index.ts": {
-            "maxDuration": 60
-        }
-    }
+    ]
 }
