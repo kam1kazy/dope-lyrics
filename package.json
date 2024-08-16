@@ -8,6 +8,7 @@
     "dev": "concurrently 'cd client && bun run dev' 'cd server && bun run start'",
     "client": "cd client && bun run dev",
     "server": "cd server && bun run start",
+    "setup": "bun install && cd client && bun install && cd ../server && bun install",
     "deploy": "cd server && bun run prisma && bun run start"
   },
   "dependencies": {
