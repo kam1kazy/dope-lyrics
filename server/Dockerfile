@@ -1,9 +1,8 @@
-FROM node:alpine
+FROM oven/bun:1 as build
 
 WORKDIR /src
 
 COPY package.json ./
-COPY package-lock.json ./
 COPY ./ ./
 
 RUN bun install
