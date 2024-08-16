@@ -25,7 +25,7 @@ Try the tool: [Кликай чтобы затестить](https://dope-lyrics.v
 1. **Clone the repository**
 
 Команда ниже скачает репозиторий и создаст папку dope-lyrics
-Если вы вводили в терминале IDE, то в потребуется перейти в папке самого проекта, для этого можно воспользоваться File -> Open Folders, либо командой `cd dope-lyrics`
+Если вы вводили в терминале IDE, то в потребуется перейти в папку самого проекта, для этого можно воспользоваться File -> Open Folders, либо командой `cd dope-lyrics`
 
 ```bash
 git clone https://github.com/kam1kazy/dope-lyrics.git
