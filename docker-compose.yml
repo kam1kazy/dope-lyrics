@@ -1,0 +1,30 @@
+networks:
+  development:
+
+services:
+  nginx:
+    build:
+        context: ./nginx
+        dockerfile: Dockerfile
+    container_name: nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - development
+
+  frontend:
+    build: 
+      context: ./client
+    networks:
+      - development
+
+  backend:
+    build: 
+      context: ./server
+    networks:
+      - development

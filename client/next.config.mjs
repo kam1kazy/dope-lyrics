@@ -2,6 +2,9 @@
 
 const NextConfig = {
   output: 'export',
+  compiler: {
+    styledComponents: true,
+  },
 }
 
 export default NextConfig
