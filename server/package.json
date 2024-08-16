@@ -10,7 +10,7 @@
     "generate": "bunx prisma generate",
     "migrate": "bunx prisma migrate deploy",
     "seed": "bunx prisma db seed",
-    "deploy": "bun run generate && bun run migrate && bun run seed && bun run start"
+    "deploy": "bun run seed && bun run start"
   },
   "prisma": {
     "seed": "bun prisma/scripts/seed.ts"
