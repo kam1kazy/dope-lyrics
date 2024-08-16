@@ -7,10 +7,10 @@
     "dev": "bun --watch src/index.ts",
     "build": "bun build --watch src/index.ts",
     "start": "NODE_ENV=production bun src/index.ts",
-    "generate": "prisma generate",
-    "migrate": "bunx prisma migrate dev --name init",
+    "generate": "bunx prisma generate",
+    "migrate": "bunx prisma migrate deploy",
     "seed": "bunx prisma db seed",
-    "deploy": "bun run generate && bun run migrate deploy && bun run seed && bun run start"
+    "deploy": "bun run generate && bun run migrate && bun run seed && bun run start"
   },
   "prisma": {
     "seed": "bun prisma/scripts/seed.ts"

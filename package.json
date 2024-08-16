@@ -9,7 +9,7 @@
     "client": "cd client && bun run dev",
     "server": "cd server && bun run start",
     "setup": "bun install && cd client && bun install && cd ../server && bun install",
-    "deploy": "cd server && bun run prisma && bun run start"
+    "deploy": "cd server && bun run deploy"
   },
   "dependencies": {
     "@netlify/functions": "^2.8.1"
