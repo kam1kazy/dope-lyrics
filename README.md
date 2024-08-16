@@ -56,9 +56,11 @@ bun run dev
 ### ⚙️ Еще команды
 
 1. Открыть базу данных:
-_запускается из папки server, где установлена prisma _
+
+запускается из папки server, где установлена prisma
 
 ```bash
+cd server
 bunx prisma studio  
 ```
 
