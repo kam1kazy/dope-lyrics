@@ -75,4 +75,22 @@ export const lyrics: LyricType[] = [
     hashtags: [2],
     userId: 1,
   },
+  {
+    text: 'Где я? Что я тут делаю?',
+    is_reaction: false,
+    paragraph_count: 1,
+    word_count: 5,
+    hashtag_count: 0,
+    hashtags: [],
+    userId: 2,
+  },
+  {
+    text: 'Опа! Я в базе - прям как дома (:',
+    is_reaction: false,
+    paragraph_count: 1,
+    word_count: 9,
+    hashtag_count: 0,
+    hashtags: [],
+    userId: 3,
+  },
 ]

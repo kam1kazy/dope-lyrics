@@ -10,7 +10,7 @@ import { lyrics, users, hashtags } from '../data'
 
 const db = new PrismaClient()
 
-const seed = async (user: UserType, hashtags: HashtagType[], lyrics: LyricType[]) => {
+const seed = async (user: UserType[], hashtags: HashtagType[], lyrics: LyricType[]) => {
   console.log(`🧻 Наполнение БД фиктивными данными...`)
 
   for (const user of users) {
@@ -44,12 +44,11 @@ const seed = async (user: UserType, hashtags: HashtagType[], lyrics: LyricType[]
   //     name: user.name,
   //   },
   // })
-
   // await db.hashtag.createMany({ data: hashtags })
   // await db.lyric.createMany({ data: lyrics })
 }
 
-seed(users[0], hashtags, lyrics)
+seed(users, hashtags, lyrics)
   .then(() => console.log('🚚 Данные были успешно загружены'))
   .catch((error) => {
     console.error('🚧 Данные не удалось загрузить данные', error)
