@@ -2,12 +2,24 @@ import { HashtagType } from '../src/types/hashtags'
 import { LyricType } from '../src/types/lyrics'
 import { UserType } from '../src/types/user'
 
-export const user: UserType[] = [
+export const users: UserType[] = [
   {
     id: 1,
     email: 't2nda@yandex.ru',
     password: '123',
     name: 'Dope',
+  },
+  {
+    id: 2,
+    email: 'lucky@yandex.ru',
+    password: 'abc',
+    name: 'Lucky',
+  },
+  {
+    id: 3,
+    email: 'professor@yandex.ru',
+    password: 'q2ws',
+    name: 'Professor',
   },
 ]
 
