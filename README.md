@@ -22,7 +22,8 @@ Try the tool: [Кликай чтобы затестить](https://dope-lyrics.v
 
 Для установки проекта выполните следующую команду:
 
-1. Clone the repository
+1. **Clone the repository**
+
 Команда ниже скачает репозиторий и создаст папку dope-lyrics
 Если вы вводили в терминале IDE, то в потребуется перейти в папке самого проекта, для этого можно воспользоваться File -> Open Folders, либо командой `cd dope-lyrics`
 
@@ -35,7 +36,7 @@ cd dope-lyrics
 
 Можно вводить сразу несколько команд, они будут выполняться одна за другой.
 
-2. Install dependencies
+2. **Install dependencies**
 
 Выполняем команду `bun run setup`, чтобы установить все зависимости (пакеты / плагины) в корневой папке, а так же в папках server и client.
 
@@ -44,7 +45,7 @@ bun run setup
 bun install
 ```
 
-2. Start dev mode
+3. **Start dev mode**
 
 ```bash
 bun run dev
