@@ -11,8 +11,10 @@ import { typeDefinitions } from './graphql/querys'
 // Контекст Prisma
 import { createContext } from './context'
 
+// Переменные для запуска сервера
 const isProduction = process.env.VERCEL_ENV === 'production'
-const port: number = isProduction ? 4000 : 4000 // assign a default value
+const port: number = isProduction ? 4000 : 4000
+const pathApi: string = 'graphql'
 
 const app = new Elysia()
   .use(cors())
@@ -21,6 +23,7 @@ const app = new Elysia()
       typeDefs: typeDefinitions,
       context: createContext,
       resolvers,
+      path: pathApi,
     })
   )
   .use(swagger())
@@ -33,4 +36,4 @@ const app = new Elysia()
 
 export type App = typeof app
 
-console.log(`🦊 Elysia is running at http://${app.server?.hostname}:${app.server?.port}/graphql`)
+console.log(`🦊 Elysia is running at http://${app.server?.hostname}:${app.server?.port}/${pathApi}`)
