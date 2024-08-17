@@ -2,13 +2,6 @@ networks:
   development:
 
 services:
-  dope-lyrics:
-    build:
-      context: https://github.com/kam1kazy/dope-lyrics.git#main
-      args:
-        - TAG=dopelyrics.cr.cloud.ru/dope-lyrics-docker-build
-      platform: linux/amd64
-
   nginx:
     image: nginx:stable-alpine
     container_name: nginx
@@ -25,7 +18,7 @@ services:
   db:
     image: postgres:16.4-alpine
     environment:
-      POSTGRES_PASSWORD: 12345678
+      POSTGRES_PASSWORD: "hOz6Xeu0_p"
       POSTGRES_USER: "postgres"
       POSTGRES_DB: "db"
     ports:

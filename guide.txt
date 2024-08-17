@@ -20,3 +20,39 @@ fetch('http://localhost:4000/graphql', {
 })
   .then((res) => res.json())
   .then((result) => console.log(result));
+
+
+# CLOUD.RU  &  DOCKER
+
+Key ID (логин)
+0b818b280fda6b3a315210f1451e41ba
+
+Key Secret (пароль)
+4e1ed61a686f267f6cb280ceaa4e841a
+
+sudo mkdir -p /etc/apt/trusted.gpg.d/
+sudo gpg --keyserver keyserver.ubuntu.com --recv-keys 7EA0A9C3F273FCD8
+sudo gpg --export --output /etc/apt/trusted.gpg.d/docker.gpg 7EA0A9C3F273FCD8
+
+sudo mkdir -p /etc/apt/trusted.gpg.d/
+sudo apt-key list | grep docker | cut -d'/' -f6- | xargs -I {} sudo gpg --export {} | sudo tee /etc/apt/trusted.gpg.d/docker.gpg
+
+# Подключаемся к серверу
+ssh -i ~/.ssh/server_key root_dope@176.123.164.17
+
+# to cloud artefact
+  docker login -u 0b818b280fda6b3a315210f1451e41ba --p 4e1ed61a686f267f6cb280ceaa4e841a dope-artefact.cr.cloud.ru
+  
+  docker build --tag dope-artefact.cr.cloud.ru/dope-artefact-client-app /Users/alina/Documents/WebProjects/forDeploy/dope-lyrics/client --platform linux/amd64
+
+  docker tag dope-artefact.cr.cloud.ru/dope-artefact-client-app dope-artefact.cr.cloud.ru/dope-artefact-client-app:latest
+
+  docker push dope-artefact.cr.cloud.ru/dope-artefact-client-app:latest
+
+
+# docker build
+docker-compose up --build
+
+docker system prune -af
+
+docker images
