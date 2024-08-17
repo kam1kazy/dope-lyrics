@@ -2,6 +2,13 @@ networks:
   development:
 
 services:
+  dope-lyrics:
+    build:
+      context: https://github.com/kam1kazy/dope-lyrics.git#main
+      args:
+        - TAG=dopelyrics.cr.cloud.ru/dope-lyrics-docker-build
+      platform: linux/amd64
+
   nginx:
     image: nginx:stable-alpine
     container_name: nginx
