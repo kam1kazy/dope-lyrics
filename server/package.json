@@ -9,8 +9,7 @@
     "start": "NODE_ENV=production bun src/index.ts",
     "generate": "bunx prisma generate",
     "migrate": "bunx prisma migrate deploy",
-    "seed": "bunx prisma db seed",
-    "deploy": "bunx prisma migrate reset -f && bun run start"
+    "seed": "bunx prisma db seed"
   },
   "prisma": {
     "seed": "bun prisma/scripts/seed.ts"
@@ -22,14 +21,14 @@
     "@graphql-tools/graphql-file-loader": "^8.0.1",
     "@graphql-tools/load": "^8.0.2",
     "@graphql-tools/schema": "^10.0.4",
-    "@prisma/client": "^5.18.0",
+    "@prisma/client": "5.18.0",
     "elysia": "latest",
     "gramio": "^0.0.47",
     "graphql-tools": "^9.0.1"
   },
   "devDependencies": {
     "bun-types": "latest",
-    "prisma": "^5.18.0",
+    "prisma": "5.18.0",
     "typescript": "^5.5.4"
   },
   "module": "src/index.js"

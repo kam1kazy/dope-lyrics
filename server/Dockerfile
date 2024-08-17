@@ -6,5 +6,8 @@ COPY package.json ./
 COPY ./ ./
 
 RUN bun install
+RUN bun run generate
+RUN bun run migrate
+RUN bun run seed
 
-CMD ["bun", "run", "deploy"]
+CMD ["bun", "run", "start"]
