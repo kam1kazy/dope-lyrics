@@ -11,6 +11,9 @@ import { typeDefinitions } from './graphql/querys'
 // Контекст Prisma
 import { createContext } from './context'
 
+// Bot Telegram
+import { Bot } from 'gramio'
+
 // Переменные для запуска сервера
 const isProduction = process.env.VERCEL_ENV === 'production'
 const port: number = isProduction ? 4000 : 4000
@@ -36,4 +39,12 @@ const app = new Elysia()
 
 export type App = typeof app
 
-console.log(`🦊 Elysia is running at http://${app.server?.hostname}:${app.server?.port}/${pathApi}`)
+console.log(
+  `🦊 Elysia is running at http://${app.server?.hostname}:${app.server?.port}/${pathApi}`
+)
+
+const bot = new Bot(process.env.BOT_TOKEN as string)
+  .command('ded', (context) => context.send('Старый пидор!'))
+  .onStart(console.log)
+
+bot.start()
