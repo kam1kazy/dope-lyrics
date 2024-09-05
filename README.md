@@ -8,6 +8,7 @@
     <img src="https://img.shields.io/website?url=https%3A%2F%2Frahuldkjain.github.io%2Fgh-profile-readme-generator&logo=github&style=flat-square" />
 </a>
 
+
 Цикл разработки: 
 - ~~собрать интерфейс~~
 - ~~собрать сервер~~
@@ -16,7 +17,9 @@
 - подключить Telegram
 - разработать функционал
 
-Try the tool: [Кликай чтобы затестить](https://dope-lyrics.vercel.app/)
+
+~~Try the tool: [Кликай чтобы затестить](https://dope-lyrics.vercel.app/)~~
+
 
 # 🌟 stack
 
