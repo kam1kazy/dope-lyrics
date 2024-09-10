@@ -4,11 +4,6 @@
 
 ## 🚀 Demo
 
-<a " target="blank">
-    <img src="https://img.shields.io/website?url=https%3A%2F%2Frahuldkjain.github.io%2Fgh-profile-readme-generator&logo=github" />
-</a>
-
-
 Цикл разработки: 
 - ~~собрать интерфейс~~
 - ~~собрать сервер~~
