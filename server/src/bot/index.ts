@@ -16,7 +16,7 @@ const dp = Dispatcher.for(tg)
 async function checkSignedIn() {
   try {
     const me = await tg.getMe()
-    return console.log('MTCUTE: Вошел в систему как - ', me.username)
+    return console.log('🤖 MTCUTE: Вошел в систему как - ', me.username)
   } catch (e) {
     if (tl.RpcError.is(e, 'AUTH_KEY_UNREGISTERED')) {
       console.log('MTCUTE: Не вошел в систему')

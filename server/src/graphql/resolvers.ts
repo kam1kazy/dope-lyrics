@@ -1,4 +1,4 @@
-import { GraphQLContext } from '../context'
+import { GraphQLContext } from './context'
 
 export const resolvers = {
   Query: {

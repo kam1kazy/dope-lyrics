@@ -12,7 +12,7 @@
     "generate": "bunx prisma generate",
     "migrate": "bunx prisma migrate deploy",
     "seed": "bunx prisma db seed",
-    "mtcute": "bun src/mtcute/index.ts"
+    "bot": "bun src/bot/index.ts"
   },
   "prisma": {
     "seed": "bun prisma/scripts/seed.ts"
