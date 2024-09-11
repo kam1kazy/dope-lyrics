@@ -19,7 +19,7 @@
 # 🌟 stack
 
 `bun.sh` 
-`elysia.jx` 
+`elysia.js` 
 `@elysia/graphql-yoga` 
 `prisma` 
 `next.js`
