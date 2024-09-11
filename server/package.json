@@ -2,6 +2,8 @@
   "name": "dope-lyrics-server",
   "version": "0.1.0",
   "license": "MIT",
+  "module": "src/index.js",
+  "type": "module",
   "private": true,
   "scripts": {
     "dev": "bun --watch src/index.ts",
@@ -21,15 +23,19 @@
     "@graphql-tools/graphql-file-loader": "^8.0.1",
     "@graphql-tools/load": "^8.0.2",
     "@graphql-tools/schema": "^10.0.4",
+    "@mtcute/bun": "^0.16.9",
+    "@mtcute/dispatcher": "^0.16.9",
     "@prisma/client": "5.18.0",
     "elysia": "latest",
     "gramio": "^0.0.47",
     "graphql-tools": "^9.0.1"
   },
   "devDependencies": {
+    "@antfu/eslint-config": "^3.5.1",
+    "@types/bun": "^1.1.9",
+    "@types/node": "^22.5.4",
     "bun-types": "latest",
     "prisma": "5.18.0",
     "typescript": "^5.5.4"
-  },
-  "module": "src/index.js"
+  }
 }

@@ -12,7 +12,7 @@ import { typeDefinitions } from './graphql/querys'
 import { createContext } from './context'
 
 // Bot Telegram
-import { Bot } from 'gramio'
+import { bot } from './gramio'
 
 // Переменные для запуска сервера
 const isProduction = process.env.VERCEL_ENV === 'production'
@@ -35,6 +35,18 @@ const app = new Elysia()
       tags: ['Dope server'],
     },
   })
+  .get(
+    '/sign',
+    ({ body }) => {
+      return body
+    },
+    {
+      body: t.Object({
+        name: t.String(),
+        password: t.String(),
+      }),
+    }
+  )
   .listen(port)
 
 export type App = typeof app
@@ -42,9 +54,3 @@ export type App = typeof app
 console.log(
   `🦊 Elysia is running at http://${app.server?.hostname}:${app.server?.port}/${pathApi}`
 )
-
-const bot = new Bot(process.env.BOT_TOKEN as string)
-  .command('ded', (context) => context.send('Старый пидор!'))
-  .onStart(console.log)
-
-bot.start()

@@ -3,20 +3,15 @@
   "version": "0.1.0",
   "license": "MIT",
   "private": true,
-  "type": "module",
   "scripts": {
     "dev": "concurrently 'cd client && bun run dev' 'cd server && bun run start'",
     "client": "cd client && bun run dev",
     "server": "cd server && bun run start",
-    "setup": "cd client && bun install && cd ../server && bun install && bun run deploy",
+    "setup": " bun install && cd client && bun install && cd ../server && bun install",
     "deploy": "cd server && bun run deploy"
   },
-  "dependencies": {
-    "@netlify/functions": "^2.8.1"
-  },
   "devDependencies": {
-    "concurrently": "^8.2.2",
-    "netlify-cli": "^17.34.1"
+    "concurrently": "^8.2.2"
   },
   "compileOptions": {
     "paths": {
@@ -30,5 +25,6 @@
         "prisma/*"
       ]
     }
-  }
+  },
+  "type": "module"
 }
