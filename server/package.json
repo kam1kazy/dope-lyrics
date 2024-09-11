@@ -11,7 +11,8 @@
     "start": "NODE_ENV=production bun src/index.ts",
     "generate": "bunx prisma generate",
     "migrate": "bunx prisma migrate deploy",
-    "seed": "bunx prisma db seed"
+    "seed": "bunx prisma db seed",
+    "mtcute": "bun src/mtcute/index.ts"
   },
   "prisma": {
     "seed": "bun prisma/scripts/seed.ts"
@@ -24,7 +25,9 @@
     "@graphql-tools/load": "^8.0.2",
     "@graphql-tools/schema": "^10.0.4",
     "@mtcute/bun": "^0.16.9",
+    "@mtcute/core": "^0.16.9",
     "@mtcute/dispatcher": "^0.16.9",
+    "@mtcute/tl": "^187.0.0",
     "@prisma/client": "5.18.0",
     "elysia": "latest",
     "gramio": "^0.0.47",

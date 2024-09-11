@@ -11,10 +11,6 @@ import { typeDefinitions } from './graphql/querys'
 // Контекст Prisma
 import { createContext } from './context'
 
-// Bot Telegram
-import { bot } from './gramio'
-import { mtUserConnect } from './mtcute'
-
 // Переменные для запуска сервера
 const isProduction = process.env.VERCEL_ENV === 'production'
 const port: number = isProduction ? 4000 : 4000
