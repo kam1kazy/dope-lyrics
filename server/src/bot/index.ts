@@ -5,6 +5,7 @@ import * as env from '../env'
 
 const phone = env.BOT_PHONE
 const chatId = env.BOT_CHAT_ID
+const pass = '7808'
 
 // Создаем клиент
 const tg = new TelegramClient({
@@ -18,22 +19,32 @@ const dp = Dispatcher.for(tg)
 
 // Запускаем бота
 const self = await tg.start({
-  phone: () => tg.input('Phone > '),
-  code: () => tg.input('Code > '),
-  password: () => tg.input('Password > '),
+  phone: phone,
+  code: async () => {
+    const code = await prompt('Введите код:')
+    if (code === null) {
+      throw new Error('Отменено пользователем')
+    }
+    return code
+  },
+  password: pass,
 })
 
 if (self) {
-  console.log('\n🤖 MTCUTE: Вошел в систему как me -', self.username)
+  console.log('\n🤖 MTCUTE: Вошел в систему как -', self.username)
 } else {
   console.error('\n🛑 MTCUTE: Не вошел в систему')
 }
 
+// const phoneCodeHash = await tg.sendCode({ phone: phone })
+
+// console.log('\n🤖 MTCUTE: Код отправлен', phoneCodeHash)
+
 // Получаем историю чата
 async function getChatHistory() {
   try {
-    // const history = await tg.getHistory(chatId, { limit: 100 })
-    // console.log('\nСообщения из чата:', history)
+    const history = await tg.getHistory(chatId, { limit: 100 })
+    console.log('\nСообщения из чата:', history)
     // history.messages.forEach((message) => {
     //   console.log(message.text)
     // })
