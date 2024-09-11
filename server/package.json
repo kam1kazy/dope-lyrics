@@ -30,11 +30,9 @@
     "@mtcute/tl": "^187.0.0",
     "@prisma/client": "5.18.0",
     "elysia": "latest",
-    "gramio": "^0.0.47",
     "graphql-tools": "^9.0.1"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^3.5.1",
     "@types/bun": "^1.1.9",
     "@types/node": "^22.5.4",
     "bun-types": "latest",
