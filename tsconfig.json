@@ -2,9 +2,9 @@
   "compileOptions": {
     "paths": {
       "@server/*": ["../server/src/*"],
-      "@components/*": ["../client/src/components/*"],
+      "@prisma/*": ["../server/prisma/*"],
       "@client/*": ["../client/src/*"],
-      "@prisma/*": ["../prisma/*"]
+      "@components/*": ["../client/src/components/*"]
     }
   }
 }

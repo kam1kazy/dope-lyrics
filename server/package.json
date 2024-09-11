@@ -12,7 +12,8 @@
     "generate": "bunx prisma generate",
     "migrate": "bunx prisma migrate deploy",
     "seed": "bunx prisma db seed",
-    "bot": "bun src/bot/index.ts"
+    "bot": "bun src/bot/index.ts",
+    "devBot": "concurrently \"bun dev\" \"bun bot\""
   },
   "prisma": {
     "seed": "bun prisma/scripts/seed.ts"
@@ -36,6 +37,7 @@
     "@types/bun": "^1.1.9",
     "@types/node": "^22.5.4",
     "bun-types": "latest",
+    "concurrently": "^9.0.0",
     "prisma": "5.18.0",
     "typescript": "^5.5.4"
   }
