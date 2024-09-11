@@ -15,5 +15,16 @@ dp.onNewMessage(filters.start, async (msg) => {
   await msg.answerText('Hello, world!')
 })
 
-const user = await tg.start({ botToken: env.BOT_TOKEN })
-console.log('Logged in as', user.username)
+// Войти как bot
+// const mtBotConnect = await tg.start({ botToken: env.BOT_TOKEN })
+
+// Войти как user
+const mtUserConnect = await tg.start({
+  phone: () => tg.input('Phone > '),
+  code: () => tg.input('Code > '),
+  password: () => tg.input('Password > '),
+})
+
+console.log('Logged in as', mtUserConnect.username)
+
+export { mtUserConnect }

@@ -14,7 +14,7 @@ services:
       - frontend
     networks:
       - development
-    
+
   db:
     image: postgres:16.4-alpine
     environment:
@@ -27,7 +27,7 @@ services:
       - development
 
   frontend:
-    build: 
+    build:
       context: ./client
     networks:
       - development

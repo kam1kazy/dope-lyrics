@@ -13,6 +13,7 @@ import { createContext } from './context'
 
 // Bot Telegram
 import { bot } from './gramio'
+import { mtUserConnect } from './mtcute'
 
 // Переменные для запуска сервера
 const isProduction = process.env.VERCEL_ENV === 'production'
