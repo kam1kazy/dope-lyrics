@@ -28,7 +28,9 @@ const createJSONdata = (chatHistory: LyricType[]) => {
         if (err) {
           console.error('\n🛑 MTCUTE: Ошибка создание файла', err)
         } else {
-          console.log(`🟢 MTCUTE: Файл успешно создан в ${fullPath}`)
+          console.log(
+            `🟢 MTCUTE: Файл с историей чата успешно создан в ${fullPath}\n`
+          )
         }
       })
     }
