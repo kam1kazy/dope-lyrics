@@ -49,7 +49,6 @@ export async function getChatHistory() {
     date: Date.now(),
   }
   let data: any[] = []
-  let currentData: any[] = []
 
   console.log('\n🟢 MTCUTE: Получаем историю чата...')
 
