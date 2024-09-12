@@ -83,7 +83,7 @@ export async function getChatHistory() {
   createJSONdata(data)
 }
 
-getChatHistory()
+//* getChatHistory() *//
 
 // Команды
 // dp.onNewMessage(filters.chatId(chatId), async (msg) => {

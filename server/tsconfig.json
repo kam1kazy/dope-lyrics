@@ -28,6 +28,6 @@
     // "noEmit": true,
   },
 
-  "include": ["./src"],
+  "include": ["./src", "bot/index.ts"],
   "exclude": ["**/node_modules"]
 }

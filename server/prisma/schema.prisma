@@ -7,27 +7,99 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id       Int     @id @default(autoincrement())
-  email    String?
-  password String?
-  name     String?
-}
-
 model Lyric {
-  id              Int      @id @default(autoincrement())
-  text            String
-  is_reaction     Boolean?
-  paragraph_count Int?
-  word_count      Int?
-  hashtag_count   Int?
-  hashtags        Int[]
-  userId          Int
+  id             Int             @id @default(autoincrement())
+  message        Message         @relation(fields: [messageId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  user           User            @relation(fields: [userId], references: [id])
+  chat           Chat            @relation(fields: [chatId], references: [id])
+  date           DateTime
+  editDate       DateTime
+  isPinned       Boolean
+  isChannelPost  Boolean
+  replyToMessage ReplyToMessage?
+  media          Media?
+
+  userId    Int @unique
+  chatId    Int @unique
+  messageId Int @unique
 }
 
-model Hashtag {
-  id      Int    @id @default(autoincrement())
-  text    String @unique
-  userId  Int
-  lyricId Int?
+model Message {
+  id             Int       @id @default(autoincrement())
+  text           String?
+  wordCount      Int?
+  paragraphCount Int?
+  reactions      Reaction?
+  hashtags       Hashtags?
+  lyric          Lyric     @relation(fields: [lyricId], references: [id])
+
+  lyricId Int @unique
+}
+
+model Reaction {
+  id             Int     @id @default(autoincrement())
+  reactions      Emoji[]
+  uniqueCount    Int
+  totalFreeCount Int
+  totalPaidCount Int
+  totalCount     Int
+  message        Message @relation(fields: [messageId], references: [id])
+
+  messageId Int @unique
+}
+
+model Emoji {
+  id       Int      @id @default(autoincrement())
+  emoji    String
+  isPaid   Boolean
+  count    Int
+  reaction Reaction @relation(fields: [reactionId], references: [id])
+
+  reactionId Int
+}
+
+model Hashtags {
+  id       Int      @id @default(autoincrement())
+  hashtags String[]
+  count    Int
+  message  Message  @relation(fields: [messageId], references: [id])
+
+  messageId Int @unique
+}
+
+model User {
+  id          Int     @id @default(autoincrement())
+  username    String?
+  displayName String?
+  owner       Int?
+  isAdmin     Boolean
+  lyric       Lyric   @relation(fields: [lyricId], references: [id])
+
+  lyricId Int @unique
+}
+
+model Chat {
+  id    Int    @id @default(autoincrement())
+  title String
+  type  String
+  lyric Lyric  @relation(fields: [lyricId], references: [id])
+
+  lyricId Int @unique
+}
+
+model ReplyToMessage {
+  id    Int   @id @default(autoincrement())
+  lyric Lyric @relation(fields: [lyricId], references: [id])
+
+  lyricId Int @unique
+}
+
+model Media {
+  id       Int     @id @default(autoincrement())
+  mime     String
+  duration Int
+  convert  Boolean
+  lyric    Lyric   @relation(fields: [lyricId], references: [id])
+
+  lyricId Int @unique
 }
