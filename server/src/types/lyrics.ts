@@ -1,3 +1,11 @@
+interface UserType {
+  id: number
+  username?: string
+  displayName?: string
+  owner?: number
+  isAdmin: boolean
+}
+
 interface LyricType {
   id: number
   message: MessageType
@@ -11,26 +19,24 @@ interface LyricType {
   media?: MediaType
 }
 
+interface ChatType {
+  id: number
+  title: string
+  type: string
+}
+
+interface MediaType {
+  mime: string
+  duration: number
+  convert: boolean
+}
+
 interface MessageType {
   text?: string
   word_count?: number
   paragraph_count?: number
   reactions?: ReactionType
   hashtags?: HashtagsType
-}
-
-interface ReactionType {
-  reactions: EmojiType[]
-  uniqueCount: number
-  totalFreeCount: number
-  totalPaidCount: number
-  totalCount: number
-}
-
-interface EmojiType {
-  emoji: string
-  isPaid: boolean
-  count: number
 }
 
 interface HashtagsType {
@@ -48,28 +54,22 @@ interface HashtagDataType {
   text: string
 }
 
-interface UserType {
-  id: number
-  username?: string
-  displayName?: string
-  owner?: number
-  isAdmin: boolean
+interface ReactionType {
+  reactions: EmojiType[]
+  uniqueCount: number
+  totalFreeCount: number
+  totalPaidCount: number
+  totalCount: number
 }
 
-interface ChatType {
-  id: number
-  title: string
-  type: string
+interface EmojiType {
+  emoji: string
+  isPaid: boolean
+  count: number
 }
 
 interface ReplyToMessageType {
   id: number
-}
-
-interface MediaType {
-  mimeType: string
-  duration: number
-  convert: boolean
 }
 
 export { LyricType, EmojiType, HashtagsType, HashtagDataType }
