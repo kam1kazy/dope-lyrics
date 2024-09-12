@@ -1,7 +1,8 @@
 import fs from 'fs'
 
 // TYPES
-import { LyricType } from '../types/lyrics'
+import { LyricType } from '../types'
+import { filters } from '@mtcute/dispatcher'
 
 // HANDLERS
 import {
@@ -54,7 +55,11 @@ const getChat = (data: any) => {
 
           reactions: message.reactions?.reactions
             ? {
-                reactions: message.reactions?.reactions,
+                reactions: message.reactions?.reactions.filter(
+                  (reaction: any) => {
+                    return !reaction.order
+                  }
+                ),
                 uniqueCount: message.reactions?.reactions.length,
                 totalFreeCount: handlerCountReactions(
                   message.reactions?.reactions,
@@ -73,7 +78,7 @@ const getChat = (data: any) => {
 
           hashtags: message.entities
             ? {
-                hashtag: hashtagStringsOnly(message.entities),
+                hashtags: hashtagStringsOnly(message.entities),
                 count: message.entities?.length,
               }
             : null,
@@ -90,16 +95,16 @@ const getChat = (data: any) => {
           title: message.chat.title,
           type: message.chat.type,
         },
-        date: message.date,
+        date: new Date(Date.parse(message.date)),
         editDate: message.editDate,
         isPinned: message.isPinned,
         isChannelPost: message.isChannelPost,
         replyToMessage: message.replyToMessage
           ? { id: message.replyToMessage.id }
-          : false,
+          : null,
         media: message.media
           ? {
-              mimeType: message.media.mimeType,
+              mime: message.media.mimeType,
               duration: message.media.duration,
               convert: message.media.convert,
             }

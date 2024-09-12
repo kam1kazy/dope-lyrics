@@ -1,4 +1,4 @@
-import { EmojiType, HashtagDataType } from '../types/lyrics'
+import { EmojiType, HashtagDataType } from '../types'
 
 // Кол-во слов
 const handlerCountWords = (lyric: string) => {

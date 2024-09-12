@@ -8,15 +8,15 @@ datasource db {
 }
 
 model User {
-  id          Int     @id @default(autoincrement())
+  id          Int      @id @default(autoincrement())
   username    String?
   displayName String?
   owner       Int?
   isAdmin     Boolean
-  lyrics      Lyric[]
+  lyrics      Lyrics[]
 }
 
-model Lyric {
+model Lyrics {
   id             Int              @id @default(autoincrement())
   message        Message[]
   user           User             @relation(fields: id, references: id)
@@ -33,7 +33,7 @@ model Chat {
   id    Int    @id @default(autoincrement())
   title String
   type  String
-  lyric Lyric  @relation(fields: lyricId, references: id)
+  lyric Lyrics @relation(fields: lyricId, references: id)
 
   lyricId Int @unique
 }
@@ -43,7 +43,7 @@ model Media {
   mime     String
   duration Int
   convert  Boolean
-  lyric    Lyric   @relation(fields: lyricId, references: id)
+  lyric    Lyrics  @relation(fields: lyricId, references: id)
 
   lyricId Int @unique
 }
@@ -55,7 +55,7 @@ model Message {
   paragraphCount Int?
   reaction       Reaction[]
   hashtags       Hashtags[]
-  lyric          Lyric      @relation(fields: lyricId, references: id)
+  lyric          Lyrics     @relation(fields: lyricId, references: id)
 
   lyricId    Int  @unique
   reactionId Int? @unique
@@ -94,8 +94,8 @@ model Emoji {
 }
 
 model ReplyToMessage {
-  id    Int   @id @default(autoincrement())
-  lyric Lyric @relation(fields: lyricId, references: id)
+  id    Int    @id @default(autoincrement())
+  lyric Lyrics @relation(fields: lyricId, references: id)
 
   lyricId Int @unique
 }

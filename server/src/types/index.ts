@@ -1,4 +1,4 @@
-interface UserType {
+export interface UserType {
   id: number
   username?: string
   displayName?: string
@@ -6,45 +6,45 @@ interface UserType {
   isAdmin: boolean
 }
 
-interface LyricType {
+export interface LyricType {
   id: number
   message: MessageType
   user: UserType
   chat: ChatType
   date: Date
-  editDate: Date
+  editDate: Date | null
   isPinned: boolean
   isChannelPost: boolean
   replyToMessage?: ReplyToMessageType
   media?: MediaType
 }
 
-interface ChatType {
+export interface ChatType {
   id: number
   title: string
   type: string
 }
 
-interface MediaType {
+export interface MediaType {
   mime: string
   duration: number
   convert: boolean
 }
 
-interface MessageType {
+export interface MessageType {
   text?: string
   word_count?: number
   paragraph_count?: number
-  reactions?: ReactionType
+  reactions?: ReactionType | null
   hashtags?: HashtagsType
 }
 
-interface HashtagsType {
+export interface HashtagsType {
   hashtags: string[]
   count: number
 }
 
-interface HashtagDataType {
+export interface HashtagDataType {
   offset: number
   length: number
   kind: string
@@ -54,7 +54,7 @@ interface HashtagDataType {
   text: string
 }
 
-interface ReactionType {
+export interface ReactionType {
   reactions: EmojiType[]
   uniqueCount: number
   totalFreeCount: number
@@ -62,14 +62,14 @@ interface ReactionType {
   totalCount: number
 }
 
-interface EmojiType {
+export interface EmojiType {
   emoji: string
   isPaid: boolean
   count: number
 }
 
-interface ReplyToMessageType {
-  id: number
+export interface ReplyToMessageType {
+  id: {
+    id: number
+  }
 }
-
-export { LyricType, EmojiType, HashtagsType, HashtagDataType }

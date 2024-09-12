@@ -1,16 +1,28 @@
 import { PrismaClient } from '@prisma/client'
 
 // Типы
-import { UserType } from '../../src/types/user'
-import { HashtagType } from '../../src/types/hashtags'
-import { LyricType } from '../../src/types/lyrics'
+import {
+  LyricType,
+  HashtagsType,
+  UserType,
+  ChatType,
+  MediaType,
+  ReactionType,
+  MessageType,
+  ReplyToMessageType,
+  EmojiType,
+} from '../../src/types/index'
 
-// Дата для примера
-import { lyrics, users, hashtags } from '../data'
+// Дата
+import chatHistory from '../../bot-data/data/chatHistory.json'
 
 const db = new PrismaClient()
 
-const seed = async (user: UserType[], hashtags: HashtagType[], lyrics: LyricType[]) => {
+const seed = async (
+  user: UserType[],
+  hashtags: HashtagsType[],
+  lyrics: LyricType[]
+) => {
   console.log(`🧻 Наполнение БД фиктивными данными...`)
 
   for (const user of users) {
