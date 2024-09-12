@@ -36,9 +36,13 @@ const createJSONdata = (chatHistory: LyricType[]) => {
 }
 
 // Создаем массив с нужными данными из полученной Data
-export const getChat = (data: any) => {
+const getChat = (data: any) => {
+  const filterData = data.filter((message: any) => {
+    return message.action === null
+  })
+
   try {
-    const chatHistory: LyricType[] = data.map((message: any) => {
+    const chatHistory: LyricType[] = filterData.map((message: any) => {
       return {
         id: message.id,
         message: {
@@ -65,10 +69,12 @@ export const getChat = (data: any) => {
               }
             : null,
 
-          hashtags: {
-            hashtag: hashtagStringsOnly(message.entities),
-            count: message.entities?.length,
-          },
+          hashtags: message.entities
+            ? {
+                hashtag: hashtagStringsOnly(message.entities),
+                count: message.entities?.length,
+              }
+            : null,
         },
         user: {
           id: message.sender.id,
@@ -99,9 +105,6 @@ export const getChat = (data: any) => {
       }
     })
 
-    createJSONdata(chatHistory)
-    console.log('🟢 MTCUTE: Объект с историей чата создан успешно')
-
     return chatHistory
   } catch (error) {
     console.error(
@@ -110,3 +113,5 @@ export const getChat = (data: any) => {
     )
   }
 }
+
+export { getChat, createJSONdata }

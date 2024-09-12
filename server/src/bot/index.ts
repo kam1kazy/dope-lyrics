@@ -6,7 +6,7 @@ import { Dispatcher, filters } from '@mtcute/dispatcher'
 import * as env from '../env'
 
 // ФУНКЦИИ
-import { getChat } from '../handlers/getChatHandlers'
+import { getChat, createJSONdata } from '../handlers/getChatHandlers'
 
 const phone = env.BOT_PHONE
 const chatId = env.BOT_CHAT_ID
@@ -16,7 +16,7 @@ const pass = env.BOT_PASS
 const tg = new TelegramClient({
   apiId: env.API_ID,
   apiHash: env.API_HASH,
-  storage: 'bot-data/session',
+  storage: './bot-data/session',
 })
 
 // Диспетчер событий
@@ -43,14 +43,45 @@ if (self) {
 
 // Получаем историю чата
 export async function getChatHistory() {
-  try {
-    const history = await tg.getHistory(chatId, { limit: 5 })
-    console.log('🟢 MTCUTE: История чата получена')
-
-    getChat(history)
-  } catch (error) {
-    console.error('\n🛑 MTCUTE: Ошибка при получении истории сообщений:', error)
+  const limit = 100
+  let offset = {
+    id: 0,
+    date: Date.now(),
   }
+  let data: any[] = []
+  let currentData: any[] = []
+
+  console.log('\n🟢 MTCUTE: Получаем историю чата...')
+
+  // Пошаговый парсинг
+  while (true) {
+    try {
+      const history = await tg.getHistory(chatId, { limit, offset })
+      const chatData = getChat(history)
+
+      if (chatData) {
+        // <-- добавьте эту проверку
+        data.push(...chatData)
+      }
+
+      if (history.length < limit) {
+        break
+      }
+
+      offset.id += limit
+    } catch (error) {
+      console.error(
+        '\n🛑 MTCUTE: Ошибка при получении истории сообщений:',
+        error
+      )
+      break
+    }
+  }
+
+  console.log('🟢 MTCUTE: История чата получена')
+
+  // Создаем файл с полученной базой по нашей модели из LyricType
+  createJSONdata(data)
 }
 
 getChatHistory()
