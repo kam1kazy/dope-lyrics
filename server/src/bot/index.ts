@@ -6,7 +6,7 @@ import { Dispatcher, filters } from '@mtcute/dispatcher'
 import * as env from '../env'
 
 // ФУНКЦИИ
-import { getChat, createJSONdata } from '../handlers/getChatHandlers'
+import { getChat, createJSONdata } from '../handlers/getChatHistory'
 
 const phone = env.BOT_PHONE
 const chatId = env.BOT_CHAT_ID

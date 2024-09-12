@@ -10,7 +10,7 @@ import {
   handlerCountReactions,
   handlerWithoutHashtags,
   hashtagStringsOnly,
-} from '../handlers/handlers'
+} from './handlers'
 
 // Создаем JSON файл с данными
 const createJSONdata = (chatHistory: LyricType[]) => {
