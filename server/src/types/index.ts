@@ -1,58 +1,31 @@
 export interface UserType {
   id: number
-  username?: string
-  displayName?: string
-  owner?: number
-  isAdmin: boolean
-}
-
-export type Data = {
-  id: number
-  message: {
-    text: string
-    word_count: number
-    paragraph_count: number
-    reactions: null | ReactionType
-    hashtags: {
-      hashtags: string[]
-      count: number
-    }
-  }
-  user: {
-    id: number
-    username: null
-    displayName: string
-    owner: number
-    isAdmin: boolean
-  }
-  chat: {
-    id: number
-    title: string
-    type: string
-  }
-  date: string
-  editDate: string
-  isPinned: boolean
-  isChannelPost: boolean
-  replyToMessage: null | ReplyToMessageType
-  media: boolean | MediaType | {}
-}
-
-export interface ChatHistoryType {
-  chatHistory: Data[]
+  username: string
+  email: string
+  password: string
 }
 
 export interface LyricType {
   id: number
+  owner: UserType
   message: MessageType
-  user: UserType
+  user: UserLyricType
   chat: ChatType
   date: Date
   editDate?: Date | null
   isPinned: boolean
   isChannelPost: boolean
-  replyToMessage?: ReplyToMessageType
+  replyToMessage?: null | ReplyToMessageType
   media?: boolean | MediaType
+
+  userId: number
+}
+
+export interface UserLyricType {
+  id: number
+  username?: string
+  displayName?: string
+  isAdmin: boolean
 }
 
 export interface ChatType {
@@ -107,4 +80,37 @@ export interface EmojiType {
 
 export interface ReplyToMessageType {
   id: number
+}
+
+export type DataType = {
+  id: number
+  owner: number
+  message: {
+    text: string
+    word_count: number
+    paragraph_count: number
+    reactions: null | ReactionType
+    hashtags: {
+      hashtags: string[]
+      count: number
+    }
+  }
+  user: {
+    id: number
+    username: null
+    displayName: string
+    owner: number
+    isAdmin: boolean
+  }
+  chat: {
+    id: number
+    title: string
+    type: string
+  }
+  date: string
+  editDate: string
+  isPinned: boolean
+  isChannelPost: boolean
+  replyToMessage: null | ReplyToMessageType
+  media: boolean | MediaType | {}
 }

@@ -6,7 +6,7 @@ import { swagger } from '@elysiajs/swagger'
 // GraphQL
 import { yoga } from '@elysiajs/graphql-yoga'
 import { schema } from './graphql/schema'
-import chatHistory from '../bot-data/data/chatHistory.json'
+
 // Переменные для запуска сервера
 const isProduction = process.env.VERCEL_ENV === 'production'
 const port: number = isProduction ? 4000 : 4000

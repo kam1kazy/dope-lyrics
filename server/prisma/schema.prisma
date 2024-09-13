@@ -8,18 +8,18 @@ datasource db {
 }
 
 model Users {
-  id          Int      @id @default(autoincrement())
-  username    String?
-  displayName String?
-  owner       Int?
-  isAdmin     Boolean
-  lyrics      Lyrics[]
+  id       Int      @id @default(autoincrement())
+  username String
+  email    String
+  password String
+  lyrics   Lyrics[]
 }
 
 model Lyrics {
   id             Int              @id @default(autoincrement())
+  owner          Users            @relation(fields: userId, references: id)
   message        Message[]
-  user           Users            @relation(fields: id, references: id)
+  user           UserLyric[]
   chat           Chat[]
   date           DateTime
   editDate       DateTime
@@ -27,15 +27,29 @@ model Lyrics {
   isChannelPost  Boolean
   replyToMessage ReplyToMessage[]
   media          Media[]
+
+  userId Int
+}
+
+model UserLyric {
+  key         Int     @id @default(autoincrement())
+  id          BigInt
+  username    String?
+  displayName String?
+  isAdmin     Boolean
+  lyrics      Lyrics  @relation(fields: lyricId, references: id)
+
+  lyricId Int
 }
 
 model Chat {
-  id    Int    @id @default(autoincrement())
+  key   Int    @id @default(autoincrement())
+  id    BigInt
   title String
   type  String
   lyric Lyrics @relation(fields: lyricId, references: id)
 
-  lyricId Int @unique
+  lyricId Int
 }
 
 model Media {
@@ -45,21 +59,21 @@ model Media {
   convert  Boolean
   lyric    Lyrics  @relation(fields: lyricId, references: id)
 
-  lyricId Int @unique
+  lyricId Int
 }
 
 model Message {
-  id             Int        @id @default(autoincrement())
-  text           String?
-  wordCount      Int?
-  paragraphCount Int?
-  reaction       Reaction[]
-  hashtags       Hashtags[]
-  lyric          Lyrics     @relation(fields: lyricId, references: id)
+  id              Int         @id @default(autoincrement())
+  text            String?
+  word_count      Int?
+  paragraph_count Int?
+  reactions       Reactions[]
+  hashtags        Hashtags[]
+  lyric           Lyrics      @relation(fields: lyricId, references: id)
 
-  lyricId    Int  @unique
-  reactionId Int? @unique
-  hashtagsId Int? @unique
+  lyricId    Int
+  reactionId Int?
+  hashtagsId Int?
 }
 
 model Hashtags {
@@ -71,7 +85,7 @@ model Hashtags {
   messageId Int
 }
 
-model Reaction {
+model Reactions {
   id             Int     @id @default(autoincrement())
   message        Message @relation(fields: messageId, references: id)
   Emoji          Emoji[]
@@ -80,22 +94,23 @@ model Reaction {
   totalPaidCount Int
   totalCount     Int
 
-  messageId Int @unique
+  messageId Int
 }
 
 model Emoji {
-  id       Int      @id @default(autoincrement())
+  id       Int       @id @default(autoincrement())
   emoji    String
   isPaid   Boolean
   count    Int
-  reaction Reaction @relation(fields: reactionId, references: id)
+  order    Int?
+  reaction Reactions @relation(fields: reactionId, references: id)
 
-  reactionId Int @unique
+  reactionId Int
 }
 
 model ReplyToMessage {
   id    Int    @id @default(autoincrement())
   lyric Lyrics @relation(fields: lyricId, references: id)
 
-  lyricId Int @unique
+  lyricId Int
 }

@@ -16,7 +16,7 @@
     "devBot": "concurrently \"bun dev\" \"bun bot\""
   },
   "prisma": {
-    "seed": "bun prisma/scripts/seed.ts"
+    "seed": "bun ./prisma/script/seed.ts"
   },
   "dependencies": {
     "@elysiajs/cors": "^1.1.0",

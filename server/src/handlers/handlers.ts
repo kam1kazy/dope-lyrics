@@ -31,7 +31,7 @@ const handlerCountReactions = (
   try {
     return totalCount
   } catch (error) {
-    return console.error(`\n🛑 MTCUTE: Ошибка подсчета ${type} реакций:`, error)
+    return console.error(`\nMTCUTE: 🛑 Ошибка подсчета ${type} реакций:`, error)
   }
 }
 

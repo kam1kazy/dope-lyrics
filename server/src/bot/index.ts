@@ -26,9 +26,9 @@ const dp = Dispatcher.for(tg)
 const self = await tg.start({
   phone: phone,
   code: async () => {
-    const code = await prompt('🙈 Введите код:')
+    const code = await prompt('MTCUTE: 🙈  Введите код:')
     if (code === null) {
-      throw new Error('❌ Отменено пользователем')
+      throw new Error('MTCUTE: ❌  Отменено пользователем')
     }
     return code
   },
@@ -36,9 +36,9 @@ const self = await tg.start({
 })
 
 if (self) {
-  console.log('\n🤖 MTCUTE: Вошел в систему как -', self.username)
+  console.log('\nMTCUTE: 🤖 Вошел в систему как -', self.username)
 } else {
-  console.error('\n🛑 MTCUTE: Не вошел в систему')
+  console.error('\nMTCUTE: 🛑  Не вошел в систему')
 }
 
 // Получаем историю чата
@@ -50,7 +50,7 @@ export async function getChatHistory() {
   }
   let data: any[] = []
 
-  console.log('\n🟢 MTCUTE: Получаем историю чата...')
+  console.log('MTCUTE: 🧻 Получаем историю чата...')
 
   // Пошаговый парсинг
   while (true) {
@@ -70,17 +70,19 @@ export async function getChatHistory() {
       offset.id += limit
     } catch (error) {
       console.error(
-        '\n🛑 MTCUTE: Ошибка при получении истории сообщений:',
+        '\nMTCUTE: 🛑 Ошибка при получении истории сообщений:',
         error
       )
       break
     }
   }
 
-  console.log('🟢 MTCUTE: История чата получена')
+  console.log('MTCUTE: 📥 История чата получена')
 
   // Создаем файл с полученной базой по нашей модели из LyricType
-  createJSONdata(data)
+  if (data.length) {
+    createJSONdata(data)
+  }
 }
 
 getChatHistory()

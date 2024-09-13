@@ -23,14 +23,14 @@ const createJSONdata = (chatHistory: LyricType[]) => {
 
   fs.mkdir(dirName, { recursive: true }, (err) => {
     if (err) {
-      console.error('\n🛑 MTCUTE: Ошибка создание папки', err)
+      console.error('\nMTCUTE: 🛑 Ошибка создание папки', err)
     } else {
       fs.writeFile(fullPath, jsonData, (err) => {
         if (err) {
-          console.error('\n🛑 MTCUTE: Ошибка создание файла', err)
+          console.error('\nMTCUTE: 🛑 Ошибка создание файла', err)
         } else {
           console.log(
-            `🟢 MTCUTE: Файл с историей чата успешно создан в ${fullPath}\n`
+            `MTCUTE: 🟢 Файл с историей чата успешно создан в ${fullPath}\n`
           )
         }
       })
@@ -48,6 +48,7 @@ const getChat = (data: any) => {
     const chatHistory: LyricType[] = filterData.map((message: any) => {
       return {
         id: message.id,
+        userId: 0,
         message: {
           text: handlerWithoutHashtags(message.text),
           word_count: handlerCountWords(message.text ?? ''),
@@ -74,20 +75,19 @@ const getChat = (data: any) => {
                   'total'
                 ),
               }
-            : null,
+            : {},
 
           hashtags: message.entities
             ? {
                 hashtags: hashtagStringsOnly(message.entities),
                 count: message.entities?.length,
               }
-            : null,
+            : {},
         },
         user: {
           id: message.sender.id,
           username: message.sender.username,
           displayName: message.sender.displayName,
-          owner: 0,
           isAdmin: message.sender.isAdmin,
         },
         chat: {
@@ -101,14 +101,14 @@ const getChat = (data: any) => {
         isChannelPost: message.isChannelPost,
         replyToMessage: message.replyToMessage
           ? { id: message.replyToMessage.id }
-          : null,
+          : {},
         media: message.media
           ? {
               mime: message.media.mimeType,
               duration: message.media.duration,
               convert: message.media.convert,
             }
-          : false,
+          : {},
       }
     })
 
@@ -118,6 +118,7 @@ const getChat = (data: any) => {
       '\n🛑 MTCUTE: Ошибка при создании объекта chatHistory:',
       error
     )
+    return false
   }
 }
 
