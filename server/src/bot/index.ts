@@ -23,23 +23,24 @@ const tg = new TelegramClient({
 const dp = Dispatcher.for(tg)
 
 // Авторизуемся в боте
-const self = await tg.start({
-  phone: phone,
-  code: async () => {
-    const code = await prompt('MTCUTE: 🙈  Введите код:')
-    if (code === null) {
-      throw new Error('MTCUTE: ❌  Отменено пользователем')
-    }
-    return code
-  },
-  password: pass,
-})
-
-if (self) {
-  console.log('\nMTCUTE: 🤖 Вошел в систему как -', self.username)
-} else {
-  console.error('\nMTCUTE: 🛑  Не вошел в систему')
-}
+const self = await tg
+  .start({
+    phone: phone,
+    code: async () => {
+      const code = await prompt('MTCUTE: 🙈  Введите код:')
+      if (code === null) {
+        throw new Error('MTCUTE: ❌  Отменено пользователем\n\n')
+      }
+      return code
+    },
+    password: pass,
+  })
+  .then((self) => {
+    console.log('\nMTCUTE: 🤖 Вошел в систему как -', self.username)
+  })
+  .catch((error) => {
+    console.error('\nMTCUTE: 🛑  Не вошел в систему\n\n', error)
+  })
 
 // Получаем историю чата
 export async function getChatHistory() {
@@ -59,7 +60,6 @@ export async function getChatHistory() {
       const chatData = getChat(history)
 
       if (chatData) {
-        // <-- добавьте эту проверку
         data.push(...chatData)
       }
 
@@ -70,17 +70,16 @@ export async function getChatHistory() {
       offset.id += limit
     } catch (error) {
       console.error(
-        '\nMTCUTE: 🛑 Ошибка при получении истории сообщений:',
+        '\nMTCUTE: 🛑 Ошибка при получении истории сообщений:\n\n',
         error
       )
       break
     }
   }
 
-  console.log('MTCUTE: 📥 История чата получена')
-
   // Создаем файл с полученной базой по нашей модели из LyricType
   if (data.length) {
+    console.log('MTCUTE: 📥 История чата получена')
     createJSONdata(data)
   }
 }

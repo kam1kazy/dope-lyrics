@@ -57,6 +57,7 @@ CREATE TABLE "Media" (
 -- CreateTable
 CREATE TABLE "Message" (
     "id" SERIAL NOT NULL,
+    "message_id" INTEGER NOT NULL,
     "text" TEXT,
     "word_count" INTEGER,
     "paragraph_count" INTEGER,

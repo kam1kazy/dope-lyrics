@@ -1,8 +1,5 @@
-import fs from 'fs'
-
 // TYPES
 import { LyricType } from '../types'
-import { filters } from '@mtcute/dispatcher'
 
 // HANDLERS
 import {
@@ -13,30 +10,7 @@ import {
   hashtagStringsOnly,
 } from './handlers'
 
-// Создаем JSON файл с данными
-const createJSONdata = (chatHistory: LyricType[]) => {
-  const jsonData = JSON.stringify(chatHistory, null, 2)
-
-  const dirName = 'bot-data/data'
-  const fileName = 'chatHistory.json'
-  const fullPath = `${dirName}/${fileName}`
-
-  fs.mkdir(dirName, { recursive: true }, (err) => {
-    if (err) {
-      console.error('\nMTCUTE: 🛑 Ошибка создание папки', err)
-    } else {
-      fs.writeFile(fullPath, jsonData, (err) => {
-        if (err) {
-          console.error('\nMTCUTE: 🛑 Ошибка создание файла', err)
-        } else {
-          console.log(
-            `MTCUTE: 🟢 Файл с историей чата успешно создан в ${fullPath}\n`
-          )
-        }
-      })
-    }
-  })
-}
+import { createJSONdata } from './createJSONdata'
 
 // Создаем массив с нужными данными из полученной Data
 const getChat = (data: any) => {
@@ -47,20 +21,16 @@ const getChat = (data: any) => {
   try {
     const chatHistory: LyricType[] = filterData.map((message: any) => {
       return {
-        id: message.id,
         userId: 0,
         message: {
           text: handlerWithoutHashtags(message.text),
+          message_id: message.id,
           word_count: handlerCountWords(message.text ?? ''),
           paragraph_count: handlerCountParagraphs(message.text ?? ''),
 
           reactions: message.reactions?.reactions
             ? {
-                reactions: message.reactions?.reactions.filter(
-                  (reaction: any) => {
-                    return !reaction.order
-                  }
-                ),
+                reactions: message.reactions?.reactions,
                 uniqueCount: message.reactions?.reactions.length,
                 totalFreeCount: handlerCountReactions(
                   message.reactions?.reactions,
@@ -75,14 +45,14 @@ const getChat = (data: any) => {
                   'total'
                 ),
               }
-            : {},
+            : null,
 
-          hashtags: message.entities
+          hashtags: message.entities?.length
             ? {
                 hashtags: hashtagStringsOnly(message.entities),
                 count: message.entities?.length,
               }
-            : {},
+            : null,
         },
         user: {
           id: message.sender.id,
@@ -101,21 +71,21 @@ const getChat = (data: any) => {
         isChannelPost: message.isChannelPost,
         replyToMessage: message.replyToMessage
           ? { id: message.replyToMessage.id }
-          : {},
-        media: message.media
+          : null,
+        media: message.media?.mimeType
           ? {
               mime: message.media.mimeType,
               duration: message.media.duration,
               convert: message.media.convert,
             }
-          : {},
+          : null,
       }
     })
 
     return chatHistory
   } catch (error) {
     console.error(
-      '\n🛑 MTCUTE: Ошибка при создании объекта chatHistory:',
+      '\n🛑 MTCUTE: Ошибка при создании объекта chatHistory:\n\n',
       error
     )
     return false

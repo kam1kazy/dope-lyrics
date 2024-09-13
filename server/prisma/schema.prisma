@@ -64,6 +64,7 @@ model Media {
 
 model Message {
   id              Int         @id @default(autoincrement())
+  message_id      Int
   text            String?
   word_count      Int?
   paragraph_count Int?

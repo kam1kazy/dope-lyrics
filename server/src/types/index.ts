@@ -6,24 +6,21 @@ export interface UserType {
 }
 
 export interface LyricType {
-  id: number
-  owner: UserType
+  userId: number
   message: MessageType
   user: UserLyricType
   chat: ChatType
-  date: Date
-  editDate?: Date | null
+  date: string
+  editDate?: string
   isPinned: boolean
   isChannelPost: boolean
   replyToMessage?: null | ReplyToMessageType
-  media?: boolean | MediaType
-
-  userId: number
+  media?: MediaType | null
 }
 
 export interface UserLyricType {
   id: number
-  username?: string
+  username?: string | null
   displayName?: string
   isAdmin: boolean
 }
@@ -42,10 +39,11 @@ export interface MediaType {
 
 export interface MessageType {
   text?: string
+  message_id: number
   word_count?: number
   paragraph_count?: number
   reactions?: ReactionType | null
-  hashtags?: HashtagsType
+  hashtags?: HashtagsType | null
 }
 
 export interface HashtagsType {
@@ -82,35 +80,67 @@ export interface ReplyToMessageType {
   id: number
 }
 
-export type DataType = {
-  id: number
-  owner: number
+export interface ConvertDataType {
+  userId: number
   message: {
-    text: string
-    word_count: number
-    paragraph_count: number
-    reactions: null | ReactionType
-    hashtags: {
-      hashtags: string[]
-      count: number
+    create: {
+      text: string
+      message_id: number
+      word_count: number
+      paragraph_count: number
+      reactions: {
+        create: {
+          uniqueCount: number
+          totalFreeCount: number
+          totalPaidCount: number
+          totalCount: number
+          Emoji: {
+            create: {
+              emoji: string
+              isPaid: boolean
+              count: number
+              order: number | null
+            }[]
+          }
+        }
+      } | null
+      hashtags: {
+        create: {
+          hashtags: string[]
+        }
+        count: number
+      } | null
     }
   }
   user: {
-    id: number
-    username: null
-    displayName: string
-    owner: number
-    isAdmin: boolean
+    create: {
+      id: number
+      username: string | null
+      displayName: string
+      isAdmin: boolean
+    }
   }
   chat: {
-    id: number
-    title: string
-    type: string
+    create: {
+      id: number
+      title: string
+      type: string
+    }
   }
   date: string
   editDate: string
   isPinned: boolean
   isChannelPost: boolean
-  replyToMessage: null | ReplyToMessageType
-  media: boolean | MediaType | {}
+  replyToMessage: {
+    create: {
+      id: number
+    }
+  } | null
+  media: {
+    create: {
+      mime: string
+      duration: number
+      convert?: boolean
+    }
+  } | null
 }
