@@ -7,7 +7,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
+model Users {
   id          Int      @id @default(autoincrement())
   username    String?
   displayName String?
@@ -19,7 +19,7 @@ model User {
 model Lyrics {
   id             Int              @id @default(autoincrement())
   message        Message[]
-  user           User             @relation(fields: id, references: id)
+  user           Users            @relation(fields: id, references: id)
   chat           Chat[]
   date           DateTime
   editDate       DateTime

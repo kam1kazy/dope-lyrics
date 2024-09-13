@@ -96,7 +96,7 @@ const getChat = (data: any) => {
           type: message.chat.type,
         },
         date: new Date(Date.parse(message.date)),
-        editDate: message.editDate,
+        editDate: message.editDate ?? '',
         isPinned: message.isPinned,
         isChannelPost: message.isChannelPost,
         replyToMessage: message.replyToMessage
