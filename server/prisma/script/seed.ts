@@ -1,71 +1,19 @@
 import { PrismaClient } from '@prisma/client'
 
 // Типы
-import { UserType, ConvertDataType } from '../../src/types/index'
+import { UserType, LyricType } from '../../src/types/index'
 
 // Дата
 const chatUser = require('../../bot-data/data/usersData.json')
-const convertHistory = require('../../bot-data/data/convertHistory.json')
+const chatHistory = require('../../bot-data/data/chatHistory.json')
 
 const db = new PrismaClient()
 
 const arrUser: UserType[] = chatUser
-const arrConvert: ConvertDataType[] = [
-  {
-    userId: 0,
-    message: {
-      create: {
-        text: 'Тебе кажется, что я легкий, как  J-SON \nНо положил твой прод, как Jason',
-        message_id: 1948,
-        word_count: 13,
-        paragraph_count: 2,
-        reactions: {
-          create: {
-            uniqueCount: 1,
-            totalFreeCount: 1,
-            totalPaidCount: 0,
-            totalCount: 1,
-            Emoji: {
-              create: [
-                {
-                  emoji: '🔥',
-                  isPaid: false,
-                  count: 1,
-                  order: 0,
-                },
-              ],
-            },
-          },
-        },
-        hashtags: null,
-      },
-    },
-    user: {
-      create: {
-        id: -1001819066685,
-        username: null,
-        displayName: 'Фразочки',
-        isAdmin: true,
-      },
-    },
-    chat: {
-      create: {
-        id: -1001819066685,
-        title: 'Фразочки',
-        type: 'chat',
-      },
-    },
-    date: '2024-09-13T11:18:11.000Z',
-    editDate: '2024-09-13T12:47:46.000Z',
-    isPinned: false,
-    isChannelPost: true,
-    replyToMessage: null,
-    media: null,
-  },
-]
+const arrHistory: LyricType[] = chatHistory
 
 async function seed() {
-  console.log(`\nPRISMA: 🧻 Наполнение БД фиктивными данными...`)
+  console.log(`\nPRISMA: 🧻 Запись...`)
 
   await db.users
     .createMany({
@@ -82,20 +30,107 @@ async function seed() {
       )
     })
 
-  await db.lyrics
-    .createMany({
-      data: arrConvert,
-      skipDuplicates: true,
-    })
-    .then(() =>
-      console.log('PRISMA: 🚚 Данные - Convert - были успешно загружены')
-    )
-    .catch((error) => {
+  const userExists = await db.users.findUnique({
+    where: {
+      id: 1, // значение userId, которое вы хотите использовать
+    },
+  })
+
+  if (!userExists) {
+    throw new Error('\nPRISMA: 🙅 User не был найден')
+  }
+
+  let successCount = 0
+
+  for (const item of arrHistory) {
+    try {
+      const {
+        date,
+        editDate,
+        isPinned,
+        isChannelPost,
+        message,
+        user,
+        replyToMessage,
+        media,
+      } = item
+
+      const lyrics = await db.lyrics.create({
+        data: {
+          //? LYRICS
+          userId: userExists.id,
+          date: date,
+          editDate: editDate,
+          isPinned,
+          isChannelPost,
+
+          //? MESSAGE
+          message: message
+            ? {
+                create: {
+                  text: message.text,
+                  message_id: message.message_id,
+                  word_count: message.word_count,
+                  paragraph_count: message.paragraph_count,
+
+                  //? REACTION
+                  reactions: message.reactions
+                    ? {
+                        create: {
+                          uniqueCount: message.reactions.uniqueCount,
+                          totalFreeCount: message.reactions.totalFreeCount,
+                          totalPaidCount: message.reactions.totalPaidCount,
+                          totalCount: message.reactions.totalCount,
+                        },
+                      }
+                    : undefined,
+
+                  //? HASHTAG
+                  hashtags: message.hashtags
+                    ? {
+                        create: message.hashtags,
+                      }
+                    : undefined,
+                },
+              }
+            : undefined,
+
+          //? USERS
+          user: user
+            ? {
+                create: {
+                  id: user.id,
+                  username: user.username,
+                  displayName: user.displayName,
+                  isAdmin: user.isAdmin,
+                },
+              }
+            : undefined,
+
+          //? REPLY
+          replyToMessage: replyToMessage ?? null,
+
+          //? MEDIA
+          media: media
+            ? {
+                create: {
+                  mime: media.mime,
+                  duration: media.duration,
+                  convert: media.convert,
+                },
+              }
+            : undefined,
+        },
+      })
+
+      successCount++
+    } catch (error) {
       console.error(
-        'PRISMA: 🚧 Данные - Convert - не удалось загрузить в базу\n\n',
+        'PRISMA: 🚧 Данные - Lyrics - не удалось загрузить в базу\n\n',
         error
       )
-    })
+    }
+  }
 }
 
 seed()

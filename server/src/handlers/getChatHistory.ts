@@ -66,17 +66,15 @@ const getChat = (data: any) => {
           type: message.chat.type,
         },
         date: new Date(Date.parse(message.date)),
-        editDate: message.editDate ?? '',
+        editDate: new Date(Date.parse(message.editDate)) ?? null,
         isPinned: message.isPinned,
         isChannelPost: message.isChannelPost,
-        replyToMessage: message.replyToMessage
-          ? { id: message.replyToMessage.id }
-          : null,
+        replyToMessage: message.replyToMessage?.id ?? null,
         media: message.media?.mimeType
           ? {
               mime: message.media.mimeType,
               duration: message.media.duration,
-              convert: message.media.convert,
+              convert: false,
             }
           : null,
       }

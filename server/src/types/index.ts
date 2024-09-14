@@ -10,17 +10,18 @@ export interface LyricType {
   message: MessageType
   user: UserLyricType
   chat: ChatType
-  date: string
-  editDate?: string
+  date: Date
+  editDate: Date
   isPinned: boolean
   isChannelPost: boolean
-  replyToMessage?: null | ReplyToMessageType
-  media?: MediaType | null
+  owner: UserType
+  replyToMessage: number | null
+  media: MediaType
 }
 
 export interface UserLyricType {
   id: number
-  username?: string | null
+  username?: string
   displayName?: string
   isAdmin: boolean
 }
@@ -34,16 +35,16 @@ export interface ChatType {
 export interface MediaType {
   mime: string
   duration: number
-  convert?: boolean
+  convert: boolean
 }
 
 export interface MessageType {
-  text?: string
   message_id: number
+  text?: string
   word_count?: number
   paragraph_count?: number
-  reactions?: ReactionType | null
-  hashtags?: HashtagsType | null
+  reactions?: ReactionType
+  hashtags?: HashtagsType
 }
 
 export interface HashtagsType {
@@ -74,10 +75,6 @@ export interface EmojiType {
   isPaid: boolean
   count: number
   order?: null | number
-}
-
-export interface ReplyToMessageType {
-  id: number
 }
 
 export interface ConvertDataType {
