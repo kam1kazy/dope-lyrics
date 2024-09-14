@@ -8,15 +8,18 @@ datasource db {
 }
 
 model Users {
-  id       Int      @id @default(autoincrement())
+  id Int @id @default(autoincrement())
+
   username String
   email    String
   password String
-  lyrics   Lyrics[]
+
+  lyrics Lyrics[]
 }
 
 model Lyrics {
-  id            Int       @id @default(autoincrement())
+  id Int @id @default(autoincrement())
+
   date          DateTime
   editDate      DateTime?
   isPinned      Boolean
@@ -28,13 +31,13 @@ model Lyrics {
   replyToMessage Int?
   media          Media?
 
-  // Скалярное значение для привязки к User?
   userId Int
-  // Здесь владелец заиси, который привязываеися к User?
   owner  Users @relation(fields: [userId], references: [id])
 }
 
 model Message {
+  id Int @id @default(autoincrement())
+
   message_id      Int
   text            String?
   word_count      Int?
@@ -43,70 +46,76 @@ model Message {
   reactions Reactions?
   hashtags  Hashtags?
 
-  id      Int    @id @default(autoincrement())
   lyric   Lyrics @relation(fields: lyricId, references: id)
   lyricId Int    @unique
 }
 
 model UserLyric {
-  key         Int     @id @default(autoincrement())
+  key Int @id @default(autoincrement())
+
   id          BigInt
   username    String?
   displayName String?
   isAdmin     Boolean
-  lyrics      Lyrics  @relation(fields: lyricId, references: id)
 
-  lyricId Int @unique
+  lyrics  Lyrics @relation(fields: lyricId, references: id)
+  lyricId Int    @unique
 }
 
 model Chat {
-  key   Int    @id @default(autoincrement())
+  key Int @id @default(autoincrement())
+
   id    BigInt
   title String
   type  String
-  lyric Lyrics @relation(fields: lyricId, references: id)
 
-  lyricId Int @unique
+  lyric   Lyrics @relation(fields: lyricId, references: id)
+  lyricId Int    @unique
 }
 
 model Media {
-  id       Int     @id @default(autoincrement())
+  id Int @id @default(autoincrement())
+
   mime     String
   duration Int
   convert  Boolean
-  lyric    Lyrics  @relation(fields: lyricId, references: id)
 
-  lyricId Int @unique
+  lyric   Lyrics @relation(fields: lyricId, references: id)
+  lyricId Int    @unique
 }
 
 model Hashtags {
-  id       Int      @id @default(autoincrement())
-  message  Message  @relation(fields: messageId, references: id)
-  count    Int
-  hashtags String[]
+  id Int @id @default(autoincrement())
 
-  messageId Int @unique
+  hashtags String[]
+  count    Int
+
+  message   Message @relation(fields: messageId, references: id)
+  messageId Int     @unique
 }
 
 model Reactions {
-  id             Int     @id @default(autoincrement())
-  message        Message @relation(fields: messageId, references: id)
-  Emoji          Emoji?
+  id Int @id @default(autoincrement())
+
   uniqueCount    Int
   totalFreeCount Int
   totalPaidCount Int
   totalCount     Int
 
-  messageId Int @unique
+  Emoji Emoji?
+
+  message   Message @relation(fields: messageId, references: id)
+  messageId Int     @unique
 }
 
 model Emoji {
-  id       Int       @id @default(autoincrement())
-  emoji    String
-  isPaid   Boolean
-  count    Int
-  order    Int?
-  reaction Reactions @relation(fields: reactionId, references: id)
+  id Int @id @default(autoincrement())
 
-  reactionId Int @unique
+  emoji  String
+  isPaid Boolean
+  count  Int
+  order  Int?
+
+  reaction   Reactions @relation(fields: reactionId, references: id)
+  reactionId Int       @unique
 }

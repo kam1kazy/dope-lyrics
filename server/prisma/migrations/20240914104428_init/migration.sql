@@ -23,11 +23,11 @@ CREATE TABLE "Lyrics" (
 
 -- CreateTable
 CREATE TABLE "Message" (
+    "id" SERIAL NOT NULL,
     "message_id" INTEGER NOT NULL,
     "text" TEXT,
     "word_count" INTEGER,
     "paragraph_count" INTEGER,
-    "id" SERIAL NOT NULL,
     "lyricId" INTEGER NOT NULL,
 
     CONSTRAINT "Message_pkey" PRIMARY KEY ("id")
@@ -70,8 +70,8 @@ CREATE TABLE "Media" (
 -- CreateTable
 CREATE TABLE "Hashtags" (
     "id" SERIAL NOT NULL,
-    "count" INTEGER NOT NULL,
     "hashtags" TEXT[],
+    "count" INTEGER NOT NULL,
     "messageId" INTEGER NOT NULL,
 
     CONSTRAINT "Hashtags_pkey" PRIMARY KEY ("id")
