@@ -50,6 +50,32 @@ model Message {
   lyricId Int    @unique
 }
 
+model Reactions {
+  id Int @id @default(autoincrement())
+
+  uniqueCount    Int
+  totalFreeCount Int
+  totalPaidCount Int
+  totalCount     Int
+
+  emojis Emoji[]
+
+  message   Message @relation(fields: messageId, references: id)
+  messageId Int     @unique
+}
+
+model Emoji {
+  id Int @id @default(autoincrement())
+
+  emoji  String
+  isPaid Boolean
+  count  Int
+  order  Int?
+
+  reaction   Reactions @relation(fields: [reactionId], references: [id])
+  reactionId Int
+}
+
 model UserLyric {
   key Int @id @default(autoincrement())
 
@@ -92,30 +118,4 @@ model Hashtags {
 
   message   Message @relation(fields: messageId, references: id)
   messageId Int     @unique
-}
-
-model Reactions {
-  id Int @id @default(autoincrement())
-
-  uniqueCount    Int
-  totalFreeCount Int
-  totalPaidCount Int
-  totalCount     Int
-
-  Emoji Emoji?
-
-  message   Message @relation(fields: messageId, references: id)
-  messageId Int     @unique
-}
-
-model Emoji {
-  id Int @id @default(autoincrement())
-
-  emoji  String
-  isPaid Boolean
-  count  Int
-  order  Int?
-
-  reaction   Reactions @relation(fields: reactionId, references: id)
-  reactionId Int       @unique
 }

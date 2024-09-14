@@ -4,6 +4,7 @@
       "@server/*": ["../server/src/*"],
       "@prisma/*": ["../server/prisma/*"],
       "@client/*": ["../client/src/*"],
+      "@bot/*": ["../server/src/bot/*"],
       "@components/*": ["../client/src/components/*"]
     }
   }

@@ -10,7 +10,7 @@ const chatHistory = require('../../bot-data/data/chatHistory.json')
 const db = new PrismaClient()
 
 const arrUser: UserType[] = chatUser
-const arrHistory: LyricType[] = chatHistory
+const arrHistory = chatHistory
 
 async function seed() {
   console.log(`\nPRISMA: 🧻 Запись...`)
@@ -81,6 +81,9 @@ async function seed() {
                           totalFreeCount: message.reactions.totalFreeCount,
                           totalPaidCount: message.reactions.totalPaidCount,
                           totalCount: message.reactions.totalCount,
+                          emojis: {
+                            create: message.reactions.emojis,
+                          },
                         },
                       }
                     : undefined,

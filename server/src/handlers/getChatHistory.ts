@@ -30,7 +30,7 @@ const getChat = (data: any) => {
 
           reactions: message.reactions?.reactions
             ? {
-                reactions: message.reactions?.reactions,
+                emojis: message.reactions?.reactions,
                 uniqueCount: message.reactions?.reactions.length,
                 totalFreeCount: handlerCountReactions(
                   message.reactions?.reactions,

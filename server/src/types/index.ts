@@ -63,7 +63,7 @@ export interface HashtagDataType {
 }
 
 export interface ReactionType {
-  reactions: EmojiType[]
+  emojis: EmojiType[]
   uniqueCount: number
   totalFreeCount: number
   totalPaidCount: number
