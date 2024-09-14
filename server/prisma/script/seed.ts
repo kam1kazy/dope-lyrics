@@ -131,6 +131,14 @@ async function seed() {
       )
     }
   }
+
+  if (successCount === arrHistory.length) {
+    console.log(`PRISMA: 🟢 Все ${arrHistory.length} записей успешно созданы`)
+  } else {
+    console.log(
+      `\nPRISMA:🚧 Создано ${successCount} из ${arrHistory.length} записей`
+    )
+  }
 }
 
 seed()
