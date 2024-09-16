@@ -21,7 +21,7 @@
 TODO: 
 - Типизировать: - Получаемый объект сообщения из Telegram (уже начал, но пока не подходит)
 - хрнаить сеансы в бд?
-- кэширование в GrapqlYoga (server) и Apollo Client (client)
+- кэширование в GrapQL Yoga (server) и Apollo Client (client)
 
 ФИЧИ:
 - История сессий
