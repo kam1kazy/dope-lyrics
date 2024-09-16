@@ -18,6 +18,16 @@ const getChat = (data: any) => {
     return message.action === null
   })
 
+  let reactionsCount = 0
+
+  const tryInter = (trap: any) => {
+    reactionsCount++
+    console.log('MTCUTE: trap', trap)
+    console.log('MTCUTE: reactionsCount', reactionsCount)
+
+    return reactionsCount
+  }
+
   try {
     const chatHistory: LyricType[] = filterData.map((message: any) => {
       return {
@@ -30,7 +40,16 @@ const getChat = (data: any) => {
 
           reactions: message.reactions?.reactions
             ? {
-                emojis: message.reactions?.reactions,
+                emojis: message.reactions?.reactions
+                  ? message.reactions?.reactions.map((emoji: any) => {
+                      return {
+                        emoji: emoji.emoji,
+                        isPaid: emoji.isPaid,
+                        count: emoji.count,
+                        order: emoji.order,
+                      }
+                    })
+                  : [],
                 uniqueCount: message.reactions?.reactions.length,
                 totalFreeCount: handlerCountReactions(
                   message.reactions?.reactions,

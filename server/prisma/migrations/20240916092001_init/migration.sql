@@ -108,9 +108,6 @@ CREATE UNIQUE INDEX "Message_lyricId_key" ON "Message"("lyricId");
 CREATE UNIQUE INDEX "Reactions_messageId_key" ON "Reactions"("messageId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Emoji_reactionId_key" ON "Emoji"("reactionId");
-
--- CreateIndex
 CREATE UNIQUE INDEX "UserLyric_lyricId_key" ON "UserLyric"("lyricId");
 
 -- CreateIndex

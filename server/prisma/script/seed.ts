@@ -41,6 +41,7 @@ async function seed() {
   }
 
   let successCount = 0
+  let reactionsCount = 0
 
   for (const item of arrHistory) {
     try {
@@ -129,11 +130,15 @@ async function seed() {
       successCount++
     } catch (error) {
       console.error(
-        'PRISMA: 🚧 Данные - Lyrics - не удалось загрузить в базу\n\n',
+        'PRISMA: 🚧 Данные Lyrics - Iter: #' +
+          successCount +
+          ' - не удалось загрузить в базу\n\n',
         error
       )
     }
   }
+
+  console.log(reactionsCount)
 
   if (successCount === arrHistory.length) {
     console.log(`PRISMA: 🟢 Все ${arrHistory.length} записей успешно созданы`)
