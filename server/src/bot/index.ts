@@ -1,6 +1,6 @@
 // TELEGRAM BOT
 import { TelegramClient } from '@mtcute/bun'
-import { Dispatcher, filters } from '@mtcute/dispatcher'
+import { Dispatcher } from '@mtcute/dispatcher'
 
 // КОНСТАНТЫ
 import * as env from '../env'
@@ -8,6 +8,9 @@ import * as env from '../env'
 // ФУНКЦИИ
 import { getChat } from '../handlers/getChatHistory'
 import { createJSONdata } from '../handlers/createJSONdata'
+
+// TYPES
+import { IMessage } from '../types/dataMessage'
 
 const phone = env.BOT_PHONE
 const chatId = env.BOT_CHAT_ID
@@ -78,14 +81,14 @@ export async function getChatHistory() {
     }
   }
 
-  // Создаем файл с полученной базой по нашей модели из LyricType
+  // Создаем файл с полученной базой по нашей модели из ILyric
   if (data.length) {
     console.log('MTCUTE: 📥 История чата получена')
     createJSONdata(data)
   }
 }
 
-// getChatHistory()
+getChatHistory()
 
 // Команды
 // dp.onNewMessage(filters.chatId(chatId), async (msg) => {

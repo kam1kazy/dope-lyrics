@@ -1,5 +1,6 @@
 // TYPES
-import { LyricType, EmojiType } from '../types'
+import { ILyric, IEmoji } from '../types/lyric'
+import { IMessage } from '../types/dataMessage'
 
 // HANDLERS
 import {
@@ -13,13 +14,13 @@ import {
 // Создаем массив с нужными данными из полученной Data
 const getChat = (data: any) => {
   // Убираем из полученной истории чата системные сообщения
-  const filterData = data.filter((message: any) => {
+  const filterData = data.filter((message: IMessage) => {
     return message.action === null
   })
 
   // Создаем новый массив из отфильтрованного исходника
   try {
-    const chatHistory: LyricType[] = filterData.map((message: any) => {
+    const chatHistory: ILyric[] = filterData.map((message: IMessage) => {
       return {
         userId: 0,
         message: {
@@ -31,7 +32,7 @@ const getChat = (data: any) => {
           reactions: message.reactions?.reactions
             ? {
                 emojis: message.reactions?.reactions
-                  ? message.reactions?.reactions.map((emoji: any) => {
+                  ? message.reactions?.reactions.map((emoji: IEmoji) => {
                       return {
                         emoji: emoji.emoji,
                         isPaid: emoji.isPaid,
@@ -72,7 +73,7 @@ const getChat = (data: any) => {
         chat: {
           id: message.chat.id,
           title: message.chat.title,
-          type: message.chat.type,
+          type: message.chat.chatType,
         },
         date: new Date(Date.parse(message.date)),
         editDate: new Date(Date.parse(message.editDate)) ?? null,

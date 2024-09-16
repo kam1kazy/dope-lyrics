@@ -1,10 +1,10 @@
 import fs from 'fs'
 
 // TYPES
-import { LyricType } from '../types'
+import { ILyric } from '../types/lyric'
 
 // Создаем JSON файл с данными
-export const createJSONdata = (chatHistory: LyricType[]) => {
+export const createJSONdata = (chatHistory: ILyric[]) => {
   const jsonData = JSON.stringify(chatHistory, null, 2)
 
   const dirName = 'bot-data/data'

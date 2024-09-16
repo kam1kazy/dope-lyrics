@@ -1,4 +1,4 @@
-import { EmojiType, HashtagDataType } from '../types'
+import { IEmoji, IHashtagData } from '../types/lyric'
 
 // Кол-во слов
 const handlerCountWords = (lyric: string) => {
@@ -16,7 +16,7 @@ const handlerCountParagraphs = (lyric: string) => {
 
 // Кол-во всех реакций с учетом повторений
 const handlerCountReactions = (
-  reactions: EmojiType[],
+  reactions: IEmoji[],
   type: 'total' | 'paid' | 'free'
 ) => {
   const totalCount = reactions.reduce((total: number, reaction) => {
@@ -44,8 +44,8 @@ const handlerWithoutHashtags = (lyric: string) => {
 }
 
 // Вырезать хэштеги из массива объектов
-const hashtagStringsOnly = (data: HashtagDataType[]) => {
-  const hashtagStrings: string[] = data.map((hashtag: HashtagDataType) =>
+const hashtagStringsOnly = (data: IHashtagData[]) => {
+  const hashtagStrings: string[] = data.map((hashtag: IHashtagData) =>
     hashtag.text.replace(/^#/, '')
   )
 

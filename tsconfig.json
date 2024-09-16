@@ -1,10 +1,11 @@
 {
   "compileOptions": {
     "paths": {
+      // SERVER
       "@server/*": ["../server/src/*"],
       "@prisma/*": ["../server/prisma/*"],
+      // CLIENT
       "@client/*": ["../client/src/*"],
-      "@bot/*": ["../server/src/bot/*"],
       "@components/*": ["../client/src/components/*"]
     }
   }

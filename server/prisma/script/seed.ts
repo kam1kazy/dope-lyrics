@@ -1,7 +1,8 @@
 import { PrismaClient } from '@prisma/client'
 
 // Типы
-import { UserType, LyricType } from '../../src/types/index'
+import { ILyric } from '../../src/types/lyric'
+import { IUser } from '../../src/types/user'
 
 // Дата
 const chatUser = require('../../bot-data/data/usersData.json')
@@ -10,7 +11,7 @@ const chatHistory = require('../../bot-data/data/chatHistory.json')
 const db = new PrismaClient()
 
 // Типизируем данные
-const arrUser: UserType[] = chatUser
+const arrUser: IUser[] = chatUser
 const arrHistory = chatHistory
 
 async function seed() {

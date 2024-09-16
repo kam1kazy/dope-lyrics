@@ -2,14 +2,11 @@ import { GraphQLContext } from './context'
 
 export const resolvers = {
   Query: {
-    user: (_parent: unknown, _args: unknown, context: GraphQLContext) => {
-      return context.prisma.user.findMany()
-    },
-    hashtags: (_parent: unknown, _args: unknown, context: GraphQLContext) => {
-      return context.prisma.hashtag.findMany()
+    users: (_parent: unknown, _args: unknown, context: GraphQLContext) => {
+      return context.prisma.users.findMany()
     },
     lyrics: (_parent: unknown, _args: unknown, context: GraphQLContext) => {
-      return context.prisma.lyric.findMany()
+      return context.prisma.lyrics.findMany()
     },
   },
 }
