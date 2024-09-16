@@ -9,12 +9,14 @@ const chatHistory = require('../../bot-data/data/chatHistory.json')
 
 const db = new PrismaClient()
 
+// Типизируем данные
 const arrUser: UserType[] = chatUser
 const arrHistory = chatHistory
 
 async function seed() {
   console.log(`\nPRISMA: 🧻 Запись...`)
 
+  // Добавляем пользователей
   await db.users
     .createMany({
       data: arrUser,
@@ -34,9 +36,10 @@ async function seed() {
       )
     })
 
+  // Проверяем на наличие и достаем пользователя из базы данных
   const userExists = await db.users.findUnique({
     where: {
-      id: 1, // значение userId, которое вы хотите использовать
+      id: 1, // значение userId - это пользователь которому принадлежат данные
     },
   })
 
@@ -47,6 +50,7 @@ async function seed() {
   // Счетчик для цикла прохода по истории чата
   let successCount = 0
 
+  // Цикл создает по одной записи за раз
   for (const item of arrHistory) {
     try {
       const {
@@ -61,6 +65,7 @@ async function seed() {
         media,
       } = item
 
+      // Создаем запись
       const lyrics = await db.lyrics.create({
         data: {
           //? LYRICS
