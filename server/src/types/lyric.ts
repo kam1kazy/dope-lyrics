@@ -26,7 +26,7 @@ export interface IMessage {
 }
 
 export interface IHashtags {
-  hashtags: string[]
+  tags: string[]
   count: number
 }
 

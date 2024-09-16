@@ -2,11 +2,15 @@
   "compileOptions": {
     "paths": {
       // SERVER
-      "@server/*": ["../server/src/*"],
-      "@prisma/*": ["../server/prisma/*"],
+      "@server/*": ["./server/src/*"],
+      "@prisma/*": ["./server/prisma/*"],
+      "@graphql/*": ["./server/src/graphql/*"],
+      "@bot/*": ["./server/src/bot/*"],
+      "@type/*": ["./server/src/type/*"],
       // CLIENT
-      "@client/*": ["../client/src/*"],
-      "@components/*": ["../client/src/components/*"]
+      "@client/*": ["./client/src/*"],
+      "@components/*": ["../client/src/components/*"],
+      "@app/*": ["./app/*"]
     }
   }
 }

@@ -59,7 +59,7 @@ const getChat = (data: any) => {
 
           hashtags: message.entities?.length
             ? {
-                hashtags: hashtagStringsOnly(message.entities),
+                tags: hashtagStringsOnly(message.entities),
                 count: message.entities?.length,
               }
             : null,

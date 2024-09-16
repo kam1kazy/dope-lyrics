@@ -96,7 +96,7 @@ export const typeDefinitions = /* GraphQL */ `
   type Hashtag {
     id: Int!
 
-    hashtags: [String!]!
+    tags: [String!]!
     count: Int!
 
     messageId: Int!

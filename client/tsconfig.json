@@ -19,7 +19,16 @@
     ],
     "paths": {
       "@/*": ["./src/*"],
-      "@/server/*": ["./src/server/*"]
+      // SERVER
+      "@server/*": ["../server/src/*"],
+      "@prisma/*": ["../server/prisma/*"],
+      "@graphql/*": ["../server/src/graphql/*"],
+      "@bot/*": ["../server/src/bot/*"],
+      "@type/*": ["../server/src/type/*"],
+      // CLIENT
+      "@components/*": ["./components/*"],
+      "@apolloServer/*": ["./server/*"],
+      "@app/*": ["./app/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],

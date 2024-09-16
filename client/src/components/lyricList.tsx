@@ -6,7 +6,11 @@ import { TotalCount } from './totalCount'
 import { ALL_LYRICS } from '@/server/lyrics'
 
 export const LyricList = () => {
-  const { loading, error, data } = useQuery(ALL_LYRICS)
+  const { loading, error, data } = useQuery(ALL_LYRICS, {
+    onError: (error) => {
+      console.error('Error fetching ' + data + '  lyrics:', error)
+    },
+  })
 
   if (loading) {
     return <Spinner />
@@ -15,8 +19,6 @@ export const LyricList = () => {
   if (error) {
     return <h2>Error...</h2>
   }
-
-  console.log(data.lyrics)
 
   return (
     <VStack spacing={2} mt={4}>
