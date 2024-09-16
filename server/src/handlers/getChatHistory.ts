@@ -1,5 +1,5 @@
 // TYPES
-import { LyricType } from '../types'
+import { LyricType, EmojiType } from '../types'
 
 // HANDLERS
 import {
@@ -10,24 +10,14 @@ import {
   hashtagStringsOnly,
 } from './handlers'
 
-import { createJSONdata } from './createJSONdata'
-
 // Создаем массив с нужными данными из полученной Data
 const getChat = (data: any) => {
+  // Убираем из полученной истории чата системные сообщения
   const filterData = data.filter((message: any) => {
     return message.action === null
   })
 
-  let reactionsCount = 0
-
-  const tryInter = (trap: any) => {
-    reactionsCount++
-    console.log('MTCUTE: trap', trap)
-    console.log('MTCUTE: reactionsCount', reactionsCount)
-
-    return reactionsCount
-  }
-
+  // Создаем новый массив из отфильтрованного исходника
   try {
     const chatHistory: LyricType[] = filterData.map((message: any) => {
       return {
@@ -109,4 +99,4 @@ const getChat = (data: any) => {
   }
 }
 
-export { getChat, createJSONdata }
+export { getChat }

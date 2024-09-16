@@ -52,17 +52,10 @@ const hashtagStringsOnly = (data: HashtagDataType[]) => {
   return hashtagStrings
 }
 
-// Вырезать объект из объекта по ключу
-const handlerWithoutKey = (data: any, key: string) => {
-  delete data[key]
-  return data
-}
-
 export {
   handlerCountParagraphs,
   handlerCountWords,
   handlerCountReactions,
   handlerWithoutHashtags,
   hashtagStringsOnly,
-  handlerWithoutKey,
 }

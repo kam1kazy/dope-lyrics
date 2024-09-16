@@ -6,7 +6,8 @@ import { Dispatcher, filters } from '@mtcute/dispatcher'
 import * as env from '../env'
 
 // ФУНКЦИИ
-import { getChat, createJSONdata } from '../handlers/getChatHistory'
+import { getChat } from '../handlers/getChatHistory'
+import { createJSONdata } from '../handlers/createJSONdata'
 
 const phone = env.BOT_PHONE
 const chatId = env.BOT_CHAT_ID
@@ -84,7 +85,7 @@ export async function getChatHistory() {
   }
 }
 
-getChatHistory()
+// getChatHistory()
 
 // Команды
 // dp.onNewMessage(filters.chatId(chatId), async (msg) => {
