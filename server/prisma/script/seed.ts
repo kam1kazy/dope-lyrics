@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client'
 // Типы
 import { ILyric } from '../../src/types/lyric'
 import { IUser } from '../../src/types/user'
+import { IChatHistoryItem } from '../../src/types/prismaCreate'
 
 // Дата
 const chatUser = require('../../bot-data/data/usersData.json')
@@ -12,7 +13,7 @@ const db = new PrismaClient()
 
 // Типизируем данные
 const arrUser: IUser[] = chatUser
-const arrHistory = chatHistory
+const arrHistory: IChatHistoryItem[] = chatHistory
 
 async function seed() {
   console.log(`\nPRISMA: 🧻 Запись...`)

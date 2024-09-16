@@ -19,12 +19,12 @@
     "seed": "bun ./prisma/script/seed.ts"
   },
   "dependencies": {
-    "@elysiajs/cors": "^1.1.0",
-    "@elysiajs/graphql-yoga": "^1.1.0",
+    "@elysiajs/cors": "^1.1.1",
+    "@elysiajs/graphql-yoga": "^1.1.1",
     "@elysiajs/swagger": "^1.1.1",
     "@graphql-tools/graphql-file-loader": "^8.0.1",
     "@graphql-tools/load": "^8.0.2",
-    "@graphql-tools/schema": "^10.0.4",
+    "@graphql-tools/schema": "^10.0.6",
     "@mtcute/bun": "^0.16.9",
     "@mtcute/core": "^0.16.9",
     "@mtcute/dispatcher": "^0.16.9",
@@ -35,11 +35,11 @@
   },
   "devDependencies": {
     "@types/bun": "^1.1.9",
-    "@types/node": "^22.5.4",
+    "@types/node": "^22.5.5",
     "bun-types": "latest",
     "concurrently": "^9.0.0",
-    "prisma": "5.18.0",
+    "prisma": "^5.19.1",
     "telegram-bot-api-types": "^7.9.12",
-    "typescript": "^5.5.4"
+    "typescript": "^5.6.2"
   }
 }
