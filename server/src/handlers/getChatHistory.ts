@@ -23,6 +23,7 @@ const getChat = (data: any) => {
     const chatHistory: ILyric[] = filterData.map((message: IMessage) => {
       return {
         userId: 0,
+        lyric_id: message.id,
         message: {
           text: handlerWithoutHashtags(message.text),
           message_id: message.id,

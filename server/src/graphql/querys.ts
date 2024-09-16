@@ -10,6 +10,7 @@ export const typeDefinitions = /* GraphQL */ `
   type Lyric {
     id: Int!
 
+    lyric_id: Int!
     date: String!
     editDate: String
     isPinned: Boolean!

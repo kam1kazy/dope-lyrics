@@ -20,6 +20,7 @@ model Users {
 model Lyrics {
   id Int @id @default(autoincrement())
 
+  lyric_id       Int
   date           DateTime
   editDate       DateTime?
   isPinned       Boolean
@@ -113,8 +114,8 @@ model Media {
 model Hashtags {
   id Int @id @default(autoincrement())
 
-  hashtags String[]
-  count    Int
+  tags  String[]
+  count Int
 
   message   Message @relation(fields: messageId, references: id)
   messageId Int     @unique

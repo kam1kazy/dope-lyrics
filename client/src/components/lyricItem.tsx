@@ -15,24 +15,22 @@ interface LyricItemProps {
   message: {
     text: string
     word_count: number
-    hashtags?: {
+    hashtags: {
       id: number
-      tags?: string[]
+      tags: string[]
       count: number
     }
   }
 }
 
 export const LyricItem = ({ id, message }: LyricItemProps) => {
-  console.log(message)
+  console.log(message.hashtags)
 
   return (
     <VStack spacing={3} key={id}>
       <HStack spacing={4}>
-        {message.hashtags != null
-          ? message.hashtags.tags?.map((tag, index) => {
-              console.log(message.hashtags)
-
+        {message.hashtags
+          ? message.hashtags.tags.map((tag, index) => {
               return (
                 <Tag
                   size={tag}

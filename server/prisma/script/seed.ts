@@ -72,6 +72,7 @@ async function seed() {
         data: {
           //? LYRICS
           userId: userExists.id,
+          lyric_id: message?.message_id ?? null,
           date: date,
           editDate: editDate,
           isPinned,
@@ -104,7 +105,10 @@ async function seed() {
                   //? HASHTAG
                   hashtags: message.hashtags
                     ? {
-                        create: message.hashtags,
+                        create: {
+                          tags: message.hashtags.tags.map((tag) => tag),
+                          count: message.hashtags.count,
+                        },
                       }
                     : undefined,
                 },

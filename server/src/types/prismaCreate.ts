@@ -17,8 +17,8 @@ export interface IChatHistoryItem {
       totalPaidCount: number
       totalCount: number
     } | null
-    hashtags: {
-      hashtags: string[]
+    hashtags?: {
+      tags: string[]
       count: number
     } | null
   }
