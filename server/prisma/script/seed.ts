@@ -21,7 +21,11 @@ async function seed() {
       skipDuplicates: true,
     })
     .then(() =>
-      console.log('PRISMA: 🚚 Данные - Users - были успешно загружены')
+      console.log(
+        'PRISMA: 🚚 Данные Users - в кол-ве ' +
+          arrUser.length +
+          ' были успешно загружены'
+      )
     )
     .catch((error) => {
       console.error(
@@ -40,8 +44,8 @@ async function seed() {
     throw new Error('\nPRISMA: 🙅 User не был найден')
   }
 
+  // Счетчик для цикла прохода по истории чата
   let successCount = 0
-  let reactionsCount = 0
 
   for (const item of arrHistory) {
     try {
@@ -52,6 +56,7 @@ async function seed() {
         isChannelPost,
         message,
         user,
+        chat,
         replyToMessage,
         media,
       } = item
@@ -111,6 +116,17 @@ async function seed() {
               }
             : undefined,
 
+          //? CHAT
+          chat: chat
+            ? {
+                create: {
+                  id: chat.id,
+                  title: chat.title,
+                  type: chat.type,
+                },
+              }
+            : undefined,
+
           //? REPLY
           replyToMessage: replyToMessage ?? null,
 
@@ -138,10 +154,10 @@ async function seed() {
     }
   }
 
-  console.log(reactionsCount)
-
   if (successCount === arrHistory.length) {
-    console.log(`PRISMA: 🟢 Все ${arrHistory.length} записей успешно созданы`)
+    console.log(
+      `PRISMA: 🚚 Данные Lyrics - в кол-ве ${arrHistory.length} успешно созданы`
+    )
   } else {
     console.log(
       `\nPRISMA:🚧 Создано ${successCount} из ${arrHistory.length} записей`
