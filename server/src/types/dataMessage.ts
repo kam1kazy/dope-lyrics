@@ -170,4 +170,14 @@ interface IMessage {
   effectId: any
 }
 
-export { IMessage }
+interface IHashtagData {
+  offset: number
+  length: number
+  kind: string
+  params: {
+    kind: string
+  }
+  text: string
+}
+
+export { IMessage, IHashtagData }

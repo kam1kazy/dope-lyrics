@@ -8,8 +8,7 @@ import { yoga } from '@elysiajs/graphql-yoga'
 import { schema } from './graphql/schema'
 
 // Переменные для запуска сервера
-const isProduction = process.env.VERCEL_ENV === 'production'
-const port: number = isProduction ? 4000 : 4000
+const port: number = 4000
 
 const app = new Elysia()
   .use(cors())

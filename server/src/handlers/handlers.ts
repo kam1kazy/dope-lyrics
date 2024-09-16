@@ -1,4 +1,5 @@
-import { IEmoji, IHashtagData } from '../types/lyric'
+import { IEmoji } from '../types/lyric'
+import { IHashtagData } from '../types/dataMessage'
 
 // Кол-во слов
 const handlerCountWords = (lyric: string) => {

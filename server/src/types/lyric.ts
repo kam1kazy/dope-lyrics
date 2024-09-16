@@ -1,5 +1,6 @@
 import { IUser } from './user'
 
+// LYRIC TYPE
 export interface ILyric {
   userId: number
   message: IMessage | null
@@ -12,6 +13,36 @@ export interface ILyric {
   owner?: IUser | null
   replyToMessage: number | null
   media: IMedia | null
+}
+
+// MESSAGE TYPE
+export interface IMessage {
+  message_id: number
+  text?: string
+  word_count?: number
+  paragraph_count?: number
+  reactions?: IReaction | null
+  hashtags?: IHashtags | null
+}
+
+export interface IHashtags {
+  hashtags: string[]
+  count: number
+}
+
+export interface IReaction {
+  emojis: IEmoji[] | null
+  uniqueCount: number
+  totalFreeCount: number | void
+  totalPaidCount: number | void
+  totalCount: number | void
+}
+
+export interface IEmoji {
+  emoji: string | void
+  isPaid: boolean
+  count: number
+  order?: null | number
 }
 
 export interface IUserLyric {
@@ -31,43 +62,4 @@ export interface IMedia {
   mime: string
   duration: number
   convert: boolean
-}
-
-export interface IMessage {
-  message_id: number
-  text?: string
-  word_count?: number
-  paragraph_count?: number
-  reactions?: IReaction | null
-  hashtags?: IHashtags | null
-}
-
-export interface IHashtags {
-  hashtags: string[]
-  count: number
-}
-
-export interface IHashtagData {
-  offset: number
-  length: number
-  kind: string
-  params: {
-    kind: string
-  }
-  text: string
-}
-
-export interface IReaction {
-  emojis: IEmoji[] | null
-  uniqueCount: number
-  totalFreeCount: number | void
-  totalPaidCount: number | void
-  totalCount: number | void
-}
-
-export interface IEmoji {
-  emoji: string | void
-  isPaid: boolean
-  count: number
-  order?: null | number
 }
