@@ -113,15 +113,15 @@ bunx prisma studio
 2. Удаляет и заново создает БД или выполняет "мягкий сброс", удаляя все данные, таблицы, индексы и другие артефакты:
 
 ```bash
-bunx prisma migrate reset
+bunx prisma migrate reset --skip-seed
 ```
 
-3. Выполняет миграцию для разработки:
+3. Создает миграции:
 ```bash
-bunx prisma migrate dev --name init
+bunx prisma migrate dev --name init --skip-seed
 ```
 
-4. Выполняет посев (заливает фиктивные данные):
+4. Выполняет посев (заливает данные):
 ```bash
 bun seed
 ```
