@@ -20,16 +20,16 @@ model Users {
 model Lyrics {
   id Int @id @default(autoincrement())
 
-  date          DateTime
-  editDate      DateTime?
-  isPinned      Boolean
-  isChannelPost Boolean
-
-  message        Message?
-  user           UserLyric?
-  chat           Chat?
+  date           DateTime
+  editDate       DateTime?
+  isPinned       Boolean
+  isChannelPost  Boolean
   replyToMessage Int?
-  media          Media?
+
+  message Message?
+  user    UserLyric?
+  chat    Chat?
+  media   Media?
 
   userId Int
   owner  Users @relation(fields: [userId], references: [id])

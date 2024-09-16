@@ -2,95 +2,108 @@ export const typeDefinitions = /* GraphQL */ `
   type User {
     id: Int!
     username: String!
-    email: String!
+    email: String
     password: String!
-    lyrics: [Lyric!]!
+    lyrics: [Lyric!]
   }
 
   type Lyric {
     id: Int!
+
     date: String!
     editDate: String
     isPinned: Boolean!
     isChannelPost: Boolean!
+    replyToMessage: Int
+
     message: Message
     user: User
     chat: Chat
-    replyToMessage: Int
     media: Media
+
+    userId: Int!
   }
 
   type Message {
     id: Int!
+
     message_id: Int!
     text: String
     word_count: Int
     paragraph_count: Int
+
     reactions: Reaction
     hashtags: Hashtag
-    lyric: Lyric!
+
+    lyricId: Int!
   }
 
   type Reaction {
     id: Int!
+
     uniqueCount: Int!
     totalFreeCount: Int!
     totalPaidCount: Int!
     totalCount: Int!
+
     emojis: [Emoji!]!
-    message: Message!
+
+    messageId: Int!
   }
 
   type Emoji {
     id: Int!
+
     emoji: String!
     isPaid: Boolean!
     count: Int!
     order: Int
-    reaction: Reaction!
+
+    reactionId: Int!
   }
 
   type UserLyric {
     key: Int!
+
     id: Int!
     username: String
-    displayName: String
+    displayName: String!
     isAdmin: Boolean!
-    lyrics: Lyric!
+
+    lyricsId: Int!
   }
 
   type Chat {
     key: Int!
+
     id: Int!
     title: String!
     type: String!
-    lyric: Lyric!
+
+    lyricId: Int!
   }
 
   type Media {
     id: Int!
+
     mime: String!
     duration: Int!
     convert: Boolean!
-    lyric: Lyric!
+
+    lyricId: Int!
   }
 
   type Hashtag {
     id: Int!
+
     hashtags: [String!]!
     count: Int!
-    message: Message!
+
+    messageId: Int!
   }
 
   type Query {
     users: [User!]!
     lyrics: [Lyric!]!
-    messages: [Message!]!
-    reactions: [Reaction!]!
-    emojis: [Emoji!]!
-    userLyrics: [UserLyric!]!
-    chats: [Chat!]!
-    media: [Media!]!
-    hashtags: [Hashtag!]!
   }
 `
