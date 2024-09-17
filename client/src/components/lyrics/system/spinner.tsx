@@ -58,10 +58,10 @@ export const Particle = ({
         w={size + 'rem'}
         h={size + 'rem'}
         borderRadius={size + 'rem'}
-        background={'#fff'}
-        boxShadow={'0px 0px 14px #fff'}
+        background={'#cbccd1'}
+        boxShadow={'0px 0px 8px #cbccd1'}
         sx={{
-          animation: spin + ' ' + lapDuration + 'ms ease-in-out infinite ',
+          animation: glitch + ' ' + lapDuration + 'ms ease-in-out infinite ',
           animationDelay: delay + 'ms',
         }}
       />

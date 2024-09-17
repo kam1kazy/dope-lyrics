@@ -48,29 +48,41 @@ export default function SettingList({ onOpen, isOpen, onClose }: any) {
           borderBottomRightRadius={0}
           borderBottomLeftRadius={0}
         >
-          <MenuOptionGroup
-            defaultValue='asc'
-            title='Order'
-            type='radio'
-            background={'#0e0f11'}
-          >
-            <MenuItemOption value='asc' background={'#0e0f11'}>
-              Ascending
+          <MenuOptionGroup title='Отображение' type='checkbox'>
+            <MenuItemOption value='hashtags' background={'#0e0f11'}>
+              Хэштеги / Выкл / Mini
             </MenuItemOption>
-            <MenuItemOption value='desc' background={'#0e0f11'}>
-              Descending
+            <MenuItemOption value='reactions' background={'#0e0f11'}>
+              Реакции / Выкл / Mini
+            </MenuItemOption>
+            <MenuItemOption value='divider' background={'#0e0f11'}>
+              Разделитель
+            </MenuItemOption>
+            <MenuItemOption value='fonts' background={'#0e0f11'}>
+              Шрифт / Размер
+            </MenuItemOption>
+            <MenuItemOption value='grammar' background={'#0e0f11'}>
+              Исправление грамматики (β)
             </MenuItemOption>
           </MenuOptionGroup>
           <MenuDivider />
-          <MenuOptionGroup title='Country' type='checkbox'>
-            <MenuItemOption value='email' background={'#0e0f11'}>
-              Email
+          <MenuOptionGroup
+            defaultValue='asc'
+            title='Фильтры'
+            type='radio'
+            background={'#0e0f11'}
+          >
+            <MenuItemOption value='countWords' background={'#0e0f11'}>
+              Кол-во слов
             </MenuItemOption>
-            <MenuItemOption value='phone' background={'#0e0f11'}>
-              Phone
+            <MenuItemOption value='countParagraphs' background={'#0e0f11'}>
+              Кол-во абзацев
             </MenuItemOption>
-            <MenuItemOption value='country' background={'#0e0f11'}>
-              Country
+            <MenuItemOption value='hashtag' background={'#0e0f11'}>
+              Наименование хэштега
+            </MenuItemOption>
+            <MenuItemOption value='keywords' background={'#0e0f11'}>
+              Ключевые слова
             </MenuItemOption>
           </MenuOptionGroup>
         </MenuList>

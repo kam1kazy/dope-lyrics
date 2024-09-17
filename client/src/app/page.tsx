@@ -58,6 +58,34 @@ export default function Home() {
             alignItems={'center'}
             position={'relative'}
             overflowY={'hidden'}
+            sx={{
+              '::before': {
+                content: '""',
+                position: 'absolute',
+                zIndex: '-1,',
+                top: '0',
+                bottom: 'auto',
+                left: '0',
+                right: '0',
+                height: '3%',
+                opacity: ' 0.45',
+                background:
+                  'linear-gradient(to top, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 1) 100%);',
+              },
+              '::after': {
+                content: '""',
+                position: 'absolute',
+                zIndex: '-1,',
+                top: 'auto',
+                bottom: '61px',
+                left: '0',
+                right: '0',
+                height: '3%',
+                opacity: ' 0.45',
+                background:
+                  'linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 1) 100%);',
+              },
+            }}
           >
             {/* <AddLyric /> */}
             <LyricList />

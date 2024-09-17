@@ -24,7 +24,7 @@ export const Menu = () => {
       p={'0 50px'}
       mt={'auto'}
       borderRadius={'5px'}
-      boxShadow={'0px 12px 19px -4px rgba(34, 60, 80, 0.15) inset'}
+      boxShadow={'0px 4px 15px -4px rgba(34, 60, 80, 0.15) inset'}
       // boxShadow={'0px 5px 50px 12px rgba(34, 60, 80, 1)'}
     >
       <SettingData

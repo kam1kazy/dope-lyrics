@@ -16,7 +16,7 @@ export const LyricList = () => {
   })
 
   if (loading) {
-    return <Spinner count={100} duration={1000} size={0.375} />
+    return <Spinner count={65} duration={900} size={0.375} />
   }
 
   if (error) {
@@ -33,7 +33,7 @@ export const LyricList = () => {
       overflowY={'scroll'}
       textAlign={'center'}
       wordBreak={'keep-all'}
-      boxShadow={'0px 5px 10px 0px rgba(34, 60, 80, 0.35) inset'}
+      boxShadow={'0px 0px 17px 0px rgba(34, 60, 80, 0.35) inset'}
       overflowX={'hidden'}
       fontSize={'14px'}
       sx={{
