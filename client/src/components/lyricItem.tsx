@@ -46,8 +46,8 @@ export const LyricItem = ({ id, message }: LyricItemProps) => {
       </HStack>
 
       <HStack spacing={4}>
-        <Text>{message.text}</Text>
-        <CloseButton />
+        <Text whiteSpace='pre-wrap'>{message.text}</Text>
+        {/* <CloseButton /> */}
       </HStack>
     </VStack>
   )

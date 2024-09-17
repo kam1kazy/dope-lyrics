@@ -21,7 +21,28 @@ export const LyricList = () => {
   }
 
   return (
-    <VStack spacing={2} mt={4}>
+    <VStack
+      spacing={2}
+      mt={4}
+      overflowY={'scroll'}
+      padding={'15'}
+      maxH={'575px'}
+      margin={'auto'}
+      textAlign={'center'}
+      sx={{
+        '&::-webkit-scrollbar': {
+          width: '10px',
+          height: '10px',
+        },
+        '&::-webkit-scrollbar-thumb': {
+          backgroundColor: 'red',
+          borderRadius: '10px',
+        },
+        '&::-webkit-scrollbar-track': {
+          backgroundColor: 'yellow',
+        },
+      }}
+    >
       {data?.lyrics.map((lyric: any) => (
         <LyricItem key={lyric.id} {...lyric} />
       ))}
