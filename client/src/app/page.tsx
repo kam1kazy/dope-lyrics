@@ -35,7 +35,7 @@ export default function Home() {
               bottom: '0',
               left: '0',
               right: '0',
-              opacity: '0.15',
+              opacity: '0.27',
               backgroundImage: 'url(./noise.png)',
             },
           }}
@@ -50,13 +50,14 @@ export default function Home() {
             p={0}
             background={'#0f110e'}
             boxShadow={
-              ' 0 4px 30px 0 rgba(35, 197, 41, 0.14),0 1px 10px 0 rgba(38, 213, 29, 0.12),0 2px 4px -1px rgba(33, 229, 39, 0.2) inset;'
+              ' 0 3px 10px 0 rgba(35, 197, 41, 0.14),0 1px 10px 0 rgba(38, 213, 29, 0.12),0 2px 4px -1px rgba(33, 229, 39, 0.2) inset;'
             }
             display={'flex'}
             flexDirection={'column'}
             justifyContent={'space-between'}
             alignItems={'center'}
             position={'relative'}
+            overflowY={'hidden'}
           >
             {/* <AddLyric /> */}
             <LyricList />

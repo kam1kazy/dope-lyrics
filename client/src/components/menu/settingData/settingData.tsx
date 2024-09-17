@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import {
   Button,
   Modal,
@@ -8,15 +7,23 @@ import {
   ModalCloseButton,
   ModalBody,
   ModalFooter,
-  useDisclosure,
+  Image,
 } from '@chakra-ui/react'
 
-function TransitionExample() {
-  const { isOpen, onOpen, onClose } = useDisclosure()
-
+export default function SettingData({ onOpen, isOpen, onClose }: any) {
   return (
     <>
-      <Button onClick={onOpen}>Open Modal</Button>
+      <Image
+        src='./icons/data-recovery.svg'
+        maxW={'18px'}
+        cursor={'pointer'}
+        filter={'drop-shadow(0px 0px 3px rgba(255, 255, 255, 0.3));'}
+        transition={'filter 0.3s'}
+        _hover={{
+          filter: 'drop-shadow(0px 0px 6px #3b35f3);',
+        }}
+        onClick={onOpen}
+      />
       <Modal
         isCentered
         isOpen={isOpen}

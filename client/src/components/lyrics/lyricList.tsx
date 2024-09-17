@@ -1,11 +1,12 @@
-import { VStack, Spinner } from '@chakra-ui/react'
+import { VStack } from '@chakra-ui/react'
 import { useQuery } from '@apollo/client'
 
 import { LyricItem } from './lyricItem'
 import { TotalCount } from './totalCount'
-import { ALL_LYRICS } from '@/server/lyrics'
+import { ErrorText } from './system/error'
+import { Spinner } from './system/spinner'
 
-import { ErrorText } from './error'
+import { ALL_LYRICS } from '@/server/lyrics'
 
 export const LyricList = () => {
   const { loading, error, data } = useQuery(ALL_LYRICS, {
@@ -15,11 +16,11 @@ export const LyricList = () => {
   })
 
   if (loading) {
-    return <Spinner m={'auto'} />
+    return <Spinner count={100} duration={1000} size={0.375} />
   }
 
   if (error) {
-    return <ErrorText title={'Error'} error={error} />
+    return <ErrorText title={'Error'} />
   }
 
   return (
@@ -32,7 +33,7 @@ export const LyricList = () => {
       overflowY={'scroll'}
       textAlign={'center'}
       wordBreak={'keep-all'}
-      boxShadow={'0px 10px 20px 0px rgba(34, 60, 80, 0.35) inset'}
+      boxShadow={'0px 5px 10px 0px rgba(34, 60, 80, 0.35) inset'}
       overflowX={'hidden'}
       fontSize={'14px'}
       sx={{
