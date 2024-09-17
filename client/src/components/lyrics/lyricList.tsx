@@ -5,6 +5,8 @@ import { LyricItem } from './lyricItem'
 import { TotalCount } from './totalCount'
 import { ALL_LYRICS } from '@/server/lyrics'
 
+import { ErrorText } from './error'
+
 export const LyricList = () => {
   const { loading, error, data } = useQuery(ALL_LYRICS, {
     onError: (error) => {
@@ -13,11 +15,11 @@ export const LyricList = () => {
   })
 
   if (loading) {
-    return <Spinner />
+    return <Spinner m={'auto'} />
   }
 
   if (error) {
-    return <h2>Error...</h2>
+    return <ErrorText title={'Error'} error={error} />
   }
 
   return (

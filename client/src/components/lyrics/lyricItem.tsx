@@ -24,8 +24,6 @@ interface LyricItemProps {
 }
 
 export const LyricItem = ({ id, message }: LyricItemProps) => {
-  console.log(message.hashtags)
-
   return (
     <VStack spacing={3} key={id}>
       <HStack spacing={4}>

@@ -1,29 +1,37 @@
-import {extendTheme} from '@chakra-ui/react'
+import { extendTheme } from '@chakra-ui/react'
+import { mode } from '@chakra-ui/theme-tools'
 
 export const theme = extendTheme({
-    colors: {
-        gray: {
-            "900": "#171D1C"
-        },
-        yellow: {
-            "400": "#fec601"
-        },
-        purple: {
-            "300": "#5863f8"
-        }
-        
-
+  colors: {
+    gray: {
+      '900': '#171D1C',
     },
-    fonts: {
-        heading: 'Roboto',
-        body:'Roboto'
+    yellow: {
+      '400': '#fec601',
     },
-    styles:{
-        global:{
-                body:{
-                    bg: 'white',
-                    color: 'gray.900'
-                }
-        }
-    }
+    purple: {
+      '300': '#5863f8',
+    },
+  },
+  fonts: {
+    heading: 'Roboto',
+    body: 'Roboto',
+  },
+  styles: {
+    global: (props: any) => ({
+      body: {
+        fontFamily: 'body',
+        color: mode('gray.800', 'whiteAlpha.900')(props),
+        bg: mode('white', 'gray.800')(props),
+        lineHeight: 'base',
+      },
+      '*::placeholder': {
+        color: mode('gray.400', 'whiteAlpha.400')(props),
+      },
+      '*, *::before, &::after': {
+        borderColor: mode('gray.200', 'whiteAlpha.300')(props),
+        wordWrap: 'break-word',
+      },
+    }),
+  },
 })

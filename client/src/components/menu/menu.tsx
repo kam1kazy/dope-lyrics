@@ -1,13 +1,4 @@
-import {
-  Text,
-  HStack,
-  VStack,
-  Tag,
-  TagLabel,
-  Image,
-  Icon,
-  CloseButton,
-} from '@chakra-ui/react'
+import { HStack, Image } from '@chakra-ui/react'
 
 export const Menu = () => {
   return (
@@ -15,7 +6,7 @@ export const Menu = () => {
       spacing={3}
       justifyContent={'space-between'}
       w={'100%'}
-      minH={'52px'}
+      minH={'61px'}
       p={'0 50px'}
       borderRadius={'5px'}
       boxShadow={'0px 12px 19px -4px rgba(34, 60, 80, 0.15) inset'}
