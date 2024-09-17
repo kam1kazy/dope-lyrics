@@ -38,7 +38,9 @@ export const LyricItem = ({ id, message }: LyricItemProps) => {
                   variant='subtle'
                   colorScheme='cyan'
                 >
-                  <TagLabel>#{tag}</TagLabel>
+                  <TagLabel p={'3px 5px'} cursor={'default'}>
+                    #{tag}
+                  </TagLabel>
                 </Tag>
               )
             })

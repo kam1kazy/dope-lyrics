@@ -23,12 +23,16 @@ export const LyricList = () => {
   return (
     <VStack
       spacing={2}
-      mt={4}
-      overflowY={'scroll'}
-      padding={'15'}
-      maxH={'575px'}
       margin={'auto'}
+      m={0}
+      padding={'15'}
+      maxH={'590px'}
+      overflowY={'scroll'}
       textAlign={'center'}
+      wordBreak={'keep-all'}
+      boxShadow={'0px 10px 20px 0px rgba(34, 60, 80, 0.35) inset'}
+      overflowX={'hidden'}
+      fontSize={'14px'}
       sx={{
         '&::-webkit-scrollbar': {
           width: '10px',
