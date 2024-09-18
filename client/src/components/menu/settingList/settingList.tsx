@@ -1,92 +1,124 @@
+// STYLES
 import {
-  Menu,
-  MenuButton,
-  MenuList,
-  MenuOptionGroup,
-  MenuItemOption,
-  MenuDivider,
-  IconButton,
-  Image,
+  Collapse,
+  Box,
+  Text,
+  Heading,
+  Divider,
+  SimpleGrid,
+  Input,
+  NumberInput,
+  NumberInputField,
+  NumberInputStepper,
+  NumberIncrementStepper,
+  NumberDecrementStepper,
 } from '@chakra-ui/react'
 
-export default function SettingList({ onOpen, isOpen, onClose }: any) {
+// COMPONENT
+import { RadioSelect } from '../controls/radioSelect'
+
+export default function SettingList({ isOpen }: { isOpen: boolean }) {
   return (
-    <>
-      <Menu closeOnSelect={false} isLazy>
-        <MenuButton
-          as={IconButton}
-          aria-label='Options'
-          variant='outline'
-          background={'transparent'}
-          border={'none'}
-          maxW={'24px'}
-          minW={'24px'}
-          _hover={{
-            background: 'transparent',
-            filter: 'drop-shadow(0px 0px 3px #3b35f3);',
-          }}
-          _active={{
-            background: 'transparent',
-          }}
+    <Collapse
+      in={isOpen}
+      style={{ position: 'absolute', bottom: '61px', width: '98%' }}
+    >
+      <Box
+        p='25px'
+        color='white'
+        mt='4'
+        bg='rgba(34, 60, 80, 1)'
+        rounded='md'
+        shadow='md'
+        fontSize='14px'
+        boxShadow={'0px 10px 26px 20px rgba(34, 60, 80, 0.35)'}
+      >
+        <Heading fontSize={'18px'} mb={'10px'}>
+          Отображение
+        </Heading>
+        <Divider />
+
+        <Box
+          display={'flex'}
+          flexWrap={'wrap'}
+          justifyContent={'space-between'}
         >
-          <Image
-            src='./icons/settings.svg'
-            maxW={'24px'}
-            cursor={'pointer'}
-            filter={'drop-shadow(0px 0px 3px rgba(255, 255, 255, 0.3));'}
-            transition={'filter 0.3s'}
-            m={'auto'}
-            _hover={{
-              filter: 'drop-shadow(0px 0px 3px #3b35f3);',
-            }}
-          />
-        </MenuButton>
-        <MenuList
-          minWidth='340px'
-          top={'auto'}
-          background={'#0e0f11'}
-          borderBottomRightRadius={0}
-          borderBottomLeftRadius={0}
+          {/* Row */}
+          <Text alignContent={'center'}>Разделитель:</Text>
+          <RadioSelect settings={['Выкл', '***', '...', '----']} />
+
+          {/* Row */}
+          <Text alignContent={'center'}>Исправление грамматики (β):</Text>
+          <RadioSelect settings={['Вкл', 'Выкл']} />
+        </Box>
+
+        <Box as={SimpleGrid} columns={{ base: 4 }} columnGap={'10px'}>
+          {/* Row */}
+          <Text alignContent={'center'}>Хэштеги:</Text>
+          <RadioSelect settings={['Вкл', 'Выкл', 'Mini']} />
+
+          {/* Row */}
+          <Text alignContent={'center'}>Шрифт:</Text>
+          <RadioSelect settings={['Font', 'Font2', 'Font3']} />
+
+          {/* Row */}
+          <Text alignContent={'center'}>Хэштеги:</Text>
+          <RadioSelect settings={['Вкл', 'Выкл', 'Mini']} />
+
+          {/* Row */}
+          <Text alignContent={'center'}>Шрифт:</Text>
+          <RadioSelect settings={['Font', 'Font2', 'Font3']} />
+
+          {/* Row */}
+          <Text alignContent={'center'}>Реакции:</Text>
+          <RadioSelect settings={['Вкл', 'Выкл', 'Mini']} />
+
+          {/* Row */}
+          <Text alignContent={'center'}>Размер:</Text>
+          <RadioSelect settings={['14', '16', '18']} />
+        </Box>
+
+        <Heading fontSize={'18px'} mb={'10px'} mt={'20px'}>
+          Фильтры
+        </Heading>
+
+        <Divider mb={'10px'} />
+
+        <Box
+          display={'flex'}
+          flexWrap={'wrap'}
+          justifyContent={'space-between'}
+          rowGap={'10px'}
         >
-          <MenuOptionGroup title='Отображение' type='checkbox'>
-            <MenuItemOption value='hashtags' background={'#0e0f11'}>
-              Хэштеги / Выкл / Mini
-            </MenuItemOption>
-            <MenuItemOption value='reactions' background={'#0e0f11'}>
-              Реакции / Выкл / Mini
-            </MenuItemOption>
-            <MenuItemOption value='divider' background={'#0e0f11'}>
-              Разделитель
-            </MenuItemOption>
-            <MenuItemOption value='fonts' background={'#0e0f11'}>
-              Шрифт / Размер
-            </MenuItemOption>
-            <MenuItemOption value='grammar' background={'#0e0f11'}>
-              Исправление грамматики (β)
-            </MenuItemOption>
-          </MenuOptionGroup>
-          <MenuDivider />
-          <MenuOptionGroup
-            defaultValue='asc'
-            title='Фильтры'
-            type='radio'
-            background={'#0e0f11'}
-          >
-            <MenuItemOption value='countWords' background={'#0e0f11'}>
-              Кол-во слов
-            </MenuItemOption>
-            <MenuItemOption value='countParagraphs' background={'#0e0f11'}>
-              Кол-во абзацев
-            </MenuItemOption>
-            <MenuItemOption value='hashtag' background={'#0e0f11'}>
-              Наименование хэштега
-            </MenuItemOption>
-            <MenuItemOption value='keywords' background={'#0e0f11'}>
-              Ключевые слова
-            </MenuItemOption>
-          </MenuOptionGroup>
-        </MenuList>
-      </Menu>
-    </>
+          {/* Row */}
+          <Text alignContent={'center'}>Кол-во слов</Text>
+          <NumberInput width={'90px'} defaultValue={0} min={0}>
+            <NumberInputField />
+            <NumberInputStepper>
+              <NumberIncrementStepper />
+              <NumberDecrementStepper />
+            </NumberInputStepper>
+          </NumberInput>
+
+          {/* Row */}
+          <Text alignContent={'center'}>Кол-во абзацев</Text>
+          <NumberInput width={'90px'} defaultValue={0} min={0}>
+            <NumberInputField />
+            <NumberInputStepper>
+              <NumberIncrementStepper />
+              <NumberDecrementStepper />
+            </NumberInputStepper>
+          </NumberInput>
+
+          {/* Row */}
+          <Text alignContent={'center'}>Наименование хэштега</Text>
+          <Input width={'90px'} placeholder='Tags' />
+
+          {/* Row */}
+          <Text alignContent={'center'}>Ключевые слова</Text>
+          <Input width={'90px'} placeholder='Words' />
+        </Box>
+      </Box>
+    </Collapse>
   )
 }

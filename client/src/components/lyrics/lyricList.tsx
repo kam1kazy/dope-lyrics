@@ -1,4 +1,4 @@
-import { VStack } from '@chakra-ui/react'
+import { VStack, Portal } from '@chakra-ui/react'
 import { useQuery } from '@apollo/client'
 
 import { LyricItem } from './lyricItem'
@@ -8,7 +8,7 @@ import { Spinner } from './system/spinner'
 
 import { ALL_LYRICS } from '@/server/lyrics'
 
-export const LyricList = () => {
+export const LyricList = (myRef: any) => {
   const { loading, error, data } = useQuery(ALL_LYRICS, {
     onError: (error) => {
       console.error('Error fetching ' + data + '  lyrics:', error)
@@ -16,7 +16,7 @@ export const LyricList = () => {
   })
 
   if (loading) {
-    return <Spinner count={65} duration={900} size={0.375} />
+    return <Spinner count={105} duration={900} size={0.375} />
   }
 
   if (error) {

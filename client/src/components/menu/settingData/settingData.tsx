@@ -1,3 +1,5 @@
+import { useState, useRef } from 'react'
+
 import {
   Button,
   Modal,
@@ -10,7 +12,13 @@ import {
   Image,
 } from '@chakra-ui/react'
 
-export default function SettingData({ onOpen, isOpen, onClose }: any) {
+export default function SettingData({
+  onOpen,
+  isOpen,
+  onClose,
+  containerRef,
+}: any) {
+  const ref = useRef<HTMLDivElement>(null)
   return (
     <>
       <Image
@@ -31,6 +39,7 @@ export default function SettingData({ onOpen, isOpen, onClose }: any) {
         closeOnOverlayClick={false}
         scrollBehavior='outside'
         motionPreset='slideInBottom'
+        portalProps={containerRef ? { containerRef: containerRef } : undefined}
       >
         <ModalOverlay />
         <ModalContent>
