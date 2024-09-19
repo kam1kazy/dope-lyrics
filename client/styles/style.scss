@@ -22,3 +22,24 @@
 *::-webkit-scrollbar-track {
   background-color: transparent;
 }
+
+.carousel {
+  position: relative;
+  overflow: hidden;
+  height: 400px; /* пример высоты компонента Carousel */
+  border: 1px solid;
+  width: 400px;
+  margin: auto;
+}
+
+.lyric {
+  position: absolute;
+  bottom: 0;
+  top: 0;
+  right: 0;
+  left: 0;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  text-align: center;
+  margin: 0 auto;
+}

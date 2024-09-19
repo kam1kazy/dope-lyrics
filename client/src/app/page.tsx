@@ -2,11 +2,11 @@
 import { useState, useRef } from 'react'
 
 // APOLLO CLIENT
-import { ApolloProvider, useQuery } from '@apollo/client'
+import { ApolloProvider } from '@apollo/client'
 import client from '@/server/apolloClient'
 
 // STYLES
-import { ChakraProvider, Container, Flex, Portal } from '@chakra-ui/react'
+import { ChakraProvider, Container, Flex } from '@chakra-ui/react'
 import { theme } from '../../styles/theme'
 
 // COMPONENTS

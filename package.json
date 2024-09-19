@@ -26,5 +26,8 @@
       ]
     }
   },
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "@react-spring/web": "^9.7.4"
+  }
 }

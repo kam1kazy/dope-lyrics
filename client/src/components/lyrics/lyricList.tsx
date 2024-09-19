@@ -1,14 +1,19 @@
-import { VStack, Portal } from '@chakra-ui/react'
+import { VStack } from '@chakra-ui/react'
 import { useQuery } from '@apollo/client'
 
-import { LyricItem } from './lyricItem'
-import { TotalCount } from './totalCount'
 import { ErrorText } from './system/error'
 import { Spinner } from './system/spinner'
+import { LyricItem } from './lyricItem'
+import { TotalCount } from './totalCount'
+import { Viewport } from './viewport/viewport'
 
 import { ALL_LYRICS } from '@/server/lyrics'
 
-export const LyricList = (myRef: any) => {
+import { useRef, useCallback, useEffect } from 'react'
+
+export const LyricList = () => {
+  const ref = useRef<HTMLDivElement>(null)
+
   const { loading, error, data } = useQuery(ALL_LYRICS, {
     onError: (error) => {
       console.error('Error fetching ' + data + '  lyrics:', error)
@@ -16,7 +21,7 @@ export const LyricList = (myRef: any) => {
   })
 
   if (loading) {
-    return <Spinner count={105} duration={900} size={0.375} />
+    return <Spinner count={125} duration={900} size={0.375} />
   }
 
   if (error) {
@@ -25,11 +30,14 @@ export const LyricList = (myRef: any) => {
 
   return (
     <VStack
+      ref={ref}
       spacing={2}
       margin={'auto'}
       m={0}
       padding={'15'}
       maxH={'590px'}
+      w={'100%'}
+      h={'100%'}
       overflowY={'scroll'}
       textAlign={'center'}
       wordBreak={'keep-all'}
@@ -50,10 +58,15 @@ export const LyricList = (myRef: any) => {
         },
       }}
     >
-      {data?.lyrics.map((lyric: any) => (
+      <h1>Dope Lyrics</h1>
+      <h1>****</h1>
+
+      <Viewport data={data.lyrics} />
+
+      {/* {data?.lyrics.map((lyric: any) => (
         <LyricItem key={lyric.id} {...lyric} />
-      ))}
-      <TotalCount count={data?.lyrics.length} />
+      ))} */}
+      {/* <TotalCount count={data?.lyrics.length} /> */}
     </VStack>
   )
 }
