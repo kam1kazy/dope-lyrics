@@ -1,8 +1,15 @@
 import React, { useState, useEffect } from 'react'
-import { useSpring, animated } from '@react-spring/web'
-import { ILyric } from '../../../../../server/src/types/lyric'
-import { Controls } from './controls'
+
+// STYLES
 import { Box } from '@chakra-ui/react'
+import { motion } from 'framer-motion'
+
+// COMPONENTS
+import { LyricItem } from '../lyricItem'
+import { Controls } from './controls'
+
+// TYPES
+import { ILyric } from '@server/types/lyric'
 
 export function Viewport({ data }: { data: ILyric[] }) {
   const [index, setIndex] = useState(0)
@@ -20,7 +27,7 @@ export function Viewport({ data }: { data: ILyric[] }) {
 
           return prevIndex + 1
         })
-      }, 6000) // Задержка в мс соответствует времени анимации
+      }, 2000) // Задержка в мс соответствует времени анимации
     } else if (index < data.length) {
       setAnimationComplete(true) // Сброс флага анимации, если есть следующий элемент
     }
@@ -28,38 +35,28 @@ export function Viewport({ data }: { data: ILyric[] }) {
     return () => clearInterval(intervalId)
   }, [data.length, animationComplete, index])
 
-  const [props, api] = useSpring(
-    () => ({
-      from: { opacity: 0, translateY: 500 },
-      to: async (next) => {
-        await next({ opacity: 1, translateY: 0 })
-      },
-      config: { duration: 6000 },
-    }),
-    []
-  )
-
   return (
     <>
-      <Controls pause={api.pause} resume={api.resume} count={index} />
+      {/* <Controls pause={api.pause} resume={api.resume} count={index} /> */}
       <br />
       <br />
       <Box
         position={'relative'}
         overflow={'hidden'}
-        h={'400px'}
+        h={'481px'}
         w={'100%'}
         m={'auto'}
       >
-        {data.slice(0, index + 1).map((item) => {
-          console.log('index: ' + index)
-
-          return (
-            <animated.div key={item.lyric_id} className='lyric' style={props}>
-              {item.message?.text}
-            </animated.div>
-          )
-        })}
+        {data.slice(0, index + 1).map((item: any) => (
+          <motion.div
+            className='lyric'
+            initial={{ opacity: 0, translateY: 500 }}
+            animate={{ opacity: [0, 1, 0], translateY: 0 }}
+            transition={{ duration: 12, times: [0.2, 0.5, 1] }}
+          >
+            <LyricItem {...item} />
+          </motion.div>
+        ))}
       </Box>
     </>
   )

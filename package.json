@@ -1,8 +1,6 @@
 {
   "name": "dope-lyrics",
   "version": "0.1.0",
-  "license": "MIT",
-  "private": true,
   "scripts": {
     "dev": "concurrently 'cd client && bun run dev' 'cd server && bun run start'",
     "client": "cd client && bun run dev",
@@ -26,8 +24,7 @@
       ]
     }
   },
-  "type": "module",
-  "dependencies": {
-    "@react-spring/web": "^9.7.4"
-  }
+  "license": "MIT",
+  "private": true,
+  "type": "module"
 }

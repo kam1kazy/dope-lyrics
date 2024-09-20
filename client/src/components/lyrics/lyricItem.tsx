@@ -27,7 +27,7 @@ export const LyricItem = ({ id, message }: LyricItemProps) => {
   return (
     <VStack spacing={3} key={id}>
       <HStack spacing={4}>
-        {message.hashtags
+        {message?.hashtags
           ? message.hashtags.tags.map((tag, index) => {
               return (
                 <Tag
@@ -46,7 +46,7 @@ export const LyricItem = ({ id, message }: LyricItemProps) => {
       </HStack>
 
       <HStack spacing={4}>
-        <Text whiteSpace='pre-wrap'>{message.text}</Text>
+        <Text whiteSpace='pre-wrap'>{message?.text}</Text>
         {/* <CloseButton /> */}
       </HStack>
     </VStack>
