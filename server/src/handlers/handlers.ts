@@ -1,5 +1,15 @@
+// TYPES
 import { IEmoji } from '../types/lyric'
 import { IHashtagData } from '../types/dataMessage'
+import { tg } from '../bot'
+
+type BotClient = typeof tg
+
+interface sendToBotChat {
+  tg: BotClient
+  chatId: number
+  text: number
+}
 
 // Кол-во слов
 const handlerCountWords = (lyric: string) => {
@@ -54,7 +64,7 @@ const hashtagStringsOnly = (data: IHashtagData[]) => {
 }
 
 // Отправить в определенный чат
-const sendToBotChat = ({ text, chatId, tg }: any) => {
+const sendToBotChat = ({ tg, chatId, text }: sendToBotChat) => {
   tg.sendText(chatId, 'MTCUTE [CMD]: 💳 Chat ID     ' + text.toString())
 }
 

@@ -15,7 +15,7 @@ const channelId = env.BOT_CHANNEL_ID
 const pass = env.BOT_PASS
 
 // Создаем клиент
-const tg = new TelegramClient({
+export const tg = new TelegramClient({
   apiId: env.API_ID,
   apiHash: env.API_HASH,
   storage: './bot-data/session',
