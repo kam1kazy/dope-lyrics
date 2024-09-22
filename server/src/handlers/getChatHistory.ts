@@ -1,104 +1,61 @@
-// TYPES
-import { ILyric, IEmoji } from '../types/lyric'
-import { IMessage } from '../types/dataMessage'
-
 // HANDLERS
-import {
-  handlerCountParagraphs,
-  handlerCountWords,
-  handlerCountReactions,
-  handlerWithoutHashtags,
-  hashtagStringsOnly,
-} from './handlers'
+import { filterHistory } from './filterHistory'
+import { createJSONdata } from './createJSONdata'
 
-// Создаем массив с нужными данными из полученной Data
-const getChat = (data: any) => {
-  // Убираем из полученной истории чата системные сообщения
-  const filterData = data.filter((message: IMessage) => {
-    return message.action === null
-  })
+// Получаем историю чата
+export async function getChatHistory({
+  tg,
+  chatId,
+}: {
+  tg: any
+  chatId: number
+}) {
+  const limit = 100
+  const offset = {
+    id: 0,
+    date: Date.now(),
+  }
+  let data: any[] = []
+  console.log('MTCUTE: 🧻 Получаем историю чата...')
 
-  // Создаем новый массив из отфильтрованного исходника
-  try {
-    const chatHistory: ILyric[] = filterData.map((message: IMessage) => {
-      return {
-        userId: 0,
-        lyric_id: message.id,
-        message: {
-          text: handlerWithoutHashtags(message.text),
-          message_id: message.id,
-          word_count: handlerCountWords(message.text ?? ''),
-          paragraph_count: handlerCountParagraphs(message.text ?? ''),
+  // Пошаговый парсинг
+  while (true) {
+    try {
+      const history = await tg.getHistory(chatId, { limit, offset })
 
-          reactions: message.reactions?.reactions
-            ? {
-                emojis: message.reactions?.reactions
-                  ? message.reactions?.reactions.map((emoji: IEmoji) => {
-                      return {
-                        emoji: emoji.emoji,
-                        isPaid: emoji.isPaid,
-                        count: emoji.count,
-                        order: emoji.order,
-                      }
-                    })
-                  : [],
-                uniqueCount: message.reactions?.reactions.length,
-                totalFreeCount: handlerCountReactions(
-                  message.reactions?.reactions,
-                  'free'
-                ),
-                totalPaidCount: handlerCountReactions(
-                  message.reactions?.reactions,
-                  'paid'
-                ),
-                totalCount: handlerCountReactions(
-                  message.reactions?.reactions,
-                  'total'
-                ),
-              }
-            : null,
+      let chatData: any[] | boolean = []
 
-          hashtags: message.entities?.length
-            ? {
-                tags: hashtagStringsOnly(message.entities),
-                count: message.entities?.length,
-              }
-            : null,
-        },
-        user: {
-          id: message.sender.id,
-          username: message.sender.username,
-          displayName: message.sender.displayName,
-          isAdmin: message.sender.isAdmin,
-        },
-        chat: {
-          id: message.chat.id,
-          title: message.chat.title,
-          type: message.chat.chatType,
-        },
-        date: new Date(Date.parse(message.date)),
-        editDate: new Date(Date.parse(message.editDate)) ?? null,
-        isPinned: message.isPinned,
-        isChannelPost: message.isChannelPost,
-        replyToMessage: message.replyToMessage?.id ?? null,
-        media: message.media?.mimeType
-          ? {
-              mime: message.media.mimeType,
-              duration: message.media.duration,
-              convert: false,
-            }
-          : null,
+      if (history.length > 0) {
+        chatData = filterHistory(history)
+      } else {
+        console.error('MTCUTE: 🛑 Получен пустой массив истории чата')
+        return false
       }
-    })
 
-    return chatHistory
-  } catch (error) {
-    console.error(
-      '\n🛑 MTCUTE: Ошибка при создании объекта chatHistory:\n\n',
-      error
-    )
-    return false
+      if (chatData) {
+        data.push(...chatData)
+      }
+
+      if (history.length < limit) {
+        console.log('MTCUTE: 🌀 Шаги парсинга закончились')
+        break
+      } else {
+        console.log('MTCUTE: 🌀 - Шаг парсинга')
+      }
+
+      offset.id += limit
+    } catch (error) {
+      console.error(
+        '\nMTCUTE: 🛑 Ошибка при получении истории сообщений:\n\n',
+        error
+      )
+      break
+    }
+  }
+
+  // Создаем файл с полученной базой по нашей модели из ILyric
+  if (data.length) {
+    console.log('MTCUTE: 📥 История чата получена')
+    createJSONdata(data)
   }
 }
-
-export { getChat }

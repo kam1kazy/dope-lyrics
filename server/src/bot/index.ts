@@ -5,12 +5,8 @@ import { Dispatcher } from '@mtcute/dispatcher'
 // КОНСТАНТЫ
 import * as env from '../env'
 
-// ФУНКЦИИ
-import { getChat } from '../handlers/getChatHistory'
-import { createJSONdata } from '../handlers/createJSONdata'
-
-// TYPES
-import { IMessage } from '../types/dataMessage'
+// HANDLERS
+import { getChatHistory } from '../handlers/getChatHistory'
 
 const phone = env.BOT_PHONE
 const chatId = env.BOT_CHAT_ID
@@ -31,9 +27,9 @@ const self = await tg
   .start({
     phone: phone,
     code: async () => {
-      const code = await prompt('MTCUTE: 🙈  Введите код:')
+      const code = await prompt('MTCUTE: 🙈 Введите код:')
       if (code === null) {
-        throw new Error('MTCUTE: ❌  Отменено пользователем\n\n')
+        throw new Error('MTCUTE: ❌ Отменено пользователем\n\n')
       }
       return code
     },
@@ -43,62 +39,7 @@ const self = await tg
     console.log('\nMTCUTE: 🤖 Вошел в систему как -', self.username)
   })
   .catch((error) => {
-    console.error('\nMTCUTE: 🛑  Не вошел в систему\n\n', error)
+    console.error('\nMTCUTE: 🛑 Не вошел в систему\n\n', error)
   })
 
-// Получаем историю чата
-export async function getChatHistory() {
-  const limit = 100
-  let offset = {
-    id: 0,
-    date: Date.now(),
-  }
-  let data: any[] = []
-
-  console.log('MTCUTE: 🧻 Получаем историю чата...')
-
-  // Пошаговый парсинг
-  while (true) {
-    try {
-      const history = await tg.getHistory(chatId, { limit, offset })
-      const chatData = getChat(history)
-
-      if (chatData) {
-        data.push(...chatData)
-      }
-
-      if (history.length < limit) {
-        break
-      }
-
-      offset.id += limit
-    } catch (error) {
-      console.error(
-        '\nMTCUTE: 🛑 Ошибка при получении истории сообщений:\n\n',
-        error
-      )
-      break
-    }
-  }
-
-  // Создаем файл с полученной базой по нашей модели из ILyric
-  if (data.length) {
-    console.log('MTCUTE: 📥 История чата получена')
-    createJSONdata(data)
-  }
-}
-
-getChatHistory()
-
-// Команды
-// dp.onNewMessage(filters.chatId(chatId), async (msg) => {
-//   await msg.replyText('hiiii from dope bot! 🌵')
-// })
-
-// dp.onNewMessage(filters.start, async (msg) => {
-//   await msg.answerText('Hello, world!')
-// })
-
-// dp.onNewMessage(async (msg) => {
-//   await msg.answerText('Hello, dope world!')
-// })
+getChatHistory({ tg, chatId })
