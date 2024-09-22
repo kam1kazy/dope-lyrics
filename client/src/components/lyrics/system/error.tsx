@@ -1,9 +1,15 @@
 import { Text, Box, keyframes } from '@chakra-ui/react'
 import { Fira_Mono } from 'next/font/google'
-import { Spinner } from './spinner'
+
 const fira = Fira_Mono({ weight: ['500'], subsets: ['latin'] })
 
-export const ErrorText = ({ title }: { title: string }) => {
+export const ErrorText = ({
+  title,
+  description,
+}: {
+  title: string
+  description?: string
+}) => {
   {
     return (
       <Box
@@ -42,7 +48,7 @@ export const ErrorText = ({ title }: { title: string }) => {
           {title}
         </Text>
         <Text display={'block'} mt={5} fontSize={'14px'}>
-          Ошибка загрузки данных
+          {description ? description : 'Ошибка загрузки данных'}
         </Text>
       </Box>
     )

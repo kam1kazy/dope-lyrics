@@ -1,22 +1,29 @@
-import { VStack } from '@chakra-ui/react'
+import { useRef } from 'react'
 import { useQuery } from '@apollo/client'
 
+// STYLES
+import { VStack } from '@chakra-ui/react'
+
+// COMPONENTS
 import { ErrorText } from './system/error'
 import { Spinner } from './system/spinner'
-import { LyricItem } from './lyricItem'
 import { TotalCount } from './totalCount'
 import { Viewport } from './viewport/viewport'
 
+// GRAPHQL
 import { ALL_LYRICS } from '@/server/lyrics'
 
-import { useRef, useCallback, useEffect } from 'react'
+// HANDLERS
+import { CreateArrListCarousel } from '@/handlers/createArrListCarousel'
 
 export const LyricList = () => {
   const ref = useRef<HTMLDivElement>(null)
 
+  let carouselList: any[] = []
+
   const { loading, error, data } = useQuery(ALL_LYRICS, {
     onError: (error) => {
-      console.error('Error fetching ' + data + '  lyrics:', error)
+      console.error('Ошибка запроса ' + data + '  lyrics:', error)
     },
   })
 
@@ -26,6 +33,18 @@ export const LyricList = () => {
 
   if (error) {
     return <ErrorText title={'Error'} />
+  }
+
+  if (data) {
+    carouselList = CreateArrListCarousel(data.lyrics)
+  } else {
+    console.error(
+      'Не удалось создать список: \n\n' + data + '\n\nlyrics:',
+      error
+    )
+    return (
+      <ErrorText title={'Error'} description={'Не удалось создать список'} />
+    )
   }
 
   return (
@@ -61,9 +80,9 @@ export const LyricList = () => {
       <h1>Dope Lyrics</h1>
       <h1>****</h1>
 
-      <Viewport data={data.lyrics} />
+      <Viewport data={carouselList} />
 
-      <TotalCount count={data?.lyrics.length} />
+      <TotalCount count={data.lyrics.length} />
     </VStack>
   )
 }

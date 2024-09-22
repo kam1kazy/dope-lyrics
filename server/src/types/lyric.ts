@@ -19,7 +19,7 @@ export interface ILyric {
 // MESSAGE TYPE
 export interface IMessage {
   message_id: number
-  text?: string
+  text: string
   word_count?: number
   paragraph_count?: number
   reactions?: IReaction | null

@@ -6,17 +6,24 @@ import { motion } from 'framer-motion'
 
 // COMPONENTS
 import { LyricItem } from '../lyricItem'
-import { Controls } from './controls'
 
 // TYPES
 import { ILyric } from '@server/types/lyric'
 
-export function Viewport({ data }: { data: ILyric[] }) {
+type LyricItem = Pick<ILyric, 'message' | 'lyric_id'>
+
+interface IViewportLyricList {
+  lyric_id: LyricItem['lyric_id']
+  message: LyricItem['message']
+}
+
+export function Viewport({ data }: { data: any[] }) {
   const [index, setIndex] = useState(0)
   const [animationComplete, setAnimationComplete] = useState(false)
 
+  // Пошаговый дроп Lyrics
   useEffect(() => {
-    let intervalId: any
+    let intervalId: Timer
 
     if (!animationComplete) {
       intervalId = setInterval(() => {
@@ -37,9 +44,6 @@ export function Viewport({ data }: { data: ILyric[] }) {
 
   return (
     <>
-      {/* <Controls pause={api.pause} resume={api.resume} count={index} /> */}
-      <br />
-      <br />
       <Box
         position={'relative'}
         overflow={'hidden'}
@@ -47,14 +51,15 @@ export function Viewport({ data }: { data: ILyric[] }) {
         w={'100%'}
         m={'auto'}
       >
-        {data.slice(0, index + 1).map((item: any) => (
+        {data.slice(0, index + 1).map((item: IViewportLyricList) => (
           <motion.div
+            key={item.lyric_id + '_' + item.message?.message_id}
             className='lyric'
             initial={{ opacity: 0, translateY: 500 }}
             animate={{ opacity: [0, 1, 0], translateY: 0 }}
             transition={{ duration: 12, times: [0.2, 0.5, 1] }}
           >
-            <LyricItem id={item.lyric_id} item={item} />
+            <LyricItem item={item} />
           </motion.div>
         ))}
       </Box>

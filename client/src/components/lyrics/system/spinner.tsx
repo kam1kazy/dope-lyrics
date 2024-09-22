@@ -1,4 +1,4 @@
-import { Box, keyframes, css } from '@chakra-ui/react'
+import { Box, keyframes } from '@chakra-ui/react'
 
 interface IParticle {
   size: number
