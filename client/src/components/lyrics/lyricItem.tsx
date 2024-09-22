@@ -7,28 +7,21 @@ import {
   CloseButton,
 } from '@chakra-ui/react'
 
+import { ILyric } from '@server/types/lyric'
+
+type LyricItem = Pick<ILyric, 'message'>
+
 interface LyricItemProps {
   id: number
-  text: string
-  data: string
-  replyToMessage: number
-  message: {
-    text: string
-    word_count: number
-    hashtags: {
-      id: number
-      tags: string[]
-      count: number
-    }
-  }
+  item: LyricItem
 }
 
-export const LyricItem = ({ id, message }: LyricItemProps) => {
+export const LyricItem = ({ id, item }: LyricItemProps) => {
   return (
     <VStack spacing={3} key={id}>
       <HStack spacing={4}>
-        {message?.hashtags
-          ? message.hashtags.tags.map((tag, index) => {
+        {item.message?.hashtags
+          ? item.message.hashtags.tags.map((tag, index) => {
               return (
                 <Tag
                   size={tag}
@@ -46,7 +39,7 @@ export const LyricItem = ({ id, message }: LyricItemProps) => {
       </HStack>
 
       <HStack spacing={4}>
-        <Text whiteSpace='pre-wrap'>{message?.text}</Text>
+        <Text whiteSpace='pre-wrap'>{item.message?.text}</Text>
         {/* <CloseButton /> */}
       </HStack>
     </VStack>

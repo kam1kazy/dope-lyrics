@@ -63,10 +63,7 @@ export const LyricList = () => {
 
       <Viewport data={data.lyrics} />
 
-      {/* {data?.lyrics.map((lyric: any) => (
-        <LyricItem key={lyric.id} {...lyric} />
-      ))} */}
-      {/* <TotalCount count={data?.lyrics.length} /> */}
+      <TotalCount count={data?.lyrics.length} />
     </VStack>
   )
 }

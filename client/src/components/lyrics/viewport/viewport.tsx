@@ -54,7 +54,7 @@ export function Viewport({ data }: { data: ILyric[] }) {
             animate={{ opacity: [0, 1, 0], translateY: 0 }}
             transition={{ duration: 12, times: [0.2, 0.5, 1] }}
           >
-            <LyricItem {...item} />
+            <LyricItem id={item.lyric_id} item={item} />
           </motion.div>
         ))}
       </Box>
