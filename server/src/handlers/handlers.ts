@@ -53,10 +53,16 @@ const hashtagStringsOnly = (data: IHashtagData[]) => {
   return hashtagStrings
 }
 
+// Отправить в определенный чат
+const sendToBotChat = ({ text, chatId, tg }: any) => {
+  tg.sendText(chatId, 'MTCUTE [CMD]: 💳 Chat ID     ' + text.toString())
+}
+
 export {
   handlerCountParagraphs,
   handlerCountWords,
   handlerCountReactions,
   handlerWithoutHashtags,
   hashtagStringsOnly,
+  sendToBotChat,
 }
