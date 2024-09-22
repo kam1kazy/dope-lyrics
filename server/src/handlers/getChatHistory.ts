@@ -10,18 +10,22 @@ export async function getChatHistory({
   tg: any
   chatId: number
 }) {
-  const limit = 100
-  const offset = {
-    id: 0,
-    date: Date.now(),
+  let params = {
+    limit: 100,
+    offset: {
+      date: Number(Date.now()),
+      id: 0,
+    },
   }
+
   let data: any[] = []
   console.log('MTCUTE: 🧻 Получаем историю чата...')
 
   // Пошаговый парсинг
   while (true) {
     try {
-      const history = await tg.getHistory(chatId, { limit, offset })
+      const history = await tg.getHistory(chatId, { limit: 20 })
+      console.log('MTCUTE: Сообщения из чата:', history.length)
 
       let chatData: any[] | boolean = []
 
@@ -36,14 +40,13 @@ export async function getChatHistory({
         data.push(...chatData)
       }
 
-      if (history.length < limit) {
-        console.log('MTCUTE: 🌀 Шаги парсинга закончились')
+      if (history.length < params.limit) {
         break
-      } else {
-        console.log('MTCUTE: 🌀 - Шаг парсинга')
       }
 
-      offset.id += limit
+      params.offset.id += params.limit
+
+      console.log(params.offset.id)
     } catch (error) {
       console.error(
         '\nMTCUTE: 🛑 Ошибка при получении истории сообщений:\n\n',
