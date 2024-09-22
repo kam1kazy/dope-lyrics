@@ -5,7 +5,7 @@ import { tg } from '../bot'
 
 type BotClient = typeof tg
 
-interface sendToBotChat {
+interface ISendToBotChat {
   tg: BotClient
   chatId: number
   text: number
@@ -64,7 +64,7 @@ const hashtagStringsOnly = (data: IHashtagData[]) => {
 }
 
 // Отправить в определенный чат
-const sendToBotChat = ({ tg, chatId, text }: sendToBotChat) => {
+const sendToBotChat = ({ tg, chatId, text }: ISendToBotChat) => {
   tg.sendText(chatId, 'MTCUTE [CMD]: 💳 Chat ID     ' + text.toString())
 }
 
