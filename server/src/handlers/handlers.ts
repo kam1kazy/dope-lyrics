@@ -1,9 +1,7 @@
 // TYPES
 import { IEmoji } from '../types/lyric'
 import { IHashtagData } from '../types/dataMessage'
-import { tg } from '../bot'
-
-type BotClient = typeof tg
+import { BotClient } from '../bot'
 
 interface ISendToBotChat {
   tg: BotClient

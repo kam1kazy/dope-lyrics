@@ -15,11 +15,13 @@ const channelId = env.BOT_CHANNEL_ID
 const pass = env.BOT_PASS
 
 // Создаем клиент
-export const tg = new TelegramClient({
+const tg = new TelegramClient({
   apiId: env.API_ID,
   apiHash: env.API_HASH,
   storage: './bot-data/session',
 })
+
+export type BotClient = typeof tg
 
 // Диспетчер событий
 const dp = Dispatcher.for(tg)
