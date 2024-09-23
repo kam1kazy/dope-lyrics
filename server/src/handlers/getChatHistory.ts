@@ -2,12 +2,15 @@
 import { filterHistory } from './filterHistory'
 import { createJSONdata } from './createJSONdata'
 
+// TYPES
+import { TypeBotClient } from '../bot/index'
+
 // Получаем историю чата
 export async function getChatHistory({
   tg,
   chatId,
 }: {
-  tg: any
+  tg: TypeBotClient
   chatId: number
 }) {
   let params = {

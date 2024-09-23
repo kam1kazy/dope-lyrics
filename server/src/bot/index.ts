@@ -2,29 +2,28 @@
 import { TelegramClient } from '@mtcute/bun'
 import { Dispatcher, filters } from '@mtcute/dispatcher'
 
+// HANDLERS
+import { commandChatHistory, commandChatId } from './commands'
+
 // КОНСТАНТЫ
 import * as env from '../env'
 
-// HANDLERS
-import { getChatHistory } from '../handlers/getChatHistory'
-import { sendToBotChat } from '../handlers/handlers'
-
 const phone = env.BOT_PHONE
-const chatId = env.BOT_CHAT_ID
-const channelId = env.BOT_CHANNEL_ID
 const pass = env.BOT_PASS
 
 // Создаем клиент
-const tg = new TelegramClient({
+export const tg = new TelegramClient({
   apiId: env.API_ID,
   apiHash: env.API_HASH,
   storage: './bot-data/session',
 })
 
-export type BotClient = typeof tg
+export type TypeBotClient = typeof tg
 
 // Диспетчер событий
 const dp = Dispatcher.for(tg)
+
+export type TypeBotDispatcher = typeof dp
 
 // Авторизуемся в боте
 const self = await tg
@@ -46,23 +45,13 @@ const self = await tg
     console.error('\nMTCUTE: 🛑 Не вошел в систему\n\n', error)
   })
 
-// Команды
+// Команды для бота
 
-dp.onNewMessage(filters.command('chathistory'), async (msg) => {
-  await msg.delete()
-  await getChatHistory({ tg, chatId: channelId })
-    .then(() => {
-      msg.answerText('MTCUTE: 📥 История чата получена')
-    })
-    .catch(() => {
-      msg.answerText('MTCUTE: 🛑 Ошибка при получении истории')
-    })
-})
-
+// Получаем историю чата
+dp.onNewMessage(filters.command('chathistory'), async (msg) =>
+  commandChatHistory({ tg, msg })
+)
 // Получаем ID чата
-dp.onNewMessage(filters.command('chatid'), async (msg) => {
-  await msg.delete()
-  const text = msg.chat.id
-  sendToBotChat({ tg, chatId, text })
-  console.log('MTCUTE [CMD]: 💳 Chat ID     ' + msg.chat.id)
-})
+dp.onNewMessage(filters.command('chatid'), async (msg) =>
+  commandChatId({ tg, msg })
+)
