@@ -82,7 +82,6 @@ git clone https://github.com/kam1kazy/dope-lyrics.git
 
 ```bash
 git config --global http.postBuffer 524288000
-git clone --depth 1 https://github.com/kam1kazy/dope-lyrics.git
 ```
 
 После загрузки, нужно перейти в папке с проектом.
