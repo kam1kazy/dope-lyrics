@@ -1,4 +1,5 @@
-import { Text, Box, keyframes } from '@chakra-ui/react'
+import { Text, Box } from '@chakra-ui/react'
+import { keyframes } from '@emotion/react'
 import { Fira_Mono } from 'next/font/google'
 
 const fira = Fira_Mono({ weight: ['500'], subsets: ['latin'] })
