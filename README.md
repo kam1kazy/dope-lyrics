@@ -97,6 +97,32 @@ bunx prisma migrate dev --name init --skip-seed
 bun seed
 ```
 
+### ⚙️ Подключаем telegram бота
+
+1. Заполняем файл .env в папке server (пример в .env.example). 
+Вам нужен обязательно API_ID и API_HASH. Получить API_ID и API_HASH можно на сайте https://my.telegram.org/apps
+
+```bash
+API_ID=
+API_HASH=
+BOT_TOKEN=
+BOT_PHONE=
+BOT_PASS= (это пин пароль от телеграмма)
+BOT_CHAT_ID=
+BOT_CHANNEL_ID=
+```
+
+2. Как создать бота в telegram:
+
+- Открываем telegram
+- Ищем @BotFather
+- Нажимаем на него
+- Нажимаем на команду `/start`
+- Нажимаем на команду `/newbot`
+- Вводим имя бота
+- Вводим имя пользователя (должно быть уникальным)
+- Получаем токен бота
+- Вставляем токен в .env файл
 
 ## 💻  Использование
 
