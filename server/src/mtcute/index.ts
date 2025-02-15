@@ -1,6 +1,7 @@
 // TELEGRAM BOT
 import { TelegramClient } from '@mtcute/bun'
 import { Dispatcher, filters } from '@mtcute/dispatcher'
+import path from 'path'
 
 // HANDLERS
 import { commandChatHistory, commandChatId } from './commands'
@@ -15,7 +16,7 @@ const pass = env.BOT_PASS
 export const tg = new TelegramClient({
   apiId: env.API_ID,
   apiHash: env.API_HASH,
-  storage: './bot-data/session',
+  storage: path.resolve(__dirname, '../../bot-data/session'),
 })
 
 export type TypeBotClient = typeof tg
