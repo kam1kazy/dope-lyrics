@@ -10,7 +10,7 @@ import { schema } from './graphql/schema'
 // Переменные для запуска сервера
 const port: number = 4000
 
-const app = new Elysia()
+const app: Elysia = new Elysia()
   .use(cors())
   .use(swagger())
   .use(yoga(schema))
