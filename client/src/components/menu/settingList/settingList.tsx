@@ -31,7 +31,7 @@ export default function SettingList({ isOpen }: { isOpen: boolean }) {
         rounded='md'
         shadow='md'
         fontSize='14px'
-        boxShadow={'0px 10px 26px 20px rgba(34, 60, 80, 0.35)'}
+        boxShadow={'0px 18px 26px 20px rgba(34, 60, 80, 0.35)'}
       >
         {/*
           <Heading fontSize={'18px'} mb={'10px'}>
@@ -82,35 +82,49 @@ export default function SettingList({ isOpen }: { isOpen: boolean }) {
           display={'flex'}
           flexWrap={'wrap'}
           justifyContent={'space-between'}
+          flexDirection={'column'}
           rowGap={'10px'}
+          sx={{
+            '& > div': {
+              display: 'flex',
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            },
+          }}
         >
-          {/* Row */}
-          <Text alignContent={'center'}>Кол-во слов</Text>
-          <NumberInput width={'90px'} defaultValue={0} min={0}>
-            <NumberInputField />
-            <NumberInputStepper>
-              <NumberIncrementStepper />
-              <NumberDecrementStepper />
-            </NumberInputStepper>
-          </NumberInput>
-
-          {/* Row */}
-          <Text alignContent={'center'}>Кол-во абзацев</Text>
-          <NumberInput width={'90px'} defaultValue={0} min={0}>
-            <NumberInputField />
-            <NumberInputStepper>
-              <NumberIncrementStepper />
-              <NumberDecrementStepper />
-            </NumberInputStepper>
-          </NumberInput>
-
-          {/* Row */}
-          <Text alignContent={'center'}>Наименование тега</Text>
-          <Input width={'90px'} placeholder='Tags' />
-
-          {/* Row */}
-          <Text alignContent={'center'}>Ключевые слова</Text>
-          <Input width={'90px'} placeholder='Words' />
+          <div>
+            {/* Row */}
+            <Text alignContent={'center'}>Кол-во слов</Text>
+            <NumberInput width={'90px'} defaultValue={0} min={0}>
+              <NumberInputField />
+              <NumberInputStepper>
+                <NumberIncrementStepper />
+                <NumberDecrementStepper />
+              </NumberInputStepper>
+            </NumberInput>
+          </div>
+          <div>
+            {/* Row */}
+            <Text alignContent={'center'}>Кол-во абзацев</Text>
+            <NumberInput width={'90px'} defaultValue={0} min={0}>
+              <NumberInputField />
+              <NumberInputStepper>
+                <NumberIncrementStepper />
+                <NumberDecrementStepper />
+              </NumberInputStepper>
+            </NumberInput>
+          </div>
+          <div>
+            {/* Row */}
+            <Text alignContent={'center'}>Наименование тега</Text>
+            <Input width={'90px'} placeholder='Tags' />
+          </div>
+          <div>
+            {/* Row */}
+            <Text alignContent={'center'}>Ключевые слова</Text>
+            <Input width={'90px'} placeholder='Words' />
+          </div>
         </Box>
       </Box>
     </Collapse>

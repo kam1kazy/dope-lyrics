@@ -59,6 +59,7 @@ export default function Home() {
             alignItems={'center'}
             position={'relative'}
             overflowY={'hidden'}
+            style={{ scrollbarWidth: 'none' }}
             sx={{
               '::before': {
                 content: '""',
@@ -85,6 +86,9 @@ export default function Home() {
                 opacity: ' 0.45',
                 background:
                   'linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 1) 100%);',
+              },
+              '&::-webkit-scrollbar-track': {
+                backgroundColor: 'transparent',
               },
             }}
           >

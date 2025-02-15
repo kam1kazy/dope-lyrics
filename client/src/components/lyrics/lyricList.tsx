@@ -69,11 +69,11 @@ export const LyricList = () => {
           height: '10px',
         },
         '&::-webkit-scrollbar-thumb': {
-          backgroundColor: 'red',
+          backgroundColor: 'rgba(34, 60, 80, 0.35)',
           borderRadius: '10px',
         },
         '&::-webkit-scrollbar-track': {
-          backgroundColor: 'yellow',
+          backgroundColor: 'transparent',
         },
       }}
     >
