@@ -18,35 +18,43 @@ const arrHistory: IChatHistoryItem[] = chatHistory
 async function seed() {
   console.log(`\nPRISMA: 🧻 Запись...`)
 
-  // Добавляем пользователей
-  await db.users
-    .createMany({
-      data: arrUser,
-      skipDuplicates: true,
-    })
-    .then(() =>
-      console.log(
-        'PRISMA: 🚚 Данные Users - в кол-ве ' +
-          arrUser.length +
-          ' были успешно загружены'
-      )
-    )
-    .catch((error) => {
-      console.error(
-        'PRISMA: 🚧 Данные - Users - не удалось загрузить в базу\n\n',
-        error
-      )
-    })
-
   // Проверяем на наличие и достаем пользователя из базы данных
-  const userExists = await db.users.findUnique({
+  let userExists = await db.users.findUnique({
     where: {
-      id: 1, // значение userId - это пользователь которому принадлежат данные
+      id: 0, // значение userId - это пользователь которому принадлежат данные
     },
   })
 
+  console.log('userExists', userExists)
+
+  // Добавляем пользователей
   if (!userExists) {
-    throw new Error('\nPRISMA: 🙅 User не был найден')
+    console.log(`\nPRISMA: 🙅 User не был найден`)
+    console.log(`\nPRISMA: 🧻 Запись...`)
+    await db.users
+      .createMany({
+        data: arrUser,
+        skipDuplicates: true,
+      })
+      .then(() =>
+        console.log(
+          'PRISMA: 🚚 Данные Users - в кол-ве ' +
+            arrUser.length +
+            ' были успешно загружены'
+        )
+      )
+      .catch((error) => {
+        console.error(
+          'PRISMA: 🚧 Данные - Users - не удалось загрузить в базу\n\n',
+          error
+        )
+      })
+
+    userExists = await db.users.findUnique({
+      where: {
+        id: 0, // значение userId - это пользователь которому принадлежат данные
+      },
+    })
   }
 
   // Счетчик для цикла прохода по истории чата
@@ -68,7 +76,7 @@ async function seed() {
       } = item
 
       // Создаем запись
-      const lyrics = await db.lyrics.create({
+      await db.lyrics.create({
         data: {
           //? LYRICS
           userId: userExists.id,
