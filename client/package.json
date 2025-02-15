@@ -13,24 +13,24 @@
     "bun": "^1.1"
   },
   "dependencies": {
-    "@apollo/client": "^3.11.8",
-    "@chakra-ui/icons": "^2.1.1",
-    "@chakra-ui/next-js": "^2.2.0",
-    "@chakra-ui/react": "^2.8.2",
-    "@emotion/react": "^11.13.3",
-    "@emotion/styled": "^11.13.0",
-    "elysia": "^1.1.12",
-    "framer-motion": "^11.5.4",
-    "graphql": "^16.9.0",
+    "@apollo/client": "^3.13.1",
+    "@chakra-ui/icons": "^2.2.4",
+    "@chakra-ui/next-js": "^2.4.2",
+    "@chakra-ui/react": "^2.10.5",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "elysia": "^1.2.12",
+    "framer-motion": "^11.18.2",
+    "graphql": "^16.10.0",
     "next": "14.2.5",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
     "@types/bun": "latest",
-    "@types/node": "^20.16.5",
-    "@types/react": "^18.3.6",
-    "@types/react-dom": "^18.3.0",
-    "typescript": "^5.6.2"
+    "@types/node": "^20.17.19",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "typescript": "^5.7.3"
   }
 }

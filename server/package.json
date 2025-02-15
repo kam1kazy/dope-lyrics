@@ -19,27 +19,28 @@
     "seed": "bun ./prisma/script/seed.ts"
   },
   "dependencies": {
-    "@elysiajs/cors": "^1.1.1",
-    "@elysiajs/graphql-yoga": "^1.1.1",
-    "@elysiajs/swagger": "^1.1.1",
-    "@graphql-tools/graphql-file-loader": "^8.0.1",
-    "@graphql-tools/load": "^8.0.2",
-    "@graphql-tools/schema": "^10.0.6",
-    "@mtcute/bun": "^0.16.9",
-    "@mtcute/core": "^0.16.9",
-    "@mtcute/dispatcher": "^0.16.9",
+    "@elysiajs/cors": "^1.2.0",
+    "@elysiajs/graphql-yoga": "^1.2.0",
+    "@elysiajs/swagger": "^1.2.0",
+    "@graphql-tools/graphql-file-loader": "^8.0.14",
+    "@graphql-tools/load": "^8.0.14",
+    "@graphql-tools/schema": "^10.0.18",
+    "@mtcute/bun": "^0.16.14",
+    "@mtcute/core": "^0.16.14",
+    "@mtcute/dispatcher": "^0.16.13",
     "@mtcute/tl": "^187.0.0",
     "@prisma/client": "5.18.0",
+    "dotenv": "^16.4.7",
     "elysia": "latest",
-    "graphql-tools": "^9.0.1"
+    "graphql-tools": "^9.0.13"
   },
   "devDependencies": {
-    "@types/bun": "^1.1.9",
-    "@types/node": "^22.5.5",
+    "@types/bun": "^1.2.2",
+    "@types/node": "^22.13.4",
     "bun-types": "latest",
-    "concurrently": "^9.0.1",
-    "prisma": "^5.19.1",
-    "telegram-bot-api-types": "^7.9.12",
-    "typescript": "^5.6.2"
+    "concurrently": "^9.1.2",
+    "prisma": "^5.22.0",
+    "telegram-bot-api-types": "^7.11.0",
+    "typescript": "^5.7.3"
   }
 }
