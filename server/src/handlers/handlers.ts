@@ -1,10 +1,10 @@
 // TYPES
 import { IEmoji } from '../types/lyric'
 import { IHashtagData } from '../types/dataMessage'
-import { BotClient } from '../mtcute'
+import { TypeBotClient } from '../mtcute/index'
 
 interface ISendToBotChat {
-  tg: BotClient
+  tg: TypeBotClient
   chatId: number
   text: number
 }
