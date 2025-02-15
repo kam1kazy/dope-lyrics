@@ -1,7 +1,7 @@
 // TYPES
 import { IEmoji } from '../types/lyric'
 import { IHashtagData } from '../types/dataMessage'
-import { BotClient } from '../bot'
+import { BotClient } from '../mtcute'
 
 interface ISendToBotChat {
   tg: BotClient

@@ -3,7 +3,7 @@ import { filterHistory } from './filterHistory'
 import { createJSONdata } from './createJSONdata'
 
 // TYPES
-import { TypeBotClient } from '../bot/index'
+import { TypeBotClient } from '../mtcute/index'
 
 // Получаем историю чата
 export async function getChatHistory({
