@@ -16,7 +16,7 @@ const arrUser: IUser[] = chatUser
 const arrHistory: IChatHistoryItem[] = chatHistory
 
 async function seed() {
-  console.log(`\nPRISMA: 🧻 Запись...`)
+  console.log(`\nPRISMA: 🧻 Запись данных в базу...`)
 
   // Проверяем на наличие и достаем пользователя из базы данных
   let userExists = await db.users.findUnique({
@@ -28,7 +28,7 @@ async function seed() {
   // Добавляем пользователей
   if (!userExists) {
     console.log(`\nPRISMA: 🙅 Users не был найден`)
-    console.log(`\nPRISMA: 📝 Создание пользователей...`)
+    console.log(`PRISMA: 📝 Создание пользователей...`)
     await db.users
       .createMany({
         data: arrUser,
@@ -38,7 +38,7 @@ async function seed() {
         console.log(
           'PRISMA: 🚚 Данные Users - в кол-ве ' +
             arrUser.length +
-            ' были успешно загружены'
+            ' были успешно созданы'
         )
       )
       .catch((error) => {
@@ -183,7 +183,7 @@ async function seed() {
 }
 
 seed()
-  .then(() => console.log('PRISMA: 🟢 Данные были успешно загружены'))
+  .then(() => console.log('\nPRISMA: 🟢 Данные были успешно загружены'))
   .catch((error) => {
     console.error('PRISMA: 🚧 Данные не удалось загрузить в базу\n\n', error)
     process.exit(1)
