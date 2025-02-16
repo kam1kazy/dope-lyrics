@@ -2,10 +2,10 @@
   "name": "dope-lyrics",
   "version": "0.1.0",
   "scripts": {
-    "dev": "concurrently 'cd client && bun run dev' 'cd server && bun run start'",
+    "dev": "concurrently 'cd server/src/mtcute && bun index.ts' 'cd server && bun run start' 'cd client && bun run dev'",
     "client": "cd client && bun run dev",
     "server": "cd server && bun run start",
-    "setup": " bun install && cd client && bun install && cd ../server && bun install",
+    "setup": " bun install && cd client && bun install && cd ../server && bun install && bun prisma generate",
     "deploy": "cd server && bun run deploy"
   },
   "devDependencies": {
