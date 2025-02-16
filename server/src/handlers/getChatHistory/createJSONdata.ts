@@ -12,9 +12,6 @@ export const createJSONdata = (chatHistory: ILyric[]) => {
   const fileName = 'chatHistory.json'
   const fullPath = path.join(dirName, fileName)
 
-  console.log('__dirname: ', __dirname)
-  console.log('fullPath: ', fullPath)
-
   fs.mkdir(dirName, { recursive: true }, (err) => {
     if (err) {
       console.error('\nMTCUTE: 🛑 Ошибка создание папки', err)
