@@ -22,6 +22,7 @@ export async function getChatHistory({
   }
 
   let data: any[] = []
+  let totalMessages = 0
 
   console.log('MTCUTE: 🧻 Получаем историю чата...')
 
@@ -51,7 +52,16 @@ export async function getChatHistory({
 
       if (history.length < params.limit) {
         console.log('MTCUTE: Всего собрано сообщений:', data.length)
+        console.log(
+          'MTCUTE: Убрано системных сообщений:',
+          totalMessages - data.length,
+          ' \n'
+        )
         break
+      }
+
+      if (history.length > totalMessages) {
+        totalMessages = history[history.length - 1].id
       }
 
       params.offset = {
