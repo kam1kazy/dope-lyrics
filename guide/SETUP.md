@@ -52,3 +52,9 @@ bun run dev
 ```bash
 docker run -p 5432:5432 --name NAME-DOCKER-CONTAINER -e POSTGRES_PASSWORD=UPASSDB -e POSTGRES_DB=UNAMEDB -e POSTGRES_USER=UUSERDB -d postgres
 ```
+
+### ⚙️ Следующий этап
+
+[Гайд по PRISMA](https://github.com/kam1kazy/dope-lyrics/blob/main/guide/PRISMA.md)
+
+[Гайд по MTCUTE](https://github.com/kam1kazy/dope-lyrics/blob/main/guide/MTCUTE.md)

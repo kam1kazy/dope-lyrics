@@ -26,3 +26,12 @@ bunx prisma migrate dev --name init --skip-seed
 4. Выполняет посев (заливает данные) - сейчас он не срабатывает, так как нет данных полученных из ботом (они будут в папке bot-data):
 ```bash
 bun seed
+```
+
+### ⚙️ Следующий этап
+
+[Гайд по MTCUTE](https://github.com/kam1kazy/dope-lyrics/blob/main/guide/MTCUTE.md)
+
+### ⚙️ Предыдущий этап
+
+[Гайд по SETUP](https://github.com/kam1kazy/dope-lyrics/blob/main/guide/SETUP.md)

@@ -39,5 +39,8 @@ BOT_CHANNEL_ID=
 - Отправляем команду `/chathistory` в группу
 - Получаем историю чата в консоли
 
+### ⚙️ Предыдущие этапы
 
+[Гайд по SETUP](https://github.com/kam1kazy/dope-lyrics/blob/main/guide/SETUP.md)
 
+[Гайд по PRISMA](https://github.com/kam1kazy/dope-lyrics/blob/main/guide/PRISMA.md)

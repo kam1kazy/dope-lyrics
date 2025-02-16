@@ -15,15 +15,15 @@
 
 ### ⚙️ Как инициализировать проект
 
-[Гайд по установки](https://github.com/kam1kazy/dope-lyrics/guide/SETUP.md)
+[Гайд по установки](https://github.com/kam1kazy/dope-lyrics/blob/main/guide/SETUP.md)
 
 ### ⚙️ Команды для работы с базой данных через Prisma ORMc
 
-[Гайд по PRISMA](https://github.com/kam1kazy/dope-lyrics/guide/PRISMA.md)
+[Гайд по PRISMA](https://github.com/kam1kazy/dope-lyrics/blob/main/guide/PRISMA.md)
 
 ### ⚙️ Подключаем telegram бота
 
-[Гайд по MTCUTE](https://github.com/kam1kazy/dope-lyrics/guide/MTCUTE.md)
+[Гайд по MTCUTE](https://github.com/kam1kazy/dope-lyrics/blob/main/guide/MTCUTE.md)
 
 ## 💻  Использование
 
@@ -37,7 +37,7 @@
 
 - **Подключение GPT**
 
-[TODO](https://github.com/kam1kazy/dope-lyrics/guide/FUTURES.md)
+[TODO](https://github.com/kam1kazy/dope-lyrics/blob/main/guide/FUTURES.md)
 
 ## 🙏 Support
 
