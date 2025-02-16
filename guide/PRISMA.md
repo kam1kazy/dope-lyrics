@@ -11,11 +11,12 @@ cd server
 ```bash
 bunx prisma studio
 ```
-2. Генерируем Prisma Client:
+2. Генерируем Prisma Client (не нужно, если выполняли команду setup из корня):
 
 ```bash
 bun prisma generate
 ```
+
 3. Удаляет и заново создает БД ("мягкий сброс"), удаляя все данные, таблицы, индексы и другие артефакты:
 
 ```bash
