@@ -25,7 +25,7 @@ bun prisma generate
 bunx prisma migrate reset --skip-seed
 ```
 
-3. Создает миграции:
+3. Создает миграции по моделям из схемы:
 ```bash
 bunx prisma migrate dev --name init --skip-seed
 ```
