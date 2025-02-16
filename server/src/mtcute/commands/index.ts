@@ -21,7 +21,7 @@ const commandChatHistory = async ({ tg, msg }: ICommandChat) => {
   await msg.delete()
   await getChatHistory({ tg, chatId: channelId })
     .then(() => {
-      msg.answerText('MTCUTE: 📥 История чата получена')
+      // msg.answerText('MTCUTE: 📥 История чата получена')
     })
     .catch(() => {
       msg.answerText('MTCUTE: 🛑 Ошибка при получении истории')
