@@ -47,6 +47,29 @@ BOT_CHANNEL_ID=
 bun seed
 ```
 
+6. Делаем приложение видимым в telegram:
+
+Установите Localtunnel с помощью npm:
+
+```bash
+  npm install -g localtunnel
+```
+
+Запустите Localtunnel:
+
+```bash
+lt --port 3000
+```
+В терминале появится ссылка вида:
+
+```bash
+https://violet-cougars-listen.loca.lt
+```
+
+Её нужно прислать @botfather'у чтобы он сделал приложение видимым в telegram.
+
+Можно пользоваться.
+
 ### ⚙️ Предыдущие этапы
 
 [Гайд по SETUP](https://github.com/kam1kazy/dope-lyrics/blob/main/guide/SETUP.md)
