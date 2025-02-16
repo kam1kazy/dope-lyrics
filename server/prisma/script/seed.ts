@@ -25,12 +25,10 @@ async function seed() {
     },
   })
 
-  console.log('userExists', userExists)
-
   // Добавляем пользователей
   if (!userExists) {
-    console.log(`\nPRISMA: 🙅 User не был найден`)
-    console.log(`\nPRISMA: 🧻 Запись...`)
+    console.log(`\nPRISMA: 🙅 Users не был найден`)
+    console.log(`\nPRISMA: 📝 Создание пользователей...`)
     await db.users
       .createMany({
         data: arrUser,
