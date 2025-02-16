@@ -28,7 +28,29 @@ bunx prisma migrate reset --skip-seed
 bunx prisma migrate dev --name init --skip-seed
 ```
 
-5. Выполняет посев (заливает данные) - сейчас он не срабатывает, так как нет данных полученных из ботом (они будут в папке bot-data):
+5. Для базы потребуется добавить пользователя к которому будет привязаны данные (можете сделать это ручками):
+ 
+Создаем папку bot-data/data и в ней создадим файл usersData.json
+```bash
+mkdir -p bot-data/data
+New-Item -Path bot-data/data/usersData.json -ItemType File
+```
+Добавим туда объект с данными пользователей:
+
+```json
+{
+  "users": [
+    {
+      "id": 0,
+      "username": "test",
+      "password": "test",
+      "email": "test@test.com",
+    }
+  ]
+}
+```
+
+6. Выполняет посев (заливает данные) - сейчас он не срабатывает, так как нет данных полученных из ботом (они будут в папке bot-data):
 ```bash
 bun seed
 ```
