@@ -17,7 +17,7 @@
 
 [Гайд по установки](https://github.com/kam1kazy/dope-lyrics/blob/main/guide/SETUP.md)
 
-### ⚙️ Команды для работы с базой данных через Prisma ORMc
+### ⚙️ Команды для работы с базой данных через Prisma ORM
 
 [Гайд по PRISMA](https://github.com/kam1kazy/dope-lyrics/blob/main/guide/PRISMA.md)
 
