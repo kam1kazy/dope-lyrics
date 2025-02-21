@@ -1,19 +1,27 @@
 import { PrismaClient } from '@prisma/client'
+const fs = require('fs')
+const path = require('path')
 
 // Типы
 import { ILyric } from '../../src/types/lyric'
 import { IUser } from '../../src/types/user'
 import { IChatHistoryItem } from '../../src/types/prismaCreate'
 
-// Дата
-const chatUser = require('../../bot-data/data/usersData.json')
-const chatHistory = require('../../bot-data/data/chatHistory.json')
+const chatHistoryPath = path.resolve(
+  __dirname,
+  '../../bot-data/data/chatHistory.json'
+)
+const chatUserPath = path.resolve(
+  __dirname,
+  '../../bot-data/data/usersData.json'
+)
+let chatHistory: IChatHistoryItem[] = null
+let chatUser: IUser[] = null
 
+// Дата базы
 const db = new PrismaClient()
 
-// Типизируем данные
-const arrUser: IUser[] = chatUser
-const arrHistory: IChatHistoryItem[] = chatHistory
+console.log('DATABASE_URL in seed.ts:', process.env.DATABASE_URL)
 
 async function seed() {
   console.log(`\nPRISMA: 🧻 Запись данных в базу...`)
@@ -26,18 +34,21 @@ async function seed() {
   })
 
   // Добавляем пользователей
-  if (!userExists) {
+  if (fs.existsSync(chatUser)) {
+    chatUser = require(chatUserPath)
+
     console.log(`\nPRISMA: 🙅 Users не был найден`)
     console.log(`PRISMA: 📝 Создание пользователей...`)
+
     await db.users
       .createMany({
-        data: arrUser,
+        data: chatUser,
         skipDuplicates: true,
       })
       .then(() =>
         console.log(
           'PRISMA: 🚚 Данные Users - в кол-ве ' +
-            arrUser.length +
+            chatUser.length +
             ' были успешно созданы'
         )
       )
@@ -59,126 +70,130 @@ async function seed() {
   let successCount = 0
 
   // Цикл создает по одной записи за раз
-  for (const item of arrHistory) {
-    try {
-      const {
-        date,
-        editDate,
-        isPinned,
-        isChannelPost,
-        message,
-        user,
-        chat,
-        replyToMessage,
-        media,
-      } = item
+  if (fs.existsSync(chatHistoryPath)) {
+    chatHistory = require(chatHistoryPath)
 
-      // Создаем запись
-      await db.lyrics.create({
-        data: {
-          //? LYRICS
-          userId: userExists.id,
-          lyric_id: message?.message_id ?? null,
-          date: date,
-          editDate: editDate,
+    for (const item of chatHistory) {
+      try {
+        const {
+          date,
+          editDate,
           isPinned,
           isChannelPost,
+          message,
+          user,
+          chat,
+          replyToMessage,
+          media,
+        } = item
 
-          //? MESSAGE
-          message: message
-            ? {
-                create: {
-                  text: message.text,
-                  message_id: message.message_id,
-                  word_count: message.word_count,
-                  paragraph_count: message.paragraph_count,
+        // Создаем запись
+        await db.lyrics.create({
+          data: {
+            //? LYRICS
+            userId: userExists.id,
+            lyric_id: message?.message_id ?? null,
+            date: date,
+            editDate: editDate,
+            isPinned,
+            isChannelPost,
 
-                  //? REACTION
-                  reactions: message.reactions
-                    ? {
-                        create: {
-                          uniqueCount: message.reactions.uniqueCount,
-                          totalFreeCount: message.reactions.totalFreeCount,
-                          totalPaidCount: message.reactions.totalPaidCount,
-                          totalCount: message.reactions.totalCount,
-                          emojis: {
-                            create: message.reactions.emojis,
+            //? MESSAGE
+            message: message
+              ? {
+                  create: {
+                    text: message.text,
+                    message_id: message.message_id,
+                    word_count: message.word_count,
+                    paragraph_count: message.paragraph_count,
+
+                    //? REACTION
+                    reactions: message.reactions
+                      ? {
+                          create: {
+                            uniqueCount: message.reactions.uniqueCount,
+                            totalFreeCount: message.reactions.totalFreeCount,
+                            totalPaidCount: message.reactions.totalPaidCount,
+                            totalCount: message.reactions.totalCount,
+                            emojis: {
+                              create: message.reactions.emojis,
+                            },
                           },
-                        },
-                      }
-                    : undefined,
+                        }
+                      : undefined,
 
-                  //? HASHTAG
-                  hashtags: message.hashtags
-                    ? {
-                        create: {
-                          tags: message.hashtags.tags.map((tag) => tag),
-                          count: message.hashtags.count,
-                        },
-                      }
-                    : undefined,
-                },
-              }
-            : undefined,
+                    //? HASHTAG
+                    hashtags: message.hashtags
+                      ? {
+                          create: {
+                            tags: message.hashtags.tags.map((tag) => tag),
+                            count: message.hashtags.count,
+                          },
+                        }
+                      : undefined,
+                  },
+                }
+              : undefined,
 
-          //? USERS
-          user: user
-            ? {
-                create: {
-                  id: user.id,
-                  username: user.username,
-                  displayName: user.displayName,
-                  isAdmin: user.isAdmin,
-                },
-              }
-            : undefined,
+            //? USERS
+            user: user
+              ? {
+                  create: {
+                    id: user.id,
+                    username: user.username,
+                    displayName: user.displayName,
+                    isAdmin: user.isAdmin,
+                  },
+                }
+              : undefined,
 
-          //? CHAT
-          chat: chat
-            ? {
-                create: {
-                  id: chat.id,
-                  title: chat.title,
-                  type: chat.type,
-                },
-              }
-            : undefined,
+            //? CHAT
+            chat: chat
+              ? {
+                  create: {
+                    id: chat.id,
+                    title: chat.title,
+                    type: chat.type,
+                  },
+                }
+              : undefined,
 
-          //? REPLY
-          replyToMessage: replyToMessage ?? null,
+            //? REPLY
+            replyToMessage: replyToMessage ?? null,
 
-          //? MEDIA
-          media: media
-            ? {
-                create: {
-                  mime: media.mime,
-                  duration: media.duration,
-                  convert: media.convert,
-                },
-              }
-            : undefined,
-        },
-      })
+            //? MEDIA
+            media: media
+              ? {
+                  create: {
+                    mime: media.mime,
+                    duration: media.duration,
+                    convert: media.convert,
+                  },
+                }
+              : undefined,
+          },
+        })
 
-      successCount++
-    } catch (error) {
-      console.error(
-        'PRISMA: 🚧 Данные Lyrics - Iter: #' +
-          successCount +
-          ' - не удалось загрузить в базу\n\n',
-        error
-      )
+        successCount++
+      } catch (error) {
+        console.error(
+          'PRISMA: 🚧 Данные Lyrics - Iter: #' +
+            successCount +
+            ' - не удалось загрузить в базу\n\n',
+          error
+        )
+      }
     }
+  } else {
+    console.log(`\nPRISMA: 🧻 Данные History не были найдены`)
   }
 
-  if (successCount === arrHistory.length) {
+  if (fs.existsSync(chatHistoryPath) && successCount === chatHistory.length) {
     console.log(
-      `PRISMA: 🚚 Данные Lyrics - в кол-ве ${arrHistory.length} успешно созданы`
+      `PRISMA: 🚚 Данные Lyrics - в кол-ве ${chatHistory.length} успешно созданы`
     )
   } else {
-    console.log(
-      `\nPRISMA:🚧 Создано ${successCount} из ${arrHistory.length} записей`
-    )
+    console.log(`\nPRISMA:🚧 chatHistory не был найден или пустой`)
   }
 }
 
