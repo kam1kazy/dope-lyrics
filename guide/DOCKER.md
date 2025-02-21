@@ -8,7 +8,13 @@
 docker-compose config
 
 # Остановить контейнеры, но сохранить volumes
-docker-compose down
+docker-compose down -v
+
+# Удалить все контейнеры и образы
+docker-compose down -v --rmi all
+
+# Удалить все образы
+docker system prune -a --volumes
 
 # Пересобрать и запустить
 docker-compose up --build
@@ -69,3 +75,17 @@ docker logs -f <container_name>
 ```bash
 docker inspect <container_name>
 ```
+
+9. **Остановить контейнеры и удалить volumes**
+
+```bash
+docker-compose down -v
+```
+
+10. **Посмотреть конфигурацию**
+
+```bash
+docker-compose config
+```
+
+
