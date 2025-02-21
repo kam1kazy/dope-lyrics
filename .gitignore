@@ -178,3 +178,4 @@ dist
 .vercel
 .netlify
 guide.txt
+.snapshots
