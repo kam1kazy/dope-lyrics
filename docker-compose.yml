@@ -68,7 +68,7 @@ services:
     networks:
       - development
     healthcheck:
-      test: ["CMD", "nginx", "-t"]
+      test: ['CMD', 'nginx', '-t']
       interval: 10s
       timeout: 5s
       retries: 3
@@ -88,6 +88,10 @@ services:
       target: release
     environment:
       DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
+    command: >
+      sh -c "
+        ./wait-for-db.sh db 'bunx prisma migrate deploy && bunx prisma db seed && bun run start'
+      "
     ports:
       - '${SERVER_PORT}:${SERVER_PORT}'
     depends_on:
