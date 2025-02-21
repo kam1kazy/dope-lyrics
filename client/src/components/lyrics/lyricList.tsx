@@ -54,7 +54,7 @@ export const LyricList = () => {
       margin={'auto'}
       m={0}
       padding={'15'}
-      maxH={'590px'}
+      // maxH={'590px'}
       w={'100%'}
       h={'100%'}
       overflowY={'scroll'}
