@@ -6,7 +6,9 @@ import { TypeBotClient } from '../mtcute/index'
 interface ISendToBotChat {
   tg: TypeBotClient
   chatId: number
-  text: number
+  text: number | string
+  url?: string
+  options?: any
 }
 
 // Кол-во слов
@@ -63,7 +65,7 @@ const hashtagStringsOnly = (data: IHashtagData[]) => {
 
 // Отправить в определенный чат
 const sendToBotChat = ({ tg, chatId, text }: ISendToBotChat) => {
-  tg.sendText(chatId, 'MTCUTE [CMD]: 💳 Chat ID     ' + text.toString())
+  tg.sendText(chatId, text.toString())
 }
 
 export {

@@ -1,4 +1,5 @@
 // КОНСТАНТЫ
+import { BotKeyboard } from '@mtcute/core'
 import * as env from '../../env'
 
 // HANDLERS
@@ -16,26 +17,53 @@ interface ICommandChat {
   msg: any
 }
 
+// Команды для бота
+const options = {
+  reply_markup: {
+    inline_keyboard: [
+      [
+        {
+          text: 'Открыть приложение',
+          url: 'https://violet-cougars-listen.loca.lt',
+        },
+      ],
+    ],
+  },
+}
+
 // Получаем историю чата
 const commandChatHistory = async ({ tg, msg }: ICommandChat) => {
   await msg.delete()
   await getChatHistory({ tg, chatId: channelId })
     .then(() => {
-      // msg.answerText('MTCUTE: 📥 История чата получена')
+      sendToBotChat({ tg, chatId, text: 'MTCUTE: 📥 История чата получена' })
     })
     .catch(() => {
-      msg.answerText('MTCUTE: 🛑 Ошибка при получении истории')
+      sendToBotChat({
+        tg,
+        chatId,
+        text: 'MTCUTE: 🛑 Ошибка при получении истории',
+      })
     })
 }
 
 // Получаем ID чата
 const commandChatId = async ({ tg, msg }: ICommandChat) => {
-  console.log(msg)
-
   await msg.delete()
-  const text = msg.chat.id
+  const text = 'MTCUTE: 💳 Chat ID: ' + msg.chat.id
   sendToBotChat({ tg, chatId, text })
-  console.log('MTCUTE [CMD]: 💳 Chat ID     ' + msg.chat.id)
 }
 
-export { commandChatHistory, commandChatId }
+// Открываем приложение
+const commandStart = async ({ tg, msg }: ICommandChat) => {
+  await msg.delete()
+  const text = 'MTCUTE: 📱 Вы хотите открыть приложение?'
+
+  await tg.sendText(msg.chat.id, text, {
+    replyMarkup: BotKeyboard.inline([
+      [BotKeyboard.url('Запустить', 'https://violet-cougars-listen.loca.lt')],
+    ]),
+  })
+}
+
+export { commandChatHistory, commandChatId, commandStart }

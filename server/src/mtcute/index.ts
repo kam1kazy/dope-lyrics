@@ -4,7 +4,7 @@ import { Dispatcher, filters } from '@mtcute/dispatcher'
 import path from 'path'
 
 // HANDLERS
-import { commandChatHistory, commandChatId } from './commands'
+import { commandChatHistory, commandChatId, commandStart } from './commands'
 
 // КОНСТАНТЫ
 import * as env from '../env'
@@ -46,8 +46,6 @@ const self = await tg
     console.error('\nMTCUTE: 🛑 Не вошел в систему\n\n', error)
   })
 
-// Команды для бота
-
 // Получаем историю чата
 dp.onNewMessage(filters.command('chathistory'), async (msg) =>
   commandChatHistory({ tg, msg })
@@ -55,4 +53,8 @@ dp.onNewMessage(filters.command('chathistory'), async (msg) =>
 // Получаем ID чата
 dp.onNewMessage(filters.command('chatid'), async (msg) =>
   commandChatId({ tg, msg })
+)
+// Открываем приложение
+dp.onNewMessage(filters.command('app'), async (msg) =>
+  commandStart({ tg, msg })
 )
