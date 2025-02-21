@@ -7,8 +7,14 @@ import { swagger } from '@elysiajs/swagger'
 import { yoga } from '@elysiajs/graphql-yoga'
 import { schema } from './graphql/schema'
 
+//env
+import dotenv from 'dotenv'
+dotenv.config()
+
+console.log('Starting server with DATABASE_URL:', process.env.DATABASE_URL)
+
 // Переменные для запуска сервера
-const port: number = 4000
+const port: number = Number(process.env.PORT) || 4000
 
 const app: Elysia = new Elysia()
   .use(cors())
