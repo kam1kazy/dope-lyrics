@@ -23,6 +23,7 @@ export type TypeBotClient = typeof tg
 
 // Диспетчер событий
 const dp = Dispatcher.for(tg)
+console.log('MTCUTE: Database connection string:', process.env.DATABASE_URL)
 
 export type TypeBotDispatcher = typeof dp
 
