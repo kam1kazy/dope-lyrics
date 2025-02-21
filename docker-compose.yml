@@ -1,39 +1,99 @@
 networks:
   development:
 
+volumes:
+  postgres_data:
+
 services:
+  db:
+    build:
+      context: ./db
+    image: postgres:16.4-alpine
+    container_name: postgres
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    command:
+      - 'postgres'
+      - '-c'
+      - 'max_connections=50'
+      - '-c'
+      - 'shared_buffers=1GB'
+      - '-c'
+      - 'effective_cache_size=4GB'
+      - '-c'
+      - 'work_mem=16MB'
+      - '-c'
+      - 'maintenance_work_mem=512MB'
+      - '-c'
+      - 'random_page_cost=1.1'
+      - '-c'
+      - 'temp_file_limit=10GB'
+      - '-c'
+      - 'log_min_duration_statement=200ms'
+      - '-c'
+      - 'idle_in_transaction_session_timeout=10s'
+      - '-c'
+      - 'lock_timeout=1s'
+      - '-c'
+      - 'statement_timeout=60s'
+    ports:
+      - '${DB_PORT}:${DB_PORT}'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER} -d ${DB_NAME}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - development
+    env_file:
+      - ./server/.env
+
   nginx:
     image: nginx:stable-alpine
     container_name: nginx
     ports:
-      - "80:80"
+      - '80:80'
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf
     depends_on:
-      - backend
-      - frontend
+      backend:
+        condition: service_started
+      frontend:
+        condition: service_started
     networks:
       - development
-
-  db:
-    image: postgres:16.4-alpine
-    environment:
-      POSTGRES_PASSWORD: "hOz6Xeu0_p"
-      POSTGRES_USER: "postgres"
-      POSTGRES_DB: "db"
-    ports:
-      - "5435:5435"
-    networks:
-      - development
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   frontend:
     build:
       context: ./client
+      target: release
+    ports:
+      - '${FRONTEND_PORT}:${FRONTEND_PORT}'
     networks:
       - development
 
   backend:
-    build: 
+    build:
       context: ./server
+      target: release
+    environment:
+      DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
+    ports:
+      - '${SERVER_PORT}:${SERVER_PORT}'
+    depends_on:
+      db:
+        condition: service_healthy
     networks:
       - development
+    env_file:
+      - ./server/.env
