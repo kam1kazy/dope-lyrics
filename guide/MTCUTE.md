@@ -75,3 +75,5 @@ https://violet-cougars-listen.loca.lt
 [Гайд по SETUP](https://github.com/kam1kazy/dope-lyrics/blob/main/guide/SETUP.md)
 
 [Гайд по PRISMA](https://github.com/kam1kazy/dope-lyrics/blob/main/guide/PRISMA.md)
+
+[Гайд по Docker](https://github.com/kam1kazy/dope-lyrics/blob/main/guide/DOCKER.md)

@@ -58,3 +58,5 @@ docker run -p 5432:5432 --name NAME-DOCKER-CONTAINER -e POSTGRES_PASSWORD=UPASSD
 [Гайд по PRISMA](https://github.com/kam1kazy/dope-lyrics/blob/main/guide/PRISMA.md)
 
 [Гайд по MTCUTE](https://github.com/kam1kazy/dope-lyrics/blob/main/guide/MTCUTE.md)
+
+[Гайд по Docker](https://github.com/kam1kazy/dope-lyrics/blob/main/guide/DOCKER.md)

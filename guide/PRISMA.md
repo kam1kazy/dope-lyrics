@@ -67,6 +67,8 @@ bunx prisma studio
 
 [Гайд по MTCUTE](https://github.com/kam1kazy/dope-lyrics/blob/main/guide/MTCUTE.md)
 
+[Гайд по Docker](https://github.com/kam1kazy/dope-lyrics/blob/main/guide/DOCKER.md)
+
 ### ⚙️ Предыдущий этап
 
 [Гайд по SETUP](https://github.com/kam1kazy/dope-lyrics/blob/main/guide/SETUP.md)
