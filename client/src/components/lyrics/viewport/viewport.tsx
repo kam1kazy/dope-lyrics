@@ -8,7 +8,7 @@ import { motion } from 'framer-motion'
 import { LyricItem } from '../lyricItem'
 
 // TYPES
-import { ILyric } from '@server/types/lyric'
+import { ILyric } from '@/types/lyric'
 
 type LyricItem = Pick<ILyric, 'message' | 'lyric_id'>
 

@@ -1,6 +1,6 @@
 import { Text, HStack, VStack, Tag, TagLabel } from '@chakra-ui/react'
 
-import { ILyric } from '@server/types/lyric'
+import { ILyric } from '@/types/lyric'
 
 type LyricItem = Pick<ILyric, 'message' | 'lyric_id'>
 

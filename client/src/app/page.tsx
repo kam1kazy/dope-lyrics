@@ -10,7 +10,6 @@ import { ChakraProvider, Container, Flex } from '@chakra-ui/react'
 import { theme } from '../../styles/theme'
 
 // COMPONENTS
-import { AddLyric } from '@/components/lyrics/addLyric'
 import { LyricList } from '@/components/lyrics/lyricList'
 import { Menu } from '@/components/menu/menu'
 
@@ -87,8 +86,6 @@ export default function Home() {
               },
             }}
           >
-            {/* <AddLyric /> */}
-
             <LyricList />
             <Menu />
           </Container>
