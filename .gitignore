@@ -179,3 +179,4 @@ dist
 .netlify
 guide.txt
 .snapshots
+.env
