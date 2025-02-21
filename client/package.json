@@ -7,10 +7,12 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "lint": "next lint"
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit"
   },
   "engines": {
-    "bun": "^1.1"
+    "bun": "^1.2.2"
   },
   "dependencies": {
     "@apollo/client": "^3.13.1",
@@ -19,7 +21,6 @@
     "@chakra-ui/react": "^2.10.5",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
-    "elysia": "^1.2.12",
     "framer-motion": "^11.18.2",
     "graphql": "^16.10.0",
     "next": "14.2.5",
@@ -27,7 +28,7 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "@types/bun": "latest",
+    "@types/bun": "^1.2.2",
     "@types/node": "^20.17.19",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
