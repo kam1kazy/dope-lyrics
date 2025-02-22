@@ -1,6 +1,7 @@
 # Базовый образ
 FROM oven/bun:1.2.2-alpine AS base
 WORKDIR /src
+RUN apk update && apk add --no-cache postgresql-client
 
 # Этап установки зависимостей
 FROM base AS install
@@ -9,8 +10,6 @@ RUN bun install --frozen-lockfile
 
 # Этап сборки
 FROM base AS build
-# Установка postgresql-client для Alpine
-RUN apk update && apk add --no-cache postgresql-client
 # Копирование и настройка wait-for-db.sh
 COPY wait-for-db.sh .
 RUN chmod +x wait-for-db.sh
@@ -24,10 +23,10 @@ RUN bun run generate
 FROM base AS dev
 COPY --from=build /src .
 EXPOSE 4000
-CMD ["sh", "-c", "./wait-for-db.sh db 'bunx prisma migrate deploy && bun run seed && bun run start'"]
+CMD ["sh", "-c", "./wait-for-db.sh db 'bunx prisma migrate deploy && bun run seed && bun run start:admin'"]
 
 # Финальный образ для продакшена
 FROM base AS release
 COPY --from=build /src .
 EXPOSE 4000
-CMD ["bun", "run", "start"]
+CMD ["bun", "run", "start:admin"]
