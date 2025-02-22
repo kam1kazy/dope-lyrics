@@ -56,10 +56,14 @@ services:
   nginx:
     image: nginx:stable-alpine
     container_name: nginx
+    environment:
+      - SERVER_IP=${SERVER_IP}
+      - ALLOWED_IP=${ALLOWED_IP}
     ports:
       - '80:80'
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./.htpasswd:/etc/nginx/.htpasswd:ro # для локальной разработки закомментировать
     depends_on:
       backend:
         condition: service_started
@@ -77,8 +81,10 @@ services:
     build:
       context: ./client
       target: release
-    ports:
-      - '${FRONTEND_PORT}:${FRONTEND_PORT}'
+    #    ports:  # для локальной разработки расскоментировать
+    #      - '${FRONTEND_PORT}:${FRONTEND_PORT}'
+    expose: # для локальной разработки закомментировать
+      - ${FRONTEND_PORT} # Порт доступен только внутри Docker-сети
     networks:
       - development
 
@@ -87,16 +93,18 @@ services:
       context: ./server
       target: release
     environment:
-      DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
+      DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@db:${DB_PORT}/${DB_NAME}
     command: >
       sh -c "
         ./wait-for-db.sh db 'bunx prisma migrate deploy && bunx prisma db seed && bun run start'
       "
-    ports:
-      - '${SERVER_PORT}:${SERVER_PORT}'
+    #    ports:  # для локальной разработки расскоментировать
+    #      - '${SERVER_PORT}:${SERVER_PORT}'
     depends_on:
       db:
         condition: service_healthy
+    expose: # для локальной разработки закомментировать
+      - ${SERVER_PORT} # Порт доступен только внутри Docker-сети
     networks:
       - development
     env_file:
