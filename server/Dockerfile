@@ -29,4 +29,4 @@ CMD ["sh", "-c", "./wait-for-db.sh db 'bunx prisma migrate deploy && bun run see
 FROM base AS release
 COPY --from=build /src .
 EXPOSE 4000
-CMD ["bun", "run", "start:admin"]
+CMD ["sh", "-c", "./wait-for-db.sh db 'bunx prisma migrate deploy && bun run seed && bun run start'"]
