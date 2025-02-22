@@ -12,8 +12,11 @@
     "generate": "bunx prisma generate",
     "migrate": "bunx prisma migrate deploy",
     "seed": "bunx prisma db seed",
-    "bot": "bun src/bot/index.ts",
-    "devBot": "concurrently \"bun dev\" \"bun bot\""
+    "bot": "bun src/mtcute/index.ts",
+    "bot:admin": "BOT_TYPE=admin bun src/mtcute/index.ts",
+    "devBot": "concurrently \"bun dev\" \"bun bot:admin\"",
+    "start:all": "bun run start & bun run bot",
+    "start:admin": "bunx prisma migrate deploy --name init --skip-seed & bun run start & bun run bot:admin"
   },
   "prisma": {
     "seed": "bun ./prisma/script/seed.ts"
