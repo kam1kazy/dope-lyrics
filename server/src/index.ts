@@ -11,8 +11,6 @@ import { schema } from './graphql/schema'
 import dotenv from 'dotenv'
 dotenv.config()
 
-console.log('Starting server with DATABASE_URL:', process.env.DATABASE_URL)
-
 // Переменные для запуска сервера
 const port: number = Number(process.env.PORT) || 4000
 
