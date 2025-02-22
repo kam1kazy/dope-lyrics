@@ -101,3 +101,16 @@ services:
       - development
     env_file:
       - ./server/.env
+
+  telegram-bot:
+    build:
+      context: ./server
+      target: release
+    command: bun run bot:admin
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - development
+    env_file:
+      - ./server/.env
