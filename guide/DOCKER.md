@@ -7,6 +7,19 @@
 # Посмотреть конфигурацию
 docker-compose config
 
+# Запуск в фоне
+docker-compose up -d
+
+# Просмотр логов
+docker-compose logs -f                  # все контейнеры
+docker-compose logs -f nginx           # конкретный контейнер
+
+# Статус контейнеров
+docker-compose ps
+
+# Остановка
+docker-compose down
+
 # Остановить контейнеры, но сохранить volumes
 docker-compose down -v
 
