@@ -4,6 +4,7 @@ import { createJSONdata } from './createJSONdata'
 
 // TYPES
 import { TypeBotClient } from '../../mtcute/index'
+import { sendToBotChat } from '../handlers'
 
 // Получаем историю чата
 export async function getChatHistory({
