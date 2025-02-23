@@ -84,9 +84,7 @@ services:
       retries: 3
 
   frontend:
-    build:
-      context: ./client
-      target: release
+    image: ${DOCKERHUB_USERNAME}/dope-essence-frontend:latest
     #    ports:  # для локальной разработки расскоментировать
     #      - '${FRONTEND_PORT}:${FRONTEND_PORT}'
     expose: # для локальной разработки закомментировать
@@ -95,15 +93,7 @@ services:
       - development
 
   backend:
-    build:
-      context: ./server
-      target: release
-    environment:
-      DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@db:${DB_PORT}/${DB_NAME}
-    command: >
-      sh -c "
-        ./wait-for-db.sh db 'bunx prisma migrate deploy && bunx prisma db seed && bun run start'
-      "
+    image: ${DOCKERHUB_USERNAME}/dope-essence-backend:latest
     #    ports:  # для локальной разработки расскоментировать
     #      - '${SERVER_PORT}:${SERVER_PORT}'
     depends_on:
@@ -117,9 +107,7 @@ services:
       - ./server/.env
 
   telegram-bot:
-    build:
-      context: ./server
-      target: release
+    image: ${DOCKERHUB_USERNAME}/dope-essence-backend:latest
     command: bun run bot:admin
     depends_on:
       db:
