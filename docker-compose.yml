@@ -58,7 +58,8 @@ services:
     container_name: nginx
     environment:
       - SERVER_IP=${SERVER_IP}
-      - ALLOWED_IP=${ALLOWED_IP}
+      - ALLOWED_HOME_IP=${ALLOWED_HOME_IP}
+      - ALLOWED_MOBILE_IP=${ALLOWED_MOBILE_IP}
       - SITE_URL=${SITE_URL}
     ports:
       - '80:80'
