@@ -58,12 +58,18 @@ services:
     container_name: nginx
     environment:
       - SERVER_IP=${SERVER_IP}
-      - ALLOWED_IP=${ALLOWED_IP}
+      - ALLOWED_HOME_IP=${ALLOWED_HOME_IP}
+      - ALLOWED_MOBILE_IP=${ALLOWED_MOBILE_IP}
+      - SITE_URL=${SITE_URL}
     ports:
       - '80:80'
+      - '443:443'
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      #      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx.template.conf:/etc/nginx/nginx.template.conf:ro
       - ./.htpasswd:/etc/nginx/.htpasswd:ro # для локальной разработки закомментировать
+      - /etc/letsencrypt:/etc/letsencrypt:ro # Добавляем сертификаты  # для локальной разработки закомментировать
+    command: sh -c "envsubst '$$SERVER_IP $$ALLOWED_IP $$SITE_URL' < /etc/nginx/nginx.template.conf > /etc/nginx/nginx.conf && nginx -g 'daemon off;'"
     depends_on:
       backend:
         condition: service_started

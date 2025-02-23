@@ -67,12 +67,7 @@ const commandStartApp = async ({ tg, msg }: ICommandChat) => {
       const text = '📱 Вы хотите открыть приложение?'
       await tg.sendText(msg.chat.id, text, {
         replyMarkup: BotKeyboard.inline([
-          [
-            BotKeyboard.url(
-              'Запустить',
-              'https://orange-trains-shake.loca.lt/'
-            ),
-          ],
+          [BotKeyboard.url('Запустить', `https://${env.SITE_URL}/`)],
         ]),
       })
     },

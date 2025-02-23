@@ -34,7 +34,6 @@ docker-compose up --build
 
 ```
 
-
 1. **Посмотреть все контейнеры**
 
 ```bash
@@ -100,5 +99,3 @@ docker-compose down -v
 ```bash
 docker-compose config
 ```
-
-

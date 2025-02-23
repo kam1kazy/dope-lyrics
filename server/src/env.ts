@@ -15,6 +15,7 @@ const BOT_CHANNEL_ID = Number.parseInt(process.env.BOT_CHANNEL_ID ?? '')
 const BOT_ADMIN_ID = Number.parseInt(process.env.BOT_ADMIN_ID ?? '')
 const BOT_TYPE = process.env.BOT_TYPE ?? ''
 
+const SITE_URL = process.env.SITE_URL ?? ''
 
 // Проверяем все необходимые переменные окружения
 if (Number.isNaN(API_ID) || !API_HASH) {
@@ -41,4 +42,5 @@ export {
   BOT_CHANNEL_ID,
   BOT_TYPE,
   BOT_ADMIN_ID,
+  SITE_URL,
 }
