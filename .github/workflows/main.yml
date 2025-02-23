@@ -20,18 +20,12 @@ jobs:
           echo "DOCKERHUB_USERNAME: '${{ vars.DOCKERHUB_USERNAME }}'"
           echo "Repository variables:"
           echo "DOCKER_HUB_TOKEN exists: '${{ secrets.DOCKER_HUB_TOKEN != '' }}'"
-          echo "Current directory: $(pwd)"
-          echo "Directory contents:"
-          ls -la
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -62,8 +56,3 @@ jobs:
             cd /root/project
             docker-compose pull
             docker-compose up -d
-
-      - name: Debug GitHub Secrets
-        run: |
-          echo "Username: ${{ secrets.DOCKER_HUB_USERNAME }}"
-          echo "Token Length: $(echo -n "${{ secrets.DOCKER_HUB_TOKEN }}" | wc -c)"
