@@ -60,9 +60,11 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           debug: true
           script: |
+            echo "Testing connection..."
             whoami
             pwd
             cd /root/project
             ls -la
+            echo "Starting deployment..."
             docker-compose pull
             docker-compose up -d
