@@ -9,6 +9,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Debug GitHub Secrets
+        run: |
+          echo "Username: ${{ vars.DOCKER_HUB_USERNAME }}"
+          echo "Token Length: $(echo -n "${{ secrets.DOCKER_HUB_TOKEN }}" | wc -c)"
+
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
@@ -38,8 +43,3 @@ jobs:
             cd /root/project
             docker-compose pull
             docker-compose up -d
-
-      - name: Debug GitHub Secrets
-        run: |
-          echo "Username: ${{ vars.DOCKER_HUB_USERNAME }}"
-          echo "Token Length: $(echo -n "${{ secrets.DOCKER_HUB_TOKEN }}" | wc -c)"
