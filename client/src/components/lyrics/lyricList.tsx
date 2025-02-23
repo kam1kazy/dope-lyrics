@@ -36,6 +36,7 @@ export const LyricList = () => {
   }
 
   if (data.length === 0) {
+    console.log(data.length)
     return <ErrorText title={'Empty'} description={'Список пуст'} />
   }
 
