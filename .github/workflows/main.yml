@@ -32,3 +32,8 @@ jobs:
             cd /root/project
             docker-compose pull
             docker-compose up -d
+
+      - name: Debug GitHub Secrets
+        run: |
+          echo "Username: ${{ secrets.DOCKER_HUB_USERNAME }}"
+          echo "Token Length: $(echo -n "${{ secrets.DOCKER_HUB_TOKEN }}" | wc -c)"
