@@ -84,7 +84,7 @@ services:
       retries: 3
 
   frontend:
-    image: ${DOCKERHUB_USERNAME}/dope-essence-frontend:latest
+    image: ${DOCKERHUB_USERNAME}/dope-lyrics-frontend:latest
     #    ports:  # для локальной разработки расскоментировать
     #      - '${FRONTEND_PORT}:${FRONTEND_PORT}'
     expose: # для локальной разработки закомментировать
@@ -93,7 +93,7 @@ services:
       - development
 
   backend:
-    image: ${DOCKERHUB_USERNAME}/dope-essence-backend:latest
+    image: ${DOCKERHUB_USERNAME}/dope-lyrics-backend:latest
     #    ports:  # для локальной разработки расскоментировать
     #      - '${SERVER_PORT}:${SERVER_PORT}'
     depends_on:
@@ -107,7 +107,7 @@ services:
       - ./server/.env
 
   telegram-bot:
-    image: ${DOCKERHUB_USERNAME}/dope-essence-backend:latest
+    image: ${DOCKERHUB_USERNAME}/dope-lyrics-backend:latest
     command: bun run bot:admin
     depends_on:
       db:

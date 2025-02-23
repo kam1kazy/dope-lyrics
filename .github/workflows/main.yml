@@ -36,7 +36,7 @@ jobs:
           context: ./server
           target: release
           push: true
-          tags: ${{ vars.DOCKERHUB_USERNAME }}/dope-essence-backend:latest
+          tags: ${{ vars.DOCKERHUB_USERNAME }}/dope-lyrics-backend:latest
 
       - name: Build and push Frontend image
         uses: docker/build-push-action@v6
@@ -44,7 +44,7 @@ jobs:
           context: ./client
           target: release
           push: true
-          tags: ${{ vars.DOCKERHUB_USERNAME }}/dope-essence-frontend:latest
+          tags: ${{ vars.DOCKERHUB_USERNAME }}/dope-lyrics-frontend:latest
 
       - name: Deploy to server
         uses: appleboy/ssh-action@master
