@@ -14,13 +14,13 @@ jobs:
 
       - name: Debug GitHub Secrets
         run: |
-          echo "Username: ${{ vars.DOCKER_HUB_USERNAME }}"
+          echo "Username: ${{ vars.DOCKERHUB_USERNAME }}"
           echo "Token Length: $(echo -n "${{ secrets.DOCKER_HUB_TOKEN }}" | wc -c)"
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
-          username: ${{ vars.DOCKER_HUB_USERNAME }}
+          username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
       - name: Set up QEMU
@@ -34,7 +34,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ vars.DOCKER_HUB_USERNAME }}/dope-essence:latest
+          tags: ${{ vars.DOCKERHUB_USERNAME }}/dope-essence:latest
 
       - name: Deploy to server
         uses: appleboy/ssh-action@master
