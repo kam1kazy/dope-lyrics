@@ -7,18 +7,16 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
+    
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Debug GitHub Secrets
         run: |
-          echo "All available variables:"
-          env | grep DOCKER
           echo "Username: ${{ vars.DOCKERHUB_USERNAME }}"
           echo "Token Length: $(echo -n "${{ secrets.DOCKER_HUB_TOKEN }}" | wc -c)"
-
+          
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
@@ -31,21 +29,12 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build and push Backend image
+      - name: Build and push Docker images
         uses: docker/build-push-action@v6
         with:
-          context: ./server
-          target: release
+          context: .
           push: true
-          tags: ${{ vars.DOCKERHUB_USERNAME }}/dope-essence-backend:latest
-
-      - name: Build and push Frontend image
-        uses: docker/build-push-action@v6
-        with:
-          context: ./client
-          target: release
-          push: true
-          tags: ${{ vars.DOCKERHUB_USERNAME }}/dope-essence-frontend:latest
+          tags: ${{ vars.DOCKERHUB_USERNAME }}/dope-essence:latest
 
       - name: Deploy to server
         uses: appleboy/ssh-action@master
@@ -57,3 +46,8 @@ jobs:
             cd /root/project
             docker-compose pull
             docker-compose up -d
+
+      - name: Debug GitHub Secrets
+        run: |
+          echo "Username: ${{ secrets.DOCKER_HUB_USERNAME }}"
+          echo "Token Length: $(echo -n "${{ secrets.DOCKER_HUB_TOKEN }}" | wc -c)"
