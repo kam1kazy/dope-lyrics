@@ -7,20 +7,26 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
 
+    steps:
       - name: Login to Docker Hub
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          username: ${{ vars.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Build and push Docker images
-        run: |
-          docker-compose build
-          docker-compose push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ vars.DOCKER_HUB_USERNAME }}/dope-essence:latest
 
       - name: Deploy to server
         uses: appleboy/ssh-action@master
@@ -32,3 +38,8 @@ jobs:
             cd /root/project
             docker-compose pull
             docker-compose up -d
+
+      - name: Debug GitHub Secrets
+        run: |
+          echo "Username: ${{ vars.DOCKER_HUB_USERNAME }}"
+          echo "Token Length: $(echo -n "${{ secrets.DOCKER_HUB_TOKEN }}" | wc -c)"
