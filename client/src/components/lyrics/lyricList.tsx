@@ -35,6 +35,10 @@ export const LyricList = () => {
     return <ErrorText title={'Error'} />
   }
 
+  if (data.length === 0) {
+    return <ErrorText title={'Empty'} description={'Список пуст'} />
+  }
+
   if (data) {
     carouselList = CreateArrListCarousel(data.lyrics)
   } else {
