@@ -1,7 +1,7 @@
 ### ⚙️ Подключаем telegram бота
 
-1. Заполняем файл .env в папке server (пример в .env.example). 
-Вам нужен обязательно API_ID и API_HASH. Получить API_ID и API_HASH можно на сайте https://my.telegram.org/apps
+1. Заполняем файл .env в папке server (пример в .env.example).
+   Вам нужен обязательно API_ID и API_HASH. Получить API_ID и API_HASH можно на сайте https://my.telegram.org/apps
 
 ```bash
 API_ID=
@@ -60,6 +60,7 @@ bun seed
 ```bash
 lt --port 3000
 ```
+
 В терминале появится ссылка вида:
 
 ```bash
