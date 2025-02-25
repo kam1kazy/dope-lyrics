@@ -6,10 +6,7 @@ interface IProps {
   message: IMessage
   handlerCountParagraphs: (text: string) => number
   handlerCountWords: (text: string) => number
-  handlerCountReactions: (
-    reactions: IEmoji[],
-    type: 'total' | 'paid' | 'free'
-  ) => number | void
+  handlerCountReactions: (reactions: IEmoji[], type: 'total' | 'paid' | 'free') => number | void
   handlerWithoutHashtags: (text: string) => string
   hashtagStringsOnly: (entities: IHashtagData[]) => any[]
 }
@@ -44,18 +41,9 @@ const messageObject = ({
                 })
               : [],
             uniqueCount: message.reactions?.reactions.length,
-            totalFreeCount: handlerCountReactions(
-              message.reactions?.reactions,
-              'free'
-            ),
-            totalPaidCount: handlerCountReactions(
-              message.reactions?.reactions,
-              'paid'
-            ),
-            totalCount: handlerCountReactions(
-              message.reactions?.reactions,
-              'total'
-            ),
+            totalFreeCount: handlerCountReactions(message.reactions?.reactions, 'free'),
+            totalPaidCount: handlerCountReactions(message.reactions?.reactions, 'paid'),
+            totalCount: handlerCountReactions(message.reactions?.reactions, 'total'),
           }
         : null,
 

@@ -1,20 +1,40 @@
 import { IChatHistoryItem } from '~/types/prismaCreate'
 import { IUser } from '~/types/user'
 
-export const messageObject = (
+export const messageSeedObject = (
   record: IChatHistoryItem,
-  userId: IUser['id']
+  userId: IUser['id'],
+  isUpdate: boolean = false,
 ) => {
-  return {
-    //? LYRICS
+  const baseData = {
     userId: userId,
-    lyric_id: record.message?.message_id ?? null,
+    lyric_id: record.message.message_id,
     date: record.date,
     editDate: record.editDate,
     isPinned: record.isPinned,
     isChannelPost: record.isChannelPost,
+  }
 
-    //? MESSAGE
+  if (isUpdate) {
+    // Для обновления только изменяем основные поля, не трогаем вложенные отношения
+    return {
+      ...baseData,
+      message: record.message
+        ? {
+            update: {
+              text: record.message.text,
+              word_count: record.message.word_count,
+              paragraph_count: record.message.paragraph_count,
+            },
+          }
+        : undefined,
+      // Если нужно обновить другие вложенные данные, добавьте их сюда с осторожностью
+    }
+  }
+
+  // Для создания используем полную структуру
+  return {
+    ...baseData,
     message: record.message
       ? {
           create: {
@@ -22,8 +42,6 @@ export const messageObject = (
             message_id: record.message.message_id,
             word_count: record.message.word_count,
             paragraph_count: record.message.paragraph_count,
-
-            //? REACTION
             reactions: record.message.reactions
               ? {
                   create: {
@@ -31,18 +49,14 @@ export const messageObject = (
                     totalFreeCount: record.message.reactions.totalFreeCount,
                     totalPaidCount: record.message.reactions.totalPaidCount,
                     totalCount: record.message.reactions.totalCount,
-                    emojis: {
-                      create: record.message.reactions.emojis,
-                    },
+                    emojis: { create: record.message.reactions.emojis },
                   },
                 }
               : undefined,
-
-            //? HASHTAG
             hashtags: record.message.hashtags
               ? {
                   create: {
-                    tags: record.message.hashtags.tags.map((tag) => tag),
+                    tags: record.message.hashtags.tags.map(tag => tag),
                     count: record.message.hashtags.count,
                   },
                 }
@@ -50,8 +64,6 @@ export const messageObject = (
           },
         }
       : undefined,
-
-    //? USERS
     user: record.user
       ? {
           create: {
@@ -62,8 +74,6 @@ export const messageObject = (
           },
         }
       : undefined,
-
-    //? CHAT
     chat: record.chat
       ? {
           create: {
@@ -73,11 +83,7 @@ export const messageObject = (
           },
         }
       : undefined,
-
-    //? REPLY
     replyToMessage: record.replyToMessage ?? null,
-
-    //? MEDIA
     media: record.media
       ? {
           create: {

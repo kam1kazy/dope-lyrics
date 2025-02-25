@@ -3,7 +3,7 @@ import { IUser } from './user'
 // LYRIC TYPE
 export interface ILyric {
   userId: number
-  lyric_id?: number
+  lyric_id: number
   message: IMessage | null
   user: IUserLyric | null
   chat: IChat | null
@@ -11,7 +11,7 @@ export interface ILyric {
   editDate: Date
   isPinned: boolean
   isChannelPost: boolean
-  owner?: IUser | null
+  owner: IUser | null
   replyToMessage: number | null
   media: IMedia | null
 }
@@ -48,7 +48,7 @@ export interface IEmoji {
 
 export interface IUserLyric {
   id: number
-  username?: string
+  name?: string
   displayName?: string
   isAdmin: boolean
 }

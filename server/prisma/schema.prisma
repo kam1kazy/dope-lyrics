@@ -7,20 +7,56 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Users {
-  id Int @id @default(autoincrement())
+model User {
+  id            Int       @id @default(autoincrement())
+  name          String
+  email         String    @unique
+  password      String
+  emailVerified Boolean?
+  image         String?
+  role          String
+  accounts      Account[]
+  sessions      Session[]
+  lyrics        Lyrics[]
 
-  username String
-  email    String
-  password String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
 
-  lyrics Lyrics[]
+model Account {
+  id                Int      @id @default(autoincrement())
+  userId            Int
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String
+  access_token      String
+  expires_at        DateTime
+  token_type        String
+  scope             String
+  id_token          String
+  session_state     String?
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Session {
+  id           Int      @id @default(autoincrement())
+  sessionToken String   @unique
+  userId       Int
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Lyrics {
   id Int @id @default(autoincrement())
 
-  lyric_id       Int
+  lyric_id       Int @unique
   date           DateTime
   editDate       DateTime?
   isPinned       Boolean
@@ -33,7 +69,10 @@ model Lyrics {
   media   Media?
 
   userId Int
-  owner  Users @relation(fields: [userId], references: [id])
+  owner  User @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Message {
@@ -47,8 +86,11 @@ model Message {
   reactions Reactions?
   hashtags  Hashtags?
 
-  lyric   Lyrics @relation(fields: lyricId, references: id)
+  lyric   Lyrics @relation(fields: lyricId, references: lyric_id)
   lyricId Int    @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Reactions {
@@ -63,6 +105,9 @@ model Reactions {
 
   message   Message @relation(fields: messageId, references: id)
   messageId Int     @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Emoji {
@@ -75,6 +120,9 @@ model Emoji {
 
   reaction   Reactions @relation(fields: [reactionId], references: [id])
   reactionId Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model UserLyric {
@@ -85,8 +133,11 @@ model UserLyric {
   displayName String?
   isAdmin     Boolean
 
-  lyrics  Lyrics @relation(fields: lyricId, references: id)
+  lyrics  Lyrics @relation(fields: lyricId, references: lyric_id)
   lyricId Int    @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Chat {
@@ -96,8 +147,11 @@ model Chat {
   title String
   type  String
 
-  lyric   Lyrics @relation(fields: lyricId, references: id)
+  lyric   Lyrics @relation(fields: lyricId, references: lyric_id)
   lyricId Int    @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Media {
@@ -107,8 +161,11 @@ model Media {
   duration Int
   convert  Boolean
 
-  lyric   Lyrics @relation(fields: lyricId, references: id)
+  lyric   Lyrics @relation(fields: lyricId, references: lyric_id)
   lyricId Int    @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Hashtags {
@@ -119,4 +176,7 @@ model Hashtags {
 
   message   Message @relation(fields: messageId, references: id)
   messageId Int     @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
