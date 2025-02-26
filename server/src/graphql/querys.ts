@@ -1,110 +1,110 @@
 export const typeDefinitions = /* GraphQL */ `
-	type User {
-		id: Int!
-		name: String!
-		email: String
-		password: String!
-		lyrics: [Lyric!]
-	}
+  type User {
+    id: Int!
+    name: String!
+    email: String
+    password: String!
+    lyrics: [Lyric!]
+  }
 
-	type Lyric {
-		id: Int!
+  type Lyric {
+    id: Int!
 
-		lyric_id: Int!
-		date: String!
-		editDate: String
-		isPinned: Boolean!
-		isChannelPost: Boolean!
-		replyToMessage: Int
+    lyricId: Int!
+    date: String!
+    editDate: String
+    isPinned: Boolean!
+    isChannelPost: Boolean!
+    replyToMessage: Int
 
-		message: Message
-		user: User
-		chat: Chat
-		media: Media
+    message: Message
+    user: User
+    chat: Chat
+    media: Media
 
-		userId: Int!
-	}
+    userId: Int!
+  }
 
-	type Message {
-		id: Int!
+  type Message {
+    id: Int!
 
-		message_id: Int!
-		text: String
-		word_count: Int
-		paragraph_count: Int
+    message_id: Int!
+    text: String
+    word_count: Int
+    paragraph_count: Int
 
-		reactions: Reaction
-		hashtags: Hashtag
+    reactions: Reaction
+    hashtags: Hashtag
 
-		lyricId: Int!
-	}
+    lyricId: Int!
+  }
 
-	type Reaction {
-		id: Int!
+  type Reaction {
+    id: Int!
 
-		uniqueCount: Int!
-		totalFreeCount: Int!
-		totalPaidCount: Int!
-		totalCount: Int!
+    uniqueCount: Int!
+    totalFreeCount: Int!
+    totalPaidCount: Int!
+    totalCount: Int!
 
-		emojis: [Emoji!]!
+    emojis: [Emoji!]!
 
-		messageId: Int!
-	}
+    messageId: Int!
+  }
 
-	type Emoji {
-		id: Int!
+  type Emoji {
+    id: Int!
 
-		emoji: String!
-		isPaid: Boolean!
-		count: Int!
-		order: Int
+    emoji: String!
+    isPaid: Boolean!
+    count: Int!
+    order: Int
 
-		reactionId: Int!
-	}
+    reactionId: Int!
+  }
 
-	type UserLyric {
-		key: Int!
+  type UserLyric {
+    key: Int!
 
-		id: Int!
-		name: String
-		displayName: String!
-		isAdmin: Boolean!
+    id: Int!
+    name: String
+    displayName: String!
+    isAdmin: Boolean!
 
-		lyricsId: Int!
-	}
+    lyricsId: Int!
+  }
 
-	type Chat {
-		key: Int!
+  type Chat {
+    key: Int!
 
-		id: Int!
-		title: String!
-		type: String!
+    id: Int!
+    title: String!
+    type: String!
 
-		lyricId: Int!
-	}
+    lyricId: Int!
+  }
 
-	type Media {
-		id: Int!
+  type Media {
+    id: Int!
 
-		mime: String!
-		duration: Int!
-		convert: Boolean!
+    mime: String!
+    duration: Int!
+    convert: Boolean!
 
-		lyricId: Int!
-	}
+    lyricId: Int!
+  }
 
-	type Hashtag {
-		id: Int!
+  type Hashtag {
+    id: Int!
 
-		tags: [String!]!
-		count: Int!
+    tags: [String!]!
+    count: Int!
 
-		messageId: Int!
-	}
+    messageId: Int!
+  }
 
-	type Query {
-		users: [User!]!
-		lyrics: [Lyric!]!
-	}
-`;
+  type Query {
+    users: [User!]!
+    lyrics: [Lyric!]!
+  }
+`

@@ -2,7 +2,7 @@ import { Text, HStack, VStack, Tag, TagLabel } from '@chakra-ui/react'
 
 import { ILyric } from '@/types/lyric'
 
-type LyricItem = Pick<ILyric, 'message' | 'lyric_id'>
+type LyricItem = Pick<ILyric, 'message' | 'lyricId'>
 
 interface LyricItemProps {
   item: LyricItem
@@ -10,7 +10,7 @@ interface LyricItemProps {
 
 export const LyricItem = ({ item }: LyricItemProps) => {
   return (
-    <VStack spacing={3} key={item.lyric_id}>
+    <VStack spacing={3} key={item.lyricId}>
       <HStack spacing={4}>
         {item.message?.hashtags
           ? item.message.hashtags.tags.map((tag, index) => {

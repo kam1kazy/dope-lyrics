@@ -10,10 +10,10 @@ import { LyricItem } from '../lyricItem'
 // TYPES
 import { ILyric } from '@/types/lyric'
 
-type LyricItem = Pick<ILyric, 'message' | 'lyric_id'>
+type LyricItem = Pick<ILyric, 'message' | 'lyricId'>
 
 interface IViewportLyricList {
-  lyric_id: LyricItem['lyric_id']
+  lyricId: LyricItem['lyricId']
   message: LyricItem['message']
 }
 
@@ -53,7 +53,7 @@ export function Viewport({ data }: { data: any[] }) {
       >
         {data.slice(0, index + 1).map((item: IViewportLyricList) => (
           <motion.div
-            key={item.lyric_id + '_' + item.message?.message_id}
+            key={item.lyricId + '_' + item.message?.message_id}
             className='lyric'
             initial={{ opacity: 0, translateY: 500 }}
             animate={{ opacity: [0, 1, 0], translateY: 0 }}

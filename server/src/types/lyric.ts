@@ -3,7 +3,7 @@ import { IUser } from './user'
 // LYRIC TYPE
 export interface ILyric {
   userId: number
-  lyric_id: number
+  lyricId: number
   message: IMessage | null
   user: IUserLyric | null
   chat: IChat | null

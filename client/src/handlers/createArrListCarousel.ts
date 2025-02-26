@@ -1,10 +1,10 @@
 // TYPES
 import { ILyric } from '@/types/lyric'
 
-type LyricItem = Pick<ILyric, 'message' | 'lyric_id'>
+type LyricItem = Pick<ILyric, 'message' | 'lyricId'>
 
 interface IViewportLyricList {
-  lyric_id: LyricItem['lyric_id']
+  lyricId: LyricItem['lyricId']
   message: LyricItem['message']
 }
 
@@ -27,7 +27,7 @@ export const CreateArrListCarousel = (data: ILyric[]) => {
     if (newTextList) {
       for (let n = 0; n < newTextList.length; n++) {
         let newItem: IViewportLyricList = {
-          lyric_id: data[i].lyric_id,
+          lyricId: data[i].lyricId,
           message: {
             message_id: n,
             text: newTextList[n],

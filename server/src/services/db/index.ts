@@ -43,10 +43,13 @@ export class PrismaService {
     try {
       // Используем транзакцию для массовой загрузки записей через .upsert
       await this.prisma.$transaction(
-        users.map(user => this.prisma.user.upsert(userSeedObject(user))),
+        users.map((user) => this.prisma.user.upsert(userSeedObject(user)))
       )
     } catch (error) {
-      console.error('PRISMA: 🚧 Данные пользователя - не удалось загрузить в базу\n\n', error)
+      console.error(
+        'PRISMA: 🚧 Данные пользователя - не удалось загрузить в базу\n\n',
+        error
+      )
     }
 
     console.log(`PRISMA: 📊 Итого загружено пользователей: ${users.length}`)
@@ -63,13 +66,13 @@ export class PrismaService {
         const batch = records.slice(i, i + BATCH_SIZE)
 
         await this.prisma.$transaction(
-          batch.map(item =>
+          batch.map((item) =>
             this.prisma.lyrics.upsert({
-              where: { lyric_id: item.message.message_id }, // Используем lyric_id
+              where: { lyricId: item.message.message_id }, // Используем lyricId
               create: messageSeedObject(item, userId),
               update: messageSeedObject(item, userId, true), // Обновляем те же данные
-            }),
-          ),
+            })
+          )
         )
       }
 
@@ -82,14 +85,15 @@ export class PrismaService {
   // Получение статистики
   async getStats() {
     try {
-      const [users, lyrics, messages, reactions, hashtags, media] = await Promise.all([
-        this.prisma.user.count(),
-        this.prisma.lyrics.count(),
-        this.prisma.message.count(),
-        this.prisma.reactions.count(),
-        this.prisma.hashtags.count(),
-        this.prisma.media.count(),
-      ])
+      const [users, lyrics, messages, reactions, hashtags, media] =
+        await Promise.all([
+          this.prisma.user.count(),
+          this.prisma.lyrics.count(),
+          this.prisma.message.count(),
+          this.prisma.reactions.count(),
+          this.prisma.hashtags.count(),
+          this.prisma.media.count(),
+        ])
 
       const stats = {
         users,

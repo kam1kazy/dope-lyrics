@@ -5,7 +5,7 @@ export const ALL_LYRICS = gql`
     lyrics {
       id
 
-      lyric_id
+      lyricId
       date
       editDate
       isPinned

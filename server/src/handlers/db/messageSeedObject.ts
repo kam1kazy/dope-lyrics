@@ -4,11 +4,11 @@ import { IUser } from '~/types/user'
 export const messageSeedObject = (
   record: IChatHistoryItem,
   userId: IUser['id'],
-  isUpdate: boolean = false,
+  isUpdate: boolean = false
 ) => {
   const baseData = {
     userId: userId,
-    lyric_id: record.message.message_id,
+    lyricId: record.message.message_id,
     date: record.date,
     editDate: record.editDate,
     isPinned: record.isPinned,
@@ -56,7 +56,7 @@ export const messageSeedObject = (
             hashtags: record.message.hashtags
               ? {
                   create: {
-                    tags: record.message.hashtags.tags.map(tag => tag),
+                    tags: record.message.hashtags.tags.map((tag) => tag),
                     count: record.message.hashtags.count,
                   },
                 }
