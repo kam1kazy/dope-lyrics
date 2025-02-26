@@ -6,7 +6,7 @@ const pathApi: string = 'graphql'
 
 export const schema = {
   typeDefs: typeDefinitions,
-  context: createContext,
+  context: ({ request }: { request: Request }) => createContext({ request }),
   resolvers,
   path: pathApi,
 }
