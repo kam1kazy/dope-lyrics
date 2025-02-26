@@ -59,7 +59,7 @@ export class PrismaService {
     try {
       console.log(`PRISMA: 📝 Начало загрузки ${records.length} записей`)
 
-      const userId = 0 // Убедитесь, что этот ID корректен
+      const userId = 0
 
       const BATCH_SIZE = 1000
       for (let i = 0; i < records.length; i += BATCH_SIZE) {
@@ -68,9 +68,9 @@ export class PrismaService {
         await this.prisma.$transaction(
           batch.map((item) =>
             this.prisma.lyrics.upsert({
-              where: { lyric_id: item.message.message_id }, // Используем lyricId
+              where: { lyric_id: item.message.message_id },
               create: messageSeedObject(item, userId),
-              update: messageSeedObject(item, userId, true), // Обновляем те же данные
+              update: messageSeedObject(item, userId, true),
             })
           )
         )
