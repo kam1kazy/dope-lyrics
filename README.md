@@ -37,13 +37,13 @@
 
 - **~Деплой на сервер~**
 
+- **Закрыться авторизацией**
+- 
 - **Настройка Git Actions**
 
 - **Создание новых фич**
 
 - **Подключение GPT**
-
-[TODO](https://github.com/kam1kazy/dope-lyrics/blob/main/guide/FUTURES.md)
 
 ## 🙏 Support
 
