@@ -7,7 +7,8 @@
     "client": "cd client && bun run dev",
     "server": "cd server && bun run start",
     "setup": " bun install && cd client && bun install && cd ../server && bun install && bun prisma generate",
-    "deploy": "cd server && bun run deploy"
+    "deploy": "cd server && bun run deploy",
+    "next": "cd client && bun next"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"

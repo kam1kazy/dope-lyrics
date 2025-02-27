@@ -20,7 +20,6 @@
     ],
     "paths": {
       "@/*": ["./src/*"],
-      "@/auth": ["./auth.ts"],
       "@/providers/*": ["./src/app/api/auth/callback/[provider]/*"],
       // CLIENT
       "@components/*": ["./src/components/*"],

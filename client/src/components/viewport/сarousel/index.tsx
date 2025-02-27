@@ -12,12 +12,12 @@ import { ILyric } from '@/types/lyric'
 
 type LyricItem = Pick<ILyric, 'message' | 'lyricId'>
 
-interface IViewportLyricList {
+interface ICarouselLyricList {
   lyricId: LyricItem['lyricId']
   message: LyricItem['message']
 }
 
-export function Viewport({ data }: { data: any[] }) {
+export function Carousel({ data }: { data: any[] }) {
   const [index, setIndex] = useState(0)
   const [animationComplete, setAnimationComplete] = useState(false)
 
@@ -51,7 +51,7 @@ export function Viewport({ data }: { data: any[] }) {
         w={'100%'}
         m={'auto'}
       >
-        {data.slice(0, index + 1).map((item: IViewportLyricList) => (
+        {data.slice(0, index + 1).map((item: ICarouselLyricList) => (
           <motion.div
             key={item.lyricId + '_' + item.message?.message_id}
             className='lyric'
