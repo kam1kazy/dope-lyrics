@@ -1,9 +1,8 @@
-import { IUser } from '~/types/user';
-import { GraphQLContext } from './context'
+import { GraphQLContext } from './context';
 
 interface ILogin {
-  email: IUser['email'];
-  password: IUser['password'];
+  email: string;
+  password: string;
 }
 
 export const resolvers = {
@@ -11,21 +10,17 @@ export const resolvers = {
     hello: () => 'Hello, world!',
     lyrics: async (
       _parent: unknown,
-      args: { limit?: number; offset?: number }, // Принимаем аргументы
+      args: { limit?: number; offset?: number },
       context: GraphQLContext
     ) => {
       try {
         return context.prisma.lyrics.findMany({
-          take: args.limit || 500,  // Ограничение количества записей (по умолчанию 500)
-          skip: args.offset || 0,   // Смещение (по умолчанию 0)
+          take: args.limit || 500,
+          skip: args.offset || 0,
           include: {
             message: {
               include: {
-                reactions: {
-                  include: {
-                    emojis: true,
-                  },
-                },
+                reactions: { include: { emojis: true } },
                 hashtags: true,
               },
             },
@@ -42,21 +37,72 @@ export const resolvers = {
         }
       }
     },
+    user: async (_: any, { id }: { id: string }, context: GraphQLContext) => {
+      return context.prisma.user.findUnique({ where: { id: parseInt(id) } });
+    },
+    userByEmail: async (_: any, { email }: { email: string }, context: GraphQLContext) => {
+      return context.prisma.user.findUnique({ where: { email } });
+    },
+    userByAccount: async (
+      _: any,
+      { provider, providerAccountId }: { provider: string; providerAccountId: string },
+      context: GraphQLContext
+    ) => {
+      const account = await context.prisma.account.findFirst({
+        where: { provider, providerAccountId },
+        include: { user: true },
+      });
+      return account?.user || null;
+    },
   },
   Mutation: {
     login: async (_: any, { email, password }: ILogin, context: GraphQLContext) => {
       try {
         const user = await context.prisma.user.findUnique({ where: { email } });
-        if (user && user.password === password) { // Замените на hashing в реальном проекте
+        if (user && user.password === password) { // Замените на hashing в будущем
           return { id: user.id, name: user.name, email: user.email };
         }
+        throw new Error('Неверные учетные данные');
       } catch (error: unknown) {
         if (error instanceof Error) {
-          throw new Error('🚧 Ошибка при получении пользователя: ' + error.message);
+          throw new Error('🚧 Ошибка при входе: ' + error.message);
         } else {
-          throw new Error('🚧 Ошибка при получении пользователя: Unknown error');
+          throw new Error('🚧 Ошибка при входе: Unknown error');
         }
       }
     },
-  }
+    createUser: async (
+      _: any,
+      { name, email }: { name: string; email: string },
+      context: GraphQLContext
+    ) => {
+      return context.prisma.user.create({
+        data: { name, email, password: 'default', role: 'user' }, // Добавьте нужные поля
+      });
+    },
+    updateUser: async (
+      _: any,
+      { id, name, email }: { id: string; name?: string; email?: string },
+      context: GraphQLContext
+    ) => {
+      return context.prisma.user.update({
+        where: { id: parseInt(id) },
+        data: { name, email },
+      });
+    },
+    linkAccount: async (
+      _: any,
+      { userId, provider, providerAccountId }: { userId: string; provider: string; providerAccountId: string },
+      context: GraphQLContext
+    ) => {
+      return context.prisma.account.create({
+        data: {
+          userId: parseInt(userId),
+          provider,
+          providerAccountId,
+          type: 'oauth', // Укажите нужный тип
+        },
+      });
+    },
+  },
 };

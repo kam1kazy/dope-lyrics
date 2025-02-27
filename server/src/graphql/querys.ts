@@ -167,9 +167,15 @@ updatedAt: String!
     users: [User!]!
     lyrics(limit: Int, offset: Int): [Lyric!]!
     hello: String
+    user(id: ID!): User
+    userByEmail(email: String!): User
+    userByAccount(provider: String!, providerAccountId: String!): User
   }
 
   type Mutation {
     login(email: String!, password: String!): User
+    createUser(name: String!, email: String!): User!
+    updateUser(id: ID!, name: String, email: String): User!
+    linkAccount(userId: ID!, provider: String!, providerAccountId: String!): Account!
   }
 `

@@ -9,7 +9,6 @@ import { schema } from './graphql/schema'
 
 //env
 import dotenv from 'dotenv'
-import seed from '../prisma/script/seed'
 dotenv.config()
 
 // Переменные для запуска сервера
@@ -29,5 +28,3 @@ export type App = typeof app
 console.log(
   `\n🦊 Elysia is running at http://${app.server?.hostname}:${app.server?.port}/${schema.path}`,
 )
-
-seed()
