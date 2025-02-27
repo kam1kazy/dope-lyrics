@@ -1,10 +1,19 @@
 /** @type {import('next').NextConfig} */
 
 const NextConfig = {
-  output: 'export',
+  // reactStrictMode: true,
+  // output: 'export',
   compiler: {
     styledComponents: true,
   },
+  // async rewrites() {
+  //   return [
+  //     {
+  //       source: '/api/prisma/:path*',
+  //       destination: 'http://localhost:4000/prisma/:path*',
+  //     },
+  //   ]
+  // },
 }
 
 export default NextConfig
