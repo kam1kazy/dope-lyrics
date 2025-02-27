@@ -68,7 +68,7 @@ export class PrismaService {
         await this.prisma.$transaction(
           batch.map((item) =>
             this.prisma.lyrics.upsert({
-              where: { lyric_id: item.message.message_id },
+              where: { lyricId: item.message.message_id },
               create: messageSeedObject(item, userId),
               update: messageSeedObject(item, userId, true),
             })

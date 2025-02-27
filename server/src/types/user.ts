@@ -3,7 +3,7 @@ export interface IUser {
   name: string
   password: string
   email: string
-  emailVerified: boolean
+  emailVerified: Date
   image: string
   role: string
   accounts: Account[]

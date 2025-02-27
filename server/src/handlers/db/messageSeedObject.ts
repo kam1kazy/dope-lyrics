@@ -8,7 +8,7 @@ export const messageSeedObject = (
 ) => {
   const baseData = {
     userId: userId,
-    lyric_id: record.message.message_id,
+    lyricId: record.message.message_id,
     date: record.date,
     editDate: record.editDate,
     isPinned: record.isPinned,

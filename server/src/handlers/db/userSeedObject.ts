@@ -29,7 +29,7 @@ export const userSeedObject = (record: IUser) => {
       sessions: {
         create: record.sessions.map(session => ({
           sessionToken: session.sessionToken,
-          expires: session.expires,
+          expires: session.expires ,
         })),
       },
     },

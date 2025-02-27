@@ -33,7 +33,7 @@ model Account {
   providerAccountId String  @map("provider_account_id")
   refresh_token     String? @db.Text
   access_token      String? @db.Text
-  expires_at        Int?
+  expires_at        DateTime?
   token_type        String?
   scope             String?
   id_token          String? @db.Text

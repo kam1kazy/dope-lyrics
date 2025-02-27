@@ -105,6 +105,6 @@ export const typeDefinitions = /* GraphQL */ `
 
   type Query {
     users: [User!]!
-    lyrics: [Lyric!]!
+    lyrics(limit: Int, offset: Int): [Lyric!]!
   }
 `

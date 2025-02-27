@@ -2,52 +2,15 @@ import { GraphQLContext } from './context'
 
 export const resolvers = {
   Query: {
-    users: async (
-      _parent: unknown,
-      _args: unknown,
-      context: GraphQLContext
-    ) => {
-      try {
-        return context.prisma.user.findMany({
-          include: {
-            lyrics: {
-              include: {
-                message: {
-                  include: {
-                    reactions: {
-                      include: {
-                        emojis: true,
-                      },
-                    },
-                    hashtags: true,
-                  },
-                },
-                user: true,
-                chat: true,
-                media: true,
-              },
-            },
-          },
-        })
-      } catch (error: unknown) {
-        if (error instanceof Error) {
-          throw new Error(
-            '🚧 Ошибка при получении пользователей: ' + error.message
-          )
-        } else {
-          throw new Error(
-            '🚧 Ошибка при получении пользователей: Unknown error'
-          )
-        }
-      }
-    },
     lyrics: async (
       _parent: unknown,
-      _args: unknown,
+      args: { limit?: number; offset?: number }, // Принимаем аргументы
       context: GraphQLContext
     ) => {
       try {
         return context.prisma.lyrics.findMany({
+          take: args.limit || 500,  // Ограничение количества записей (по умолчанию 500)
+          skip: args.offset || 0,   // Смещение (по умолчанию 0)
           include: {
             message: {
               include: {
@@ -63,14 +26,14 @@ export const resolvers = {
             chat: true,
             media: true,
           },
-        })
+        });
       } catch (error: unknown) {
         if (error instanceof Error) {
-          throw new Error('🚧 Ошибка при получении текстов: ' + error.message)
+          throw new Error('🚧 Ошибка при получении текстов: ' + error.message);
         } else {
-          throw new Error('🚧 Ошибка при получении текстов: Unknown error')
+          throw new Error('🚧 Ошибка при получении текстов: Unknown error');
         }
       }
     },
   },
-}
+};
