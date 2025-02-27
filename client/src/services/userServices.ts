@@ -177,12 +177,63 @@ class UserService {
     return result.data.createSession;
   }
 
-  async getSessionAndUser(sessionToken: any) {
-    return null; // JWT хранит сессию в токене
+  async getSessionAndUser(sessionToken: string) {
+    const res = await fetch(`${this.apiUrl}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query: `
+          query GetSession($sessionToken: String!) {
+            session(sessionToken: $sessionToken) {
+              sessionToken
+              userId
+              expires
+              user {
+                id
+                name
+                email
+              }
+            }
+          }
+        `,
+        variables: { sessionToken },
+      }),
+    });
+    const result = await res.json();
+    const sessionData = result.data?.session;
+    if (!sessionData) return null;
+    return {
+      session: {
+        sessionToken: sessionData.sessionToken,
+        userId: sessionData.userId.toString(),
+        expires: new Date(sessionData.expires),
+      },
+      user: sessionData.user,
+    };
   }
 
-  async updateSession(session: any) {
-    return session; // JWT не обновляет сессию в базе
+  async updateSession(session: { sessionToken: string; expires?: Date | undefined }) {
+    const res = await fetch(`${this.apiUrl}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query: `
+          mutation UpdateSession($sessionToken: String!, $expires: String!) {
+            updateSession(sessionToken: $sessionToken, expires: $expires) {
+              sessionToken
+              userId
+              expires
+            }
+          }
+        `,
+        variables: {
+          sessionToken: session.sessionToken,
+          expires: session.expires?.toISOString() || undefined,
+        },
+      }),
+    });
+    const result = await res.json();
+    return result.data?.updateSession;
   }
 
   async deleteSession(sessionToken: string) {
