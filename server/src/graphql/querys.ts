@@ -177,5 +177,7 @@ updatedAt: String!
     createUser(name: String!, email: String!): User!
     updateUser(id: ID!, name: String, email: String): User!
     linkAccount(userId: ID!, provider: String!, providerAccountId: String!): Account!
+    createSession(sessionToken: String!, userId: ID!, expires: String!): Session!
+    deleteSession(sessionToken: String!): Session!
   }
 `

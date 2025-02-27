@@ -1,27 +1,27 @@
 import { IUser } from "@/types/user";
 
 interface ICreateUser {
-    id: string;
-    name?: string | null | undefined;
-    email: string;
+  id: string;
+  name?: string | null | undefined;
+  email: string;
 }
 
 
 
 class UserService {
-    private apiUrl: string;
+  private apiUrl: string;
 
-    constructor(apiUrl: string) {
-        this.apiUrl = apiUrl;
-    }
+  constructor(apiUrl: string) {
+    this.apiUrl = apiUrl;
+  }
 
-    async createUser(user: ICreateUser) {
-        console.log('Creating user:', user);
-        const res = await fetch(`${this.apiUrl}/graphql`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                query: `
+  async createUser(user: ICreateUser) {
+    console.log('Creating user:', user);
+    const res = await fetch(`${this.apiUrl}/graphql`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query: `
                 mutation CreateUser($name: String!, $email: String!) {
                   createUser(name: $name, email: $email) {
                     id
@@ -30,20 +30,20 @@ class UserService {
                   }
                 }
               `,
-                variables: { name: user.name, email: user.email },
-            }),
-        });
-        const result = await res.json();
-        console.log('Server response:', result);
-        return result.data.createUser;
-    }
+        variables: { name: user.name, email: user.email },
+      }),
+    });
+    const result = await res.json();
+    console.log('Server response:', result);
+    return result.data.createUser;
+  }
 
-    async getUser(id: string) {
-        const res = await fetch(`${this.apiUrl}/graphql`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                query: `
+  async getUser(id: string) {
+    const res = await fetch(`${this.apiUrl}/graphql`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query: `
                 query GetUser($id: ID!) {
                   user(id: $id) {
                     id
@@ -52,19 +52,19 @@ class UserService {
                   }
                 }
               `,
-                variables: { id },
-            }),
-        });
-        const result = await res.json();
-        return result.data.user || null;
-    }
+        variables: { id },
+      }),
+    });
+    const result = await res.json();
+    return result.data.user || null;
+  }
 
-    async getUserByEmail(email: IUser['email']) {
-        const res = await fetch(`${this.apiUrl}/graphql`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                query: `
+  async getUserByEmail(email: IUser['email']) {
+    const res = await fetch(`${this.apiUrl}/graphql`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query: `
                 query GetUserByEmail($email: String!) {
                   user(email: $email) {
                     id
@@ -73,19 +73,19 @@ class UserService {
                   }
                 }
               `,
-                variables: { email },
-            }),
-        });
-        const result = await res.json();
-        return result.data.user || null;
-    }
+        variables: { email },
+      }),
+    });
+    const result = await res.json();
+    return result.data.user || null;
+  }
 
-    async getUserByAccount({ provider, providerAccountId }: { provider: string, providerAccountId: string }) {
-        const res = await fetch(`${this.apiUrl}/graphql`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                query: `
+  async getUserByAccount({ provider, providerAccountId }: { provider: string, providerAccountId: string }) {
+    const res = await fetch(`${this.apiUrl}/graphql`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query: `
                 query GetUserByAccount($provider: String!, $providerAccountId: String!) {
                   userByAccount(provider: $provider, providerAccountId: $providerAccountId) {
                     id
@@ -94,19 +94,19 @@ class UserService {
                   }
                 }
               `,
-                variables: { provider, providerAccountId },
-            }),
-        });
-        const result = await res.json();
-        return result.data.userByAccount || null;
-    }
+        variables: { provider, providerAccountId },
+      }),
+    });
+    const result = await res.json();
+    return result.data.userByAccount || null;
+  }
 
-    async updateUser(user: any) {
-        const res = await fetch(`${this.apiUrl}/graphql`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                query: `
+  async updateUser(user: any) {
+    const res = await fetch(`${this.apiUrl}/graphql`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query: `
                 mutation UpdateUser($id: ID!, $name: String, $email: String) {
                   updateUser(id: $id, name: $name, email: $email) {
                     id
@@ -115,19 +115,19 @@ class UserService {
                   }
                 }
               `,
-                variables: { id: user.id, name: user.name, email: user.email },
-            }),
-        });
-        const result = await res.json();
-        return result.data.updateUser;
-    }
+        variables: { id: user.id, name: user.name, email: user.email },
+      }),
+    });
+    const result = await res.json();
+    return result.data.updateUser;
+  }
 
-    async linkAccount(account: any) {
-        const res = await fetch(`${this.apiUrl}/graphql`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                query: `
+  async linkAccount(account: any) {
+    const res = await fetch(`${this.apiUrl}/graphql`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query: `
                 mutation LinkAccount($userId: ID!, $provider: String!, $providerAccountId: String!) {
                   linkAccount(userId: $userId, provider: $provider, providerAccountId: $providerAccountId) {
                     userId
@@ -136,32 +136,76 @@ class UserService {
                   }
                 }
               `,
-                variables: {
-                    userId: account.userId,
-                    provider: account.provider,
-                    providerAccountId: account.providerAccountId,
-                },
-            }),
-        });
-        const result = await res.json();
-        return result.data.linkAccount;
-    }
+        variables: {
+          userId: account.userId,
+          provider: account.provider,
+          providerAccountId: account.providerAccountId,
+        },
+      }),
+    });
+    const result = await res.json();
+    return result.data.linkAccount;
+  }
 
-    async createSession(session: any) {
-        return session; // JWT не требует хранения сессии в базе
+  async createSession(session: { sessionToken: string; userId: string; expires: Date }) {
+    console.log('Creating session in UserService:', session);
+    const res = await fetch(`${this.apiUrl}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query: `
+            mutation CreateSession($sessionToken: String!, $userId: ID!, $expires: String!) {
+              createSession(sessionToken: $sessionToken, userId: $userId, expires: $expires) {
+                sessionToken
+                userId
+                expires
+              }
+            }
+          `,
+        variables: {
+          sessionToken: session.sessionToken,
+          userId: session.userId,
+          expires: session.expires.toISOString(),
+        },
+      }),
+    });
+    const result = await res.json();
+    console.log('Session creation result:', result);
+    if (!result.data?.createSession) {
+      throw new Error('Ошибка создания сессии');
     }
+    return result.data.createSession;
+  }
 
-    async getSessionAndUser(sessionToken: any) {
-        return null; // JWT хранит сессию в токене
-    }
+  async getSessionAndUser(sessionToken: any) {
+    return null; // JWT хранит сессию в токене
+  }
 
-    async updateSession(session: any) {
-        return session; // JWT не обновляет сессию в базе
-    }
+  async updateSession(session: any) {
+    return session; // JWT не обновляет сессию в базе
+  }
 
-    async deleteSession(sessionToken: any) {
-        // Ничего не делаем, так как сессия в JWT
+  async deleteSession(sessionToken: string) {
+    const res = await fetch(`${this.apiUrl}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query: `
+          mutation DeleteSession($sessionToken: String!) {
+            deleteSession(sessionToken: $sessionToken) {
+              sessionToken
+            }
+          }
+        `,
+        variables: { sessionToken },
+      }),
+    });
+    const result = await res.json();
+    if (!result.data?.deleteSession) {
+      console.warn('Ошибка удаления сессии');
     }
+    return result.data?.deleteSession;
+  }
 }
 
 export default UserService;

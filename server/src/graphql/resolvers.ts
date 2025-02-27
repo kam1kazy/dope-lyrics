@@ -59,7 +59,7 @@ export const resolvers = {
     login: async (_: any, { email, password }: ILogin, context: GraphQLContext) => {
       try {
         const user = await context.prisma.user.findUnique({ where: { email } });
-        if (user && user.password === password) { // Замените на hashing в будущем
+        if (user && user.password === password) {
           return { id: user.id, name: user.name, email: user.email };
         }
         throw new Error('Неверные учетные данные');
@@ -77,7 +77,7 @@ export const resolvers = {
       context: GraphQLContext
     ) => {
       return context.prisma.user.create({
-        data: { name, email, password: 'default', role: 'user' }, // Добавьте нужные поля
+        data: { name, email, password: 'default', role: 'user' },
       });
     },
     updateUser: async (
@@ -100,9 +100,25 @@ export const resolvers = {
           userId: parseInt(userId),
           provider,
           providerAccountId,
-          type: 'oauth', // Укажите нужный тип
+          type: 'oauth',
         },
       });
+    },
+    createSession: async (
+      _: any,
+      { sessionToken, userId, expires }: { sessionToken: string; userId: string; expires: string },
+      context: GraphQLContext
+    ) => {
+      console.log('Server: Creating session:', { sessionToken, userId, expires });
+      const session = await context.prisma.session.create({
+        data: {
+          sessionToken,
+          userId: parseInt(userId),
+          expires: new Date(expires),
+        },
+      });
+      console.log('Server: Session created:', session);
+      return session;
     },
   },
 };

@@ -1,4 +1,4 @@
-import CredentialsProvider from "next-auth/providers/credentials";
+import CredentialsProvider from 'next-auth/providers/credentials';
 
 const Credentials = CredentialsProvider({
   name: "Credentials",
@@ -30,7 +30,37 @@ const Credentials = CredentialsProvider({
       throw new Error(result.errors?.[0]?.message || "Неверные учетные данные");
     }
 
-    return result.data.login; // Возвращаем данные пользователя из GraphQL ответа
+    const user = result.data.login;
+    const sessionToken = crypto.randomUUID();
+    const expires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
+    // Создаем сессию напрямую
+    const sessionRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query: `
+          mutation CreateSession($sessionToken: String!, $userId: ID!, $expires: String!) {
+            createSession(sessionToken: $sessionToken, userId: $userId, expires: $expires) {
+              sessionToken
+              userId
+              expires
+            }
+          }
+        `,
+        variables: {
+          sessionToken,
+          userId: user.id.toString(),
+          expires: expires.toISOString(),
+        },
+      }),
+    });
+    const sessionResult = await sessionRes.json();
+    if (!sessionResult.data?.createSession) {
+      throw new Error('Ошибка создания сессии');
+    }
+
+    return { ...user, sessionToken }; // Возвращаем пользователя с токеном
   },
 });
 
