@@ -1,8 +1,8 @@
-import { IUser } from '~/types/user'
+import { IUser } from '~/types/user';
 
 export const userSeedObject = (record: IUser) => {
   return {
-    where: { email: record.email }, // Используем email как уникальный ключ
+    where: { email: record.email },
     create: {
       id: record.id,
       name: record.name,
@@ -19,7 +19,7 @@ export const userSeedObject = (record: IUser) => {
           providerAccountId: account.providerAccountId,
           refresh_token: account.refresh_token,
           access_token: account.access_token,
-          expires_at: account.expires_at,
+          expires_at: account.expires_at , // Ensure it's a Date
           token_type: account.token_type,
           scope: account.scope,
           id_token: account.id_token,
@@ -29,7 +29,7 @@ export const userSeedObject = (record: IUser) => {
       sessions: {
         create: record.sessions.map(session => ({
           sessionToken: session.sessionToken,
-          expires: session.expires ,
+          expires: session.expires instanceof Date ? session.expires : new Date(session.expires), // Ensure it's a Date
         })),
       },
     },
@@ -40,5 +40,5 @@ export const userSeedObject = (record: IUser) => {
       image: record.image,
       role: record.role,
     },
-  }
-}
+  };
+};

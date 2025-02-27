@@ -18,7 +18,7 @@ type Account = {
   providerAccountId: string
   refresh_token: string
   access_token: string
-  expires_at: Date
+  expires_at: number
   token_type: string
   scope: string
   id_token: string

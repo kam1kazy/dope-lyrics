@@ -43,13 +43,10 @@ export class PrismaService {
     try {
       // Используем транзакцию для массовой загрузки записей через .upsert
       await this.prisma.$transaction(
-        users.map((user) => this.prisma.user.upsert(userSeedObject(user)))
+        users.map(user => this.prisma.user.upsert(userSeedObject(user))),
       )
     } catch (error) {
-      console.error(
-        'PRISMA: 🚧 Данные пользователя - не удалось загрузить в базу\n\n',
-        error
-      )
+      console.error('PRISMA: 🚧 Данные пользователя - не удалось загрузить в базу\n\n', error)
     }
 
     console.log(`PRISMA: 📊 Итого загружено пользователей: ${users.length}`)
@@ -66,13 +63,84 @@ export class PrismaService {
         const batch = records.slice(i, i + BATCH_SIZE)
 
         await this.prisma.$transaction(
-          batch.map((item) =>
+          batch.map(item =>
             this.prisma.lyrics.upsert({
               where: { lyricId: item.message.message_id },
-              create: messageSeedObject(item, userId),
-              update: messageSeedObject(item, userId, true),
-            })
-          )
+              create: {
+                userId: userId,
+                lyricId: item.message.message_id,
+                date: item.date,
+                editDate: item.editDate,
+                isPinned: item.isPinned,
+                isChannelPost: item.isChannelPost,
+                message: {
+                  create: {
+                    text: item.message.text,
+                    message_id: item.message.message_id,
+                    word_count: item.message.word_count,
+                    paragraph_count: item.message.paragraph_count,
+                    reactions: item.message.reactions
+                      ? {
+                        create: {
+                          uniqueCount: item.message.reactions.uniqueCount,
+                          totalFreeCount: item.message.reactions.totalFreeCount,
+                          totalPaidCount: item.message.reactions.totalPaidCount,
+                          totalCount: item.message.reactions.totalCount,
+                          emojis: {
+                            create: item.message.reactions.emojis.map(emoji => ({
+                              emoji: emoji.emoji,
+                              isPaid: emoji.isPaid,
+                              count: emoji.count,
+                              order: emoji.order,
+                            })),
+                          },
+                        },
+                      }
+                      : undefined,
+                    hashtags: item.message.hashtags
+                      ? {
+                        create: {
+                          tags: item.message.hashtags.tags,
+                          count: item.message.hashtags.count,
+                        },
+                      }
+                      : undefined,
+                  },
+                },
+              },
+              update: {
+                date: item.date,
+                editDate: item.editDate,
+                isPinned: item.isPinned,
+                isChannelPost: item.isChannelPost,
+                message: {
+                  update: {
+                    text: item.message.text,
+                    word_count: item.message.word_count,
+                    paragraph_count: item.message.paragraph_count,
+                    reactions: item.message.reactions
+                      ? {
+                        update: {
+                          uniqueCount: item.message.reactions.uniqueCount,
+                          totalFreeCount: item.message.reactions.totalFreeCount,
+                          totalPaidCount: item.message.reactions.totalPaidCount,
+                          totalCount: item.message.reactions.totalCount,
+                          emojis: {
+                            create: item.message.reactions.emojis.map(emoji => ({
+                              emoji: emoji.emoji,
+                              isPaid: emoji.isPaid,
+                              count: emoji.count,
+                              order: emoji.order,
+                            })),
+                          },
+                        },
+                      }
+                      : undefined,
+                  },
+                },
+              },
+            }),
+          ),
         )
       }
 
@@ -85,15 +153,14 @@ export class PrismaService {
   // Получение статистики
   async getStats() {
     try {
-      const [users, lyrics, messages, reactions, hashtags, media] =
-        await Promise.all([
-          this.prisma.user.count(),
-          this.prisma.lyrics.count(),
-          this.prisma.message.count(),
-          this.prisma.reactions.count(),
-          this.prisma.hashtags.count(),
-          this.prisma.media.count(),
-        ])
+      const [users, lyrics, messages, reactions, hashtags, media] = await Promise.all([
+        this.prisma.user.count(),
+        this.prisma.lyrics.count(),
+        this.prisma.message.count(),
+        this.prisma.reactions.count(),
+        this.prisma.hashtags.count(),
+        this.prisma.media.count(),
+      ])
 
       const stats = {
         users,

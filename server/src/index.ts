@@ -16,13 +16,13 @@ dotenv.config()
 const port: number = Number(process.env.PORT) || 4000
 
 const app: Elysia = new Elysia()
-.use(cors({
-  origin: 'http://localhost:3000', // Разрешите запросы только с этого источника
-  credentials: true, // Разрешите отправку куки
-}))
-.use(swagger())
-.use(yoga(schema))
-.listen(port)
+  .use(cors({
+    origin: 'http://localhost:3000', // Разрешите запросы только с этого источника
+    credentials: true, // Разрешите отправку куки
+  }))
+  .use(swagger())
+  .use(yoga(schema))
+  .listen(port)
 
 export type App = typeof app
 
@@ -30,4 +30,4 @@ console.log(
   `\n🦊 Elysia is running at http://${app.server?.hostname}:${app.server?.port}/${schema.path}`,
 )
 
-// seed()
+seed()

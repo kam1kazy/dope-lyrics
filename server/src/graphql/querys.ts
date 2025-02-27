@@ -3,8 +3,44 @@ export const typeDefinitions = /* GraphQL */ `
     id: Int!
     name: String!
     email: String
+    emailVerified: String
     password: String!
+    image: String
+    role: String!
+    accounts: [Account!]
     lyrics: [Lyric!]
+    sessions: [Session!]
+
+    createdAt: String!
+    updatedAt: String!
+  }
+
+  type Account {
+    id: Int!
+    userId: Int!
+    type: String!
+    provider: String!
+    providerAccountId: String!
+    refresh_token: String
+    access_token: String
+    expires_at: Int
+    token_type: String
+    scope: String
+    id_token: String
+    session_state: String
+
+    createdAt: String!
+    updatedAt: String!
+  }
+
+  type Session {
+    id: Int!
+    sessionToken: String!
+    userId: Int!
+    expires: String!
+
+    createdAt: String!
+    updatedAt: String!
   }
 
   type Lyric {
@@ -23,6 +59,9 @@ export const typeDefinitions = /* GraphQL */ `
     media: Media
 
     userId: Int!
+
+    createdAt: String!
+    updatedAt: String!
   }
 
   type Message {
@@ -37,6 +76,9 @@ export const typeDefinitions = /* GraphQL */ `
     hashtags: Hashtag
 
     lyricId: Int!
+
+createdAt: String!
+updatedAt: String!
   }
 
   type Reaction {
@@ -50,6 +92,9 @@ export const typeDefinitions = /* GraphQL */ `
     emojis: [Emoji!]!
 
     messageId: Int!
+
+createdAt: String!
+updatedAt: String!
   }
 
   type Emoji {
@@ -61,6 +106,9 @@ export const typeDefinitions = /* GraphQL */ `
     order: Int
 
     reactionId: Int!
+
+createdAt: String!
+updatedAt: String!
   }
 
   type UserLyric {
@@ -72,6 +120,9 @@ export const typeDefinitions = /* GraphQL */ `
     isAdmin: Boolean!
 
     lyricsId: Int!
+
+createdAt: String!
+updatedAt: String!
   }
 
   type Chat {
@@ -82,6 +133,9 @@ export const typeDefinitions = /* GraphQL */ `
     type: String!
 
     lyricId: Int!
+
+    createdAt: String!
+    updatedAt: String!
   }
 
   type Media {
@@ -92,6 +146,9 @@ export const typeDefinitions = /* GraphQL */ `
     convert: Boolean!
 
     lyricId: Int!
+
+    createdAt: String!
+    updatedAt: String!
   }
 
   type Hashtag {
@@ -101,10 +158,18 @@ export const typeDefinitions = /* GraphQL */ `
     count: Int!
 
     messageId: Int!
+
+    createdAt: String!
+    updatedAt: String!
   }
 
   type Query {
     users: [User!]!
     lyrics(limit: Int, offset: Int): [Lyric!]!
+    hello: String
+  }
+
+  type Mutation {
+    login(email: String!, password: String!): User
   }
 `

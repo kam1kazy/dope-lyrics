@@ -15,34 +15,31 @@ model User {
   emailVerified DateTime? @map("email_verified")
   image         String?
   role          String
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
   accounts      Account[]
-  sessions      Session[]
   lyrics        Lyrics[]
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  sessions      Session[]
 
   @@map("users")
 }
 
 model Account {
-  id                Int     @id @default(autoincrement())
-  userId            Int     @map("user_id")
+  id                Int      @id @default(autoincrement())
+  userId            Int      @map("user_id")
   type              String
   provider          String
-  providerAccountId String  @map("provider_account_id")
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
-  expires_at        DateTime?
+  providerAccountId String   @map("provider_account_id")
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
   @@map("accounts")
@@ -53,10 +50,9 @@ model Session {
   sessionToken String   @unique @map("session_token")
   userId       Int      @map("user_id")
   expires      DateTime
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("sessions")
 }
@@ -71,145 +67,118 @@ model VerificationToken {
 }
 
 model Lyrics {
-  id Int @id @default(autoincrement())
-
-  lyricId        Int       @unique @map("lyric_id")
+  id             Int        @id @default(autoincrement())
+  lyricId        Int        @unique @map("lyric_id")
   date           DateTime
   editDate       DateTime?
-  isPinned       Boolean   @map("is_pinned")
-  isChannelPost  Boolean   @map("is_channel_post")
-  replyToMessage Int?      @map("reply_to_message")
-
-  message Message?
-  user    UserLyric?
-  chat    Chat?
-  media   Media?
-
-  userId Int  @map("user_id")
-  owner  User @relation(fields: [userId], references: [id])
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  isPinned       Boolean    @map("is_pinned")
+  isChannelPost  Boolean    @map("is_channel_post")
+  replyToMessage Int?       @map("reply_to_message")
+  userId         Int        @map("user_id")
+  createdAt      DateTime   @default(now()) @map("created_at")
+  updatedAt      DateTime   @updatedAt @map("updated_at")
+  chat           Chat?
+  owner          User       @relation(fields: [userId], references: [id])
+  media          Media?
+  message        Message?
+  user           UserLyric?
 
   @@map("lyrics")
 }
 
 model Message {
-  id Int @id @default(autoincrement())
-
+  id              Int        @id @default(autoincrement())
   message_id      Int
   text            String?
   word_count      Int?
   paragraph_count Int?
-
-  reactions Reactions?
-  hashtags  Hashtags?
-
-  lyric   Lyrics @relation(fields: lyricId, references: lyricId)
-  lyricId Int    @unique @map("lyric_id")
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  lyricId         Int        @unique @map("lyric_id")
+  createdAt       DateTime   @default(now()) @map("created_at")
+  updatedAt       DateTime   @updatedAt @map("updated_at")
+  hashtags        Hashtags?
+  lyric           Lyrics     @relation(fields: [lyricId], references: [lyricId])
+  reactions       Reactions?
 
   @@map("messages")
 }
 
 model Reactions {
-  id Int @id @default(autoincrement())
-
-  uniqueCount    Int @map("unique_count")
-  totalFreeCount Int @map("total_free_count")
-  totalPaidCount Int @map("total_paid_count")
-  totalCount     Int @map("total_count")
-
-  emojis Emoji[]
-
-  message   Message @relation(fields: messageId, references: id)
-  messageId Int     @unique @map("message_id")
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id             Int      @id @default(autoincrement())
+  uniqueCount    Int      @map("unique_count")
+  totalFreeCount Int      @map("total_free_count")
+  totalPaidCount Int      @map("total_paid_count")
+  totalCount     Int      @map("total_count")
+  messageId      Int      @unique @map("message_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+  emojis         Emoji[]
+  message        Message  @relation(fields: [messageId], references: [id])
 
   @@map("reactions")
 }
 
 model Emoji {
-  id Int @id @default(autoincrement())
-
-  emoji  String
-  isPaid Boolean @map("is_paid")
-  count  Int
-  order  Int?
-
-  reaction   Reactions @relation(fields: [reactionId], references: [id])
+  id         Int       @id @default(autoincrement())
+  emoji      String
+  isPaid     Boolean   @map("is_paid")
+  count      Int
+  order      Int?
   reactionId Int       @unique @map("reaction_id")
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  reaction   Reactions @relation(fields: [reactionId], references: [id])
 
   @@map("emojis")
 }
 
 model UserLyric {
-  key Int @id @default(autoincrement())
-
-  id          BigInt  @db.BigInt
+  key         Int      @id @default(autoincrement())
+  id          BigInt
   username    String?
-  displayName String? @map("display_name")
-  isAdmin     Boolean @map("is_admin")
-
-  lyrics  Lyrics @relation(fields: lyricId, references: lyricId)
-  lyricId Int    @unique @map("lyric_id")
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  displayName String?  @map("display_name")
+  isAdmin     Boolean  @map("is_admin")
+  lyricId     Int      @unique @map("lyric_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  lyrics      Lyrics   @relation(fields: [lyricId], references: [lyricId])
 
   @@map("user_lyrics")
 }
 
 model Chat {
-  key Int @id @default(autoincrement())
-
-  id    BigInt @db.BigInt
-  title String
-  type  String
-
-  lyric   Lyrics @relation(fields: lyricId, references: lyricId)
-  lyricId Int    @unique @map("lyric_id")
-
+  key       Int      @id @default(autoincrement())
+  id        BigInt
+  title     String
+  type      String
+  lyricId   Int      @unique @map("lyric_id")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+  lyric     Lyrics   @relation(fields: [lyricId], references: [lyricId])
 
   @@map("chats")
 }
 
 model Media {
-  id Int @id @default(autoincrement())
-
-  mime     String
-  duration Int
-  convert  Boolean
-
-  lyric   Lyrics @relation(fields: lyricId, references: lyricId)
-  lyricId Int    @unique @map("lyric_id")
-
+  id        Int      @id @default(autoincrement())
+  mime      String
+  duration  Int
+  convert   Boolean
+  lyricId   Int      @unique @map("lyric_id")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+  lyric     Lyrics   @relation(fields: [lyricId], references: [lyricId])
 
   @@map("media")
 }
 
 model Hashtags {
-  id Int @id @default(autoincrement())
-
-  tags  String[]
-  count Int
-
-  message   Message @relation(fields: messageId, references: id)
-  messageId Int     @unique @map("message_id")
-
+  id        Int      @id @default(autoincrement())
+  tags      String[]
+  count     Int
+  messageId Int      @unique @map("message_id")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+  message   Message  @relation(fields: [messageId], references: [id])
 
   @@map("hashtags")
 }

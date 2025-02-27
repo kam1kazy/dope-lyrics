@@ -1,7 +1,14 @@
+import { IUser } from '~/types/user';
 import { GraphQLContext } from './context'
+
+interface ILogin {
+  email: IUser['email'];
+  password: IUser['password'];
+}
 
 export const resolvers = {
   Query: {
+    hello: () => 'Hello, world!',
     lyrics: async (
       _parent: unknown,
       args: { limit?: number; offset?: number }, // Принимаем аргументы
@@ -36,4 +43,20 @@ export const resolvers = {
       }
     },
   },
+  Mutation: {
+    login: async (_: any, { email, password }: ILogin, context: GraphQLContext) => {
+      try {
+        const user = await context.prisma.user.findUnique({ where: { email } });
+        if (user && user.password === password) { // Замените на hashing в реальном проекте
+          return { id: user.id, name: user.name, email: user.email };
+        }
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          throw new Error('🚧 Ошибка при получении пользователя: ' + error.message);
+        } else {
+          throw new Error('🚧 Ошибка при получении пользователя: Unknown error');
+        }
+      }
+    },
+  }
 };
