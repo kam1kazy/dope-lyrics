@@ -1,15 +1,6 @@
 {
   "name": "dope-lyrics",
   "version": "0.1.0",
-  "scripts": {
-    "start": "concurrently 'cd server/src/mtcute && bun index.ts' 'cd server && bun run start' 'cd client && bun run dev'",
-    "dev": "concurrently 'cd server && bun run start' 'cd client && bun run dev'",
-    "client": "cd client && bun run dev",
-    "server": "cd server && bun run start",
-    "setup": " bun install && cd client && bun install && cd ../server && bun install && bun prisma generate",
-    "deploy": "cd server && bun run deploy",
-    "next": "cd client && bun next"
-  },
   "devDependencies": {
     "concurrently": "^9.1.2"
   },
@@ -28,5 +19,14 @@
   },
   "license": "MIT",
   "private": true,
+  "scripts": {
+    "start": "concurrently 'cd server/src/mtcute && bun index.ts' 'cd server && bun run start' 'cd client && bun run dev'",
+    "dev": "concurrently 'cd server && bun run start' 'cd client && bun run dev'",
+    "client": "cd client && bun run dev",
+    "server": "cd server && bun run start",
+    "setup": " bun install && cd client && bun install && cd ../server && bun install && bun prisma generate",
+    "deploy": "cd server && bun run deploy",
+    "next": "cd client && bun next"
+  },
   "type": "module"
 }
