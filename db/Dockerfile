@@ -1,4 +1,4 @@
-FROM postgres:16.4-alpine
+FROM postgres:17.4-alpine
 
 # Установка локалей
 RUN apk add --no-cache \
@@ -7,4 +7,4 @@ RUN apk add --no-cache \
     musl-locales-lang
 
 ENV LANG=en_US.UTF-8
-ENV LC_ALL=en_US.UTF-8 
+ENV LC_ALL=en_US.UTF-8
