@@ -1,13 +1,9 @@
-import { PrismaClient } from '@prisma/client'
+import { prisma } from '~/lib/prisma'
 
 export type GraphQLContext = {
-  prisma: PrismaClient
+  prisma: typeof prisma
   user?: { id: string; role: string } | null
 }
-
-const prisma = new PrismaClient({
-  log: ['query', 'info', 'warn', 'error'],
-})
 
 process.on('SIGTERM', async () => {
   await prisma.$disconnect()
@@ -39,5 +35,5 @@ export async function createContext({
 
 function verifyToken(token: string) {
   // Реализация проверки токена
-  return { id: '1', role: 'admin' } // Пример возвращаемого пользователя
+  return { id: '0', role: 'admin' } // Пример возвращаемого пользователя
 }

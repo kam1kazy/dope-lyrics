@@ -16,7 +16,7 @@ import { useAdminCheck } from '~/hooks/useAdminCheck'
 import seed from '../../../prisma/script/seed'
 
 // Дата базы
-import { PrismaClient } from '@prisma/client'
+import { prisma } from '~/lib/prisma'
 import { prismaService } from '~/services/db'
 
 // TYPES
@@ -26,8 +26,6 @@ import {
   MessageContext,
 } from '@mtcute/dispatcher'
 
-const db = new PrismaClient()
-
 const chatId = env.BOT_CHAT_ID
 const channelId = env.BOT_CHANNEL_ID
 
@@ -35,8 +33,8 @@ interface ICommandChat {
   tg?: TypeBotClient | null
   tgAdmin?: TypeBotClient | null
   msg:
-    | filters.Modify<MessageContext, { command: string[] }>
-    | CallbackQueryContext
+  | filters.Modify<MessageContext, { command: string[] }>
+  | CallbackQueryContext
   keyboard?: tl.TypeKeyboardButton[][]
 }
 
