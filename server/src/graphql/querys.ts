@@ -77,8 +77,8 @@ export const typeDefinitions = /* GraphQL */ `
 
     lyricId: Int!
 
-createdAt: String!
-updatedAt: String!
+    createdAt: String!
+    updatedAt: String!
   }
 
   type Reaction {
@@ -93,8 +93,8 @@ updatedAt: String!
 
     messageId: Int!
 
-createdAt: String!
-updatedAt: String!
+    createdAt: String!
+    updatedAt: String!
   }
 
   type Emoji {
@@ -107,8 +107,8 @@ updatedAt: String!
 
     reactionId: Int!
 
-createdAt: String!
-updatedAt: String!
+    createdAt: String!
+    updatedAt: String!
   }
 
   type UserLyric {
@@ -121,8 +121,8 @@ updatedAt: String!
 
     lyricsId: Int!
 
-createdAt: String!
-updatedAt: String!
+    createdAt: String!
+    updatedAt: String!
   }
 
   type Chat {
