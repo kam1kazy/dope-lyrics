@@ -10,7 +10,6 @@ export const typeDefinitions = /* GraphQL */ `
     accounts: [Account!]
     lyrics: [Lyric!]
     sessions: [Session!]
-
     createdAt: String!
     updatedAt: String!
   }
@@ -28,7 +27,6 @@ export const typeDefinitions = /* GraphQL */ `
     scope: String
     id_token: String
     session_state: String
-
     createdAt: String!
     updatedAt: String!
   }
@@ -38,146 +36,111 @@ export const typeDefinitions = /* GraphQL */ `
     sessionToken: String!
     userId: Int!
     expires: String!
-
     createdAt: String!
     updatedAt: String!
   }
 
   type Lyric {
     id: Int!
-
     lyricId: Int!
     date: String!
     editDate: String
     isPinned: Boolean!
     isChannelPost: Boolean!
     replyToMessage: Int
-
     message: Message
     user: User
     chat: Chat
     media: Media
-
     userId: Int!
-
     createdAt: String!
     updatedAt: String!
   }
 
   type Message {
     id: Int!
-
     message_id: Int!
     text: String
     word_count: Int
     paragraph_count: Int
-
     reactions: Reaction
     hashtags: Hashtag
-
     lyricId: Int!
-
     createdAt: String!
     updatedAt: String!
   }
 
   type Reaction {
     id: Int!
-
     uniqueCount: Int!
     totalFreeCount: Int!
     totalPaidCount: Int!
     totalCount: Int!
-
     emojis: [Emoji!]!
-
     messageId: Int!
-
     createdAt: String!
     updatedAt: String!
   }
 
   type Emoji {
     id: Int!
-
     emoji: String!
     isPaid: Boolean!
     count: Int!
     order: Int
-
     reactionId: Int!
-
-    createdAt: String!
-    updatedAt: String!
-  }
-
-  type UserLyric {
-    key: Int!
-
-    id: Int!
-    name: String
-    displayName: String!
-    isAdmin: Boolean!
-
-    lyricsId: Int!
-
     createdAt: String!
     updatedAt: String!
   }
 
   type Chat {
     key: Int!
-
     id: Int!
     title: String!
     type: String!
-
     lyricId: Int!
-
     createdAt: String!
     updatedAt: String!
   }
 
   type Media {
     id: Int!
-
     mime: String!
     duration: Int!
     convert: Boolean!
-
     lyricId: Int!
-
     createdAt: String!
     updatedAt: String!
   }
 
   type Hashtag {
     id: Int!
-
     tags: [String!]!
     count: Int!
-
     messageId: Int!
-
     createdAt: String!
     updatedAt: String!
   }
 
+  type AuthResponse {
+    token: String!
+    user: User!
+  }
+
   type Query {
     users: [User!]!
+    me: User
     lyrics(limit: Int, offset: Int): [Lyric!]!
-    hello: String
     user(id: ID!): User
     userByEmail(email: String!): User
     userByAccount(provider: String!, providerAccountId: String!): User
   }
 
   type Mutation {
-    login(email: String!, password: String!): User
-    createUser(name: String!, email: String!): User!
-    updateUser(id: ID!, name: String, email: String): User!
-    linkAccount(userId: ID!, provider: String!, providerAccountId: String!): Account!
-    createSession(sessionToken: String!, userId: ID!, expires: String!): Session!
+    register(email: String!, password: String!, name: String!): AuthResponse!
+    login(email: String!, password: String!): AuthResponse!
+    logout: String!
+    createSession(sessionToken: String!, userId: Int!, expires: String!): Session!
     deleteSession(sessionToken: String!): Session!
   }
-`
+`;

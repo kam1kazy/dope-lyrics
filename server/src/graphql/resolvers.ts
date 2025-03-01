@@ -1,124 +1,166 @@
+// src/graphql/resolvers.ts
 import { GraphQLContext } from './context';
-
-interface ILogin {
-  email: string;
-  password: string;
-}
+import { sign } from 'jsonwebtoken';
 
 export const resolvers = {
   Query: {
-    hello: () => 'Hello, world!',
+    /**
+     * Получить текущего аутентифицированного пользователя
+     */
+    me: async (_: any, __: any, { prisma, user }: GraphQLContext) => {
+      if (!user) throw new Error('Не аутентифицирован');
+      const foundUser = await prisma.user.findUnique({
+        where: { id: parseInt(user.id) },
+        select: { id: true, email: true, name: true, role: true },
+      });
+      if (!foundUser) throw new Error('Пользователь не найден');
+      return foundUser;
+    },
+
+    /**
+     * Получить список текстов с пагинацией
+     */
     lyrics: async (
-      _parent: unknown,
-      args: { limit?: number; offset?: number },
-      context: GraphQLContext
+      _: any,
+      { limit, offset }: { limit?: number; offset?: number },
+      { prisma }: GraphQLContext
     ) => {
       try {
-        return context.prisma.lyrics.findMany({
-          take: args.limit || 500,
-          skip: args.offset || 0,
+        const lyrics = await prisma.lyrics.findMany({
+          take: limit || 10,
+          skip: offset || 0,
+          orderBy: { date: 'desc' },
           include: {
             message: {
               include: {
-                reactions: { include: { emojis: true } },
                 hashtags: true,
+                reactions: { include: { emojis: true } },
               },
             },
-            user: true,
-            chat: true,
-            media: true,
           },
         });
-      } catch (error: unknown) {
-        if (error instanceof Error) {
-          throw new Error('🚧 Ошибка при получении текстов: ' + error.message);
-        } else {
-          throw new Error('🚧 Ошибка при получении текстов: Unknown error');
-        }
+
+        return lyrics.map(lyric => ({
+          id: lyric.id.toString(),
+          lyricId: lyric.lyricId.toString(),
+          date: lyric.date.toISOString(),
+          editDate: lyric.editDate?.toISOString(),
+          isPinned: lyric.isPinned,
+          isChannelPost: lyric.isChannelPost,
+          replyToMessage: lyric.replyToMessage,
+          userId: lyric.userId.toString(),
+          createdAt: lyric.date.toISOString(),
+          updatedAt: lyric.date.toISOString(),
+          message: lyric.message ? {
+            id: lyric.message.id.toString(),
+            text: lyric.message.text,
+            word_count: lyric.message.word_count,
+            hashtags: lyric.message.hashtags ? {
+              id: lyric.message.hashtags.id.toString(),
+              count: lyric.message.hashtags.count,
+              tags: lyric.message.hashtags.tags,
+            } : null,
+            reactions: lyric.message.reactions ? {
+              id: lyric.message.reactions.id.toString(),
+              totalCount: lyric.message.reactions.totalCount,
+              emojis: lyric.message.reactions.emojis.map(emoji => ({
+                id: emoji.id.toString(),
+                emoji: emoji.emoji,
+                count: emoji.count,
+                order: emoji.order,
+              })),
+            } : null,
+          } : null,
+        }));
+      } catch (error) {
+        console.error('Ошибка получения текстов:', error);
+        throw new Error('Не удалось получить тексты');
       }
     },
-    user: async (_: any, { id }: { id: string }, context: GraphQLContext) => {
-      return context.prisma.user.findUnique({ where: { id: parseInt(id) } });
-    },
-    userByEmail: async (_: any, { email }: { email: string }, context: GraphQLContext) => {
-      return context.prisma.user.findUnique({ where: { email } });
-    },
-    userByAccount: async (
-      _: any,
-      { provider, providerAccountId }: { provider: string; providerAccountId: string },
-      context: GraphQLContext
-    ) => {
-      const account = await context.prisma.account.findFirst({
-        where: { provider, providerAccountId },
-        include: { user: true },
-      });
-      return account?.user || null;
+
+    /**
+     * Получить всех пользователей (только для админа)
+     */
+    users: async (_: any, __: any, { prisma, user }: GraphQLContext) => {
+      if (!user || user.role !== 'admin') throw new Error('Нет доступа');
+      return prisma.user.findMany();
     },
   },
+
   Mutation: {
-    login: async (_: any, { email, password }: ILogin, context: GraphQLContext) => {
-      try {
-        const user = await context.prisma.user.findUnique({ where: { email } });
-        if (user && user.password === password) {
-          return { id: user.id, name: user.name, email: user.email };
-        }
-        throw new Error('Неверные учетные данные');
-      } catch (error: unknown) {
-        if (error instanceof Error) {
-          throw new Error('🚧 Ошибка при входе: ' + error.message);
-        } else {
-          throw new Error('🚧 Ошибка при входе: Unknown error');
-        }
-      }
-    },
-    createUser: async (
+    /**
+     * Регистрация нового пользователя
+     */
+    register: async (
       _: any,
-      { name, email }: { name: string; email: string },
-      context: GraphQLContext
+      { email, password, name }: { email: string; password: string; name: string },
+      { prisma }: GraphQLContext
     ) => {
-      return context.prisma.user.create({
-        data: { name, email, password: 'default', role: 'user' },
+      const existingUser = await prisma.user.findUnique({ where: { email } });
+      if (existingUser) throw new Error('Пользователь уже существует');
+
+      const hashedPassword = await Bun.password.hash(password, { algorithm: 'bcrypt' });
+      const user = await prisma.user.create({
+        data: { email, password: hashedPassword, name, role: 'user' },
       });
+
+      const token = sign({ id: user.id, role: user.role }, process.env.JWT_SECRET || 'supersecretkey', {
+        expiresIn: '7d',
+      });
+
+      return { token, user };
     },
-    updateUser: async (
+
+    /**
+     * Вход пользователя
+     */
+    login: async (
       _: any,
-      { id, name, email }: { id: string; name?: string; email?: string },
-      context: GraphQLContext
+      { email, password }: { email: string; password: string },
+      { prisma }: GraphQLContext
     ) => {
-      return context.prisma.user.update({
-        where: { id: parseInt(id) },
-        data: { name, email },
+      const user = await prisma.user.findUnique({ where: { email } });
+      if (!user) throw new Error('Неверные учетные данные');
+
+      const isValid = await Bun.password.verify(password, user.password as string);
+      if (!isValid) throw new Error('Неверные учетные данные');
+
+      const token = sign({ id: user.id, role: user.role }, process.env.JWT_SECRET || 'supersecretkey', {
+        expiresIn: '7d',
       });
+
+      return { token, user };
     },
-    linkAccount: async (
-      _: any,
-      { userId, provider, providerAccountId }: { userId: string; provider: string; providerAccountId: string },
-      context: GraphQLContext
-    ) => {
-      return context.prisma.account.create({
-        data: {
-          userId: parseInt(userId),
-          provider,
-          providerAccountId,
-          type: 'oauth',
-        },
-      });
+
+    /**
+     * Выход пользователя
+     */
+    logout: async (_: any, __: any, { prisma }: GraphQLContext) => {
+      return 'Успешный выход';
     },
+
+    /**
+     * Создание сессии
+     */
     createSession: async (
       _: any,
       { sessionToken, userId, expires }: { sessionToken: string; userId: string; expires: string },
-      context: GraphQLContext
+      { prisma }: GraphQLContext
     ) => {
-      console.log('Server: Creating session:', { sessionToken, userId, expires });
-      const session = await context.prisma.session.create({
-        data: {
-          sessionToken,
-          userId: parseInt(userId),
-          expires: new Date(expires),
-        },
+      return prisma.session.create({
+        data: { sessionToken, userId: parseInt(userId), expires: new Date(expires) },
       });
-      console.log('Server: Session created:', session);
-      return session;
+    },
+
+    /**
+     * Удаление сессии
+     */
+    deleteSession: async (
+      _: any,
+      { sessionToken }: { sessionToken: string },
+      { prisma }: GraphQLContext
+    ) => {
+      return prisma.session.delete({ where: { sessionToken } });
     },
   },
 };

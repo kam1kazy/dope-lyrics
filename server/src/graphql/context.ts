@@ -1,8 +1,41 @@
-import { prisma } from '~/lib/prisma'
+// src/graphql/context.ts
+import { prisma } from '../lib/prisma';
+import { verify } from 'jsonwebtoken';
 
-export type GraphQLContext = {
-  prisma: typeof prisma
-  user?: { id: string; role: string } | null
+export interface GraphQLContext {
+  prisma: typeof prisma;
+  user?: { id: string; role: string } | null;
+}
+
+/**
+ * Создает контекст GraphQL с аутентификацией пользователя
+ * @param request - Объект HTTP-запроса
+ * @returns Объект контекста с клиентом Prisma и аутентифицированным пользователем
+ */
+export async function createContext({
+  request,
+}: {
+  request: Request;
+}): Promise<GraphQLContext> {
+  let user: { id: string; role: string } | null = null;
+
+  console.log('request в контексте', request);
+  
+  try {
+    const authHeader = request.headers.get('Authorization');
+    if (authHeader?.startsWith('Bearer ')) {
+      const token = authHeader.split(' ')[1];
+      const decoded = await verify(token, process.env.JWT_SECRET || 'supersecretkey');
+
+      if (typeof decoded !== 'string' && decoded) {
+        user = { id: decoded.id.toString(), role: decoded.role };
+      }
+    }
+  } catch (error) {
+    console.warn('Ошибка аутентификации:', error);
+  }
+
+  return { prisma, user };
 }
 
 process.on('SIGTERM', async () => {
@@ -10,30 +43,8 @@ process.on('SIGTERM', async () => {
   process.exit(0)
 })
 
+// Мониторинг производительности запросов Prisma
 // @ts-ignore
 prisma.$on('query', (e: Prisma.QueryEvent) => {
-  console.log(`Query: ${e.query}`)
-  console.log(`Params: ${e.params}`)
-  console.log(`Duration: ${e.duration}ms`)
+  console.log(`Запрос ${e.model}.${e.action} занял ${e.duration}мс \n Params: ${e.params} \n Query: ${e.query}`);
 })
-
-export async function createContext({
-  request,
-}: {
-  request: Request
-}): Promise<GraphQLContext> {
-  const authHeader = request.headers.get('Authorization')
-  let user = null
-
-  if (authHeader) {
-    const token = authHeader.replace('Bearer ', '')
-    user = await verifyToken(token) // Функция проверки токена
-  }
-
-  return { prisma, user }
-}
-
-function verifyToken(token: string) {
-  // Реализация проверки токена
-  return { id: '0', role: 'admin' } // Пример возвращаемого пользователя
-}

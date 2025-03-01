@@ -34,8 +34,13 @@ export const messageSeedObject = (
   }
 
   // Для создания используем полную структуру
-  return {
-    ...baseData,
+  return {    
+    userId: userId,
+    lyricId: record.message.message_id,
+    date: record.date,
+    editDate: record.editDate,
+    isPinned: record.isPinned,
+    isChannelPost: record.isChannelPost,
     message: {
       create: {
         text: record.message.text,

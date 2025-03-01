@@ -1,12 +1,29 @@
-import { resolvers } from './resolvers'
-import { typeDefinitions } from './querys'
-import { createContext } from './context'
-
-const pathApi: string = 'graphql'
+// src/graphql/schema.ts
+import { typeDefinitions } from './querys';
+import { resolvers } from './resolvers';
+import { createContext } from './context';
+import { useJWT } from '@graphql-yoga/plugin-jwt';
+import { useCookies } from '@whatwg-node/server-plugin-cookies';
 
 export const schema = {
   typeDefs: typeDefinitions,
-  context: ({ request }: { request: Request }) => createContext({ request }),
   resolvers,
-  path: pathApi,
-}
+  context: async ({ request }: { request: Request }) => {
+    return createContext({ request });
+  },
+  plugins: [
+    // useCookies(),
+    // useJWT({
+    //   signingKeyProviders: [() => process.env.JWT_SECRET || 'supersecretkey'],
+    //   tokenLookupLocations: [
+    //     ({ request }) => {
+    //       console.log('request в схеме', request);
+    //       const token = request.headers.get('Authorization')?.split(' ')[1];
+    //       console.log('token в схеме', token);
+    //       return token ? { token } : undefined;
+    //     },
+    //   ],
+    // }),
+  ],
+  path: 'graphql',
+};
