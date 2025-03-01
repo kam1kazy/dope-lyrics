@@ -34,7 +34,7 @@ export const messageSeedObject = (
   }
 
   // Для создания используем полную структуру
-  return {    
+  return {
     userId: userId,
     lyricId: record.message.message_id,
     date: record.date,
@@ -73,17 +73,17 @@ export const messageSeedObject = (
             },
           }
           : undefined,
-        media: record.media
-          ? {
-            create: {
-              mime: record.media.mime,
-              duration: record.media.duration,
-              convert: record.media.convert,
-            },
-          }
-          : undefined,
       },
     },
+    media: record.media
+    ? {
+      create: {
+        mime: record.media.mime,
+        duration: record.media.duration,
+        convert: record.media.convert,
+      },
+    }
+    : undefined,
   }
 }
 

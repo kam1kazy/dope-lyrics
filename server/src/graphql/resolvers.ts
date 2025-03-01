@@ -99,16 +99,26 @@ export const resolvers = {
       const existingUser = await prisma.user.findUnique({ where: { email } });
       if (existingUser) throw new Error('Пользователь уже существует');
 
+      console.log(email, password)
       const hashedPassword = await Bun.password.hash(password, { algorithm: 'bcrypt' });
       const user = await prisma.user.create({
-        data: { email, password: hashedPassword, name, role: 'user' },
+        data: { email, password: hashedPassword, role: 'user', name },
       });
 
       const token = sign({ id: user.id, role: user.role }, process.env.JWT_SECRET || 'supersecretkey', {
         expiresIn: '7d',
       });
-
-      return { token, user };
+      console.log("Создан новый пользователь:", user);
+      console.log("Сгенерирован токен:", token);
+      return {  
+        id: user.id,
+        token,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt
+       };
     },
 
     /**

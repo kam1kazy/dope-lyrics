@@ -123,8 +123,14 @@ export const typeDefinitions = /* GraphQL */ `
   }
 
   type AuthResponse {
+    id: Int!
     token: String!
+    email: String!
+    name: String!
+    role: String!
     user: User!
+    createdAt: String!
+    updatedAt: String!
   }
 
   type Query {

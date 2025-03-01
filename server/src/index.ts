@@ -22,12 +22,12 @@ const port: number = Number(process.env.PORT) || 4000
 
 const app = new Elysia()
   // State management for JWT and cookies
-  // .state('jwt', null as null | ReturnType<typeof jwt>)
-  // .state('setCookie', null as null | {
-  //   set: {
-  //     cookie: (options: { name: string; value: string; options?: Record<string, any> }) => void
-  //   }
-  // })
+  .state('jwt', null as null | ReturnType<typeof jwt>)
+  .state('setCookie', null as null | {
+    set: {
+      cookie: (options: { name: string; value: string; options?: Record<string, any> }) => void
+    }
+  })
   .use(cors({
     origin: process.env.CLIENT_URL || 'http://localhost:3000',
     credentials: true,

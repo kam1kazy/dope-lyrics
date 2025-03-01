@@ -69,56 +69,7 @@ export class PrismaService {
             this.prisma.lyrics.upsert({
               where: { id: userId },
               create:  {
-                userId: userId,
-                lyricId: item.message.message_id,
-                date: item.date,
-                editDate: item.editDate,
-                isPinned: item.isPinned,
-                isChannelPost: item.isChannelPost,
-                message: {
-                  create: {
-                    text: item.message.text,
-                    message_id: item.message.message_id,
-                    word_count: item.message.word_count,
-                    paragraph_count: item.message.paragraph_count,
-                    reactions: item.message.reactions
-                      ? {
-                        create: {
-                          uniqueCount: item.message.reactions.uniqueCount,
-                          totalFreeCount: item.message.reactions.totalFreeCount,
-                          totalPaidCount: item.message.reactions.totalPaidCount,
-                          totalCount: item.message.reactions.totalCount,
-                          emojis: {
-                            create: item.message.reactions.emojis.map(emoji => ({
-                              emoji: emoji.emoji,
-                              isPaid: emoji.isPaid,
-                              count: emoji.count,
-                              order: emoji.order,
-                            })),
-                          },
-                        },
-                      }
-                      : undefined,
-                    hashtags: item.message.hashtags
-                      ? {
-                        create: {
-                          tags: item.message.hashtags.tags,
-                          count: item.message.hashtags.count,
-                        },
-                      }
-                      : undefined,
-                   
-                  },
-                },
-                media: item.media
-                ? {
-                  create: {
-                    mime: item.media.mime,
-                    duration: item.media.duration,
-                    convert: item.media.convert,
-                  },
-                }
-                : undefined,
+                ...messageSeedObject(item, userId),
               },
               update: {
                 ...messageSeedObject(item, userId, true),
