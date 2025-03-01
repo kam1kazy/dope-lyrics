@@ -1,32 +1,18 @@
-'use client'
-
-// APOLLO CLIENT
-import { ApolloProvider } from '@apollo/client'
-import client from '@/server/apolloClient'
-
 // STYLES
-import { ChakraProvider, Container, Flex } from '@chakra-ui/react'
-import { theme } from '../../../styles/theme'
+import { Container, Flex } from '@chakra-ui/react'
 
 // COMPONENTS
 import { Viewport } from '@/components/viewport'
 import { Menu } from '@/components/menu/menu'
 
-// AUTH
-
-
 export default function Dashboard() {
-
-
     return (
-        <ApolloProvider client={client}>
-            <ChakraProvider theme={theme}>
-                <Flex
-                    h='100vh'
-                    justifyContent={'center'}
-                    alignItems={'center'}
-                    overflow={'hidden'}
-                    background={
+            <Flex
+                h='100vh'
+                justifyContent={'center'}
+                alignItems={'center'}
+                overflow={'hidden'}
+                background={
                         'linear-gradient(45deg, rgb(13, 13, 13), hsl(0, 0%, 0%));'
                     }
                     color={'#cbccd1'}
@@ -90,11 +76,10 @@ export default function Dashboard() {
                             },
                         }}
                     >
-                        <Viewport />
-                        <Menu />
+                        {/* <Viewport /> */}
+                        {/* <Menu /> */}
+                        asd
                     </Container>
                 </Flex>
-            </ChakraProvider>
-        </ApolloProvider>
     )
 }

@@ -1,14 +1,16 @@
+// server/querys/auth.ts
 import { gql } from '@apollo/client';
 
-export const CREATE_USER = gql`
-  mutation CreateUser($email: String!, $password: String!, $name: String!) {
-    createUser(email: $email, password: $password, name: $name) {
+export const REGISTER = gql`
+  mutation register($email: String!, $password: String!, $name: String!) {
+    register(email: $email, password: $password, name: $name) {
       id
       email
       name
       role
       createdAt
       updatedAt
+      token
     }
   }
 `;
@@ -22,6 +24,7 @@ export const LOGIN = gql`
       role
       createdAt
       updatedAt
+      token
     }
   }
 `;
