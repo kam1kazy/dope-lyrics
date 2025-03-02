@@ -1,6 +1,5 @@
 import { IHashtagData, IMessage } from '~/types/dataMessage'
-import { IChat, IEmoji } from '~/types/lyric'
-import { IUser } from '~/types/user'
+import { IEmoji } from '~/types/lyric'
 
 interface IProps {
   message: IMessage

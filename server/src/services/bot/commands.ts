@@ -3,20 +3,19 @@ import { BotKeyboard, tl } from '@mtcute/core'
 import * as env from '../../env'
 
 // HANDLERS
-import { getChatHistory } from '../../handlers/getChatHistory'
-import { sendToBotChat } from '../../handlers/handlers'
+import { getChatHistory } from './chat/chatHistory'
+import { sendToBotChat } from './chat/sendToChat'
 
 // TYPES
-import { TypeBotClient } from '../index'
+import { TypeBotClient } from '../../lib/mtcute'
 
 // HOOKS
-import { useAdminCheck } from '~/hooks/useAdminCheck'
+import { useAdminCheck } from '~/handlers/useAdminCheck'
 
 // PRISMA
 import seed from '../../../prisma/script/seed'
 
 // Дата базы
-import { prisma } from '~/lib/prisma'
 import { prismaService } from '~/services/db'
 
 // TYPES

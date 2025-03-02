@@ -10,13 +10,13 @@ import {
   commandStartApp,
   commandStartBd,
   seedToBD,
-} from './commands'
+} from '../services/bot/commands'
 
 // КОНСТАНТЫ
 import * as env from '../env'
 import { prismaService } from '~/services/db'
-import { getChatHistory } from '~/handlers/getChatHistory'
-import { sendToBotChat } from '~/handlers/handlers'
+import { getChatHistory } from '~/services/bot/chat/chatHistory'
+import { sendToBotChat } from '~/services/bot/chat/sendToChat'
 
 const phone = env.BOT_PHONE
 const pass = env.BOT_PASS

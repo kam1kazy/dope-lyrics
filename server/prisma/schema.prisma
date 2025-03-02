@@ -30,12 +30,12 @@ model Account {
   type              String
   provider          String
   providerAccountId String   @map("provider_account_id")
-  refresh_token     String?
-  access_token      String?
-  expires_at        Int?
-  token_type        String?
   scope             String?
   id_token          String?
+  expires_at        Int?
+  refresh_token     String?
+  token_type        String?
+  access_token      String?
   session_state     String?
   createdAt         DateTime @default(now()) @map("created_at")
   updatedAt         DateTime @updatedAt @map("updated_at")
@@ -47,8 +47,9 @@ model Account {
 
 model Session {
   id           Int      @id @default(autoincrement())
+  userId       Int      @map("user_id") 
   sessionToken String   @unique @map("session_token")
-  userId       Int      @map("user_id")
+  refreshToken String   @unique @map("refresh_token")
   expires      DateTime
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")

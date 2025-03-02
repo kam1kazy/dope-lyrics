@@ -1,10 +1,9 @@
 // HANDLERS
-import { filterHistory } from './filterHistory'
-import { createJSONdata } from './createJSONdata'
+import { filterHistory } from '../../../handlers/getChatHistory/filterHistory'
+import { createJSONdata } from '../../../handlers/getChatHistory/createJSONdata'
 
 // TYPES
-import { TypeBotClient } from '../../mtcute/index'
-import { sendToBotChat } from '../handlers'
+import { TypeBotClient } from '../../../lib/mtcute'
 
 // Получаем историю чата
 export async function getChatHistory({

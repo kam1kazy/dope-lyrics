@@ -28,8 +28,21 @@ type Account = {
 
 type Session = {
   id: number
-  sessionToken: string
   userId: number
+  refreshToken: string
+  sessionToken: string
   expires: Date
   user: IUser
+}
+
+export interface AuthResponse {
+  id: number
+  refreshToken: string
+  sessionToken: string
+  email: string
+  name: string
+  role: string
+  user: IUser
+  createdAt: string
+  updatedAt: string
 }

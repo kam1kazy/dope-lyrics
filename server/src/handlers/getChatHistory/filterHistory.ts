@@ -9,7 +9,7 @@ import {
   handlerCountReactions,
   handlerWithoutHashtags,
   hashtagStringsOnly,
-} from '../handlers'
+} from '../filtres'
 
 // OBJECTS
 import messageObject from './objMessage'

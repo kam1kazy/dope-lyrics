@@ -1,4 +1,4 @@
-import { TypeBotClient } from '~/mtcute/index'
+import { TypeBotClient } from '~/lib/mtcute'
 import * as env from '~/env'
 import {
   CallbackQueryContext,

@@ -1,7 +1,7 @@
 // TYPES
-import { IEmoji } from '../types/lyric'
-import { IHashtagData } from '../types/dataMessage'
-import { TypeBotClient } from '../mtcute/index'
+import { IEmoji } from '../../types/lyric'
+import { IHashtagData } from '../../types/dataMessage'
+import { TypeBotClient } from '../../lib/mtcute'
 
 interface ISendToBotChat {
   tg: TypeBotClient
@@ -63,10 +63,6 @@ const hashtagStringsOnly = (data: IHashtagData[]) => {
   return hashtagStrings
 }
 
-// Отправить в определенный чат
-const sendToBotChat = ({ tg, chatId, text }: ISendToBotChat) => {
-  tg.sendText(chatId, text.toString())
-}
 
 export {
   handlerCountParagraphs,
@@ -74,5 +70,4 @@ export {
   handlerCountReactions,
   handlerWithoutHashtags,
   hashtagStringsOnly,
-  sendToBotChat,
 }

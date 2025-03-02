@@ -28,8 +28,10 @@ export const userSeedObject = (record: IUser) => {
       },
       sessions: {
         create: record.sessions.map(session => ({
+          userId: record.id,
           sessionToken: session.sessionToken,
-          expires: session.expires instanceof Date ? session.expires : new Date(session.expires), // Ensure it's a Date
+          refreshToken: session.refreshToken,
+          expires: session.expires,
         })),
       },
     },

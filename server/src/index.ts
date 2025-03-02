@@ -5,16 +5,13 @@ import { swagger } from '@elysiajs/swagger'
 
 // GraphQL
 import { yoga } from '@elysiajs/graphql-yoga'
-import { schema } from './graphql/schema'
+import { schema } from './lib/graphql'
 
 // JWT
 import { jwt } from '@elysiajs/jwt'
 
-//env
+// env
 import dotenv from 'dotenv'
-import { authRoutes } from './routes/authRoutes'
-
-
 dotenv.config()
 
 // Переменные для запуска сервера
@@ -43,7 +40,6 @@ const app = new Elysia()
     },
   }))
   // Маршруты аутентификации
-  .use(authRoutes)
   .use(yoga(schema))
   .listen(port);
 

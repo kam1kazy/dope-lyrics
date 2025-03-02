@@ -44,7 +44,47 @@ export class PrismaService {
     try {
       // Используем транзакцию для массовой загрузки записей через .upsert
       await this.prisma.$transaction(
-        users.map(user => this.prisma.user.upsert(userSeedObject(user))),
+        users.map(user => this.prisma.user.upsert({
+          where: { email: user.email },
+          create: {
+            id: user.id,
+            name: user.name,
+            password: user.password,
+            email: user.email,
+            emailVerified: user.emailVerified,
+            image: user.image,
+            role: user.role,
+            accounts: {
+              create: user.accounts.map(account => ({
+                userId: user.id,
+                type: account.type,
+                provider: account.provider,
+                providerAccountId: account.providerAccountId,
+                refresh_token: account.refresh_token,
+                access_token: account.access_token,
+                expires_at: account.expires_at,
+                token_type: account.token_type,
+                scope: account.scope,
+                id_token: account.id_token,
+                session_state: account.session_state,
+              })),
+            },
+            sessions: {
+              create: user.sessions.map(session => ({
+                sessionToken: session.sessionToken,
+                refreshToken: session.refreshToken,
+                expires: session.expires,
+              })),
+            },
+          },
+          update: {
+            name: user.name,
+            password: user.password,
+            emailVerified: user.emailVerified,
+            image: user.image,
+            role: user.role,
+          },
+        })),
       )
     } catch (error) {
       console.error('PRISMA: 🚧 Данные пользователя - не удалось загрузить в базу\n\n', error)

@@ -34,6 +34,7 @@ export const typeDefinitions = /* GraphQL */ `
   type Session {
     id: Int!
     sessionToken: String!
+    refreshToken: String!
     userId: Int!
     expires: String!
     createdAt: String!
@@ -124,14 +125,17 @@ export const typeDefinitions = /* GraphQL */ `
 
   type AuthResponse {
     id: Int!
-    token: String!
     email: String!
     name: String!
     role: String!
-    user: User!
-    createdAt: String!
-    updatedAt: String!
+    refreshToken: String!
+    sessionToken: String!
   }
+
+  type Response {
+  success: Boolean!
+  message: String!
+}
 
   type Query {
     users: [User!]!
@@ -143,8 +147,9 @@ export const typeDefinitions = /* GraphQL */ `
   }
 
   type Mutation {
-    register(email: String!, password: String!, name: String!): AuthResponse!
+    createUser(email: String!, password: String!, name: String!): AuthResponse!
     login(email: String!, password: String!): AuthResponse!
+    revokeToken(refreshToken: String!): Response!
     logout: String!
     createSession(sessionToken: String!, userId: Int!, expires: String!): Session!
     deleteSession(sessionToken: String!): Session!
