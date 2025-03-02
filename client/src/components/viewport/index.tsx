@@ -11,7 +11,7 @@ import { TotalCount } from './totalCount'
 import { Carousel } from './сarousel'
 
 // GRAPHQL
-import { ALL_LYRICS } from '@/server/querys/lyrics'
+import { ALL_LYRICS } from '@/services/lyrics'
 
 // HANDLERS
 import { CreateArrListCarousel } from '@/handlers/createArrListCarousel'

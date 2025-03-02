@@ -1,22 +1,35 @@
-import { NextApiRequest, NextApiResponse } from "next";
+import { gql } from '@apollo/client';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const response = await fetch("http://localhost:4000/graphql", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      query: `
-        query AllLyrics($limit: Int, $offset: Int) {
-          lyrics(limit: $limit, offset: $offset) {
+export const ALL_LYRICS = gql`
+  query AllLyrics($limit: Int, $offset: Int) {
+    lyrics(limit: $limit, offset: $offset) {
+      id
+      lyricId
+      date
+      editDate
+      isPinned
+      isChannelPost
+      replyToMessage
+      message {
+        id
+        text
+        word_count
+        hashtags {
+          id
+          count
+          tags
+        }
+        reactions {
+          id
+          totalCount
+          emojis {
             id
-            lyricId
-            date
+            emoji
+            count
+            order
           }
         }
-      `,
-      variables: { limit: 500, offset: 0 },
-    }),
-  });
-  const data = await response.json();
-  res.status(200).json(data);
-}
+      }
+    }
+  }
+`;

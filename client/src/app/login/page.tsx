@@ -3,14 +3,14 @@
 
 import { useState } from 'react';
 import { useMutation } from '@apollo/client';
-import { LOGIN } from '@/server/querys/auth';
+import { authServices } from '@/services';
 import { Box, Button, FormControl, FormLabel, Input, VStack, Text, Heading, useToast } from '@chakra-ui/react';
 import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [login, { loading }] = useMutation(LOGIN);
+  const [login, { loading }] = useMutation(authServices.LOGIN);
   const toast = useToast();
   const router = useRouter();
 
@@ -18,10 +18,9 @@ export default function LoginPage() {
     e.preventDefault(); 
     try {
       const { data } = await login({ variables: { email, password } });
-      if (data?.login?.token) {
-        localStorage.setItem('token', data.login.token);
+      if (data?.login?.sessionToken) {
         toast({ title: 'Успешный вход', status: 'success', duration: 3000, isClosable: true });
-        router.push('/dashboard');
+        router.push('/');
       }
     } catch (error) {
       toast({ title: 'Ошибка', description: 'Неверные данные', status: 'error', duration: 3000, isClosable: true });

@@ -3,7 +3,7 @@ export interface IUser {
   name: string
   password: string
   email: string
-  emailVerified: boolean
+  emailVerified: Date
   image: string
   role: string
   accounts: Account[]
@@ -18,7 +18,7 @@ type Account = {
   providerAccountId: string
   refresh_token: string
   access_token: string
-  expires_at: Date
+  expires_at: number
   token_type: string
   scope: string
   id_token: string
@@ -28,8 +28,21 @@ type Account = {
 
 type Session = {
   id: number
-  sessionToken: string
   userId: number
+  refreshToken: string
+  sessionToken: string
   expires: Date
   user: IUser
+}
+
+export interface AuthResponse {
+  id: number
+  refreshToken: string
+  sessionToken: string
+  email: string
+  name: string
+  role: string
+  user: IUser
+  createdAt: string
+  updatedAt: string
 }
