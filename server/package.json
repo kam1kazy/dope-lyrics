@@ -44,6 +44,7 @@
     "dotenv": "^16.4.7",
     "elysia": "^1.2.22",
     "graphql-tools": "^9.0.15",
+    "jsonwebtoken": "^9.0.2",
     "lucia": "^3.2.2"
   },
   "devDependencies": {

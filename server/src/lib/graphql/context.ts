@@ -6,9 +6,10 @@ import { jwt } from '@elysiajs/jwt';
 
 export interface GraphQLContext {
   prisma: typeof prisma;
-  setCookie: CookieRequest['setCookie']
+  setCookie: (name: string, value: string, options?: { maxAge?: number; httpOnly?: boolean; secure?: boolean; sameSite?: string }) => void;
   user?: { id: string; role: string } | null;
   jwt: ReturnType<typeof jwt>;
+  cookie?: Record<string, string>;
 }
 
 /**
@@ -24,10 +25,31 @@ export async function createContext({
   let user: { id: string; role: string } | null = null;
 
   console.log('request в контексте', request);
-  const setCookie = (name: string, value: string, options: { maxAge: number; httpOnly: boolean; secure: boolean }) => {
-    request.headers.set('Set-Cookie', `${name}=${value}; ${Object.entries(options).map(([key, value]) => `${key}=${value}`).join('; ')}`);
+  
+  // Получаем куки из запроса
+  const cookieHeader = request.headers.get('Cookie');
+  const cookies: Record<string, string> = {};
+  
+  if (cookieHeader) {
+    cookieHeader.split(';').forEach(cookie => {
+      const [name, value] = cookie.trim().split('=');
+      if (name && value) {
+        cookies[name] = value;
+      }
+    });
   }
+  
+  // Функция для установки кук (будет использоваться в резолверах)
+  // Обратите внимание: эта функция не устанавливает куки напрямую,
+  // а будет использоваться в резолверах для формирования ответа
+  const setCookie = (name: string, value: string, options: { maxAge?: number; httpOnly?: boolean; secure?: boolean; sameSite?: string } = {}) => {
+    // Эта функция будет использоваться в резолверах
+    // Фактическая установка кук происходит в ответе GraphQL
+    return { name, value, options };
+  };
+
   try {
+    // Проверяем токен из заголовка Authorization
     const authHeader = request.headers.get('Authorization');
     if(!process.env.JWT_SECRET) throw new Error('JWT_SECRET не установлен');
 
@@ -39,11 +61,32 @@ export async function createContext({
         user = { id: decoded.id.toString(), role: decoded.role };
       }
     }
+    
+    // Если нет токена в заголовке, проверяем токен из куки
+    else if (cookies.token) {
+      try {
+        const decoded = await verify(cookies.token, process.env.JWT_SECRET);
+        if (typeof decoded !== 'string' && decoded) {
+          user = { id: decoded.id.toString(), role: decoded.role };
+        }
+      } catch (error) {
+        console.warn('Ошибка проверки токена из куки:', error);
+      }
+    }
   } catch (error) {
     console.warn('Ошибка аутентификации:', error);
   }
 
-  return { prisma, user, setCookie: setCookie as CookieRequest['setCookie'], jwt: jwt as ReturnType<typeof jwt> };
+  return { 
+    prisma, 
+    user, 
+    setCookie, 
+    jwt: jwt({
+      name: 'jwt',
+      secret: process.env.JWT_SECRET as string
+    }) as ReturnType<typeof jwt>, 
+    cookie: cookies
+  };
 }
 
 process.on('SIGTERM', async () => {

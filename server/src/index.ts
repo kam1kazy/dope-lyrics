@@ -1,5 +1,5 @@
 // Плагины для сервера
-import { Elysia } from 'elysia'
+import { Elysia, t } from 'elysia'
 import { cors } from '@elysiajs/cors'
 import { swagger } from '@elysiajs/swagger'
 
@@ -9,6 +9,8 @@ import { schema } from './lib/graphql'
 
 // JWT
 import { jwt } from '@elysiajs/jwt'
+import { cookie } from '@elysiajs/cookie'
+
 
 // env
 import dotenv from 'dotenv'
@@ -18,13 +20,17 @@ dotenv.config()
 const port: number = Number(process.env.PORT) || 4000
 
 const app = new Elysia()
-  // State management for JWT and cookies
-  .state('jwt', null as null | ReturnType<typeof jwt>)
-  .state('setCookie', null as null | {
-    set: {
-      cookie: (options: { name: string; value: string; options?: Record<string, any> }) => void
-    }
-  })
+  // Настраиваем плагин JWT
+  .use(jwt({
+    name: 'jwt', // имя, которое будет использоваться для доступа к методам JWT
+    secret: process.env.JWT_SECRET as string // секретный ключ для подписи токенов
+  }))
+  // Настраиваем плагин Cookie
+  .use(cookie({
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 7 * 86400, // 7 дней по умолчанию
+  }))
   .use(cors({
     origin: process.env.CLIENT_URL || 'http://localhost:3000',
     credentials: true,
@@ -39,7 +45,6 @@ const app = new Elysia()
       },
     },
   }))
-  // Маршруты аутентификации
   .use(yoga(schema))
   .listen(port);
 
