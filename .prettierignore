@@ -1,0 +1,51 @@
+# Зависимости
+node_modules
+.pnp
+.pnp.js
+
+# Сборка
+.next/
+out/
+build
+dist
+coverage
+
+# Кэш
+.npm
+.eslintcache
+.vercel
+.turbo
+
+# Логи
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Большие файлы данных
+*.min.js
+*.min.css
+*.lock
+package-lock.json
+yarn.lock
+bun.lockb
+
+# Сгенерированные файлы
+*.generated.*
+*.gen.*
+prisma/generated/
+
+# Другие файлы, которые не нужно форматировать
+.git
+.DS_Store
+*.log
+*.svg
+*.ico
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.woff
+*.woff2
+*.eot
+*.ttf
+*.otf

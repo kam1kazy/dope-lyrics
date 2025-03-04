@@ -53,7 +53,18 @@ export default function RegisterPage() {
 
   useEffect(() => {
     if (data?.createUser?.sessionToken) {
-      console.log('Успшно зарегистрирован:', data)
+      console.log('CLIENT: Успшно зарегистрирован:', data)
+
+      // Сохраняем токены в куки (они уже должны быть установлены сервером)
+      // Но для уверенности можем проверить их наличие
+      const cookies = document.cookie;
+
+      if (!cookies.includes('token=') || !cookies.includes('refresh_token=')) {
+        console.warn('Токены не были установлены в куки автоматически');
+        // Можно добавить дополнительную логику для установки кук на клиенте,
+        // но лучше, чтобы это делал сервер
+      }
+
       toast({
         title: 'Регистрация успешна',
         status: 'success',

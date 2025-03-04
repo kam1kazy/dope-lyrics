@@ -11,7 +11,7 @@ export default function Home() {
   const router = useRouter()
   const { data, loading, error } = useQuery(userServices.ME)
 
-  console.log('data', data)
+  console.log('index page: userServices.ME - data', data)
   useEffect(() => {
     if (!loading) {
       if (!data || error) {
