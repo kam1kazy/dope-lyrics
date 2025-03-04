@@ -133,24 +133,26 @@ export const typeDefinitions = /* GraphQL */ `
   }
 
   type Response {
-  success: Boolean!
-  message: String!
-}
+    success: Boolean!
+    message: String!
+  }
 
   type Query {
-    users: [User!]!
     me: User
-    lyrics(limit: Int, offset: Int): [Lyric!]!
     user(id: ID!): User
+    users: [User!]!
     userByEmail(email: String!): User
     userByAccount(provider: String!, providerAccountId: String!): User
+    cookie(name: String): String
+    lyrics(limit: Int, offset: Int): [Lyric!]!
   }
 
   type Mutation {
-    createUser(email: String!, password: String!, name: String!): AuthResponse!
     login(email: String!, password: String!): AuthResponse!
-    revokeToken(refreshToken: String!): Response!
     logout: String!
+    createUser(email: String!, password: String!, name: String!): AuthResponse!
+    setCookie(name: String, value: String): String
+    revokeToken(refreshToken: String!): Response!
     createSession(sessionToken: String!, userId: Int!, expires: String!): Session!
     deleteSession(sessionToken: String!): Session!
   }

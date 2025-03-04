@@ -15,6 +15,7 @@ import { getUsers } from '~/services/users/getUsers';
 
 // Lyrics
 import { getLyrics } from '~/services/lyrics';
+import { getCookie, setCookie } from '~/services/auth/cookie';
 
 export const resolvers = {
   Query: {
@@ -46,6 +47,13 @@ export const resolvers = {
      * @returns Promise<User[]>
      */
     users: async (_: any, __: any, { prisma, user }: GraphQLContext) => getUsers(user, prisma),
+
+    /**
+     * Получить куку по имени
+     * @param name: string
+     * @returns Promise<string>
+     */
+    cookie: async (_: any, { name }: { name: string }, { prisma }: GraphQLContext) => getCookie(name, prisma),
   },
 
   Mutation: {
@@ -90,6 +98,18 @@ export const resolvers = {
       { prisma }: GraphQLContext
     ) => revokeToken(refreshToken, prisma),
 
+    /**
+     * Установить куку
+     * @param name: string
+     * @param value: string
+     * @param prisma: PrismaClient
+     * @returns Promise<void>
+     */
+    setCookie: async (
+      _: any,
+      { name, value }: { name: string; value: string },
+      { prisma }: GraphQLContext
+    ) => setCookie(name, value, prisma),
 
     /**
      * Выход пользователя
