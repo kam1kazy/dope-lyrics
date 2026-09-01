@@ -1,0 +1,41 @@
+---
+description: ESLint и Prettier — bun only; fix перед push; хук на правках
+alwaysApply: true
+---
+
+# Lint и format
+
+Пакетный менеджер проекта — **только Bun**. Не `npm install`, не `package-lock.json`.
+
+В `client/` и `server/`: eslint 9, prettier 3, `simple-import-sort`.
+
+| Скрипт | Что делает |
+| --- | --- |
+| `bun run lint` | проверка |
+| `bun run lint:fix` | автофикс eslint |
+| `bun run format` | prettier |
+| `bun run typecheck` | `tsc --noEmit` |
+| `bun run fix` | lint:fix + format + typecheck |
+
+Из корня: `bun run fix` гоняет оба пакета.
+
+## После правок агентом
+
+Хук `afterFileEdit` (`.cursor/hooks/format-and-lint-edited-file.mjs`) гоняет prettier и eslint --fix **только на изменённом файле**. Не дублируй те же команды на весь пакет, если хук сработал.
+
+Вручную, если хук не сработал — из каталога пакета:
+
+```bash
+bunx prettier --write "<файл>"
+bunx eslint --fix "<файл>"
+```
+
+Несколько файлов — по одному. Не `eslint .` и не `fix` на весь пакет «на всякий случай».
+
+## Перед push
+
+Если пользователь просит push — в каждом затронутом пакете (`client/` / `server/`): `bun run fix`.
+Чинить errors **и** warnings. Не пушить, если `fix` красный.
+«Пуш без fix» — только явная просьба.
+
+Корневые `docs/` / `openspec/` — `fix` не нужен.

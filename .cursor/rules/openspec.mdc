@@ -1,0 +1,29 @@
+---
+description: OpenSpec — когда предлагать SDD, без Jira
+alwaysApply: true
+---
+
+# OpenSpec
+
+Корень: `openspec/` в dope-lyrics. Команды с дефисом: `/opsx-explore`, `/opsx-propose`, `/opsx-apply`, `/opsx-update`, `/opsx-sync`, `/opsx-archive`.
+
+Jira нет. Слаг change — kebab-case (`telegram-ingest`), не `CSP-XXXX`.
+
+## Когда предлагать
+
+Хотя бы одно: новая фича / client+server / ≥5 файлов / неочевидные требования / новый контракт GraphQL или схема Prisma.
+
+Формулировка одной строкой, потом ждать согласие. Propose = только артефакты, код не писать, пока не сказали apply.
+
+## Когда не навязывать
+
+Стили, 1–2 файла с очевидным фиксом, «просто сделай», «без openspec».
+
+## Порядок
+
+1. `/opsx-explore` — разобраться, код не писать
+2. `/opsx-propose` — proposal / specs / design / tasks
+3. `/opsx-apply` — после ок плана
+4. `/opsx-archive` — дельта в `openspec/specs/`, напомнить после фичи
+
+Контекст стека — `openspec/config.yaml`. Не копировать его в артефакты.

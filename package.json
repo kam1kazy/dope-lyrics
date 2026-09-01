@@ -7,7 +7,10 @@
     "client": "cd client && bun run dev",
     "server": "cd server && bun run start",
     "setup": " bun install && cd client && bun install && cd ../server && bun install && bun prisma generate",
-    "deploy": "cd server && bun run deploy"
+    "deploy": "cd server && bun run deploy",
+    "lint": "bun run --cwd client lint && bun run --cwd server lint",
+    "fix": "bun run --cwd client fix && bun run --cwd server fix",
+    "format": "bun run --cwd client format && bun run --cwd server format"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"

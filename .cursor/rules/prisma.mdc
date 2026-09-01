@@ -1,0 +1,17 @@
+---
+description: Prisma — миграции в репо, без reset без просьбы
+globs: server/prisma/**,server/src/services/db/**
+alwaysApply: false
+---
+
+# Prisma
+
+Папка `server/prisma/migrations` раньше была в `.gitignore`. Новые миграции **коммитим**. Не советовать снова игнорировать их.
+
+- Схему менять только под задачу, без нормализации «на будущее».
+- `migrate reset` / `db push --force-reset` — только если пользователь явно просит стереть данные.
+- Seed ждёт `Users.id = 1` и файлы в `server/bot-data/data/`. Не выдумывать продакшен-пользователя.
+- `lyric_id` без unique: повторный парсинг может дать дубли — не игнорировать, если задача про загрузку.
+- В GraphQL не светить `password` новыми полями.
+
+Команды из `server/`: `bunx prisma migrate dev`, `bunx prisma studio`. Не ходить в youways-БД за таблицами этого проекта.

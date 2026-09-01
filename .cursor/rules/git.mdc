@@ -1,0 +1,44 @@
+---
+description: Git — ветки от main, русский коммит, commit ≠ push
+alwaysApply: true
+---
+
+# Git
+
+Как в youways/CSP, но без Jira и без контуров uat/prod. База работы — `main`.
+`origin/develop` ушла далеко вперёд (auth, JWT, рефакторинг). Это склад, не ствол.
+Подробности: `docs/git.md`. Не мержить develop «чтобы подтянуть». Нужный кусок — cherry-pick или руками.
+Auth и сессии — из youways (`docs/youways-baseline.md`), не с develop.
+Перед push: `bun run fix` в каждом затронутом `client/` / `server/`. Чинить errors и warnings. Подробности — `lint.mdc`.
+Пакетный менеджер — только Bun. Не npm, не package-lock.
+
+## Без явной просьбы запрещено
+
+- `git commit`, `git push`, merge в `main`, создание PR
+- `git push --force` / `--force-with-lease` в `main`
+- `reset --hard`, rebase уже запушенной ветки
+- `--no-verify`, правка `git config`
+- Трейлер `Co-authored-by: Cursor` в коммитах
+
+«Закоммить» = только локальный коммит. Это не разрешение на push.
+«Пуш» без указания ветки, если цель `main` — сначала спросить.
+
+## Ветки
+
+- Фича и фикс — от актуального `main`: `feat/…`, `fix/…`.
+- Не коммитить в `main` «заодно», если работа идёт в ветке.
+- Upstream ветки = `origin/<имя-ветки>`, не `origin/main`.
+- Перед push: `git status -sb` и проверить `@{upstream}`.
+
+## Коммиты — только русский subject
+
+Одна фраза, суть, без списка файлов. Не `wip` / `fix` / `update`.
+
+| Нет | Да |
+| --- | --- |
+| `fix graphql proxy` | `Починить локальный прокси GraphQL` |
+| `update docs` | `Зафиксировать план в docs/roadmap.md` |
+
+Префикс `feat:` / `fix:` / `docs:` можно, текст после двоеточия — по-русски.
+
+Не класть в коммит `.env`, сессии `server/bot-data/`, ключи, дампы чата.

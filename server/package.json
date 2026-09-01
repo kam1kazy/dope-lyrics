@@ -16,7 +16,15 @@
     "bot:admin": "BOT_TYPE=admin bun src/mtcute/index.ts",
     "devBot": "concurrently \"bun dev\" \"bun bot:admin\"",
     "start:all": "bun run start & bun run bot",
-    "start:admin": "bunx prisma migrate deploy --name init --skip-seed & bun run start & bun run bot:admin"
+    "start:admin": "bunx prisma migrate deploy --name init --skip-seed & bun run start & bun run bot:admin",
+    "lint": "eslint \"src/**/*.ts\" \"prisma/script/**/*.ts\"",
+    "lint:fix": "eslint --fix \"src/**/*.ts\" \"prisma/script/**/*.ts\"",
+    "format": "prettier --write \"src/**/*.ts\" \"prisma/script/**/*.ts\" \"prisma/schema.prisma\"",
+    "format:check": "prettier --check \"src/**/*.ts\" \"prisma/script/**/*.ts\"",
+    "sort-imports": "eslint --fix \"src/**/*.ts\" \"prisma/script/**/*.ts\"",
+    "typecheck": "tsc --noEmit",
+    "check": "bun run lint && bun run format:check && bun run typecheck",
+    "fix": "bun run lint:fix && bun run format && bun run typecheck"
   },
   "prisma": {
     "seed": "bun ./prisma/script/seed.ts"
@@ -38,10 +46,18 @@
     "graphql-tools": "^9.0.13"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.5",
     "@types/bun": "^1.2.2",
     "@types/node": "^22.13.4",
+    "@typescript-eslint/eslint-plugin": "^8.69.0",
+    "@typescript-eslint/parser": "^8.69.0",
     "bun-types": "^1.2.2",
     "concurrently": "^9.1.2",
+    "eslint": "^9.39.5",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-simple-import-sort": "^12.1.1",
+    "globals": "^16.5.0",
+    "prettier": "^3.9.6",
     "prisma": "^6.4.1",
     "telegram-bot-api-types": "^8.3.0",
     "typescript": "^5.7.3"

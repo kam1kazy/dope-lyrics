@@ -1,0 +1,6 @@
+node_modules
+dist
+build
+bot-data
+prisma/migrations
+*.lock

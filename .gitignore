@@ -5,6 +5,9 @@
 logs
 _.log
 npm-debug.log_
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
 yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*

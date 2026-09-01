@@ -1,0 +1,30 @@
+---
+description: TypeScript — без any в новом коде, eslint no-explicit-any
+globs: "**/*.{ts,tsx}"
+alwaysApply: false
+---
+
+# TypeScript
+
+ESLint: `@typescript-eslint/no-explicit-any` — warning. В новом коде — без `any`, `as any`, `@ts-ignore`.
+
+```ts
+// плохо
+} catch (error: any) {
+  console.error(error.message)
+}
+
+// хорошо
+} catch (error: unknown) {
+  const message = error instanceof Error ? error.message : String(error)
+  console.error(message)
+}
+```
+
+Внешние данные (Telegram, JSON, GraphQL) — `unknown` + сужение, не `as ILyric`.
+`satisfies` вместо `as`, если можно. Prisma `include`/`select` — константа с `satisfies`.
+
+Не называть обычные функции `use*` — сработает `react-hooks/rules-of-hooks`.
+Легаси `useAdminCheck` не плодить.
+
+После правок типов: `bun run typecheck` в затронутом пакете.
