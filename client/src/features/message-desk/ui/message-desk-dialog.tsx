@@ -127,7 +127,7 @@ export function MessageDeskDialog({
         <DialogHeader>
           <DialogTitle>Сообщение</DialogTitle>
           <DialogDescription>
-            Полный текст из каталога. Изменения остаются в приложении.
+            Полный текст из каталога.
           </DialogDescription>
         </DialogHeader>
 

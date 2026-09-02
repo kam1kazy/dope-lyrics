@@ -22,7 +22,6 @@ import {
   useLyricView,
 } from '@/shared/lib/lyric-view/lyric-view-context';
 import { usePlayback } from '@/shared/lib/playback/playback-context';
-import { cn } from '@/shared/lib/utils/cn';
 import { Button } from '@/shared/ui/shadcn/ui/button';
 
 interface ViewportProps {
@@ -35,7 +34,51 @@ const START_Y_VH = 52;
 const END_Y_VH = -58;
 const FADE_IN = 0.08;
 const FADE_OUT = 0.12;
-const SCRUB_PX = 8;
+const READABLE_PROGRESS = 0.42;
+const SCRUB_PX = 20;
+const DOUBLE_TAP_MS = 400;
+const DOUBLE_TAP_PX = 48;
+
+function eventElement(event: ReactPointerEvent<HTMLDivElement>) {
+  const target = event.target;
+
+  if (target instanceof Element) {
+    return target;
+  }
+
+  if (target instanceof Node) {
+    return target.parentElement;
+  }
+
+  return null;
+}
+
+function catalogIdFromEvent(event: ReactPointerEvent<HTMLDivElement>) {
+  const node = eventElement(event)?.closest('[data-catalog-id]');
+  const raw = node?.getAttribute('data-catalog-id');
+
+  if (!raw) {
+    return null;
+  }
+
+  const id = Number(raw);
+
+  return Number.isFinite(id) ? id : null;
+}
+
+function isNearLastTap(
+  lastTap: { t: number; x: number; y: number },
+  x: number,
+  y: number
+) {
+  const dx = x - lastTap.x;
+  const dy = y - lastTap.y;
+
+  return (
+    Date.now() - lastTap.t <= DOUBLE_TAP_MS &&
+    dx * dx + dy * dy <= DOUBLE_TAP_PX * DOUBLE_TAP_PX
+  );
+}
 
 function slideOpacity(progress: number) {
   if (progress < FADE_IN) {
@@ -100,8 +143,45 @@ function applyPositions(
   return activeIndex;
 }
 
+function hasReadableSlide(
+  elapsedMs: number,
+  dataLength: number,
+  slideIntervalMs: number,
+  animationMs: number
+) {
+  if (dataLength === 0 || slideIntervalMs <= 0 || animationMs <= 0) {
+    return false;
+  }
+
+  const maxIndex = Math.max(dataLength - 1, 0);
+  const activeIndex = Math.min(
+    Math.floor(elapsedMs / slideIntervalMs),
+    maxIndex
+  );
+  const firstVisible = Math.max(
+    0,
+    activeIndex - Math.ceil(animationMs / slideIntervalMs)
+  );
+
+  for (let index = firstVisible; index <= activeIndex; index += 1) {
+    const age = elapsedMs - index * slideIntervalMs;
+
+    if (age < 0 || age > animationMs) {
+      continue;
+    }
+
+    const progress = age / animationMs;
+
+    if (progress >= FADE_IN && progress <= 1 - FADE_OUT) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 export function Viewport({ data, lyrics, queryVariables }: ViewportProps) {
-  const { paused, setPaused, suppressToggle } = usePlayback();
+  const { paused, setPaused, setCanPlay, suppressToggle } = usePlayback();
   const { carouselSpeed, lineGap, fontSize } = useLyricView();
   const [deskOpen, setDeskOpen] = useState(false);
   const [deskLyricId, setDeskLyricId] = useState<number | null>(null);
@@ -116,9 +196,11 @@ export function Viewport({ data, lyrics, queryVariables }: ViewportProps) {
   const intervalRef = useRef(slideIntervalMs);
   const nodesRef = useRef(new Map<number, HTMLDivElement>());
   const scrubbingRef = useRef(false);
+  const trackingRef = useRef(false);
   const wasPlayingRef = useRef(false);
   const pointerYRef = useRef(0);
   const pointerStartYRef = useRef(0);
+  const lastTapRef = useRef({ t: 0, x: 0, y: 0 });
   const timingRef = useRef({ slideIntervalMs, animationMs, dataLength: 0 });
   const [lastIndex, setLastIndex] = useState(0);
   const [finished, setFinished] = useState(false);
@@ -183,31 +265,58 @@ export function Viewport({ data, lyrics, queryVariables }: ViewportProps) {
     const previousInterval = intervalRef.current;
 
     if (previousInterval !== slideIntervalMs && previousInterval > 0) {
-      const extraPause =
-        pauseStartedRef.current === null
-          ? 0
-          : Date.now() - pauseStartedRef.current;
-      const elapsed = elapsedSinceStart(
-        originRef.current,
-        pausedAccumRef.current,
-        pauseStartedRef.current
+      const elapsed = currentElapsed();
+      const maxIndex = Math.max(dataLength - 1, 0);
+      const activeIndex = Math.min(
+        Math.floor(elapsed / previousInterval),
+        maxIndex
       );
-      const nextElapsed = (elapsed / previousInterval) * slideIntervalMs;
+      const age = elapsed - activeIndex * previousInterval;
+      const endedAt = runEndedAt(dataLength, slideIntervalMs, animationMs);
+      const nextElapsed = Math.min(
+        endedAt,
+        activeIndex * slideIntervalMs + age
+      );
 
-      originRef.current =
-        Date.now() - pausedAccumRef.current - extraPause - nextElapsed;
+      writeElapsed(nextElapsed);
     }
 
     intervalRef.current = slideIntervalMs;
-  }, [slideIntervalMs]);
 
-  useLayoutEffect(() => {
     if (finished && !scrubbingRef.current) {
       return;
     }
 
-    currentPositions();
-  }, [currentPositions, finished, lastIndex]);
+    const elapsed = currentElapsed();
+
+    if (
+      paused &&
+      !scrubbingRef.current &&
+      !hasReadableSlide(elapsed, dataLength, slideIntervalMs, animationMs)
+    ) {
+      const endedAt = runEndedAt(dataLength, slideIntervalMs, animationMs);
+      writeElapsed(Math.min(endedAt, READABLE_PROGRESS * animationMs));
+    }
+
+    setLastIndex(currentPositions());
+  }, [
+    animationMs,
+    currentPositions,
+    data,
+    dataLength,
+    finished,
+    paused,
+    slideIntervalMs,
+    writeElapsed,
+  ]);
+
+  useEffect(() => {
+    setCanPlay(!finished);
+
+    return () => {
+      setCanPlay(false);
+    };
+  }, [finished, setCanPlay]);
 
   useEffect(() => {
     if (finished || scrubbingRef.current) {
@@ -273,12 +382,46 @@ export function Viewport({ data, lyrics, queryVariables }: ViewportProps) {
     slideIntervalMs,
   ]);
 
+  const openMessageDesk = (catalogId: number) => {
+    suppressToggle();
+    setPaused(true);
+    setDeskLyricId(catalogId);
+    setDeskOpen(true);
+  };
+
+  const lyricIdForPointer = (event: ReactPointerEvent<HTMLDivElement>) => {
+    return catalogIdFromEvent(event) ?? data[lastIndex]?.id ?? null;
+  };
+
+  const tryOpenFromDoubleTap = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (!isNearLastTap(lastTapRef.current, event.clientX, event.clientY)) {
+      return false;
+    }
+
+    const catalogId = lyricIdForPointer(event);
+
+    if (catalogId === null) {
+      return false;
+    }
+
+    lastTapRef.current = { t: 0, x: 0, y: 0 };
+    trackingRef.current = false;
+    scrubbingRef.current = false;
+    event.preventDefault();
+    openMessageDesk(catalogId);
+    return true;
+  };
+
   const onPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (event.button !== 0) {
       return;
     }
 
-    if (event.target instanceof HTMLElement && event.target.closest('button')) {
+    if (eventElement(event)?.closest('button')) {
+      return;
+    }
+
+    if (tryOpenFromDoubleTap(event)) {
       return;
     }
 
@@ -286,11 +429,14 @@ export function Viewport({ data, lyrics, queryVariables }: ViewportProps) {
     pointerStartYRef.current = event.clientY;
     wasPlayingRef.current = !paused;
     scrubbingRef.current = false;
-    event.currentTarget.setPointerCapture(event.pointerId);
+    trackingRef.current = true;
   };
 
   const onPointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (!event.currentTarget.hasPointerCapture(event.pointerId)) {
+    if (
+      !trackingRef.current &&
+      !event.currentTarget.hasPointerCapture(event.pointerId)
+    ) {
       return;
     }
 
@@ -303,6 +449,9 @@ export function Viewport({ data, lyrics, queryVariables }: ViewportProps) {
       }
 
       scrubbingRef.current = true;
+      trackingRef.current = false;
+      lastTapRef.current = { t: 0, x: 0, y: 0 };
+      event.currentTarget.setPointerCapture(event.pointerId);
       suppressToggle();
 
       if (wasPlayingRef.current) {
@@ -316,21 +465,38 @@ export function Viewport({ data, lyrics, queryVariables }: ViewportProps) {
     seekByDeltaY(deltaY);
   };
 
-  const endScrub = (event: ReactPointerEvent<HTMLDivElement>) => {
+  const endPointer = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const wasTracking = trackingRef.current;
+    trackingRef.current = false;
+
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
 
-    if (!scrubbingRef.current) {
+    if (scrubbingRef.current) {
+      scrubbingRef.current = false;
+      suppressToggle();
+
+      if (wasPlayingRef.current) {
+        setPaused(false);
+      }
+
       return;
     }
 
-    scrubbingRef.current = false;
-    suppressToggle();
-
-    if (wasPlayingRef.current) {
-      setPaused(false);
+    if (!wasTracking || event.type === 'pointercancel') {
+      return;
     }
+
+    if (tryOpenFromDoubleTap(event)) {
+      return;
+    }
+
+    lastTapRef.current = {
+      t: Date.now(),
+      x: event.clientX,
+      y: event.clientY,
+    };
   };
 
   const firstVisible = Math.max(
@@ -343,54 +509,46 @@ export function Viewport({ data, lyrics, queryVariables }: ViewportProps) {
     [deskLyricId, lyrics]
   );
 
-  const openMessageDesk = (catalogId: number) => {
-    suppressToggle();
-    setDeskLyricId(catalogId);
-    setDeskOpen(true);
-  };
-
   return (
     <div
-      className="lyric-viewport relative min-h-0 w-full flex-1 touch-none overflow-hidden"
+      className="lyric-viewport relative min-h-0 w-full flex-1 touch-none overflow-hidden select-none"
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
-      onPointerUp={endScrub}
-      onPointerCancel={endScrub}
+      onPointerUp={endPointer}
+      onPointerCancel={endPointer}
+      onDoubleClick={(event) => {
+        event.preventDefault();
+      }}
     >
       {visibleSlides.map((item, offset) => {
         const index = firstVisible + offset;
-        const isCurrent = index === lastIndex;
 
         return (
           <div
             key={`${item.lyric_id}_${item.message?.message_id}_${index}`}
-            className={cn(
-              'lyric',
-              paused && !finished && isCurrent && 'flex-col gap-4'
-            )}
+            className="lyric"
+            data-catalog-id={item.id}
             ref={(node) => {
               if (node) {
                 nodesRef.current.set(index, node);
+                const timing = timingRef.current;
+                applyPositions(
+                  nodesRef.current,
+                  elapsedSinceStart(
+                    originRef.current,
+                    pausedAccumRef.current,
+                    pauseStartedRef.current
+                  ),
+                  timing.dataLength,
+                  timing.slideIntervalMs,
+                  timing.animationMs
+                );
               } else {
                 nodesRef.current.delete(index);
               }
             }}
           >
             <LyricItem item={item} />
-            {paused && !finished && isCurrent ? (
-              <Button
-                type="button"
-                size="sm"
-                variant="secondary"
-                className="pointer-events-auto shadow-sm"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  openMessageDesk(item.id);
-                }}
-              >
-                Открыть
-              </Button>
-            ) : null}
           </div>
         );
       })}
@@ -411,6 +569,9 @@ export function Viewport({ data, lyrics, queryVariables }: ViewportProps) {
             type="button"
             size="lg"
             className="pointer-events-auto"
+            onPointerDown={(event) => {
+              event.stopPropagation();
+            }}
             onClick={(event) => {
               event.stopPropagation();
               restart();

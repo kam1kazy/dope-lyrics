@@ -18,7 +18,7 @@ import {
 
 export const ControlBar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { suppressToggle } = usePlayback();
+  const { suppressToggle, beginOverlay, endOverlay } = usePlayback();
 
   const closeDrawer = () => {
     suppressToggle();
@@ -36,8 +36,14 @@ export const ControlBar = () => {
     if (!isOpen) {
       resetSwipe();
       document.body.style.removeProperty('pointer-events');
+      return;
     }
-  }, [isOpen, resetSwipe]);
+
+    beginOverlay();
+    return () => {
+      endOverlay();
+    };
+  }, [beginOverlay, endOverlay, isOpen, resetSwipe]);
 
   return (
     <>

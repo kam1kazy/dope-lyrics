@@ -28,7 +28,7 @@ export function CatalogPanel({
         />
         <DialogPrimitive.Content
           className={cn(
-            'bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right fixed inset-y-0 right-0 z-50 flex w-full max-w-[min(100%,640px)] outline-none duration-300'
+            'bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left fixed inset-y-0 left-0 z-50 flex w-full max-w-[min(100%,640px)] outline-none duration-300'
           )}
           onClick={(event) => {
             event.stopPropagation();

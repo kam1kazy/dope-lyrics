@@ -5,7 +5,7 @@ import {
   Bookmark,
   Bot,
   History,
-  PanelRight,
+  PanelLeft,
   Sparkles,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -13,6 +13,7 @@ import { useEffect, useState } from 'react';
 import { CatalogDemosPanel } from '@/features/catalog-demos';
 import { CatalogFavoritesPanel } from '@/features/catalog-favorites';
 import { usePlayback } from '@/shared/lib/playback/playback-context';
+import { useSwipeFromLeftEdge } from '@/shared/lib/swipe/use-swipe-from-left-edge';
 import { cn } from '@/shared/lib/utils/cn';
 import { CatalogPanel } from '@/shared/ui/catalog-panel/catalog-panel';
 import { Button } from '@/shared/ui/shadcn/ui/button';
@@ -45,7 +46,7 @@ export function CatalogMenu() {
     null
   );
   const [selectedDemo, setSelectedDemo] = useState<string | null>(null);
-  const { suppressToggle, setPaused } = usePlayback();
+  const { suppressToggle, beginOverlay, endOverlay } = usePlayback();
 
   const closeMenu = () => {
     suppressToggle();
@@ -53,16 +54,28 @@ export function CatalogMenu() {
     document.body.style.removeProperty('pointer-events');
   };
 
+  const openMenu = () => {
+    suppressToggle();
+    setIsOpen(true);
+  };
+
+  const swipeFromEdge = useSwipeFromLeftEdge({
+    enabled: !isOpen,
+    onOpen: openMenu,
+  });
+
   useEffect(() => {
     if (isOpen) {
-      setPaused(true);
-      return;
+      beginOverlay();
+      return () => {
+        endOverlay();
+      };
     }
 
     setActiveSection(null);
     setSelectedDemo(null);
     document.body.style.removeProperty('pointer-events');
-  }, [isOpen, setPaused]);
+  }, [beginOverlay, endOverlay, isOpen]);
 
   const openSection = (section: CatalogSection) => {
     setActiveSection(section);
@@ -78,7 +91,20 @@ export function CatalogMenu() {
 
   return (
     <>
-      <div className="pointer-events-none fixed inset-x-0 top-0 z-20 flex justify-end p-4">
+      <div
+        aria-hidden
+        className={cn(
+          'fixed inset-y-0 left-0 z-20 w-8 touch-none',
+          isOpen && 'pointer-events-none'
+        )}
+        {...swipeFromEdge.edgeProps}
+        onClick={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+        }}
+      />
+
+      <div className="pointer-events-none fixed bottom-0 left-0 z-30 p-4">
         <Button
           type="button"
           variant="ghost"
@@ -88,11 +114,10 @@ export function CatalogMenu() {
           aria-expanded={isOpen}
           onClick={(event) => {
             event.stopPropagation();
-            suppressToggle();
-            setIsOpen(true);
+            openMenu();
           }}
         >
-          <PanelRight className="size-6" />
+          <PanelLeft className="size-6" />
         </Button>
       </div>
 

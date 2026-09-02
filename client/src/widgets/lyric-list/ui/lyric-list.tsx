@@ -109,7 +109,7 @@ export const LyricList = () => {
       className="flex h-full min-h-0 w-full flex-col items-center overflow-hidden break-keep px-4 pt-4 text-center"
     >
       <Viewport
-        key={`${sortMode}-${shuffleSeed}-${shelfMode}-${selectedTags.join('|')}-${selectedEmojis.join('|')}-${deferredKeyword}-${dateFrom}-${dateTo}`}
+        key={`${shelfMode}-${selectedTags.join('|')}-${selectedEmojis.join('|')}-${deferredKeyword}-${dateFrom}-${dateTo}`}
         data={carouselList}
         lyrics={data.lyrics}
         queryVariables={queryVariables}
