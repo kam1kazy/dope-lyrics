@@ -30,13 +30,14 @@ YouWays — эталон сессий, защиты и тулчейна.
 
 Когда появится свой сервер — тот же класс защиты, что в youways, урезанный под один инстанс.
 
-**Процесс Node / API**
+**Процесс Node / API** (сделано в `dope-lyrics/server`)
 
 - security headers;
-- CSRF там, где cookie;
-- rate limit на логин и публичные точки;
+- CORS allowlist + проверка Origin / Content-Type на `/graphql`;
+- rate limit на публичные точки;
 - без stack trace наружу;
 - секреты только в env, не в образе и не в git.
+- Zod на старте HTTP; GraphQL без password/email; лимит глубины и `take`.
 
 **Хост Linux**
 

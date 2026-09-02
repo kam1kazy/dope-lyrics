@@ -2,8 +2,6 @@ export const typeDefinitions = /* GraphQL */ `
   type User {
     id: Int!
     username: String!
-    email: String
-    password: String!
     lyrics: [Lyric!]
   }
 
@@ -18,7 +16,7 @@ export const typeDefinitions = /* GraphQL */ `
     replyToMessage: Int
 
     message: Message
-    user: User
+    user: UserLyric
     chat: Chat
     media: Media
 
@@ -105,6 +103,6 @@ export const typeDefinitions = /* GraphQL */ `
 
   type Query {
     users: [User!]!
-    lyrics: [Lyric!]!
+    lyrics(limit: Int, offset: Int): [Lyric!]!
   }
-`
+`;

@@ -1,5 +1,5 @@
-import { IChatHistoryItem } from '~/types/prismaCreate'
-import { IUser } from '~/types/user'
+import { IChatHistoryItem } from '~/types/prismaCreate';
+import { IUser } from '~/types/user';
 
 export const messageObject = (
   record: IChatHistoryItem,
@@ -7,7 +7,7 @@ export const messageObject = (
 ) => {
   return {
     //? LYRICS
-    userId: userId,
+    userId,
     lyric_id: record.message?.message_id ?? null,
     date: record.date,
     editDate: record.editDate,
@@ -87,5 +87,5 @@ export const messageObject = (
           },
         }
       : undefined,
-  }
-}
+  };
+};

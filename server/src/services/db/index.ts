@@ -1,20 +1,15 @@
-import { PrismaClient } from '@prisma/client';
-
 import { messageObject } from '~/handlers/db';
+import { prisma } from '~/infrastructure/prisma';
 import { IChatHistoryItem } from '~/types/prismaCreate';
 import { IUser } from '~/types/user';
 
+const INSERT_CONCURRENCY = 8;
+
 export class PrismaService {
-  private prisma: PrismaClient;
+  private readonly prisma = prisma;
 
-  constructor() {
-    this.prisma = new PrismaClient();
-  }
-
-  // Очистка всей базы
   async clearDatabase() {
     try {
-      // Удаляем данные в правильном порядке (из-за зависимостей)
       await this.prisma.emoji.deleteMany();
       await this.prisma.reactions.deleteMany();
       await this.prisma.hashtags.deleteMany();
@@ -38,7 +33,6 @@ export class PrismaService {
     );
   }
 
-  // Загрузка пользователей
   async loadUsers(users: IUser[]) {
     try {
       const userExists = await this.getOwner();
@@ -66,7 +60,6 @@ export class PrismaService {
     }
   }
 
-  // Загрузка новых записей с проверкой на дубликаты
   async loadNewRecords(records: IChatHistoryItem[]) {
     try {
       const userExists = await this.getOwner();
@@ -76,39 +69,51 @@ export class PrismaService {
         return;
       }
       console.log(`\nPRISMA: 🫄 Пользователь UserID: ${userExists.id} найден`);
-
       console.log(`PRISMA: 📝 Начало загрузки ${records.length} записей`);
 
-      const BATCH_SIZE = 1000;
-      const duplicateFound = false;
+      const existing = await this.prisma.lyrics.findMany({
+        select: { lyric_id: true },
+      });
+      const existingIds = new Set(existing.map((row) => row.lyric_id));
 
-      for (let i = 0; i < records.length && !duplicateFound; i += BATCH_SIZE) {
-        const batch = records.slice(i, i + BATCH_SIZE);
+      const fresh = records.filter((item) => {
+        const lyricId = item.message.message_id;
+        return !existingIds.has(lyricId);
+      });
 
-        for (const item of batch) {
-          try {
-            // Создаем запись
-            await this.prisma.lyrics.create({
-              data: messageObject(item, userExists.id),
-            });
-          } catch (error) {
-            console.error(
-              'PRISMA: 🚧 Данные Lyrics - Iter: #' +
-                i +
-                ' - не удалось загрузить в базу\n\n',
-              error
-            );
-          }
-        }
+      const skipped = records.length - fresh.length;
+      if (skipped > 0) {
+        console.log(`PRISMA: ⏭️ Пропущено дублей lyric_id: ${skipped}`);
       }
 
-      console.log(`PRISMA: 📊 Итого загружено записей: ${records.length}`);
+      let loaded = 0;
+
+      for (let i = 0; i < fresh.length; i += INSERT_CONCURRENCY) {
+        const batch = fresh.slice(i, i + INSERT_CONCURRENCY);
+        await Promise.all(
+          batch.map(async (item) => {
+            try {
+              await this.prisma.lyrics.create({
+                data: messageObject(item, userExists.id),
+              });
+              existingIds.add(item.message.message_id);
+              loaded += 1;
+            } catch (error) {
+              console.error(
+                `PRISMA: 🚧 Данные Lyrics - lyric_id: ${item.message.message_id} - не удалось загрузить в базу\n\n`,
+                error
+              );
+            }
+          })
+        );
+      }
+
+      console.log(`PRISMA: 📊 Итого загружено записей: ${loaded}`);
     } catch (error) {
       console.error('PRISMA: ❌ Ошибка при загрузке записей:', error);
     }
   }
 
-  // Получение статистики
   async getStats() {
     try {
       const [users, lyrics, messages, reactions, hashtags, media] =
@@ -140,5 +145,4 @@ export class PrismaService {
   }
 }
 
-// Создаем и экспортируем экземпляр сервиса
 export const prismaService = new PrismaService();

@@ -8,7 +8,6 @@ import {
   createCarouselList,
   type ILyric,
   type LyricSlide,
-  TotalCount,
 } from '@/entities/lyric';
 import { ErrorText } from '@/shared/ui/error-text';
 import { Spinner } from '@/shared/ui/shadcn/ui/spinner';
@@ -52,14 +51,12 @@ export const LyricList = () => {
   return (
     <div
       ref={ref}
-      className="flex h-full w-full flex-col items-center overflow-x-hidden overflow-y-auto break-keep p-4 text-center text-sm"
+      className="flex h-full min-h-0 w-full flex-col items-center overflow-hidden break-keep px-4 pt-4 text-center"
     >
-      <h1 className="text-xl font-semibold">Dope Lyrics</h1>
-      <p className="text-muted-foreground">****</p>
+      {/* <h1 className="text-xl font-semibold">Dope Lyrics</h1> */}
+      {/* <p className="text-muted-foreground">****</p> */}
 
       <Viewport data={carouselList} />
-
-      <TotalCount count={data.lyrics.length} />
     </div>
   );
 };

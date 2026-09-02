@@ -6,6 +6,7 @@ import path from 'path';
 
 import { getChatHistory } from '~/handlers/getChatHistory';
 import { sendToBotChat } from '~/handlers/handlers';
+import { useAdminCheck } from '~/hooks/useAdminCheck';
 import { prismaService } from '~/services/db';
 
 // КОНСТАНТЫ
@@ -41,13 +42,12 @@ export const tg = new TelegramClient({
   storage: botSessionPath,
 });
 
-const self = await tg
+await tg
   .start({
     botToken,
   })
-  .then((user) => {
+  .then(() => {
     console.log('MTCUTE: 🤖 Бот запущен');
-    return user;
   })
   .catch((error) => {
     console.error('MTCUTE: ❌ Ошибка при запуске бота:', error);
@@ -124,9 +124,13 @@ dp.onNewMessage(filters.command('bd'), async (msg) =>
 );
 
 dp.onCallbackQuery(async (query) => {
-  if (!query.data) return;
+  if (!query.data) {
+    return;
+  }
   const data = BdButton.parse(Buffer.from(query.data).toString());
-  if (!data) return;
+  if (!data) {
+    return;
+  }
 
   const action = data.action;
   const chatId = query.chat.id;
@@ -135,69 +139,82 @@ dp.onCallbackQuery(async (query) => {
     await query.answer({ text: '❌ Ошибка: чат не найден', alert: true });
     return;
   }
-  if (!tgAdmin) {
-    await query.answer({
-      text: '❌ Ошибка: админ не авторизован',
-      alert: true,
-    });
-    return;
-  }
-  switch (action) {
-    case 'stats':
-      query.answer({ text: '⏳ Получение статистики...' });
-      const stats = await prismaService.getStats();
-      if (stats) {
-        sendToBotChat({
-          tg,
-          chatId,
-          text: `📊 Статистика:\n\nUsers: ${stats?.users}\nLyrics: ${stats?.lyrics}`,
+
+  await useAdminCheck({
+    tg,
+    msg: query as never,
+    msgCallback: query,
+    action: async () => {
+      if (!tgAdmin) {
+        await query.answer({
+          text: '❌ Ошибка: админ не авторизован',
+          alert: true,
         });
+        return;
       }
-      break;
 
-    case 'history':
-      query.answer({ text: '⏳ Получение истории...' });
-      sendToBotChat({
-        tg,
-        chatId,
-        text: '🔍 Получение истории чата...',
-      });
-      const success = await getChatHistory({ tg: tgAdmin, chatId: channelId });
-      if (success) {
-        sendToBotChat({
-          tg,
-          chatId,
-          text: '📥 История чата получена',
-        });
+      switch (action) {
+        case 'stats': {
+          await query.answer({ text: '⏳ Получение статистики...' });
+          const stats = await prismaService.getStats();
+          if (stats) {
+            sendToBotChat({
+              tg,
+              chatId,
+              text: `📊 Статистика:\n\nUsers: ${stats.users}\nLyrics: ${stats.lyrics}`,
+            });
+          }
+          break;
+        }
+
+        case 'history': {
+          await query.answer({ text: '⏳ Получение истории...' });
+          sendToBotChat({
+            tg,
+            chatId,
+            text: '🔍 Получение истории чата...',
+          });
+          const success = await getChatHistory({
+            tg: tgAdmin,
+            chatId: channelId,
+          });
+          if (success) {
+            sendToBotChat({
+              tg,
+              chatId,
+              text: '📥 История чата получена',
+            });
+          }
+          break;
+        }
+
+        case 'seed':
+          await query.answer({ text: '⏳ Начался посев...' });
+          await seedToBD({ tgAdmin, msg: query }).then(() => {
+            sendToBotChat({
+              tg,
+              chatId,
+              text: '✅ Посев завершен',
+            });
+          });
+          break;
+
+        case 'clear':
+          await query.answer({ text: '⏳ Началась очистка...' });
+          await clearBD({ tgAdmin, msg: query });
+          sendToBotChat({
+            tg,
+            chatId,
+            text: '🧹 Очистка завершена',
+          });
+          break;
+
+        default:
+          await query.answer({
+            text: '❌ Неизвестная команда',
+            alert: true,
+          });
       }
-      break;
-
-    case 'seed':
-      query.answer({ text: '⏳ Начался посев...' });
-      await seedToBD({ tgAdmin, msg: query }).then(() => {
-        sendToBotChat({
-          tg,
-          chatId,
-          text: '✅ Посев завершен',
-        });
-      });
-
-      break;
-
-    case 'clear':
-      query.answer({ text: '⏳ Началась очистка...' });
-      await clearBD({ tgAdmin, msg: query });
-      sendToBotChat({
-        tg,
-        chatId,
-        text: '🧹 Очистка завершена',
-      });
-      break;
-
-    default:
-      await query.answer({
-        text: '❌ Неизвестная команда',
-        alert: true,
-      });
-  }
+    },
+  });
 });

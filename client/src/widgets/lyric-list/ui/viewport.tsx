@@ -1,6 +1,5 @@
 'use client';
 
-import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 
 import { LyricItem, type LyricSlide } from '@/entities/lyric';
@@ -37,19 +36,16 @@ export function Viewport({ data }: ViewportProps) {
 
   return (
     <div
-      className="relative mx-auto h-[481px] w-full overflow-hidden"
+      className="lyric-viewport relative min-h-0 w-full flex-1 overflow-hidden"
       data-paused={paused}
     >
       {data.slice(0, index + 1).map((item) => (
-        <motion.div
+        <div
           key={item.lyric_id + '_' + item.message?.message_id}
           className="lyric"
-          initial={{ opacity: 0, translateY: 500 }}
-          animate={{ opacity: [0, 1, 0], translateY: 0 }}
-          transition={{ duration: 12, times: [0.2, 0.5, 1] }}
         >
           <LyricItem item={item} />
-        </motion.div>
+        </div>
       ))}
 
       <div

@@ -1,38 +1,49 @@
-import process from 'node:process'
-import dotenv from 'dotenv'
-import path from 'path'
+import path from 'node:path';
+import process from 'node:process';
 
-// Загружаем переменные окружения из .env файла
-dotenv.config({ path: path.resolve(__dirname, '../.env') })
+import dotenv from 'dotenv';
+import { z } from 'zod';
 
-const API_ID = Number.parseInt(process.env.API_ID ?? '')
-const API_HASH = process.env.API_HASH ?? ''
-const BOT_TOKEN = process.env.BOT_TOKEN ?? ''
-const BOT_PHONE = process.env.BOT_PHONE ?? ''
-const BOT_PASS = process.env.BOT_PASS ?? ''
-const BOT_CHAT_ID = Number.parseInt(process.env.BOT_CHAT_ID ?? '')
-const BOT_CHANNEL_ID = Number.parseInt(process.env.BOT_CHANNEL_ID ?? '')
-const BOT_ADMIN_ID = Number.parseInt(process.env.BOT_ADMIN_ID ?? '')
-const BOT_TYPE = process.env.BOT_TYPE ?? ''
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
-const SITE_URL = process.env.SITE_URL ?? ''
+const requiredId = z
+  .string()
+  .min(1)
+  .transform((value) => Number.parseInt(value, 10))
+  .refine((value) => Number.isFinite(value), { message: 'invalid id' });
 
-// Проверяем все необходимые переменные окружения
-if (Number.isNaN(API_ID) || !API_HASH) {
-  throw new Error('API_ID или API_HASH не установлены!')
+const botEnvSchema = z.object({
+  API_ID: requiredId,
+  API_HASH: z.string().min(1),
+  BOT_TOKEN: z.string().min(1),
+  BOT_PHONE: z.string().min(1),
+  BOT_PASS: z.string().min(1),
+  BOT_CHAT_ID: requiredId,
+  BOT_CHANNEL_ID: requiredId,
+  BOT_ADMIN_ID: z
+    .string()
+    .optional()
+    .default('')
+    .transform((value) => Number.parseInt(value, 10)),
+  BOT_TYPE: z.string().optional().default(''),
+  SITE_URL: z.string().optional().default(''),
+});
+
+const parsed = botEnvSchema.safeParse(process.env);
+
+if (!parsed.success) {
+  const hasApi =
+    Number.isFinite(Number.parseInt(process.env.API_ID ?? '', 10)) &&
+    Boolean(process.env.API_HASH);
+
+  throw new Error(
+    hasApi
+      ? 'Отсутствуют необходимые переменные окружения для бота!'
+      : 'API_ID или API_HASH не установлены!'
+  );
 }
 
-if (
-  !BOT_TOKEN ||
-  !BOT_PHONE ||
-  !BOT_PASS ||
-  Number.isNaN(BOT_CHAT_ID) ||
-  Number.isNaN(BOT_CHANNEL_ID)
-) {
-  throw new Error('Отсутствуют необходимые переменные окружения для бота!')
-}
-
-export {
+export const {
   API_HASH,
   API_ID,
   BOT_TOKEN,
@@ -43,4 +54,4 @@ export {
   BOT_TYPE,
   BOT_ADMIN_ID,
   SITE_URL,
-}
+} = parsed.data;

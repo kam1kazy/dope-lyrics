@@ -1,13 +1,9 @@
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient({
-  log: ['query', 'info', 'warn', 'error'],
-})
+import { prisma } from '../infrastructure/prisma';
 
 export type GraphQLContext = {
-  prisma: PrismaClient
-}
+  prisma: typeof prisma;
+};
 
 export async function createContext(): Promise<GraphQLContext> {
-  return { prisma }
+  return { prisma };
 }

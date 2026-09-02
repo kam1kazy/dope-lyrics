@@ -34,6 +34,9 @@ model Lyrics {
 
   userId Int
   owner  Users @relation(fields: [userId], references: [id])
+
+  @@index([lyric_id])
+  @@index([date])
 }
 
 model Message {

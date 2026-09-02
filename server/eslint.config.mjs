@@ -31,6 +31,7 @@ export default defineConfig([
       globals: {
         ...globals.node,
         Bun: 'readonly',
+        prompt: 'readonly',
       },
       parser: tsParser,
       ecmaVersion: 'latest',
@@ -60,7 +61,15 @@ export default defineConfig([
     },
   },
   {
-    files: ['prisma/script/**/*.ts', 'src/mtcute/**/*.ts'],
+    files: [
+      'prisma/script/**/*.ts',
+      'src/mtcute/**/*.ts',
+      'src/index.ts',
+      'src/app/**/*.ts',
+      'src/services/db/**/*.ts',
+      'src/handlers/**/*.ts',
+      'src/hooks/**/*.ts',
+    ],
     rules: {
       'no-console': 'off',
     },

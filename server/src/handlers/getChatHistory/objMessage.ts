@@ -1,17 +1,16 @@
-import { IHashtagData, IMessage } from '~/types/dataMessage'
-import { IChat, IEmoji } from '~/types/lyric'
-import { IUser } from '~/types/user'
+import { IHashtagData, IMessage } from '~/types/dataMessage';
+import { IEmoji } from '~/types/lyric';
 
 interface IProps {
-  message: IMessage
-  handlerCountParagraphs: (text: string) => number
-  handlerCountWords: (text: string) => number
+  message: IMessage;
+  handlerCountParagraphs: (text: string) => number;
+  handlerCountWords: (text: string) => number;
   handlerCountReactions: (
     reactions: IEmoji[],
     type: 'total' | 'paid' | 'free'
-  ) => number | void
-  handlerWithoutHashtags: (text: string) => string
-  hashtagStringsOnly: (entities: IHashtagData[]) => any[]
+  ) => number | void;
+  handlerWithoutHashtags: (text: string) => string;
+  hashtagStringsOnly: (entities: IHashtagData[]) => any[];
 }
 
 const messageObject = ({
@@ -40,7 +39,7 @@ const messageObject = ({
                     isPaid: emoji.isPaid,
                     count: emoji.count,
                     order: emoji.order,
-                  }
+                  };
                 })
               : [],
             uniqueCount: message.reactions?.reactions.length,
@@ -77,7 +76,7 @@ const messageObject = ({
       type: message.chat.chatType,
     },
     date: new Date(Date.parse(message.date)),
-    editDate: new Date(Date.parse(message.editDate)) ?? null,
+    editDate: message.editDate ? new Date(Date.parse(message.editDate)) : null,
     isPinned: message.isPinned,
     isChannelPost: message.isChannelPost,
     replyToMessage: message.replyToMessage?.id ?? null,
@@ -88,7 +87,7 @@ const messageObject = ({
           convert: false,
         }
       : null,
-  }
-}
+  };
+};
 
-export default messageObject
+export default messageObject;

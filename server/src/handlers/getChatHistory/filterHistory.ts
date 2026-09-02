@@ -1,25 +1,23 @@
 // TYPES
-import { ILyric } from '../../types/lyric'
-import { IMessage } from '../../types/dataMessage'
-
+import { IMessage } from '../../types/dataMessage';
+import { ILyric } from '../../types/lyric';
 // HANDLERS
 import {
   handlerCountParagraphs,
-  handlerCountWords,
   handlerCountReactions,
+  handlerCountWords,
   handlerWithoutHashtags,
   hashtagStringsOnly,
-} from '../handlers'
-
+} from '../handlers';
 // OBJECTS
-import messageObject from './objMessage'
+import messageObject from './objMessage';
 
 // Создаем массив с нужными данными из полученной Data
 const filterHistory = (data: any) => {
   // Убираем из полученной истории чата системные сообщения
   const filterData = data.filter((message: IMessage) => {
-    return message.action === null
-  })
+    return message.action === null;
+  });
 
   // Создаем новый массив из отфильтрованного исходника
   try {
@@ -31,17 +29,17 @@ const filterHistory = (data: any) => {
         handlerCountReactions,
         handlerWithoutHashtags,
         hashtagStringsOnly,
-      })
-    })
+      });
+    });
 
-    return chatHistory
+    return chatHistory;
   } catch (error) {
     console.error(
       '\n🛑 MTCUTE: Ошибка при создании объекта chatHistory:\n\n',
       error
-    )
-    return false
+    );
+    return false;
   }
-}
+};
 
-export { filterHistory }
+export { filterHistory };

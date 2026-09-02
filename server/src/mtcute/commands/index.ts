@@ -1,28 +1,18 @@
-// КОНСТАНТЫ
 import { BotKeyboard, tl } from '@mtcute/core';
-// TYPES
 import {
   CallbackQueryContext,
   filters,
   MessageContext,
 } from '@mtcute/dispatcher';
-// Дата базы
-import { PrismaClient } from '@prisma/client';
 
-// HOOKS
 import { useAdminCheck } from '~/hooks/useAdminCheck';
 import { prismaService } from '~/services/db';
 
-// PRISMA
 import seed from '../../../prisma/script/seed';
 import * as env from '../../env';
-// HANDLERS
 import { getChatHistory } from '../../handlers/getChatHistory';
 import { sendToBotChat } from '../../handlers/handlers';
-// TYPES
 import { TypeBotClient } from '../index';
-
-const db = new PrismaClient();
 
 const chatId = env.BOT_CHAT_ID;
 const channelId = env.BOT_CHANNEL_ID;
@@ -95,7 +85,7 @@ const commandChatHistory = async ({ tgAdmin, msg }: ICommandChat) => {
 };
 
 // Заполняем базу данных
-const seedToBD = async ({ tgAdmin, msg, tg }: ICommandChat) => {
+const seedToBD = async ({ tgAdmin, msg, tg: _tg }: ICommandChat) => {
   if (!tgAdmin) return;
 
   await useAdminCheck({

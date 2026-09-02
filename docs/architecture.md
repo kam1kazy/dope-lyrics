@@ -14,7 +14,7 @@ Telegram-чат
 ```
 
 Команды бота: `/chatid`, `/app`, `/bd` (статистика, парсинг, посев, очистка).
-Кнопки `/bd` работают только с admin-клиентом.
+Кнопки `/bd` и callback (`stats` / `history` / `seed` / `clear`) проверяют `BOT_ADMIN_ID`.
 
 Клиент: Next 14, Apollo, FSD. Прототип на Chakra; после просмотра живого экрана kit целиком меняем на shadcn.
 Фразы режутся по `\n`, гаснут 12 секунд с шагом 2.
@@ -57,8 +57,11 @@ User-сеанс в клоне мёртв. `API_ID` / `API_HASH` — [my.telegram
 ## Схема
 
 `Users` → `Lyrics` → `Message` + `Hashtags` / `Reactions` / `Chat` / `Media`.
-`lyric_id` без unique. Seed ищет `Users.id = 1`.
-Хештеги — `String[]` на сообщение. GraphQL отдаёт все lyrics без фильтров.
+`lyric_id` без unique (повторный seed пропускает уже существующие id). Индексы по `lyric_id` и `date`.
+Seed ищет `Users.id = 1`.
+Хештеги — `String[]` на сообщение. GraphQL `lyrics(limit, offset)` без `password` / `email`, глубина запроса ограничена.
+
+HTTP (Elysia): Zod env, CORS allowlist, security headers, rate limit, лимит тела, `/health`, GraphiQL/Swagger только не в production, 500 без stack trace, graceful shutdown. Один PrismaClient.
 
 ## Техдолг
 
@@ -67,4 +70,6 @@ User-сеанс в клоне мёртв. `API_ID` / `API_HASH` — [my.telegram
 | Миграции не в репо | Новые — коммитить, не возвращать в gitignore |
 | Apollo → `/graphql` | Без прокси локальный клиент не увидит API |
 | Жёсткий `env.ts` бота | Без секретов бота не стартовать |
-| `password` в типе User | В API не светить |
+| `password` в типе User | Схема GraphQL больше не отдаёт `password` и `email` |
+| Auth / cookie-сессии | Когда появится вход — модель youways, не invent |
+| Linux-хост | Когда будет свой сервер: TLS, закрытый SSH, не светить Postgres |

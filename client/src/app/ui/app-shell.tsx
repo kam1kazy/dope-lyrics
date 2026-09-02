@@ -10,7 +10,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="bg-background text-foreground flex h-svh items-center justify-center overflow-hidden">
       <div
-        className="relative flex h-full w-full max-h-[1200px] max-w-[640px] cursor-pointer flex-col items-center overflow-hidden"
+        className="relative flex h-full min-h-0 w-full max-w-[640px] cursor-pointer flex-col items-center overflow-hidden"
         onClick={togglePause}
       >
         {children}

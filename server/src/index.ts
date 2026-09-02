@@ -1,27 +1,93 @@
-// Плагины для сервера
-import { Elysia, t } from 'elysia'
-import { cors } from '@elysiajs/cors'
-import { swagger } from '@elysiajs/swagger'
+import './app/process-error-handlers';
 
-// GraphQL
-import { yoga } from '@elysiajs/graphql-yoga'
-import { schema } from './graphql/schema'
+import { cors } from '@elysiajs/cors';
+import { yoga } from '@elysiajs/graphql-yoga';
+import { swagger } from '@elysiajs/swagger';
+import { Elysia } from 'elysia';
 
-//env
-import dotenv from 'dotenv'
-dotenv.config()
+import { isOriginAllowed } from './config/cors';
+import { env, isProduction } from './config/env';
+import { securityPlugin, stopRateLimitCleanup } from './config/security';
+import { schema } from './graphql/schema';
+import { prisma } from './infrastructure/prisma';
 
-// Переменные для запуска сервера
-const port: number = Number(process.env.PORT) || 4000
+const app = new Elysia()
+  .use(securityPlugin)
+  .use(
+    cors({
+      origin: (request: Request) => {
+        const origin = request.headers.get('origin');
+        if (!origin) {
+          return true;
+        }
+        return isOriginAllowed(origin);
+      },
+      credentials: true,
+      allowedHeaders: [
+        'Content-Type',
+        'Authorization',
+        'X-Requested-With',
+        'Apollo-Require-Preflight',
+        'X-Request-Id',
+      ],
+      methods: ['GET', 'POST', 'OPTIONS'],
+      maxAge: 86400,
+    })
+  )
+  .get('/health', async () => {
+    await prisma.$queryRaw`SELECT 1`;
+    return { status: 'ok' };
+  });
 
-const app: Elysia = new Elysia()
-  .use(cors())
-  .use(swagger())
-  .use(yoga(schema))
-  .listen(port)
+if (!isProduction) {
+  app.use(swagger());
+}
 
-export type App = typeof app
+app.use(yoga(schema));
+
+const server = app.listen({
+  port: env.PORT,
+  hostname: '0.0.0.0',
+});
+
+export type App = typeof app;
 
 console.log(
-  `\n🦊 Elysia is running at http://${app.server?.hostname}:${app.server?.port}/${schema.path}`
-)
+  `\n🦊 Elysia is running at http://${server.server?.hostname}:${server.server?.port}/${schema.path}`
+);
+
+let isShuttingDown = false;
+
+const shutdown = async () => {
+  if (isShuttingDown) {
+    return;
+  }
+  isShuttingDown = true;
+
+  console.log('Shutting down server...');
+  stopRateLimitCleanup();
+
+  try {
+    await prisma.$disconnect();
+  } catch (error) {
+    console.error('Error closing database connections:', error);
+  }
+
+  try {
+    await app.stop();
+  } catch (error) {
+    console.error('Error closing server:', error);
+  }
+
+  process.exit(0);
+};
+
+process.on('SIGTERM', () => {
+  void shutdown();
+});
+process.on('SIGINT', () => {
+  void shutdown();
+});
+process.on('SIGUSR2', () => {
+  void shutdown();
+});

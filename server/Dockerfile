@@ -23,10 +23,10 @@ RUN bun run generate
 FROM base AS dev
 COPY --from=build /src .
 EXPOSE 4000
-CMD ["sh", "-c", "./wait-for-db.sh db 'bunx prisma migrate deploy && bun run seed && bun run start:admin'"]
+CMD ["sh", "-c", "./wait-for-db.sh db 'bun run migrate && bun run seed && bun run start:admin'"]
 
 # Финальный образ для продакшена
 FROM base AS release
 COPY --from=build /src .
 EXPOSE 4000
-CMD ["sh", "-c", "./wait-for-db.sh db 'bunx prisma migrate deploy && bun run seed && bun run start'"]
+CMD ["sh", "-c", "./wait-for-db.sh db 'bun run migrate && bun run start'"]

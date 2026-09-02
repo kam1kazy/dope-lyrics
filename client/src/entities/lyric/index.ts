@@ -12,4 +12,3 @@ export type {
   LyricSlide,
 } from './model/types';
 export { LyricItem } from './ui/lyric-item';
-export { TotalCount } from './ui/total-count';
