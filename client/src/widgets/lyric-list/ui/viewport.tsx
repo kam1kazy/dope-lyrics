@@ -5,20 +5,30 @@ import {
   useCallback,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react';
 
-import { LyricItem, type LyricSlide } from '@/entities/lyric';
+import {
+  type ILyric,
+  LyricItem,
+  type LyricSlide,
+  type LyricsQueryVariables,
+} from '@/entities/lyric';
+import { MessageDeskDialog } from '@/features/message-desk';
 import {
   slideTiming,
   useLyricView,
 } from '@/shared/lib/lyric-view/lyric-view-context';
 import { usePlayback } from '@/shared/lib/playback/playback-context';
+import { cn } from '@/shared/lib/utils/cn';
 import { Button } from '@/shared/ui/shadcn/ui/button';
 
 interface ViewportProps {
   data: LyricSlide[];
+  lyrics: ILyric[];
+  queryVariables: LyricsQueryVariables;
 }
 
 const START_Y_VH = 52;
@@ -90,9 +100,11 @@ function applyPositions(
   return activeIndex;
 }
 
-export function Viewport({ data }: ViewportProps) {
+export function Viewport({ data, lyrics, queryVariables }: ViewportProps) {
   const { paused, setPaused, suppressToggle } = usePlayback();
   const { carouselSpeed, lineGap, fontSize } = useLyricView();
+  const [deskOpen, setDeskOpen] = useState(false);
+  const [deskLyricId, setDeskLyricId] = useState<number | null>(null);
   const { slideIntervalMs, animationMs } = slideTiming(
     carouselSpeed,
     lineGap,
@@ -326,6 +338,16 @@ export function Viewport({ data }: ViewportProps) {
     lastIndex - Math.ceil(animationMs / slideIntervalMs)
   );
   const visibleSlides = finished ? [] : data.slice(firstVisible, lastIndex + 1);
+  const deskLyric = useMemo(
+    () => lyrics.find((item) => item.id === deskLyricId) ?? null,
+    [deskLyricId, lyrics]
+  );
+
+  const openMessageDesk = (catalogId: number) => {
+    suppressToggle();
+    setDeskLyricId(catalogId);
+    setDeskOpen(true);
+  };
 
   return (
     <div
@@ -337,11 +359,15 @@ export function Viewport({ data }: ViewportProps) {
     >
       {visibleSlides.map((item, offset) => {
         const index = firstVisible + offset;
+        const isCurrent = index === lastIndex;
 
         return (
           <div
             key={`${item.lyric_id}_${item.message?.message_id}_${index}`}
-            className="lyric"
+            className={cn(
+              'lyric',
+              paused && !finished && isCurrent && 'flex-col gap-4'
+            )}
             ref={(node) => {
               if (node) {
                 nodesRef.current.set(index, node);
@@ -351,9 +377,33 @@ export function Viewport({ data }: ViewportProps) {
             }}
           >
             <LyricItem item={item} />
+            {paused && !finished && isCurrent ? (
+              <Button
+                type="button"
+                size="sm"
+                variant="secondary"
+                className="pointer-events-auto shadow-sm"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  openMessageDesk(item.id);
+                }}
+              >
+                Открыть
+              </Button>
+            ) : null}
           </div>
         );
       })}
+
+      <MessageDeskDialog
+        lyric={deskLyric}
+        open={deskOpen}
+        queryVariables={queryVariables}
+        onOpenChange={setDeskOpen}
+        onHidden={() => {
+          setDeskOpen(false);
+        }}
+      />
 
       {finished ? (
         <div className="absolute inset-0 z-20 flex items-center justify-center">

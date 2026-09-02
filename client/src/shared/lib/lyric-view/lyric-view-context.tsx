@@ -13,8 +13,18 @@ export const SORT_MODES = ['shuffle', 'forward', 'reverse'] as const;
 
 export type SortMode = (typeof SORT_MODES)[number];
 
+export const SHELF_MODES = [
+  'all',
+  'favorites',
+  'hidden',
+  'references',
+] as const;
+
+export type ShelfMode = (typeof SHELF_MODES)[number];
+
 export const LYRIC_VIEW_DEFAULTS = {
   sortMode: 'forward' as SortMode,
+  shelfMode: 'all' as ShelfMode,
   fontSize: 24,
   lineHeight: 1.35,
   lineGap: 5,
@@ -27,6 +37,7 @@ export const LYRIC_VIEW_DEFAULTS = {
 interface LyricViewContextValue {
   sortMode: SortMode;
   shuffleSeed: number;
+  shelfMode: ShelfMode;
   fontSize: number;
   lineHeight: number;
   lineGap: number;
@@ -37,6 +48,7 @@ interface LyricViewContextValue {
   dateFrom: string;
   dateTo: string;
   setSortMode: (mode: SortMode) => void;
+  setShelfMode: (mode: ShelfMode) => void;
   setFontSize: (value: number) => void;
   setLineHeight: (value: number) => void;
   setLineGap: (value: number) => void;
@@ -55,6 +67,9 @@ const LyricViewContext = createContext<LyricViewContextValue | null>(null);
 export function LyricViewProvider({ children }: { children: ReactNode }) {
   const [sortMode, setSortModeState] = useState<SortMode>(
     LYRIC_VIEW_DEFAULTS.sortMode
+  );
+  const [shelfMode, setShelfModeState] = useState<ShelfMode>(
+    LYRIC_VIEW_DEFAULTS.shelfMode
   );
   const [shuffleSeed, setShuffleSeed] = useState(1);
   const [fontSize, setFontSize] = useState(LYRIC_VIEW_DEFAULTS.fontSize);
@@ -75,6 +90,10 @@ export function LyricViewProvider({ children }: { children: ReactNode }) {
     if (mode === 'shuffle') {
       setShuffleSeed(Date.now());
     }
+  }, []);
+
+  const setShelfMode = useCallback((mode: ShelfMode) => {
+    setShelfModeState(mode);
   }, []);
 
   const toggleTag = useCallback((tag: string) => {
@@ -102,6 +121,7 @@ export function LyricViewProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const resetFilters = useCallback(() => {
+    setShelfModeState(LYRIC_VIEW_DEFAULTS.shelfMode);
     setSelectedTags([]);
     setSelectedEmojis([]);
     setKeyword(LYRIC_VIEW_DEFAULTS.keyword);
@@ -113,6 +133,7 @@ export function LyricViewProvider({ children }: { children: ReactNode }) {
     () => ({
       sortMode,
       shuffleSeed,
+      shelfMode,
       fontSize,
       lineHeight,
       lineGap,
@@ -123,6 +144,7 @@ export function LyricViewProvider({ children }: { children: ReactNode }) {
       dateFrom,
       dateTo,
       setSortMode,
+      setShelfMode,
       setFontSize,
       setLineHeight,
       setLineGap,
@@ -138,6 +160,7 @@ export function LyricViewProvider({ children }: { children: ReactNode }) {
     [
       sortMode,
       shuffleSeed,
+      shelfMode,
       fontSize,
       lineHeight,
       lineGap,
@@ -148,6 +171,7 @@ export function LyricViewProvider({ children }: { children: ReactNode }) {
       dateFrom,
       dateTo,
       setSortMode,
+      setShelfMode,
       toggleTag,
       toggleEmoji,
       resetSettings,
@@ -204,6 +228,7 @@ export function hasCustomLyricSettings(options: {
 }
 
 export function hasActiveLyricFilters(options: {
+  shelfMode: ShelfMode;
   selectedTags: string[];
   selectedEmojis: string[];
   keyword: string;
@@ -211,6 +236,7 @@ export function hasActiveLyricFilters(options: {
   dateTo: string;
 }): boolean {
   return (
+    options.shelfMode !== LYRIC_VIEW_DEFAULTS.shelfMode ||
     options.selectedTags.length > 0 ||
     options.selectedEmojis.length > 0 ||
     options.keyword.trim().length > 0 ||

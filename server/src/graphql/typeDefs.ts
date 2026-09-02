@@ -14,6 +14,8 @@ export const typeDefinitions = /* GraphQL */ `
     isPinned: Boolean!
     isChannelPost: Boolean!
     isReference: Boolean!
+    isHidden: Boolean!
+    isFavorite: Boolean!
     replyToMessage: Int
 
     message: Message
@@ -102,10 +104,16 @@ export const typeDefinitions = /* GraphQL */ `
     messageId: Int!
   }
 
+  type LyricDemo {
+    name: String!
+    count: Int!
+  }
+
   type Query {
     users: [User!]!
     lyricTags: [String!]!
     lyricEmojis: [String!]!
+    lyricDemos: [LyricDemo!]!
     lyrics(
       limit: Int
       offset: Int
@@ -115,6 +123,18 @@ export const typeDefinitions = /* GraphQL */ `
       dateFrom: String
       dateTo: String
       referencesOnly: Boolean
+      favoritesOnly: Boolean
+      hiddenOnly: Boolean
+      demoName: String
     ): [Lyric!]!
+  }
+
+  type Mutation {
+    updateLyricFlags(
+      id: Int!
+      isHidden: Boolean
+      isFavorite: Boolean
+      isReference: Boolean
+    ): Lyric!
   }
 `;

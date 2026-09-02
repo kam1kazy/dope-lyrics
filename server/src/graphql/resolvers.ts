@@ -13,6 +13,16 @@ type LyricsArgs = {
   dateFrom?: string | null;
   dateTo?: string | null;
   referencesOnly?: boolean | null;
+  favoritesOnly?: boolean | null;
+  hiddenOnly?: boolean | null;
+  demoName?: string | null;
+};
+
+type UpdateLyricFlagsArgs = {
+  id: number;
+  isHidden?: boolean | null;
+  isFavorite?: boolean | null;
+  isReference?: boolean | null;
 };
 
 const clampLimit = (value: number | null | undefined): number => {
@@ -51,6 +61,13 @@ export const resolvers = {
     ) => {
       return lyricsService.listEmojis();
     },
+    lyricDemos: (
+      _parent: unknown,
+      _args: unknown,
+      _context: GraphQLContext
+    ) => {
+      return lyricsService.listDemos();
+    },
     lyrics: (_parent: unknown, args: LyricsArgs, _context: GraphQLContext) => {
       return lyricsService.list({
         limit: clampLimit(args.limit),
@@ -61,6 +78,22 @@ export const resolvers = {
         dateFrom: args.dateFrom,
         dateTo: args.dateTo,
         referencesOnly: args.referencesOnly,
+        favoritesOnly: args.favoritesOnly,
+        hiddenOnly: args.hiddenOnly,
+        demoName: args.demoName,
+      });
+    },
+  },
+  Mutation: {
+    updateLyricFlags: (
+      _parent: unknown,
+      args: UpdateLyricFlagsArgs,
+      _context: GraphQLContext
+    ) => {
+      return lyricsService.updateFlags(args.id, {
+        isHidden: args.isHidden ?? undefined,
+        isFavorite: args.isFavorite ?? undefined,
+        isReference: args.isReference ?? undefined,
       });
     },
   },

@@ -1,6 +1,7 @@
 import type { IUser } from '@/entities/user';
 
 export interface ILyric {
+  id: number;
   userId: number;
   lyric_id?: number;
   message: IMessage | null;
@@ -11,9 +12,16 @@ export interface ILyric {
   isPinned: boolean;
   isChannelPost: boolean;
   isReference: boolean;
+  isHidden: boolean;
+  isFavorite: boolean;
   owner?: IUser | null;
   replyToMessage: number | null;
   media: IMedia | null;
+}
+
+export interface ILyricDemo {
+  name: string;
+  count: number;
 }
 
 export interface IMessage {
@@ -64,4 +72,4 @@ export interface IMedia {
   convert: boolean;
 }
 
-export type LyricSlide = Pick<ILyric, 'message' | 'lyric_id'>;
+export type LyricSlide = Pick<ILyric, 'id' | 'message' | 'lyric_id'>;

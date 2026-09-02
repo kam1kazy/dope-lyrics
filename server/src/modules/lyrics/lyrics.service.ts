@@ -1,5 +1,6 @@
 import { lyricInclude } from '~/graphql/lyric-include';
 import { prisma } from '~/infrastructure/prisma';
+import { listLyricDemos } from '~/modules/lyrics/lyric-demos';
 import type { IChatHistoryItem } from '~/modules/lyrics/lyrics.types';
 import {
   buildLyricsWhere,
@@ -51,6 +52,50 @@ export class LyricsService {
     });
 
     return rows.map((row) => row.emoji).filter(Boolean);
+  }
+
+  listDemos() {
+    return listLyricDemos();
+  }
+
+  async updateFlags(
+    id: number,
+    flags: {
+      isHidden?: boolean;
+      isFavorite?: boolean;
+      isReference?: boolean;
+    }
+  ) {
+    const data: {
+      isHidden?: boolean;
+      isFavorite?: boolean;
+      isReference?: boolean;
+    } = {};
+
+    if (flags.isHidden !== undefined) {
+      data.isHidden = flags.isHidden;
+    }
+
+    if (flags.isFavorite !== undefined) {
+      data.isFavorite = flags.isFavorite;
+    }
+
+    if (flags.isReference !== undefined) {
+      data.isReference = flags.isReference;
+    }
+
+    if (Object.keys(data).length === 0) {
+      return this.prisma.lyrics.findUniqueOrThrow({
+        where: { id },
+        include: lyricInclude,
+      });
+    }
+
+    return this.prisma.lyrics.update({
+      where: { id },
+      data,
+      include: lyricInclude,
+    });
   }
 
   async clearCatalog() {

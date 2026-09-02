@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Lyrics" ADD COLUMN "isHidden" BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE "Lyrics" ADD COLUMN "isFavorite" BOOLEAN NOT NULL DEFAULT false;

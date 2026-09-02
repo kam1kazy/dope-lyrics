@@ -23,6 +23,7 @@ export const LyricList = () => {
   const {
     sortMode,
     shuffleSeed,
+    shelfMode,
     selectedTags,
     selectedEmojis,
     keyword,
@@ -33,14 +34,19 @@ export const LyricList = () => {
   const queryTags = selectedTags.length > 0 ? selectedTags : null;
   const queryEmojis = selectedEmojis.length > 0 ? selectedEmojis : null;
 
+  const queryVariables = {
+    tags: queryTags,
+    keyword: deferredKeyword || null,
+    emojis: queryEmojis,
+    dateFrom: dateFrom.trim() || null,
+    dateTo: dateTo.trim() || null,
+    referencesOnly: shelfMode === 'references',
+    favoritesOnly: shelfMode === 'favorites',
+    hiddenOnly: shelfMode === 'hidden',
+  };
+
   const { loading, error, data } = useQuery<{ lyrics: ILyric[] }>(ALL_LYRICS, {
-    variables: {
-      tags: queryTags,
-      keyword: deferredKeyword || null,
-      emojis: queryEmojis,
-      dateFrom: dateFrom.trim() || null,
-      dateTo: dateTo.trim() || null,
-    },
+    variables: queryVariables,
   });
 
   const carouselList = useMemo(() => {
@@ -57,6 +63,7 @@ export const LyricList = () => {
   }, [data?.lyrics, shuffleSeed, sortMode]);
 
   const hasFilters = hasActiveLyricFilters({
+    shelfMode,
     selectedTags,
     selectedEmojis,
     keyword: deferredKeyword,
@@ -102,8 +109,10 @@ export const LyricList = () => {
       className="flex h-full min-h-0 w-full flex-col items-center overflow-hidden break-keep px-4 pt-4 text-center"
     >
       <Viewport
-        key={`${sortMode}-${shuffleSeed}-${selectedTags.join('|')}-${selectedEmojis.join('|')}-${deferredKeyword}-${dateFrom}-${dateTo}`}
+        key={`${sortMode}-${shuffleSeed}-${shelfMode}-${selectedTags.join('|')}-${selectedEmojis.join('|')}-${deferredKeyword}-${dateFrom}-${dateTo}`}
         data={carouselList}
+        lyrics={data.lyrics}
+        queryVariables={queryVariables}
       />
     </div>
   );

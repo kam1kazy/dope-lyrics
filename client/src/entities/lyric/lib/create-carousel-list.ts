@@ -18,6 +18,7 @@ export const createCarouselList = (data: ILyric[]): LyricSlide[] => {
 
       for (let n = 0; n < lines.length; n++) {
         const newItem: LyricSlide = {
+          id: data[i].id,
           lyric_id: data[i].lyric_id,
           message: {
             message_id: n,

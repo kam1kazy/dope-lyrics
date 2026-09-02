@@ -19,6 +19,10 @@ export const ALL_LYRICS = gql`
     $emojis: [String!]
     $dateFrom: String
     $dateTo: String
+    $referencesOnly: Boolean
+    $favoritesOnly: Boolean
+    $hiddenOnly: Boolean
+    $demoName: String
   ) {
     lyrics(
       tags: $tags
@@ -26,6 +30,10 @@ export const ALL_LYRICS = gql`
       emojis: $emojis
       dateFrom: $dateFrom
       dateTo: $dateTo
+      referencesOnly: $referencesOnly
+      favoritesOnly: $favoritesOnly
+      hiddenOnly: $hiddenOnly
+      demoName: $demoName
     ) {
       id
 
@@ -35,6 +43,8 @@ export const ALL_LYRICS = gql`
       isPinned
       isChannelPost
       isReference
+      isHidden
+      isFavorite
       replyToMessage
 
       message {
@@ -60,6 +70,37 @@ export const ALL_LYRICS = gql`
           }
         }
       }
+    }
+  }
+`;
+
+export const LYRIC_DEMOS = gql`
+  query LyricDemos {
+    lyricDemos {
+      name
+      count
+    }
+  }
+`;
+
+export const UPDATE_LYRIC_FLAGS = gql`
+  mutation UpdateLyricFlags(
+    $id: Int!
+    $isHidden: Boolean
+    $isFavorite: Boolean
+    $isReference: Boolean
+  ) {
+    updateLyricFlags(
+      id: $id
+      isHidden: $isHidden
+      isFavorite: $isFavorite
+      isReference: $isReference
+    ) {
+      id
+      lyric_id
+      isReference
+      isHidden
+      isFavorite
     }
   }
 `;

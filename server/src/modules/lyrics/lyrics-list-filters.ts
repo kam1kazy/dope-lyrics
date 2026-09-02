@@ -1,4 +1,5 @@
 import type { Prisma } from '~/generated/prisma/client';
+import { DEMO_TAG, UNNAMED_DEMO_NAME } from '~/modules/lyrics/shelf-tags';
 
 export interface LyricsListOptions {
   limit: number;
@@ -9,6 +10,9 @@ export interface LyricsListOptions {
   dateFrom?: string | null;
   dateTo?: string | null;
   referencesOnly?: boolean | null;
+  favoritesOnly?: boolean | null;
+  hiddenOnly?: boolean | null;
+  demoName?: string | null;
 }
 
 export const normalizeTags = (tags: string[] | null | undefined): string[] => {
@@ -77,13 +81,24 @@ const buildDateWhere = (
 export const buildLyricsWhere = (
   options: Pick<
     LyricsListOptions,
-    'tags' | 'keyword' | 'emojis' | 'dateFrom' | 'dateTo' | 'referencesOnly'
+    | 'tags'
+    | 'keyword'
+    | 'emojis'
+    | 'dateFrom'
+    | 'dateTo'
+    | 'referencesOnly'
+    | 'favoritesOnly'
+    | 'hiddenOnly'
+    | 'demoName'
   >
 ): Prisma.LyricsWhereInput => {
   const tags = normalizeTags(options.tags);
   const emojis = normalizeEmojis(options.emojis);
   const keyword = normalizeKeyword(options.keyword);
   const referencesOnly = options.referencesOnly === true;
+  const favoritesOnly = options.favoritesOnly === true;
+  const hiddenOnly = options.hiddenOnly === true;
+  const demoName = options.demoName?.trim() ?? '';
 
   const messageConditions: Prisma.MessageWhereInput[] = [
     { text: { not: null } },
@@ -120,14 +135,44 @@ export const buildLyricsWhere = (
     });
   }
 
+  if (demoName) {
+    if (demoName === UNNAMED_DEMO_NAME) {
+      messageConditions.push({
+        hashtags: {
+          is: {
+            tags: { equals: [DEMO_TAG] },
+          },
+        },
+      });
+    } else {
+      messageConditions.push({
+        hashtags: {
+          is: {
+            AND: [{ tags: { has: DEMO_TAG } }, { tags: { has: demoName } }],
+          },
+        },
+      });
+    }
+  }
+
   const where: Prisma.LyricsWhereInput = {
     message: {
       AND: messageConditions,
     },
   };
 
-  if (referencesOnly) {
-    where.isReference = true;
+  if (hiddenOnly) {
+    where.isHidden = true;
+  } else {
+    where.isHidden = false;
+
+    if (favoritesOnly) {
+      where.isFavorite = true;
+    }
+
+    if (referencesOnly) {
+      where.isReference = true;
+    }
   }
 
   const dateWhere = buildDateWhere(options.dateFrom, options.dateTo);

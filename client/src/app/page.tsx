@@ -1,5 +1,6 @@
 'use client';
 
+import { CatalogMenu } from '@/widgets/catalog-menu';
 import { ControlBar } from '@/widgets/control-bar';
 import { LyricList } from '@/widgets/lyric-list';
 
@@ -12,6 +13,7 @@ export default function Home() {
       <AppShell>
         <LyricList />
       </AppShell>
+      <CatalogMenu />
       <ControlBar />
     </Providers>
   );

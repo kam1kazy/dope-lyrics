@@ -27,6 +27,10 @@ model Lyrics {
   isChannelPost  Boolean
   /// Эталон каталога: ставит приложение (позже ИИ), не хештег из Telegram.
   isReference    Boolean  @default(false)
+  /// Скрыто из обычной карусели; seed не сбрасывает.
+  isHidden       Boolean  @default(false)
+  /// Избранное для полки в drawer.
+  isFavorite     Boolean  @default(false)
   replyToMessage Int?
 
   message Message?

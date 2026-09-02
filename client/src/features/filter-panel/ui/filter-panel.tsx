@@ -5,13 +5,17 @@ import {
   AlignVerticalSpaceAround,
   ArrowDownAZ,
   ArrowUpAZ,
+  Bookmark,
   CalendarRange,
   CircleGauge,
+  EyeOff,
+  Layers,
   Monitor,
   Moon,
   RotateCcw,
   Shuffle,
   Smile,
+  Sparkles,
   Sun,
   Type,
   UnfoldVertical,
@@ -23,6 +27,7 @@ import { LYRIC_EMOJIS, LYRIC_TAGS } from '@/entities/lyric';
 import {
   hasActiveLyricFilters,
   hasCustomLyricSettings,
+  type ShelfMode,
   type SortMode,
   useLyricView,
 } from '@/shared/lib/lyric-view/lyric-view-context';
@@ -58,6 +63,17 @@ const SORT_OPTIONS: {
   { mode: 'shuffle', label: 'Случайный порядок', icon: Shuffle },
   { mode: 'forward', label: 'По порядку', icon: ArrowDownAZ },
   { mode: 'reverse', label: 'В обратном порядке', icon: ArrowUpAZ },
+];
+
+const SHELF_OPTIONS: {
+  mode: ShelfMode;
+  label: string;
+  icon: typeof Bookmark;
+}[] = [
+  { mode: 'all', label: 'Все', icon: Layers },
+  { mode: 'favorites', label: 'Избранное', icon: Bookmark },
+  { mode: 'hidden', label: 'Скрытые', icon: EyeOff },
+  { mode: 'references', label: 'Эталоны', icon: Sparkles },
 ];
 
 const TAG_SKELETON_WIDTHS = [
@@ -320,6 +336,8 @@ function SettingsTab() {
 
 function FiltersTab() {
   const {
+    shelfMode,
+    setShelfMode,
     selectedTags,
     toggleTag,
     selectedEmojis,
@@ -333,6 +351,7 @@ function FiltersTab() {
     resetFilters,
   } = useLyricView();
   const canReset = hasActiveLyricFilters({
+    shelfMode,
     selectedTags,
     selectedEmojis,
     keyword,
@@ -352,6 +371,42 @@ function FiltersTab() {
 
   return (
     <div className="flex flex-col gap-4 pb-1">
+      <div className="flex flex-col gap-2">
+        <Label className="text-muted-foreground text-xs font-normal">
+          Полка
+        </Label>
+        <div
+          data-swipe-ignore
+          className="flex flex-wrap gap-1.5"
+          role="radiogroup"
+          aria-label="Полка каталога"
+        >
+          {SHELF_OPTIONS.map(({ mode, label, icon: Icon }) => {
+            const selected = shelfMode === mode;
+
+            return (
+              <button
+                key={mode}
+                type="button"
+                role="radio"
+                aria-checked={selected}
+                aria-label={label}
+                onClick={() => setShelfMode(mode)}
+                className="cursor-pointer"
+              >
+                <Badge
+                  variant={selected ? 'default' : 'secondary'}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 text-xs"
+                >
+                  <Icon className="size-3" aria-hidden />
+                  {label}
+                </Badge>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       <div className="flex flex-col gap-2">
         <Label className="text-muted-foreground flex items-center gap-1.5 text-xs font-normal">
           <CalendarRange className="size-3.5" aria-hidden />
