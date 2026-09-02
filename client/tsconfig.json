@@ -20,15 +20,11 @@
     ],
     "paths": {
       "@/*": ["./src/*"],
-      // CLIENT
-      "@components/*": ["./src/components/*"],
-      "@apolloServer/*": ["./src/server/*"],
       "@app/*": ["./src/app/*"],
-      "@hooks/*": ["./src/hooks/*"],
-      "@utils/*": ["./src/utils/*"],
-      "@styles/*": ["./src/styles/*"],
-      "@types/*": ["./src/types/*"],
-      "@context/*": ["./src/context/*"]
+      "@widgets/*": ["./src/widgets/*"],
+      "@features/*": ["./src/features/*"],
+      "@entities/*": ["./src/entities/*"],
+      "@shared/*": ["./src/shared/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
