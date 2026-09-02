@@ -5,6 +5,7 @@ import {
   type ReactNode,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
 } from 'react';
@@ -23,16 +24,103 @@ export const SHELF_MODES = [
 export type ShelfMode = (typeof SHELF_MODES)[number];
 
 export const LYRIC_VIEW_DEFAULTS = {
-  sortMode: 'forward' as SortMode,
+  sortMode: 'shuffle' as SortMode,
   shelfMode: 'all' as ShelfMode,
-  fontSize: 24,
-  lineHeight: 1.35,
-  lineGap: 5,
-  carouselSpeed: 5,
+  fontSize: 31,
+  lineHeight: 1.45,
+  lineGap: 2,
+  carouselSpeed: 3,
   keyword: '',
   dateFrom: '',
   dateTo: '',
 };
+
+const SETTINGS_STORAGE_KEY = 'dope-lyrics.lyric-settings';
+
+type PersistedLyricSettings = {
+  sortMode: SortMode;
+  fontSize: number;
+  lineHeight: number;
+  lineGap: number;
+  carouselSpeed: number;
+};
+
+function isSortMode(value: unknown): value is SortMode {
+  return (
+    typeof value === 'string' &&
+    (SORT_MODES as readonly string[]).includes(value)
+  );
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
+}
+
+function parsePersistedSettings(raw: string): PersistedLyricSettings | null {
+  try {
+    const parsed: unknown = JSON.parse(raw);
+
+    if (!parsed || typeof parsed !== 'object') {
+      return null;
+    }
+
+    const record = parsed as Record<string, unknown>;
+
+    if (
+      !isSortMode(record.sortMode) ||
+      typeof record.fontSize !== 'number' ||
+      !Number.isFinite(record.fontSize) ||
+      typeof record.lineHeight !== 'number' ||
+      !Number.isFinite(record.lineHeight) ||
+      typeof record.lineGap !== 'number' ||
+      !Number.isFinite(record.lineGap) ||
+      typeof record.carouselSpeed !== 'number' ||
+      !Number.isFinite(record.carouselSpeed)
+    ) {
+      return null;
+    }
+
+    return {
+      sortMode: record.sortMode,
+      fontSize: clamp(Math.round(record.fontSize), 16, 36),
+      lineHeight: clamp(record.lineHeight, 1.1, 1.9),
+      lineGap: clamp(Math.round(record.lineGap), 1, 10),
+      carouselSpeed: clamp(Math.round(record.carouselSpeed), 1, 10),
+    };
+  } catch {
+    return null;
+  }
+}
+
+function readPersistedSettings(): PersistedLyricSettings | null {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  try {
+    const raw = window.localStorage.getItem(SETTINGS_STORAGE_KEY);
+
+    if (!raw) {
+      return null;
+    }
+
+    return parsePersistedSettings(raw);
+  } catch {
+    return null;
+  }
+}
+
+function writePersistedSettings(settings: PersistedLyricSettings): void {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  try {
+    window.localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+  } catch {
+    return;
+  }
+}
 
 interface LyricViewContextValue {
   sortMode: SortMode;
@@ -83,6 +171,35 @@ export function LyricViewProvider({ children }: { children: ReactNode }) {
   const [keyword, setKeyword] = useState(LYRIC_VIEW_DEFAULTS.keyword);
   const [dateFrom, setDateFrom] = useState(LYRIC_VIEW_DEFAULTS.dateFrom);
   const [dateTo, setDateTo] = useState(LYRIC_VIEW_DEFAULTS.dateTo);
+  const [settingsReady, setSettingsReady] = useState(false);
+
+  useEffect(() => {
+    const stored = readPersistedSettings();
+
+    if (stored) {
+      setSortModeState(stored.sortMode);
+      setFontSize(stored.fontSize);
+      setLineHeight(stored.lineHeight);
+      setLineGap(stored.lineGap);
+      setCarouselSpeed(stored.carouselSpeed);
+    }
+
+    setSettingsReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (!settingsReady) {
+      return;
+    }
+
+    writePersistedSettings({
+      sortMode,
+      fontSize,
+      lineHeight,
+      lineGap,
+      carouselSpeed,
+    });
+  }, [settingsReady, sortMode, fontSize, lineHeight, lineGap, carouselSpeed]);
 
   const setSortMode = useCallback((mode: SortMode) => {
     setSortModeState(mode);
