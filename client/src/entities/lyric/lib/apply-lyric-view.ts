@@ -5,6 +5,7 @@ import type { ILyric } from '../model/types';
 interface ApplyLyricViewOptions {
   sortMode: SortMode;
   shuffleSeed: number;
+  pageSize?: number;
 }
 
 function shuffleLyrics(lyrics: ILyric[], seed: number): ILyric[] {
@@ -32,8 +33,21 @@ export function applyLyricView(
   lyrics: ILyric[],
   options: ApplyLyricViewOptions
 ): ILyric[] {
-  if (options.sortMode === 'reverse') {
-    return [...lyrics].reverse();
+  const pageSize = options.pageSize ?? lyrics.length;
+
+  if (pageSize > 0 && pageSize < lyrics.length) {
+    const ordered: ILyric[] = [];
+
+    for (let offset = 0; offset < lyrics.length; offset += pageSize) {
+      ordered.push(
+        ...applyLyricView(lyrics.slice(offset, offset + pageSize), {
+          sortMode: options.sortMode,
+          shuffleSeed: options.shuffleSeed + offset,
+        })
+      );
+    }
+
+    return ordered;
   }
 
   if (options.sortMode === 'shuffle') {

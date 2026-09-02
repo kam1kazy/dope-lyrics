@@ -1,11 +1,13 @@
 'use client';
 
-import { Settings } from 'lucide-react';
+import { Settings, Shuffle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import { FilterPanel } from '@/features/filter-panel';
+import { useLyricView } from '@/shared/lib/lyric-view/lyric-view-context';
 import { usePlayback } from '@/shared/lib/playback/playback-context';
 import { useSwipeToDismiss } from '@/shared/lib/swipe/use-swipe-to-dismiss';
+import { chromeKeyClass } from '@/shared/lib/utils/chrome-key-class';
 import { cn } from '@/shared/lib/utils/cn';
 import { Button } from '@/shared/ui/shadcn/ui/button';
 import {
@@ -16,9 +18,15 @@ import {
   DrawerTitle,
 } from '@/shared/ui/shadcn/ui/drawer';
 
+import { LyricTuneHotkeys } from './lyric-tune-hotkeys';
+
 export const ControlBar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { suppressToggle, beginOverlay, endOverlay } = usePlayback();
+  const [litKey, setLitKey] = useState<'shuffle' | 'settings' | null>(null);
+  const { setSortMode } = useLyricView();
+  const { paused, canPlay, suppressToggle, beginOverlay, endOverlay } =
+    usePlayback();
+  const playing = !paused && canPlay;
 
   const closeDrawer = () => {
     suppressToggle();
@@ -48,20 +56,62 @@ export const ControlBar = () => {
   return (
     <>
       <div className="pointer-events-none fixed inset-x-0 bottom-0 z-20 flex justify-end p-4">
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="pointer-events-auto text-muted-foreground hover:text-foreground"
-          aria-label="Настройки"
-          aria-expanded={isOpen}
-          onClick={(event) => {
-            event.stopPropagation();
-            setIsOpen(true);
-          }}
-        >
-          <Settings className="size-6" />
-        </Button>
+        <div className="flex flex-col items-center">
+          <LyricTuneHotkeys />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className={chromeKeyClass({
+              playing,
+              lit: litKey === 'shuffle',
+            })}
+            aria-label="Перемешать заново"
+            title="Перемешать заново"
+            onPointerDown={() => {
+              setLitKey('shuffle');
+            }}
+            onPointerUp={() => {
+              setLitKey(null);
+            }}
+            onPointerCancel={() => {
+              setLitKey(null);
+            }}
+            onClick={(event) => {
+              event.stopPropagation();
+              suppressToggle();
+              setSortMode('shuffle');
+            }}
+          >
+            <Shuffle className="size-5" />
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className={chromeKeyClass({
+              playing,
+              lit: litKey === 'settings',
+            })}
+            aria-label="Настройки"
+            aria-expanded={isOpen}
+            onPointerDown={() => {
+              setLitKey('settings');
+            }}
+            onPointerUp={() => {
+              setLitKey(null);
+            }}
+            onPointerCancel={() => {
+              setLitKey(null);
+            }}
+            onClick={(event) => {
+              event.stopPropagation();
+              setIsOpen(true);
+            }}
+          >
+            <Settings className="size-6" />
+          </Button>
+        </div>
       </div>
 
       <Drawer
@@ -79,7 +129,7 @@ export const ControlBar = () => {
           {...swipe.contentProps}
           overlayClassName={cn(!isOpen && 'pointer-events-none opacity-0')}
           className={cn(
-            'min-h-0 overflow-hidden',
+            'min-h-0 overflow-hidden md:max-h-[min(85svh,760px)] md:max-w-2xl md:p-6',
             swipe.dragging && 'duration-0'
           )}
           onClick={(event) => {
@@ -101,7 +151,7 @@ export const ControlBar = () => {
               Внешний вид, порядок показа и фильтры каталога
             </DrawerDescription>
           </DrawerHeader>
-          <FilterPanel />
+          <FilterPanel checkIngest={isOpen} />
         </DrawerContent>
       </Drawer>
     </>

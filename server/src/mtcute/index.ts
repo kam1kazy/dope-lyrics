@@ -14,6 +14,7 @@ import {
   seedToDb,
 } from '~/mtcute/commands';
 import { assertAdmin } from '~/mtcute/guards/assert-admin';
+import { startIngestHttp } from '~/mtcute/ingest-http';
 import { sendToBotChat } from '~/mtcute/send';
 
 const botEnv = parseBotEnv();
@@ -101,6 +102,12 @@ if (botType === 'admin') {
   });
   console.log('MTCUTE: 🤖 Админ вошел в систему');
 }
+
+startIngestHttp({
+  tgAdmin,
+  channelId,
+  port: botEnv.INGEST_PORT,
+});
 
 dp.onNewMessage(filters.command('chatid'), async (msg) =>
   commandChatId({ tg, msg })

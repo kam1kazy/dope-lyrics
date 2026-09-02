@@ -28,6 +28,8 @@ interface ViewportProps {
   data: LyricSlide[];
   lyrics: ILyric[];
   queryVariables: LyricsQueryVariables;
+  hasMore: boolean;
+  onNeedMore: () => void;
 }
 
 const START_Y_VH = 52;
@@ -182,7 +184,15 @@ function hasReadableSlide(
   return false;
 }
 
-export function Viewport({ data, lyrics, queryVariables }: ViewportProps) {
+const PRELOAD_SLIDES = 24;
+
+export function Viewport({
+  data,
+  lyrics,
+  queryVariables,
+  hasMore,
+  onNeedMore,
+}: ViewportProps) {
   const { paused, canPlay, setPaused, setCanPlay, suppressToggle } =
     usePlayback();
   const { carouselSpeed, lineGap, fontSize } = useLyricView();
@@ -265,9 +275,9 @@ export function Viewport({ data, lyrics, queryVariables }: ViewportProps) {
 
       writeElapsed(next);
       setLastIndex(currentPositions());
-      setFinished(next >= endedAt && dataLength > 0);
+      setFinished(next >= endedAt && dataLength > 0 && !hasMore);
     },
-    [currentPositions, dataLength, writeElapsed]
+    [currentPositions, dataLength, hasMore, writeElapsed]
   );
 
   useLayoutEffect(() => {
@@ -357,6 +367,13 @@ export function Viewport({ data, lyrics, queryVariables }: ViewportProps) {
 
       if (elapsed >= runEndedAt(dataLength, slideIntervalMs, animationMs)) {
         currentPositions();
+
+        if (hasMore) {
+          onNeedMore();
+          frame = requestAnimationFrame(tick);
+          return;
+        }
+
         setFinished(true);
         return;
       }
@@ -387,9 +404,21 @@ export function Viewport({ data, lyrics, queryVariables }: ViewportProps) {
     currentPositions,
     dataLength,
     finished,
+    hasMore,
+    onNeedMore,
     paused,
     slideIntervalMs,
   ]);
+
+  useEffect(() => {
+    if (finished || !hasMore || dataLength === 0) {
+      return;
+    }
+
+    if (dataLength - lastIndex <= PRELOAD_SLIDES) {
+      onNeedMore();
+    }
+  }, [dataLength, finished, hasMore, lastIndex, onNeedMore]);
 
   const clearTapToggle = () => {
     if (tapToggleTimerRef.current === null) {
@@ -439,7 +468,7 @@ export function Viewport({ data, lyrics, queryVariables }: ViewportProps) {
   };
 
   const onPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (event.button !== 0) {
+    if (event.button !== 0 || deskOpen) {
       return;
     }
 
@@ -464,6 +493,10 @@ export function Viewport({ data, lyrics, queryVariables }: ViewportProps) {
   };
 
   const onPointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (deskOpen) {
+      return;
+    }
+
     if (
       !trackingRef.current &&
       !event.currentTarget.hasPointerCapture(event.pointerId)
@@ -505,6 +538,12 @@ export function Viewport({ data, lyrics, queryVariables }: ViewportProps) {
   };
 
   const endPointer = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (deskOpen) {
+      trackingRef.current = false;
+      scrubbingRef.current = false;
+      return;
+    }
+
     const wasTracking = trackingRef.current;
     trackingRef.current = false;
 

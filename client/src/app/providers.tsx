@@ -7,6 +7,7 @@ import { apolloClient } from '@/shared/api';
 import { LyricViewProvider } from '@/shared/lib/lyric-view/lyric-view-context';
 import { PlaybackProvider } from '@/shared/lib/playback/playback-context';
 import { ThemeProvider } from '@/shared/ui/shadcn/theme-provider';
+import { TooltipProvider } from '@/shared/ui/shadcn/ui/tooltip';
 
 export function Providers({ children }: { children: ReactNode }) {
   return (
@@ -17,9 +18,11 @@ export function Providers({ children }: { children: ReactNode }) {
         enableSystem
         disableTransitionOnChange
       >
-        <LyricViewProvider>
-          <PlaybackProvider>{children}</PlaybackProvider>
-        </LyricViewProvider>
+        <TooltipProvider>
+          <LyricViewProvider>
+            <PlaybackProvider>{children}</PlaybackProvider>
+          </LyricViewProvider>
+        </TooltipProvider>
       </ThemeProvider>
     </ApolloProvider>
   );

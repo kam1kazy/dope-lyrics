@@ -1,4 +1,5 @@
 import type { Prisma } from '~/generated/prisma/client';
+import { LYRIC_SONG_ROLES } from '~/modules/lyrics/lyric-facets';
 import { DEMO_TAG, UNNAMED_DEMO_NAME } from '~/modules/lyrics/shelf-tags';
 
 export interface LyricsListOptions {
@@ -12,7 +13,14 @@ export interface LyricsListOptions {
   referencesOnly?: boolean | null;
   favoritesOnly?: boolean | null;
   hiddenOnly?: boolean | null;
+  censoredOnly?: boolean | null;
   demoName?: string | null;
+  demosOnly?: boolean | null;
+  oldestFirst?: boolean | null;
+  mood?: string[] | null;
+  delivery?: string[] | null;
+  songRole?: string[] | null;
+  readiness?: string | null;
 }
 
 export const normalizeTags = (tags: string[] | null | undefined): string[] => {
@@ -78,6 +86,87 @@ const buildDateWhere = (
   return Object.keys(dateFilter).length > 0 ? dateFilter : undefined;
 };
 
+const jsonFacetContains = (
+  role: string,
+  field: 'mood' | 'delivery',
+  value: string
+): Prisma.LyricsWhereInput => ({
+  roleProfiles: {
+    path: [role, field],
+    array_contains: value,
+  },
+});
+
+const roleFacetWhere = (
+  role: string,
+  moods: string[],
+  deliveries: string[]
+): Prisma.LyricsWhereInput => {
+  const parts: Prisma.LyricsWhereInput[] = [];
+
+  if (moods.length > 0) {
+    parts.push({
+      OR: moods.map((mood) => jsonFacetContains(role, 'mood', mood)),
+    });
+  }
+
+  if (deliveries.length > 0) {
+    parts.push({
+      OR: deliveries.map((delivery) =>
+        jsonFacetContains(role, 'delivery', delivery)
+      ),
+    });
+  }
+
+  if (parts.length === 0) {
+    return { songRole: { has: role } };
+  }
+
+  if (parts.length === 1) {
+    return parts[0];
+  }
+
+  return { AND: parts };
+};
+
+const buildFacetWhere = (
+  moods: string[],
+  deliveries: string[],
+  roles: string[]
+): Prisma.LyricsWhereInput | undefined => {
+  if (moods.length === 0 && deliveries.length === 0 && roles.length === 0) {
+    return undefined;
+  }
+
+  const targetRoles = roles.length > 0 ? roles : [...LYRIC_SONG_ROLES];
+
+  if (roles.length > 0) {
+    return {
+      OR: roles.map((role) => roleFacetWhere(role, moods, deliveries)),
+    };
+  }
+
+  const unscoped: Prisma.LyricsWhereInput[] = [];
+
+  if (moods.length > 0) {
+    unscoped.push({ mood: { hasSome: moods } });
+  }
+
+  if (deliveries.length > 0) {
+    unscoped.push({ delivery: { hasSome: deliveries } });
+  }
+
+  const unscopedWhere: Prisma.LyricsWhereInput =
+    unscoped.length === 1 ? unscoped[0] : { AND: unscoped };
+
+  return {
+    OR: [
+      unscopedWhere,
+      ...targetRoles.map((role) => roleFacetWhere(role, moods, deliveries)),
+    ],
+  };
+};
+
 export const buildLyricsWhere = (
   options: Pick<
     LyricsListOptions,
@@ -89,7 +178,13 @@ export const buildLyricsWhere = (
     | 'referencesOnly'
     | 'favoritesOnly'
     | 'hiddenOnly'
+    | 'censoredOnly'
     | 'demoName'
+    | 'demosOnly'
+    | 'mood'
+    | 'delivery'
+    | 'songRole'
+    | 'readiness'
   >
 ): Prisma.LyricsWhereInput => {
   const tags = normalizeTags(options.tags);
@@ -98,7 +193,9 @@ export const buildLyricsWhere = (
   const referencesOnly = options.referencesOnly === true;
   const favoritesOnly = options.favoritesOnly === true;
   const hiddenOnly = options.hiddenOnly === true;
+  const censoredOnly = options.censoredOnly === true;
   const demoName = options.demoName?.trim() ?? '';
+  const demosOnly = options.demosOnly === true;
 
   const messageConditions: Prisma.MessageWhereInput[] = [
     { text: { not: null } },
@@ -153,6 +250,14 @@ export const buildLyricsWhere = (
         },
       });
     }
+  } else if (demosOnly) {
+    messageConditions.push({
+      hashtags: {
+        is: {
+          tags: { has: DEMO_TAG },
+        },
+      },
+    });
   }
 
   const where: Prisma.LyricsWhereInput = {
@@ -173,12 +278,31 @@ export const buildLyricsWhere = (
     if (referencesOnly) {
       where.isReference = true;
     }
+
+    if (censoredOnly) {
+      where.isCensored = true;
+    }
   }
 
   const dateWhere = buildDateWhere(options.dateFrom, options.dateTo);
 
   if (dateWhere) {
     where.date = dateWhere;
+  }
+
+  const moods = normalizeTags(options.mood);
+  const deliveries = normalizeTags(options.delivery);
+  const songRoles = normalizeTags(options.songRole);
+  const readiness = options.readiness?.trim();
+
+  const facetWhere = buildFacetWhere(moods, deliveries, songRoles);
+
+  if (facetWhere) {
+    where.AND = [facetWhere];
+  }
+
+  if (readiness) {
+    where.readiness = readiness;
   }
 
   return where;

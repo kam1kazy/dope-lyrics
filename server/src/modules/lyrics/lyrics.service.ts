@@ -1,6 +1,11 @@
 import { lyricInclude } from '~/graphql/lyric-include';
 import { prisma } from '~/infrastructure/prisma';
 import { listLyricDemos } from '~/modules/lyrics/lyric-demos';
+import {
+  type LyricProfilePatch,
+  parseLyricProfilePatch,
+  roleProfilesToJson,
+} from '~/modules/lyrics/lyric-facets';
 import type { IChatHistoryItem } from '~/modules/lyrics/lyrics.types';
 import {
   buildLyricsWhere,
@@ -19,9 +24,16 @@ export class LyricsService {
       where: buildLyricsWhere(options),
       take: options.limit,
       skip: options.offset,
-      orderBy: { date: 'desc' },
+      orderBy: { date: options.oldestFirst ? 'asc' : 'desc' },
       include: lyricInclude,
     });
+  }
+
+  async listLyricIds(): Promise<number[]> {
+    const rows = await this.prisma.lyrics.findMany({
+      select: { lyric_id: true },
+    });
+    return rows.map((row) => row.lyric_id);
   }
 
   async listTags(): Promise<string[]> {
@@ -64,12 +76,14 @@ export class LyricsService {
       isHidden?: boolean;
       isFavorite?: boolean;
       isReference?: boolean;
+      isCensored?: boolean;
     }
   ) {
     const data: {
       isHidden?: boolean;
       isFavorite?: boolean;
       isReference?: boolean;
+      isCensored?: boolean;
     } = {};
 
     if (flags.isHidden !== undefined) {
@@ -82,6 +96,62 @@ export class LyricsService {
 
     if (flags.isReference !== undefined) {
       data.isReference = flags.isReference;
+    }
+
+    if (flags.isCensored !== undefined) {
+      data.isCensored = flags.isCensored;
+    }
+
+    if (Object.keys(data).length === 0) {
+      return this.prisma.lyrics.findUniqueOrThrow({
+        where: { id },
+        include: lyricInclude,
+      });
+    }
+
+    return this.prisma.lyrics.update({
+      where: { id },
+      data,
+      include: lyricInclude,
+    });
+  }
+
+  async updateProfile(
+    id: number,
+    input: {
+      mood?: string[] | null;
+      delivery?: string[] | null;
+      songRole?: string[] | null;
+      roleProfiles?: unknown;
+      readiness?: string | null;
+    }
+  ) {
+    const parsed = parseLyricProfilePatch(input);
+    const data: {
+      mood?: LyricProfilePatch['mood'];
+      delivery?: LyricProfilePatch['delivery'];
+      songRole?: LyricProfilePatch['songRole'];
+      roleProfiles?: ReturnType<typeof roleProfilesToJson>;
+      readiness?: LyricProfilePatch['readiness'];
+    } = {};
+
+    if (parsed.mood !== undefined) {
+      data.mood = parsed.mood;
+    }
+
+    if (parsed.delivery !== undefined) {
+      data.delivery = parsed.delivery;
+    }
+
+    if (parsed.roleProfiles !== undefined) {
+      data.roleProfiles = roleProfilesToJson(parsed.roleProfiles);
+      data.songRole = parsed.roleProfiles.map((profile) => profile.songRole);
+    } else if (parsed.songRole !== undefined) {
+      data.songRole = parsed.songRole;
+    }
+
+    if (parsed.readiness !== undefined) {
+      data.readiness = parsed.readiness;
     }
 
     if (Object.keys(data).length === 0) {
@@ -116,13 +186,13 @@ export class LyricsService {
     }
   }
 
-  async loadNewRecords(records: IChatHistoryItem[]) {
+  async loadNewRecords(records: IChatHistoryItem[]): Promise<number> {
     try {
       const owner = await usersService.getOwner();
 
       if (!owner) {
         console.log(`\nPRISMA: 🙅 Users не был найден`);
-        return;
+        return 0;
       }
       console.log(`\nPRISMA: 🫄 Пользователь UserID: ${owner.id} найден`);
       console.log(`PRISMA: 📝 Начало загрузки ${records.length} записей`);
@@ -165,8 +235,10 @@ export class LyricsService {
       }
 
       console.log(`PRISMA: 📊 Итого загружено записей: ${loaded}`);
+      return loaded;
     } catch (error) {
       console.error('PRISMA: ❌ Ошибка при загрузке записей:', error);
+      return 0;
     }
   }
 

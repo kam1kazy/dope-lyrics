@@ -23,7 +23,7 @@
 
 ### 1. Поля на `Lyrics`, не отдельная таблица
 
-Четыре колонки `mood`, `delivery`, `songRole`, `readiness`: `String?`. Пусто = `NULL`.
+Четыре колонки `mood`, `delivery`, `songRole`, `readiness`. Настроение и подача — `String[]` (пусто = `[]`). Роль и готовность — `String?` (пусто = `NULL`).
 
 Альтернатива: таблица `LyricProfile` 1:1 — лишний join на каждый `lyrics`. JSON — хуже фильтровать и индексировать. Отдельная таблица имеет смысл, когда появятся события карусели / лайки склеек; не сейчас.
 
@@ -37,9 +37,9 @@
 
 ### 3. Мутация отдельно от `updateLyricFlags`
 
-`updateLyricProfile(id, mood, delivery, songRole, readiness)`: каждое поле опционально; явный `null` снимает грань. Полки не смешивать с профилем — разные задачи и кэш Apollo.
+`updateLyricProfile(id, mood, delivery, songRole, readiness)`: каждое поле опционально; для настроения и подачи пустой список снимает грань, для роли и готовности — явный `null`. Полки не смешивать с профилем — разные задачи и кэш Apollo.
 
-Фильтры списка: опциональные аргументы `mood`, `delivery`, `songRole`, `readiness` в `lyrics(...)`, И в `buildLyricsWhere` по аналогии с `referencesOnly`.
+Фильтры списка: опциональные аргументы `mood`, `delivery` (списки, внутри грани логическое ИЛИ), `songRole`, `readiness` в `lyrics(...)`, И между гранями в `buildLyricsWhere` по аналогии с `referencesOnly`.
 
 ### 4. Сводка одним query
 
@@ -55,9 +55,13 @@
 
 Клиентские словари дублировать тонко: импорт констант нельзя через границу пакетов — завести те же ключи в `client/src/entities/lyric` и не разъезжаться (один список в спеке; при apply сверить вручную). Query `lyricFacetOptions` не делать в MVP: словарь крошечный.
 
-### 6. Seed / persist
+### 6. Seed / persist и готовность по длине
 
-`create-lyric-data.ts` и парсер mtcute не пишут колонки профиля. Миграция: default NULL. Повторный upsert по `lyric_id` MUST не включать эти поля в `update`.
+`create-lyric-data.ts` и парсер mtcute **не пишут** `mood` / `delivery` / `songRole`. Готовность при **новой** вставке считается из `Message.paragraph_count` (непустые строки): абзац = 4 строки, дальше floor — `LINE` (1–3), `FRAGMENT` (4–19), `BLOCK` (20–35), `TEXT` (36+); `READY` только вручную; 0 строк → `NULL`. Уже существующие `lyric_id` при повторной загрузке не обновляются, поэтому ручная разметка (включая «готово») не затирается. Одноразовая data-миграция заполняет только строки с `readiness IS NULL`.
+
+### 7. Словарь готовности
+
+Ключи API: `LINE`, `FRAGMENT`, `BLOCK`, `TEXT`, `READY`. Подписи UI: строка, фрагмент, блок, текст, готово. Порядок чипов тот же.
 
 ## Risks / Trade-offs
 
@@ -71,8 +75,9 @@
 1. Миграция Prisma (коммитить), `bun prisma generate` из `server/`.
 2. GraphQL + service + фильтры.
 3. Карточка и drawer (MVP 1).
-4. `catalogStats` + пункт меню (MVP 2).
-5. Откат: откатить миграцию / не вызывать новые поля; старые полки не зависят от профиля.
+4. Data-миграция готовности по `paragraph_count` + `TEXT` в словаре; запись при create.
+5. `catalogStats` + пункт меню (MVP 2).
+6. Откат: откатить миграцию / не вызывать новые поля; старые полки не зависят от профиля.
 
 ## Open Questions
 

@@ -31,6 +31,15 @@ model Lyrics {
   isHidden       Boolean  @default(false)
   /// Избранное для полки в drawer.
   isFavorite     Boolean  @default(false)
+  /// Полка «цензура»: ставит приложение, seed не трогает.
+  isCensored     Boolean  @default(false)
+  /// Авторский профиль: словари в lyric-facets.ts, seed не трогает.
+  /// mood/delivery без роли; у каждой роли — свой набор в roleProfiles.
+  mood           String[] @default([])
+  delivery       String[] @default([])
+  songRole       String[] @default([])
+  roleProfiles   Json     @default("{}")
+  readiness      String?
   replyToMessage Int?
 
   message Message?

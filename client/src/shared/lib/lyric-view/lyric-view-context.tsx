@@ -10,6 +10,13 @@ import {
   useState,
 } from 'react';
 
+import type {
+  LyricDelivery,
+  LyricMood,
+  LyricReadiness,
+  LyricSongRole,
+} from '@/shared/lib/lyric-facets';
+
 export const SORT_MODES = ['shuffle', 'forward', 'reverse'] as const;
 
 export type SortMode = (typeof SORT_MODES)[number];
@@ -19,6 +26,7 @@ export const SHELF_MODES = [
   'favorites',
   'hidden',
   'references',
+  'censored',
 ] as const;
 
 export type ShelfMode = (typeof SHELF_MODES)[number];
@@ -33,6 +41,10 @@ export const LYRIC_VIEW_DEFAULTS = {
   keyword: '',
   dateFrom: '',
   dateTo: '',
+  mood: [] as LyricMood[],
+  delivery: [] as LyricDelivery[],
+  songRole: [] as LyricSongRole[],
+  readiness: null as LyricReadiness | null,
 };
 
 const SETTINGS_STORAGE_KEY = 'dope-lyrics.lyric-settings';
@@ -54,6 +66,12 @@ function isSortMode(value: unknown): value is SortMode {
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
+}
+
+function nextShuffleSeed(current: number): number {
+  const next = Date.now();
+
+  return next === current ? current + 1 : next;
 }
 
 function parsePersistedSettings(raw: string): PersistedLyricSettings | null {
@@ -84,7 +102,7 @@ function parsePersistedSettings(raw: string): PersistedLyricSettings | null {
       sortMode: record.sortMode,
       fontSize: clamp(Math.round(record.fontSize), 16, 36),
       lineHeight: clamp(record.lineHeight, 1.1, 1.9),
-      lineGap: clamp(Math.round(record.lineGap), 1, 10),
+      lineGap: clamp(Number(record.lineGap.toFixed(2)), 1, 10),
       carouselSpeed: clamp(Math.round(record.carouselSpeed), 1, 10),
     };
   } catch {
@@ -135,6 +153,10 @@ interface LyricViewContextValue {
   keyword: string;
   dateFrom: string;
   dateTo: string;
+  mood: LyricMood[];
+  delivery: LyricDelivery[];
+  songRole: LyricSongRole[];
+  readiness: LyricReadiness | null;
   setSortMode: (mode: SortMode) => void;
   setShelfMode: (mode: ShelfMode) => void;
   setFontSize: (value: number) => void;
@@ -146,6 +168,10 @@ interface LyricViewContextValue {
   setKeyword: (value: string) => void;
   setDateFrom: (value: string) => void;
   setDateTo: (value: string) => void;
+  setMood: (value: LyricMood[]) => void;
+  setDelivery: (value: LyricDelivery[]) => void;
+  setSongRole: (value: LyricSongRole[]) => void;
+  setReadiness: (value: LyricReadiness | null) => void;
   resetSettings: () => void;
   resetFilters: () => void;
 }
@@ -171,6 +197,16 @@ export function LyricViewProvider({ children }: { children: ReactNode }) {
   const [keyword, setKeyword] = useState(LYRIC_VIEW_DEFAULTS.keyword);
   const [dateFrom, setDateFrom] = useState(LYRIC_VIEW_DEFAULTS.dateFrom);
   const [dateTo, setDateTo] = useState(LYRIC_VIEW_DEFAULTS.dateTo);
+  const [mood, setMood] = useState<LyricMood[]>(LYRIC_VIEW_DEFAULTS.mood);
+  const [delivery, setDelivery] = useState<LyricDelivery[]>(
+    LYRIC_VIEW_DEFAULTS.delivery
+  );
+  const [songRole, setSongRole] = useState<LyricSongRole[]>(
+    LYRIC_VIEW_DEFAULTS.songRole
+  );
+  const [readiness, setReadiness] = useState<LyricReadiness | null>(
+    LYRIC_VIEW_DEFAULTS.readiness
+  );
   const [settingsReady, setSettingsReady] = useState(false);
 
   useEffect(() => {
@@ -205,7 +241,7 @@ export function LyricViewProvider({ children }: { children: ReactNode }) {
     setSortModeState(mode);
 
     if (mode === 'shuffle') {
-      setShuffleSeed(Date.now());
+      setShuffleSeed(nextShuffleSeed);
     }
   }, []);
 
@@ -244,6 +280,10 @@ export function LyricViewProvider({ children }: { children: ReactNode }) {
     setKeyword(LYRIC_VIEW_DEFAULTS.keyword);
     setDateFrom(LYRIC_VIEW_DEFAULTS.dateFrom);
     setDateTo(LYRIC_VIEW_DEFAULTS.dateTo);
+    setMood(LYRIC_VIEW_DEFAULTS.mood);
+    setDelivery(LYRIC_VIEW_DEFAULTS.delivery);
+    setSongRole(LYRIC_VIEW_DEFAULTS.songRole);
+    setReadiness(LYRIC_VIEW_DEFAULTS.readiness);
   }, []);
 
   const value = useMemo(
@@ -260,6 +300,10 @@ export function LyricViewProvider({ children }: { children: ReactNode }) {
       keyword,
       dateFrom,
       dateTo,
+      mood,
+      delivery,
+      songRole,
+      readiness,
       setSortMode,
       setShelfMode,
       setFontSize,
@@ -271,6 +315,10 @@ export function LyricViewProvider({ children }: { children: ReactNode }) {
       setKeyword,
       setDateFrom,
       setDateTo,
+      setMood,
+      setDelivery,
+      setSongRole,
+      setReadiness,
       resetSettings,
       resetFilters,
     }),
@@ -287,6 +335,10 @@ export function LyricViewProvider({ children }: { children: ReactNode }) {
       keyword,
       dateFrom,
       dateTo,
+      mood,
+      delivery,
+      songRole,
+      readiness,
       setSortMode,
       setShelfMode,
       toggleTag,
@@ -351,6 +403,10 @@ export function hasActiveLyricFilters(options: {
   keyword: string;
   dateFrom: string;
   dateTo: string;
+  mood: LyricMood[];
+  delivery: LyricDelivery[];
+  songRole: LyricSongRole[];
+  readiness: LyricReadiness | null;
 }): boolean {
   return (
     options.shelfMode !== LYRIC_VIEW_DEFAULTS.shelfMode ||
@@ -358,6 +414,10 @@ export function hasActiveLyricFilters(options: {
     options.selectedEmojis.length > 0 ||
     options.keyword.trim().length > 0 ||
     options.dateFrom.trim().length > 0 ||
-    options.dateTo.trim().length > 0
+    options.dateTo.trim().length > 0 ||
+    options.mood.length > 0 ||
+    options.delivery.length > 0 ||
+    options.songRole.length > 0 ||
+    options.readiness !== null
   );
 }

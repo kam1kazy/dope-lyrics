@@ -92,6 +92,7 @@ export const mapMessage = ({
     user: {
       id: message.sender.id,
       username: message.sender.username ?? undefined,
+      displayName: message.sender.displayName,
       isAdmin: peerIsAdmin(message.sender),
     },
     chat: {

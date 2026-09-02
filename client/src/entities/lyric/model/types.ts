@@ -1,4 +1,11 @@
 import type { IUser } from '@/entities/user';
+import type {
+  LyricDelivery,
+  LyricMood,
+  LyricReadiness,
+  LyricRoleProfile,
+  LyricSongRole,
+} from '@/shared/lib/lyric-facets';
 
 export interface ILyric {
   id: number;
@@ -14,6 +21,12 @@ export interface ILyric {
   isReference: boolean;
   isHidden: boolean;
   isFavorite: boolean;
+  isCensored: boolean;
+  mood: LyricMood[];
+  delivery: LyricDelivery[];
+  songRole: LyricSongRole[];
+  roleProfiles: LyricRoleProfile[];
+  readiness: LyricReadiness | null;
   owner?: IUser | null;
   replyToMessage: number | null;
   media: IMedia | null;

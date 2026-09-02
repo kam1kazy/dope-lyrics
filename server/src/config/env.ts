@@ -25,6 +25,7 @@ const httpEnvSchema = z.object({
     .enum(['development', 'production', 'test'])
     .default('development'),
   PORT: z.coerce.number().int().positive().default(4000),
+  INGEST_URL: z.string().optional().default('http://127.0.0.1:4071'),
   DATABASE_URL: postgresUrl,
   SITE_URL: z.string().optional().default(''),
   CORS_ORIGINS: z.string().optional().default(''),
@@ -69,6 +70,7 @@ const botEnvSchema = z.object({
     .transform((value) => Number.parseInt(value, 10)),
   BOT_TYPE: z.string().optional().default(''),
   SITE_URL: z.string().optional().default(''),
+  INGEST_PORT: z.coerce.number().int().positive().default(4071),
 });
 
 export type BotEnv = z.infer<typeof botEnvSchema>;

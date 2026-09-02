@@ -1,12 +1,11 @@
 'use client';
 
-import { useQuery } from '@apollo/client/react';
 import {
   AlignVerticalSpaceAround,
   ArrowDownAZ,
   ArrowUpAZ,
+  Ban,
   Bookmark,
-  CalendarRange,
   CircleGauge,
   EyeOff,
   Layers,
@@ -14,7 +13,6 @@ import {
   Moon,
   RotateCcw,
   Shuffle,
-  Smile,
   Sparkles,
   Sun,
   Type,
@@ -23,7 +21,7 @@ import {
 import { useTheme } from 'next-themes';
 import { type ReactNode, useEffect, useState } from 'react';
 
-import { LYRIC_EMOJIS, LYRIC_TAGS } from '@/entities/lyric';
+import { CatalogIngest } from '@/features/catalog-ingest';
 import {
   hasActiveLyricFilters,
   hasCustomLyricSettings,
@@ -34,9 +32,9 @@ import {
 import { cn } from '@/shared/lib/utils/cn';
 import { Badge } from '@/shared/ui/shadcn/ui/badge';
 import { Button } from '@/shared/ui/shadcn/ui/button';
-import { Input } from '@/shared/ui/shadcn/ui/input';
 import { Label } from '@/shared/ui/shadcn/ui/label';
-import { Skeleton } from '@/shared/ui/shadcn/ui/skeleton';
+
+import { LyricFilterFields } from './lyric-filter-fields';
 
 type PanelTab = 'settings' | 'filters';
 
@@ -60,7 +58,7 @@ const SORT_OPTIONS: {
   label: string;
   icon: typeof Shuffle;
 }[] = [
-  { mode: 'shuffle', label: 'Случайный порядок', icon: Shuffle },
+  { mode: 'shuffle', label: 'Вперемешку', icon: Shuffle },
   { mode: 'forward', label: 'По порядку', icon: ArrowDownAZ },
   { mode: 'reverse', label: 'В обратном порядке', icon: ArrowUpAZ },
 ];
@@ -72,51 +70,10 @@ const SHELF_OPTIONS: {
 }[] = [
   { mode: 'all', label: 'Все', icon: Layers },
   { mode: 'favorites', label: 'Избранное', icon: Bookmark },
-  { mode: 'hidden', label: 'Скрытые', icon: EyeOff },
   { mode: 'references', label: 'Эталоны', icon: Sparkles },
+  { mode: 'censored', label: 'Цензура', icon: Ban },
+  { mode: 'hidden', label: 'Скрытые', icon: EyeOff },
 ];
-
-const TAG_SKELETON_WIDTHS = [
-  '4.5rem',
-  '3.25rem',
-  '5.5rem',
-  '3.75rem',
-  '4rem',
-  '6rem',
-  '3.5rem',
-  '5rem',
-] as const;
-
-function ChipSkeletons({
-  label,
-  kind,
-}: {
-  label: string;
-  kind: 'tags' | 'emojis';
-}) {
-  return (
-    <div
-      data-swipe-ignore
-      role="status"
-      aria-live="polite"
-      aria-busy="true"
-      aria-label={label}
-      className="flex max-h-28 flex-wrap gap-1.5 overflow-hidden"
-    >
-      {kind === 'tags'
-        ? TAG_SKELETON_WIDTHS.map((width) => (
-            <Skeleton
-              key={width}
-              className="h-5 rounded-md"
-              style={{ width }}
-            />
-          ))
-        : Array.from({ length: 8 }, (_, index) => (
-            <Skeleton key={index} className="size-8 rounded-md" />
-          ))}
-    </div>
-  );
-}
 
 function SliderRow({
   id,
@@ -140,16 +97,16 @@ function SliderRow({
   onChange: (value: number) => void;
 }) {
   return (
-    <div className="grid grid-cols-[1.5rem_7.25rem_minmax(0,1fr)_2.25rem] items-center gap-3">
+    <div className="grid grid-cols-[1.5rem_7.25rem_minmax(0,1fr)_2.25rem] items-center gap-3 md:grid-cols-[1.75rem_8.5rem_minmax(0,1fr)_2.5rem] md:gap-4">
       <span
-        className="text-muted-foreground flex size-6 items-center justify-center overflow-visible [&_svg]:overflow-visible"
+        className="text-muted-foreground flex size-6 items-center justify-center overflow-visible md:size-7 [&_svg]:overflow-visible"
         aria-hidden
       >
         {icon}
       </span>
       <Label
         htmlFor={id}
-        className="text-muted-foreground whitespace-nowrap text-xs font-normal"
+        className="text-muted-foreground whitespace-nowrap text-xs font-normal md:text-sm"
       >
         {label}
       </Label>
@@ -164,20 +121,20 @@ function SliderRow({
         aria-label={label}
         onChange={(event) => onChange(Number(event.target.value))}
         className={cn(
-          'h-1.5 w-full cursor-pointer appearance-none rounded-full bg-muted',
+          'h-1.5 w-full cursor-pointer appearance-none rounded-full bg-muted md:h-2',
           'accent-primary',
-          '[&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:size-3.5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full',
-          '[&::-moz-range-thumb]:bg-primary [&::-moz-range-thumb]:size-3.5 [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:rounded-full'
+          '[&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:size-3.5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full md:[&::-webkit-slider-thumb]:size-4',
+          '[&::-moz-range-thumb]:bg-primary [&::-moz-range-thumb]:size-3.5 [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:rounded-full md:[&::-moz-range-thumb]:size-4'
         )}
       />
-      <span className="text-muted-foreground text-right text-xs tabular-nums">
+      <span className="text-muted-foreground text-right text-xs tabular-nums md:text-sm">
         {display}
       </span>
     </div>
   );
 }
 
-function SettingsTab() {
+function SettingsTab({ checkIngest }: { checkIngest: boolean }) {
   const {
     sortMode,
     setSortMode,
@@ -206,8 +163,8 @@ function SettingsTab() {
   }, []);
 
   return (
-    <div className="flex flex-col gap-4 pb-1">
-      <div className="grid grid-cols-2 gap-2">
+    <div className="flex flex-col gap-4 pb-1 md:gap-6">
+      <div className="grid grid-cols-2 gap-2 md:gap-3">
         <div
           role="radiogroup"
           aria-label="Порядок показа"
@@ -223,18 +180,28 @@ function SettingsTab() {
                 role="radio"
                 size="icon-sm"
                 variant="ghost"
-                aria-label={label}
+                aria-label={
+                  mode === 'shuffle'
+                    ? 'Вперемешку. Повторное нажатие перемешивает заново'
+                    : label
+                }
                 aria-checked={selected}
-                title={label}
+                title={
+                  mode === 'shuffle'
+                    ? 'Вперемешку — ещё раз, чтобы перемешать заново'
+                    : label
+                }
                 className={cn(
-                  'h-8 w-full rounded-md',
+                  'h-8 w-full rounded-md md:h-10',
                   selected
                     ? 'bg-background text-foreground shadow-sm'
                     : 'text-muted-foreground'
                 )}
-                onClick={() => setSortMode(mode)}
+                onClick={() => {
+                  setSortMode(mode);
+                }}
               >
-                <Icon className="size-4" />
+                <Icon className="size-4 md:size-5" />
               </Button>
             );
           })}
@@ -259,21 +226,21 @@ function SettingsTab() {
                 aria-checked={selected}
                 title={label}
                 className={cn(
-                  'h-8 w-full rounded-md',
+                  'h-8 w-full rounded-md md:h-10',
                   selected
                     ? 'bg-background text-foreground shadow-sm'
                     : 'text-muted-foreground'
                 )}
                 onClick={() => setTheme(id)}
               >
-                <Icon className="size-4" />
+                <Icon className="size-4 md:size-5" />
               </Button>
             );
           })}
         </div>
       </div>
 
-      <div className="flex flex-col gap-4 overflow-visible">
+      <div className="flex flex-col gap-4 overflow-visible md:gap-5">
         <SliderRow
           id="lyric-font-size"
           icon={<Type className="size-4" />}
@@ -301,10 +268,10 @@ function SettingsTab() {
           icon={<UnfoldVertical className="size-4" />}
           label="Отступ строк"
           value={lineGap}
-          display={String(lineGap)}
+          display={lineGap.toFixed(1)}
           min={1}
           max={10}
-          step={1}
+          step={0.05}
           onChange={setLineGap}
         />
         <SliderRow
@@ -323,13 +290,15 @@ function SettingsTab() {
       <Button
         type="button"
         variant="outline"
-        className="w-full gap-2"
+        className="w-full gap-2 md:h-10"
         disabled={!canReset}
         onClick={resetSettings}
       >
         <RotateCcw className="size-4" />
         Сбросить настройки
       </Button>
+
+      <CatalogIngest enabled={checkIngest} />
     </div>
   );
 }
@@ -339,16 +308,24 @@ function FiltersTab() {
     shelfMode,
     setShelfMode,
     selectedTags,
-    toggleTag,
     selectedEmojis,
-    toggleEmoji,
     keyword,
-    setKeyword,
     dateFrom,
-    setDateFrom,
     dateTo,
-    setDateTo,
     resetFilters,
+    mood,
+    delivery,
+    songRole,
+    readiness,
+    setMood,
+    setDelivery,
+    setSongRole,
+    setReadiness,
+    setKeyword,
+    setDateFrom,
+    setDateTo,
+    toggleTag,
+    toggleEmoji,
   } = useLyricView();
   const canReset = hasActiveLyricFilters({
     shelfMode,
@@ -357,27 +334,21 @@ function FiltersTab() {
     keyword,
     dateFrom,
     dateTo,
+    mood,
+    delivery,
+    songRole,
+    readiness,
   });
 
-  const { data: tagsData, loading: tagsLoading } = useQuery<{
-    lyricTags: string[];
-  }>(LYRIC_TAGS);
-  const { data: emojisData, loading: emojisLoading } = useQuery<{
-    lyricEmojis: string[];
-  }>(LYRIC_EMOJIS);
-
-  const tags = tagsData?.lyricTags ?? [];
-  const emojis = emojisData?.lyricEmojis ?? [];
-
   return (
-    <div className="flex flex-col gap-4 pb-1">
-      <div className="flex flex-col gap-2">
-        <Label className="text-muted-foreground text-xs font-normal">
+    <div className="flex flex-col gap-4 pb-1 md:gap-6">
+      <div className="flex flex-col gap-2 md:gap-3">
+        <Label className="text-muted-foreground text-xs font-normal md:text-sm">
           Полка
         </Label>
         <div
           data-swipe-ignore
-          className="flex flex-wrap gap-1.5"
+          className="flex flex-wrap gap-1.5 md:gap-2"
           role="radiogroup"
           aria-label="Полка каталога"
         >
@@ -396,9 +367,9 @@ function FiltersTab() {
               >
                 <Badge
                   variant={selected ? 'default' : 'secondary'}
-                  className="inline-flex items-center gap-1 px-2 py-0.5 text-xs"
+                  className="inline-flex items-center gap-1 px-2 py-0.5 text-xs md:gap-1.5 md:px-2.5 md:py-1 md:text-sm"
                 >
-                  <Icon className="size-3" aria-hidden />
+                  <Icon className="size-3 md:size-3.5" aria-hidden />
                   {label}
                 </Badge>
               </button>
@@ -407,126 +378,78 @@ function FiltersTab() {
         </div>
       </div>
 
-      <div className="flex flex-col gap-2">
-        <Label className="text-muted-foreground flex items-center gap-1.5 text-xs font-normal">
-          <CalendarRange className="size-3.5" aria-hidden />
-          Период
-        </Label>
-        <div className="grid grid-cols-2 gap-2">
-          <Input
-            id="filter-date-from"
-            type="date"
-            value={dateFrom}
-            aria-label="Дата с"
-            onChange={(event) => setDateFrom(event.target.value)}
-            className="h-9"
-          />
-          <Input
-            id="filter-date-to"
-            type="date"
-            value={dateTo}
-            aria-label="Дата по"
-            onChange={(event) => setDateTo(event.target.value)}
-            className="h-9"
-          />
-        </div>
-      </div>
+      <LyricFilterFields
+        idPrefix="carousel-filter"
+        value={{
+          selectedTags,
+          selectedEmojis,
+          keyword,
+          dateFrom,
+          dateTo,
+          mood,
+          delivery,
+          songRole,
+          readiness,
+        }}
+        onChange={(patch) => {
+          if (patch.selectedTags) {
+            const next = patch.selectedTags;
+            const added = next.find((tag) => !selectedTags.includes(tag));
+            const removed = selectedTags.find((tag) => !next.includes(tag));
+            const tag = added ?? removed;
 
-      <div className="flex flex-col gap-2">
-        <Label className="text-muted-foreground text-xs font-normal">
-          Теги
-        </Label>
-        {tagsLoading ? (
-          <ChipSkeletons kind="tags" label="Загрузка тегов" />
-        ) : tags.length === 0 ? (
-          <p className="text-muted-foreground text-xs">Тегов пока нет</p>
-        ) : (
-          <div
-            data-swipe-ignore
-            className="flex max-h-28 flex-wrap gap-1.5 overflow-y-auto"
-          >
-            {tags.map((tag) => {
-              const selected = selectedTags.includes(tag);
+            if (tag) {
+              toggleTag(tag);
+            }
+          }
 
-              return (
-                <button
-                  key={tag}
-                  type="button"
-                  onClick={() => toggleTag(tag)}
-                  className="cursor-pointer"
-                >
-                  <Badge
-                    variant={selected ? 'default' : 'secondary'}
-                    className="px-2 py-0.5 text-xs"
-                  >
-                    #{tag}
-                  </Badge>
-                </button>
-              );
-            })}
-          </div>
-        )}
-      </div>
+          if (patch.selectedEmojis) {
+            const next = patch.selectedEmojis;
+            const added = next.find((emoji) => !selectedEmojis.includes(emoji));
+            const removed = selectedEmojis.find(
+              (emoji) => !next.includes(emoji)
+            );
+            const emoji = added ?? removed;
 
-      <div className="flex flex-col gap-2">
-        <Label className="text-muted-foreground flex items-center gap-1.5 text-xs font-normal">
-          <Smile className="size-3.5" aria-hidden />
-          Реакции
-        </Label>
-        {emojisLoading ? (
-          <ChipSkeletons kind="emojis" label="Загрузка реакций" />
-        ) : emojis.length === 0 ? (
-          <p className="text-muted-foreground text-xs">Реакций пока нет</p>
-        ) : (
-          <div
-            data-swipe-ignore
-            className="flex max-h-28 flex-wrap gap-1.5 overflow-y-auto"
-          >
-            {emojis.map((emoji) => {
-              const selected = selectedEmojis.includes(emoji);
+            if (emoji) {
+              toggleEmoji(emoji);
+            }
+          }
 
-              return (
-                <button
-                  key={emoji}
-                  type="button"
-                  onClick={() => toggleEmoji(emoji)}
-                  className="cursor-pointer"
-                  aria-label={`Реакция ${emoji}`}
-                  aria-pressed={selected}
-                >
-                  <Badge
-                    variant={selected ? 'default' : 'secondary'}
-                    className="inline-flex min-h-8 min-w-8 items-center justify-center px-2.5 py-1.5 text-base leading-none"
-                  >
-                    {emoji}
-                  </Badge>
-                </button>
-              );
-            })}
-          </div>
-        )}
-      </div>
+          if (patch.keyword !== undefined) {
+            setKeyword(patch.keyword);
+          }
 
-      <div className="flex flex-col gap-2">
-        <Label
-          htmlFor="filter-keywords"
-          className="text-muted-foreground text-xs font-normal"
-        >
-          Ключевые слова
-        </Label>
-        <Input
-          id="filter-keywords"
-          value={keyword}
-          onChange={(event) => setKeyword(event.target.value)}
-          placeholder="Часть слова в тексте"
-          className="h-9"
-        />
-      </div>
+          if (patch.dateFrom !== undefined) {
+            setDateFrom(patch.dateFrom);
+          }
+
+          if (patch.dateTo !== undefined) {
+            setDateTo(patch.dateTo);
+          }
+
+          if (patch.mood !== undefined) {
+            setMood(patch.mood);
+          }
+
+          if (patch.delivery !== undefined) {
+            setDelivery(patch.delivery);
+          }
+
+          if (patch.songRole !== undefined) {
+            setSongRole(patch.songRole);
+          }
+
+          if (patch.readiness !== undefined) {
+            setReadiness(patch.readiness);
+          }
+        }}
+      />
 
       <Button
         type="button"
         variant="outline"
-        className="w-full gap-2"
+        className="w-full gap-2 md:h-10"
         disabled={!canReset}
         onClick={resetFilters}
       >
@@ -537,16 +460,20 @@ function FiltersTab() {
   );
 }
 
-export function FilterPanel() {
+export function FilterPanel({
+  checkIngest = false,
+}: {
+  checkIngest?: boolean;
+}) {
   const [tab, setTab] = useState<PanelTab>('settings');
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-3">
+    <div className="flex min-h-0 flex-1 flex-col gap-3 md:gap-4">
       <div
         role="tablist"
         aria-label="Разделы панели"
         data-swipe-ignore
-        className="bg-muted grid shrink-0 grid-cols-2 rounded-lg p-1"
+        className="bg-muted grid shrink-0 grid-cols-2 rounded-lg p-1 md:p-1.5"
       >
         {TABS.map(({ id, label }) => {
           const selected = tab === id;
@@ -561,7 +488,7 @@ export function FilterPanel() {
               aria-controls={`panel-tabpanel-${id}`}
               variant="ghost"
               className={cn(
-                'h-8 rounded-md text-sm',
+                'h-8 rounded-md text-sm md:h-10 md:text-base',
                 selected
                   ? 'bg-background text-foreground shadow-sm'
                   : 'text-muted-foreground'
@@ -580,7 +507,10 @@ export function FilterPanel() {
         aria-labelledby={`panel-tab-${tab}`}
         className="min-h-0 flex-1 overflow-y-auto"
       >
-        {tab === 'settings' ? <SettingsTab /> : <FiltersTab />}
+        <div hidden={tab !== 'settings'}>
+          <SettingsTab checkIngest={checkIngest} />
+        </div>
+        {tab === 'filters' ? <FiltersTab /> : null}
       </div>
     </div>
   );

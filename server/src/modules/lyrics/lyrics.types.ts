@@ -10,6 +10,10 @@ export interface ILyric {
   editDate: Date | null;
   isPinned: boolean;
   isChannelPost: boolean;
+  mood?: string[];
+  delivery?: string[];
+  songRole?: string[];
+  readiness?: string | null;
   owner?: IUser | null;
   replyToMessage: number | null;
   media: IMedia | null;

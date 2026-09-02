@@ -1,4 +1,43 @@
 export const typeDefinitions = /* GraphQL */ `
+  enum LyricMood {
+    AGGRESSION
+    LONGING
+    IRONY
+    TENDERNESS
+    BRAVADO
+    ANXIETY
+    COLD
+    EUPHORIA
+  }
+
+  enum LyricDelivery {
+    PUNCH
+    FLOW
+    HOOK
+    SPOKEN
+    TUNE
+    ADLIB
+    TONGUE_TWISTER
+  }
+
+  enum LyricSongRole {
+    VERSE
+    HOOK
+    BRIDGE
+    INTRO
+    SCENE
+    PUNCHLINE
+    SKETCH
+  }
+
+  enum LyricReadiness {
+    LINE
+    FRAGMENT
+    BLOCK
+    TEXT
+    READY
+  }
+
   type User {
     id: Int!
     username: String!
@@ -16,6 +55,12 @@ export const typeDefinitions = /* GraphQL */ `
     isReference: Boolean!
     isHidden: Boolean!
     isFavorite: Boolean!
+    isCensored: Boolean!
+    mood: [LyricMood!]!
+    delivery: [LyricDelivery!]!
+    songRole: [LyricSongRole!]!
+    roleProfiles: [LyricRoleProfile!]!
+    readiness: LyricReadiness
     replyToMessage: Int
 
     message: Message
@@ -24,6 +69,18 @@ export const typeDefinitions = /* GraphQL */ `
     media: Media
 
     userId: Int!
+  }
+
+  type LyricRoleProfile {
+    songRole: LyricSongRole!
+    mood: [LyricMood!]!
+    delivery: [LyricDelivery!]!
+  }
+
+  input LyricRoleProfileInput {
+    songRole: LyricSongRole!
+    mood: [LyricMood!]!
+    delivery: [LyricDelivery!]!
   }
 
   type Message {
@@ -109,6 +166,16 @@ export const typeDefinitions = /* GraphQL */ `
     count: Int!
   }
 
+  type LyricIngestPreview {
+    available: Boolean!
+    pendingCount: Int!
+  }
+
+  type LyricIngestResult {
+    available: Boolean!
+    addedCount: Int!
+  }
+
   type Query {
     users: [User!]!
     lyricTags: [String!]!
@@ -125,8 +192,16 @@ export const typeDefinitions = /* GraphQL */ `
       referencesOnly: Boolean
       favoritesOnly: Boolean
       hiddenOnly: Boolean
+      censoredOnly: Boolean
       demoName: String
+      demosOnly: Boolean
+      oldestFirst: Boolean
+      mood: [LyricMood!]
+      delivery: [LyricDelivery!]
+      songRole: [LyricSongRole!]
+      readiness: LyricReadiness
     ): [Lyric!]!
+    lyricIngestPreview: LyricIngestPreview!
   }
 
   type Mutation {
@@ -135,6 +210,15 @@ export const typeDefinitions = /* GraphQL */ `
       isHidden: Boolean
       isFavorite: Boolean
       isReference: Boolean
+      isCensored: Boolean
     ): Lyric!
+    updateLyricProfile(
+      id: Int!
+      mood: [LyricMood!]
+      delivery: [LyricDelivery!]
+      roleProfiles: [LyricRoleProfileInput!]
+      readiness: LyricReadiness
+    ): Lyric!
+    ingestPendingLyrics: LyricIngestResult!
   }
 `;

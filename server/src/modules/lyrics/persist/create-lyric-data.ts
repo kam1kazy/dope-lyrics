@@ -1,3 +1,4 @@
+import { readinessFromLineCount } from '~/modules/lyrics/lyric-facets';
 import type { IChatHistoryItem } from '~/modules/lyrics/lyrics.types';
 import type { IUser } from '~/modules/users/users.types';
 
@@ -12,6 +13,7 @@ export const createLyricData = (
     editDate: record.editDate,
     isPinned: record.isPinned,
     isChannelPost: record.isChannelPost,
+    readiness: readinessFromLineCount(record.message?.paragraph_count),
 
     message: record.message
       ? {

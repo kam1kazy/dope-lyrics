@@ -25,7 +25,7 @@
     "typecheck": "tsc --noEmit",
     "check": "bun run lint && bun run format:check && bun run typecheck",
     "fix": "bun run lint:fix && bun run format && bun run typecheck",
-    "kill-port": "for p in 4000 4001 4002 4003 4004 4005 4006 4007 4008 4009; do pids=$(lsof -ti tcp:$p); [ -n \"$pids\" ] && kill -9 $pids; done"
+    "kill-port": "for p in 4000 4001 4002 4003 4004 4005 4006 4007 4008 4009 4071; do pids=$(lsof -ti tcp:$p); [ -n \"$pids\" ] && kill -9 $pids; done"
   },
   "dependencies": {
     "@elysiajs/cors": "^1.4.2",

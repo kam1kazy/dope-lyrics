@@ -117,6 +117,7 @@ const BOTTOM_WISPS: Wisp[] = [
 const ENTER_MS = 1180;
 const EXIT_MS = 860;
 const REDUCED_MS = 180;
+const WAVE_SHIFT_X = 40;
 
 function clamp01(value: number) {
   return Math.min(1, Math.max(0, value));
@@ -156,6 +157,14 @@ function isDarkTheme() {
 
 function bottomTaper(x: number, width: number) {
   return Math.pow(Math.max(0, 1 - (x / width) * 1.04), 0.72);
+}
+
+function waveLocalX(x: number) {
+  return Math.max(0, x - WAVE_SHIFT_X);
+}
+
+function leftEdgeLock(nx: number) {
+  return Math.min(1, nx / 0.045);
 }
 
 function waveOffset(nx: number, t: number, layer: WaveLayer) {
@@ -283,19 +292,25 @@ export function PauseAtmosphere({ active }: { active: boolean }) {
         return;
       }
 
-      const step = width > 900 ? 5 : 4;
-      ctx.beginPath();
-      ctx.moveTo(0, height);
-      for (let x = 0; x <= width; x += step) {
-        const nx = x / Math.max(width, 1);
-        const y =
+      const ribbonY = (x: number) => {
+        const localX = waveLocalX(x);
+        const nx = localX / Math.max(width, 1);
+        return (
           height -
           (layer.base * (0.84 + breath * 0.16) * rise +
-            waveOffset(nx, t, layer) * inflate) *
-            bottomTaper(x, width);
-        ctx.lineTo(x, y);
+            waveOffset(nx, t, layer) * inflate * leftEdgeLock(nx)) *
+            bottomTaper(localX, width)
+        );
+      };
+
+      const step = width > 900 ? 5 : 4;
+      ctx.beginPath();
+      ctx.moveTo(0, height + 2);
+      for (let x = 0; x < width; x += step) {
+        ctx.lineTo(x, ribbonY(x));
       }
-      ctx.lineTo(width, height);
+      ctx.lineTo(width, ribbonY(width));
+      ctx.lineTo(width, height + 2);
       ctx.closePath();
 
       const gradient = ctx.createLinearGradient(
@@ -324,31 +339,37 @@ export function PauseAtmosphere({ active }: { active: boolean }) {
         return;
       }
 
+      const wispY = (x: number) => {
+        const localX = waveLocalX(x);
+        const nx = localX / Math.max(width, 1);
+        const lock = leftEdgeLock(nx);
+        return (
+          height -
+          (wisp.base * (0.88 + breath * 0.12) * rise +
+            (Math.sin(nx * wisp.freq + t * wisp.speed + wisp.phase) *
+              wisp.amp *
+              inflate +
+              Math.sin(nx * wisp.freq * 1.7 + t * wisp.speed * 0.6) *
+                wisp.amp *
+                0.35 *
+                inflate) *
+              lock) *
+            bottomTaper(localX, width)
+        );
+      };
+
       ctx.beginPath();
       const step = 6;
       let started = false;
       for (let x = 0; x <= width; x += step) {
-        const nx = x / Math.max(width, 1);
-        const taper = bottomTaper(x, width);
-        if (taper <= 0.02) {
-          continue;
+        if (bottomTaper(waveLocalX(x), width) <= 0.02) {
+          break;
         }
-        const y =
-          height -
-          (wisp.base * (0.88 + breath * 0.12) * rise +
-            Math.sin(nx * wisp.freq + t * wisp.speed + wisp.phase) *
-              wisp.amp *
-              inflate +
-            Math.sin(nx * wisp.freq * 1.7 + t * wisp.speed * 0.6) *
-              wisp.amp *
-              0.35 *
-              inflate) *
-            taper;
         if (!started) {
-          ctx.moveTo(x, y);
+          ctx.moveTo(x, wispY(x));
           started = true;
         } else {
-          ctx.lineTo(x, y);
+          ctx.lineTo(x, wispY(x));
         }
       }
       ctx.strokeStyle = `rgb(${rgb} / ${wisp.alpha * (dark ? 1 : 0.7) * rise})`;
@@ -398,7 +419,7 @@ export function PauseAtmosphere({ active }: { active: boolean }) {
         }
 
         const pulse = 0.45 + 0.55 * Math.sin(now * 0.0018 + particle.seed);
-        const edgeFade = bottomTaper(particle.x, width);
+        const edgeFade = bottomTaper(waveLocalX(particle.x), width);
 
         if (
           particle.x > width * 0.98 ||
@@ -504,7 +525,7 @@ export function PauseAtmosphere({ active }: { active: boolean }) {
 
   return (
     <div aria-hidden className="lyric-pause-atmosphere">
-      <canvas ref={canvasRef} className="size-full" />
+      <canvas ref={canvasRef} className="block size-full" />
     </div>
   );
 }

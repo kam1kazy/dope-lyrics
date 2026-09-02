@@ -1,4 +1,6 @@
 import { env } from '~/config/env';
+import { fetchIngestApply, fetchIngestPreview } from '~/graphql/ingest-client';
+import { roleProfilesFromJson } from '~/modules/lyrics/lyric-facets';
 import { lyricsService } from '~/modules/lyrics/lyrics.service';
 import { usersService } from '~/modules/users/users.service';
 
@@ -15,7 +17,14 @@ type LyricsArgs = {
   referencesOnly?: boolean | null;
   favoritesOnly?: boolean | null;
   hiddenOnly?: boolean | null;
+  censoredOnly?: boolean | null;
   demoName?: string | null;
+  demosOnly?: boolean | null;
+  oldestFirst?: boolean | null;
+  mood?: string[] | null;
+  delivery?: string[] | null;
+  songRole?: string[] | null;
+  readiness?: string | null;
 };
 
 type UpdateLyricFlagsArgs = {
@@ -23,6 +32,15 @@ type UpdateLyricFlagsArgs = {
   isHidden?: boolean | null;
   isFavorite?: boolean | null;
   isReference?: boolean | null;
+  isCensored?: boolean | null;
+};
+
+type UpdateLyricProfileArgs = {
+  id: number;
+  mood?: string[] | null;
+  delivery?: string[] | null;
+  roleProfiles?: unknown;
+  readiness?: string | null;
 };
 
 const clampLimit = (value: number | null | undefined): number => {
@@ -80,8 +98,22 @@ export const resolvers = {
         referencesOnly: args.referencesOnly,
         favoritesOnly: args.favoritesOnly,
         hiddenOnly: args.hiddenOnly,
+        censoredOnly: args.censoredOnly,
         demoName: args.demoName,
+        demosOnly: args.demosOnly,
+        oldestFirst: args.oldestFirst,
+        mood: args.mood,
+        delivery: args.delivery,
+        songRole: args.songRole,
+        readiness: args.readiness,
       });
+    },
+    lyricIngestPreview: (
+      _parent: unknown,
+      _args: unknown,
+      _context: GraphQLContext
+    ) => {
+      return fetchIngestPreview();
     },
   },
   Mutation: {
@@ -94,7 +126,32 @@ export const resolvers = {
         isHidden: args.isHidden ?? undefined,
         isFavorite: args.isFavorite ?? undefined,
         isReference: args.isReference ?? undefined,
+        isCensored: args.isCensored ?? undefined,
       });
+    },
+    updateLyricProfile: (
+      _parent: unknown,
+      args: UpdateLyricProfileArgs,
+      _context: GraphQLContext
+    ) => {
+      return lyricsService.updateProfile(args.id, {
+        mood: args.mood,
+        delivery: args.delivery,
+        roleProfiles: args.roleProfiles,
+        readiness: args.readiness,
+      });
+    },
+    ingestPendingLyrics: (
+      _parent: unknown,
+      _args: unknown,
+      _context: GraphQLContext
+    ) => {
+      return fetchIngestApply();
+    },
+  },
+  Lyric: {
+    roleProfiles: (parent: { roleProfiles?: unknown }) => {
+      return roleProfilesFromJson(parent.roleProfiles);
     },
   },
 };

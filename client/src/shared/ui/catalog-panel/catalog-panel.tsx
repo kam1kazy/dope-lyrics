@@ -10,6 +10,7 @@ interface CatalogPanelProps {
   onOpenChange: (open: boolean) => void;
   children: ReactNode;
   onPointerDownOutside?: () => void;
+  className?: string;
 }
 
 export function CatalogPanel({
@@ -17,6 +18,7 @@ export function CatalogPanel({
   onOpenChange,
   children,
   onPointerDownOutside,
+  className,
 }: CatalogPanelProps) {
   return (
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
@@ -28,7 +30,8 @@ export function CatalogPanel({
         />
         <DialogPrimitive.Content
           className={cn(
-            'bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left fixed inset-y-0 left-0 z-50 flex w-full max-w-[min(100%,640px)] outline-none duration-300'
+            'bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left fixed inset-y-0 left-0 z-50 flex w-full max-w-[min(100%,640px)] overflow-hidden outline-none duration-300 ease-out transition-[max-width]',
+            className
           )}
           onClick={(event) => {
             event.stopPropagation();
