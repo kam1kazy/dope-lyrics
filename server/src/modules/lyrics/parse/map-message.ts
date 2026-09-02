@@ -1,8 +1,8 @@
 import { Message, MessageEntity, Peer } from '@mtcute/core';
 
-import { IEmoji, ILyric, IMedia } from '~/types/lyric';
+import type { IEmoji, ILyric, IMedia } from '~/modules/lyrics/lyrics.types';
 
-interface IProps {
+interface MapMessageProps {
   message: Message;
   handlerCountParagraphs: (text: string) => number;
   handlerCountWords: (text: string) => number;
@@ -45,14 +45,14 @@ const toLyricMedia = (media: Message['media']): IMedia | null => {
   };
 };
 
-const messageObject = ({
+export const mapMessage = ({
   message,
   handlerCountParagraphs,
   handlerCountWords,
   handlerCountReactions,
   handlerWithoutHashtags,
   hashtagStringsOnly,
-}: IProps): ILyric => {
+}: MapMessageProps): ILyric => {
   const reactionList = message.reactions?.reactions ?? [];
   const emojis: IEmoji[] = reactionList.map((reaction) => {
     return {
@@ -107,5 +107,3 @@ const messageObject = ({
     media: toLyricMedia(message.media),
   };
 };
-
-export default messageObject;

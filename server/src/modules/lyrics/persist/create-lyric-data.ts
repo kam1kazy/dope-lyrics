@@ -1,12 +1,11 @@
-import { IChatHistoryItem } from '~/types/prismaCreate';
-import { IUser } from '~/types/user';
+import type { IChatHistoryItem } from '~/modules/lyrics/lyrics.types';
+import type { IUser } from '~/modules/users/users.types';
 
-export const messageObject = (
+export const createLyricData = (
   record: IChatHistoryItem,
   userId: IUser['id']
 ) => {
   return {
-    //? LYRICS
     userId,
     lyric_id: record.message?.message_id ?? null,
     date: record.date,
@@ -14,7 +13,6 @@ export const messageObject = (
     isPinned: record.isPinned,
     isChannelPost: record.isChannelPost,
 
-    //? MESSAGE
     message: record.message
       ? {
           create: {
@@ -23,7 +21,6 @@ export const messageObject = (
             word_count: record.message.word_count,
             paragraph_count: record.message.paragraph_count,
 
-            //? REACTION
             reactions: record.message.reactions
               ? {
                   create: {
@@ -38,7 +35,6 @@ export const messageObject = (
                 }
               : undefined,
 
-            //? HASHTAG
             hashtags: record.message.hashtags
               ? {
                   create: {
@@ -51,7 +47,6 @@ export const messageObject = (
         }
       : undefined,
 
-    //? USERS
     user: record.user
       ? {
           create: {
@@ -63,7 +58,6 @@ export const messageObject = (
         }
       : undefined,
 
-    //? CHAT
     chat: record.chat
       ? {
           create: {
@@ -74,10 +68,8 @@ export const messageObject = (
         }
       : undefined,
 
-    //? REPLY
     replyToMessage: record.replyToMessage ?? null,
 
-    //? MEDIA
     media: record.media
       ? {
           create: {

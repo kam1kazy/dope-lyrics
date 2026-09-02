@@ -1,14 +1,12 @@
 import fs from 'fs';
 import path from 'path';
 
-// TYPES
-import { ILyric } from '../../types/lyric';
+import type { ILyric } from '~/modules/lyrics/lyrics.types';
 
-// Создаем JSON файл с данными
-export const createJSONdata = (chatHistory: ILyric[]) => {
+export const createJsonData = (chatHistory: ILyric[]) => {
   const jsonData = JSON.stringify(chatHistory, null, 2);
 
-  const dirName = path.join(__dirname, '../../../bot-data', 'data');
+  const dirName = path.join(process.cwd(), 'bot-data', 'data');
   const fileName = 'chatHistory.json';
   const fullPath = path.join(dirName, fileName);
 

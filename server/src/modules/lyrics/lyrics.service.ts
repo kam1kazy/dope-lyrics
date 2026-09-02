@@ -1,14 +1,24 @@
-import { messageObject } from '~/handlers/db';
+import { lyricInclude } from '~/graphql/lyric-include';
 import { prisma } from '~/infrastructure/prisma';
-import { IChatHistoryItem } from '~/types/prismaCreate';
-import { IUser } from '~/types/user';
+import type { IChatHistoryItem } from '~/modules/lyrics/lyrics.types';
+import { createLyricData } from '~/modules/lyrics/persist/create-lyric-data';
+import { usersService } from '~/modules/users/users.service';
 
 const INSERT_CONCURRENCY = 8;
 
-export class PrismaService {
+export class LyricsService {
   private readonly prisma = prisma;
 
-  async clearDatabase() {
+  list(limit: number, offset: number) {
+    return this.prisma.lyrics.findMany({
+      take: limit,
+      skip: offset,
+      orderBy: { date: 'desc' },
+      include: lyricInclude,
+    });
+  }
+
+  async clearCatalog() {
     try {
       await this.prisma.emoji.deleteMany();
       await this.prisma.reactions.deleteMany();
@@ -26,49 +36,15 @@ export class PrismaService {
     }
   }
 
-  private async getOwner() {
-    return (
-      (await this.prisma.users.findUnique({ where: { id: 1 } })) ??
-      (await this.prisma.users.findFirst())
-    );
-  }
-
-  async loadUsers(users: IUser[]) {
-    try {
-      const userExists = await this.getOwner();
-
-      if (!userExists) {
-        console.log(`\nPRISMA: 🙅 Users не был найден`);
-        console.log(`PRISMA: 📝 Начало загрузки ${users.length} пользователей`);
-        await this.prisma.users.createMany({
-          data: users.map(({ id, username, email, password }) => ({
-            id: id > 0 ? id : 1,
-            username,
-            email,
-            password,
-          })),
-          skipDuplicates: true,
-        });
-      } else {
-        console.log(`PRISMA: 🫄 UserID: ${userExists.id} уже существует`);
-        return;
-      }
-
-      console.log(`PRISMA: 📊 Итого загружено пользователей: ${users.length}`);
-    } catch (error) {
-      console.error('PRISMA: ❌ Ошибка при загрузке пользователей:', error);
-    }
-  }
-
   async loadNewRecords(records: IChatHistoryItem[]) {
     try {
-      const userExists = await this.getOwner();
+      const owner = await usersService.getOwner();
 
-      if (!userExists) {
+      if (!owner) {
         console.log(`\nPRISMA: 🙅 Users не был найден`);
         return;
       }
-      console.log(`\nPRISMA: 🫄 Пользователь UserID: ${userExists.id} найден`);
+      console.log(`\nPRISMA: 🫄 Пользователь UserID: ${owner.id} найден`);
       console.log(`PRISMA: 📝 Начало загрузки ${records.length} записей`);
 
       const existing = await this.prisma.lyrics.findMany({
@@ -94,7 +70,7 @@ export class PrismaService {
           batch.map(async (item) => {
             try {
               await this.prisma.lyrics.create({
-                data: messageObject(item, userExists.id),
+                data: createLyricData(item, owner.id),
               });
               existingIds.add(item.message.message_id);
               loaded += 1;
@@ -145,4 +121,4 @@ export class PrismaService {
   }
 }
 
-export const prismaService = new PrismaService();
+export const lyricsService = new LyricsService();

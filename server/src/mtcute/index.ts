@@ -1,30 +1,28 @@
-// TELEGRAM BOT
 import { BotKeyboard, TelegramClient } from '@mtcute/bun';
 import { CallbackDataBuilder, Dispatcher, filters } from '@mtcute/dispatcher';
 import fs from 'fs';
 import path from 'path';
 
-import { getChatHistory } from '~/handlers/getChatHistory';
-import { sendToBotChat } from '~/handlers/handlers';
-import { useAdminCheck } from '~/hooks/useAdminCheck';
-import { prismaService } from '~/services/db';
-
-// КОНСТАНТЫ
-import * as env from '../env';
-// HANDLERS
+import { parseBotEnv } from '~/config/env';
+import { lyricsService } from '~/modules/lyrics/lyrics.service';
+import { getChatHistory } from '~/modules/lyrics/parse/get-chat-history';
 import {
-  clearBD,
+  clearDb,
   commandChatId,
   commandStartApp,
   commandStartBd,
-  seedToBD,
-} from './commands';
+  seedToDb,
+} from '~/mtcute/commands';
+import { assertAdmin } from '~/mtcute/guards/assert-admin';
+import { sendToBotChat } from '~/mtcute/send';
 
-const phone = env.BOT_PHONE;
-const pass = env.BOT_PASS;
-const botToken = env.BOT_TOKEN;
-const botType = env.BOT_TYPE;
-const channelId = env.BOT_CHANNEL_ID;
+const botEnv = parseBotEnv();
+
+const phone = botEnv.BOT_PHONE;
+const pass = botEnv.BOT_PASS;
+const botToken = botEnv.BOT_TOKEN;
+const botType = botEnv.BOT_TYPE;
+const channelId = botEnv.BOT_CHANNEL_ID;
 
 const botSessionPath = path.resolve(__dirname, '../../bot-data/session');
 const adminSessionPath = path.resolve(
@@ -35,10 +33,9 @@ const adminSessionPath = path.resolve(
 fs.mkdirSync(path.dirname(botSessionPath), { recursive: true });
 fs.mkdirSync(path.dirname(adminSessionPath), { recursive: true });
 
-// Создаем и инициализируем основного бота
 export const tg = new TelegramClient({
-  apiId: env.API_ID,
-  apiHash: env.API_HASH,
+  apiId: botEnv.API_ID,
+  apiHash: botEnv.API_HASH,
   storage: botSessionPath,
 });
 
@@ -53,45 +50,9 @@ await tg
     console.error('MTCUTE: ❌ Ошибка при запуске бота:', error);
   });
 
-// Диспетчер событий
 export type TypeBotClient = typeof tg;
 
 const dp = Dispatcher.for(tg);
-export type TypeBotDispatcher = typeof dp;
-
-// Создаем и инициализируем админ-клиент
-export let tgAdmin: TelegramClient | null = null;
-
-if (botType === 'admin') {
-  tgAdmin = new TelegramClient({
-    apiId: env.API_ID,
-    apiHash: env.API_HASH,
-    storage: adminSessionPath,
-  });
-
-  // Добавляем инициализацию tgAdmin
-  await tgAdmin.start({
-    phone,
-    code: async () => {
-      const code = await prompt('MTCUTE: 🙈 Введите код для админа:');
-      if (code === null) {
-        throw new Error('MTCUTE: ❌ Отменено пользователем\n\n');
-      }
-      return code;
-    },
-    password: pass,
-  });
-  console.log('MTCUTE: 🤖 Админ вошел в систему');
-}
-
-// Получаем ID чата
-dp.onNewMessage(filters.command('chatid'), async (msg) =>
-  commandChatId({ tg, msg })
-);
-// Открываем приложение
-dp.onNewMessage(filters.command('app'), async (msg) =>
-  commandStartApp({ tg, msg })
-);
 
 const BdButton = new CallbackDataBuilder('bd', 'id', 'action');
 
@@ -118,7 +79,37 @@ const markup = [
   ],
 ];
 
-// Управление базой данных
+export let tgAdmin: TelegramClient | null = null;
+
+if (botType === 'admin') {
+  tgAdmin = new TelegramClient({
+    apiId: botEnv.API_ID,
+    apiHash: botEnv.API_HASH,
+    storage: adminSessionPath,
+  });
+
+  await tgAdmin.start({
+    phone,
+    code: async () => {
+      const code = await prompt('MTCUTE: 🙈 Введите код для админа:');
+      if (code === null) {
+        throw new Error('MTCUTE: ❌ Отменено пользователем\n\n');
+      }
+      return code;
+    },
+    password: pass,
+  });
+  console.log('MTCUTE: 🤖 Админ вошел в систему');
+}
+
+dp.onNewMessage(filters.command('chatid'), async (msg) =>
+  commandChatId({ tg, msg })
+);
+
+dp.onNewMessage(filters.command('app'), async (msg) =>
+  commandStartApp({ tg, msg })
+);
+
 dp.onNewMessage(filters.command('bd'), async (msg) =>
   commandStartBd({ tg, msg, keyboard: markup })
 );
@@ -140,7 +131,7 @@ dp.onCallbackQuery(async (query) => {
     return;
   }
 
-  await useAdminCheck({
+  await assertAdmin({
     tg,
     msg: query as never,
     msgCallback: query,
@@ -156,7 +147,7 @@ dp.onCallbackQuery(async (query) => {
       switch (action) {
         case 'stats': {
           await query.answer({ text: '⏳ Получение статистики...' });
-          const stats = await prismaService.getStats();
+          const stats = await lyricsService.getStats();
           if (stats) {
             sendToBotChat({
               tg,
@@ -190,7 +181,7 @@ dp.onCallbackQuery(async (query) => {
 
         case 'seed':
           await query.answer({ text: '⏳ Начался посев...' });
-          await seedToBD({ tgAdmin, msg: query }).then(() => {
+          await seedToDb({ tgAdmin, msg: query }).then(() => {
             sendToBotChat({
               tg,
               chatId,
@@ -201,7 +192,7 @@ dp.onCallbackQuery(async (query) => {
 
         case 'clear':
           await query.answer({ text: '⏳ Началась очистка...' });
-          await clearBD({ tgAdmin, msg: query });
+          await clearDb({ tgAdmin, msg: query });
           sendToBotChat({
             tg,
             chatId,

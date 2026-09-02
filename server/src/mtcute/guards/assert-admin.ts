@@ -4,25 +4,26 @@ import {
   MessageContext,
 } from '@mtcute/dispatcher';
 
-import * as env from '~/env';
-import { TypeBotClient } from '~/mtcute/index';
+import { parseBotEnv } from '~/config/env';
+import type { TypeBotClient } from '~/mtcute/types';
 
-const chatId = env.BOT_CHAT_ID;
-const botAdminId = Number(env.BOT_ADMIN_ID);
+const botEnv = parseBotEnv();
+const chatId = botEnv.BOT_CHAT_ID;
+const botAdminId = Number(botEnv.BOT_ADMIN_ID);
 
-interface IAdminCheck {
+interface AssertAdmin {
   tg: TypeBotClient;
   msg: filters.Modify<MessageContext, { command: string[] }>;
   msgCallback?: CallbackQueryContext;
   action: () => Promise<void>;
 }
 
-export const useAdminCheck = async ({
+export const assertAdmin = async ({
   tg,
   msg,
   msgCallback,
   action,
-}: IAdminCheck) => {
+}: AssertAdmin) => {
   if (!msgCallback) {
     await msg.delete().catch(() => undefined);
   }

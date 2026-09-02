@@ -65,11 +65,8 @@ export default defineConfig([
     files: [
       'prisma/script/**/*.ts',
       'src/mtcute/**/*.ts',
-      'src/index.ts',
       'src/app/**/*.ts',
-      'src/services/db/**/*.ts',
-      'src/handlers/**/*.ts',
-      'src/hooks/**/*.ts',
+      'src/modules/**/*.ts',
     ],
     rules: {
       'no-console': 'off',

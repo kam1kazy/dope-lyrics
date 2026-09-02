@@ -2,18 +2,18 @@
 
 Фаза: первый срез **D** закрыт на клиенте. Kit **C** (shadcn) тоже.
 
-A–B закрыты. Chakra нет. Защита API с youways — в `server/`. `bun run fix` зелёный.
+A–B закрыты. Chakra нет. Защита API с youways — в `server/`. Сервер разложен по модулям (как youways, не FSD).
 
 ---
 
 **Сделано только что**
 
+- Сервер: `app/` + `modules/lyrics|users` + тонкий GraphQL; единый `config/env` (`http` + `parseBotEnv`); `handlers/`/`services/`/`hooks/`/`types/` убраны.
 - Drawer: три иконки порядка (случайно / по порядку / обратно; повторный тап по случайному — новый shuffle).
 - Слайдеры размера, межстрочия, скорости — сразу на экране.
 - Чипы тегов из данных, несколько, «хотя бы один».
 - Ключевые слова — подстрока без регистра по тексту всего сообщения.
 - Свайп вниз закрывает drawer; слайдеры, поиск и теги жест не перехватывают.
-- Сервер: без самописного `dataMessage.ts`, история через `Message` / `MessageEntity` / `Peer` из `@mtcute/core`, `ILyric[]`, `editDate: Date | null`.
 
 Планы: [`004_ui_shadcn.md`](004_ui_shadcn.md), [`003_catalog_controls.md`](003_catalog_controls.md).
 
@@ -21,7 +21,7 @@ A–B закрыты. Chakra нет. Защита API с youways — в `server/
 
 **Current:** остаток инструмента, не новый kit.
 
-1. Фильтр в GraphQL (`tag` / `keyword`), не только после полной выгрузки.
+1. Фильтр в GraphQL (`tag` / `keyword`) — в `lyricsService.list`, не только на клиенте.
 2. Дальше по D: эмодзи, даты, эталоны.
 
 **Не сейчас:** ИИ (E); Linux-хост и регистрация (F); TS 7 / Prisma 8; возвращать Chakra или `any`.

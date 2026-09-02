@@ -22,6 +22,24 @@ Telegram-чат
 Слои в `client/src`: `app` (роутер Next) → `widgets` → `features` → `entities` → `shared`.
 Импорт только вниз. Публичный API слайса — `index.ts`. Слой `pages` не используем: конфликт с Next `src/pages`.
 
+## Сервер: модули (не FSD)
+
+Два процесса: `bun src/app/index.ts` (HTTP) и `bun src/mtcute/index.ts` (Telegram).
+
+```
+server/src/
+  app/           — HTTP entry, Elysia, shutdown
+  config/        — env (http + parseBotEnv), cors, security
+  infrastructure/ — Prisma singleton
+  graphql/       — typeDefs, тонкие resolvers → modules
+  modules/
+    lyrics/      — service, parse (mt→JSON), persist (seed)
+    users/       — service (owner, loadUsers, GraphQL list)
+  mtcute/        — bot + admin client, commands, guards
+```
+
+GraphQL resolvers только вызывают `lyricsService` / `usersService`. Бот — те же service, не дублирует Prisma.
+
 ## Telegram: бот и домен
 
 Публичный сервер не нужен, чтобы забрать заметки.
@@ -34,14 +52,14 @@ Telegram-чат
 | Бот, когда комп выключен | Да |
 
 Парсинг делает `tgAdmin` (аккаунт), не бот. Токен — для кнопок.
-История чата типизирована через `Message` / `MessageEntity` / `Peer` из `@mtcute/core`. `getChatHistory` собирает `ILyric[]`. `editDate` — `Date | null`. FLOOD_WAIT — `unknown` + сужение. Самописного `dataMessage.ts` нет.
+История чата типизирована через `Message` / `MessageEntity` / `Peer` из `@mtcute/core`. `getChatHistory` собирает `ILyric[]`. `editDate` — `Date | null`. FLOOD_WAIT — `unknown` + сужение.
 
 Два клиента в `server/src/mtcute/index.ts`:
 
 1. Бот — `BOT_TOKEN`
 2. Админ — телефон + 2FA + код. Нужен для `getHistory`
 
-`env.ts` падает без полного набора TG-переменных. GraphQL их не читает.
+`parseBotEnv()` в `config/env.ts` — только для mtcute. HTTP не требует TG-секретов.
 
 ## Проверка бота
 
@@ -71,7 +89,7 @@ HTTP: Elysia 1.4 + GraphQL Yoga 5 (не `@elysiajs/graphql-yoga`). Zod env, CORS
 | --- | --- |
 | Миграции не в репо | Новые — коммитить, не возвращать в gitignore |
 | Apollo → `/graphql` | Без прокси локальный клиент не увидит API |
-| Жёсткий `env.ts` бота | Без секретов бота не стартовать |
+| Жёсткий env бота | `parseBotEnv()` без секретов бот не стартует |
 | `password` / `email` в GraphQL | Схема больше не отдаёт; в Prisma-типе User могут остаться |
 | Auth / cookie-сессии | Когда появится вход — модель youways, не invent и не develop |
 | Linux-хост | Когда будет свой сервер: TLS, закрытый SSH, не светить Postgres |

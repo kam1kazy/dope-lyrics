@@ -28,6 +28,6 @@ ESLint: `@typescript-eslint/no-explicit-any` — warning. В новом коде
 `satisfies` вместо `as`, если можно. Prisma `include`/`select` — константа с `satisfies`.
 
 Не называть обычные функции `use*` — сработает `react-hooks/rules-of-hooks`.
-Легаси `useAdminCheck` не плодить.
+Легаси `useAdminCheck` не плодить — использовать `assertAdmin` в `mtcute/guards/`.
 
 После правок типов: `bun run typecheck` в затронутом пакете.

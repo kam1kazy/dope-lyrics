@@ -1,6 +1,8 @@
-import { env } from '../config/env';
+import { env } from '~/config/env';
+import { lyricsService } from '~/modules/lyrics/lyrics.service';
+import { usersService } from '~/modules/users/users.service';
+
 import type { GraphQLContext } from './context';
-import { lyricInclude } from './lyric-include';
 
 type ConnectionArgs = {
   limit?: number | null;
@@ -30,30 +32,18 @@ const clampOffset = (value: number | null | undefined): number => {
 
 export const resolvers = {
   Query: {
-    users: (_parent: unknown, _args: unknown, context: GraphQLContext) => {
-      return context.prisma.users.findMany({
-        select: {
-          id: true,
-          username: true,
-          lyrics: {
-            take: env.GRAPHQL_MAX_LIMIT,
-            orderBy: { date: 'desc' },
-            include: lyricInclude,
-          },
-        },
-      });
+    users: (_parent: unknown, _args: unknown, _context: GraphQLContext) => {
+      return usersService.list();
     },
     lyrics: (
       _parent: unknown,
       args: ConnectionArgs,
-      context: GraphQLContext
+      _context: GraphQLContext
     ) => {
-      return context.prisma.lyrics.findMany({
-        take: clampLimit(args.limit),
-        skip: clampOffset(args.offset),
-        orderBy: { date: 'desc' },
-        include: lyricInclude,
-      });
+      return lyricsService.list(
+        clampLimit(args.limit),
+        clampOffset(args.offset)
+      );
     },
   },
 };

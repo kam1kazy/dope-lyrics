@@ -1,10 +1,10 @@
 import fs from 'fs';
 import path from 'path';
 
-import { prismaService } from '~/services/db';
-
-import { IChatHistoryItem } from '../../src/types/prismaCreate';
-import { IUser } from '../../src/types/user';
+import { lyricsService } from '~/modules/lyrics/lyrics.service';
+import type { IChatHistoryItem } from '~/modules/lyrics/lyrics.types';
+import { usersService } from '~/modules/users/users.service';
+import type { IUser } from '~/modules/users/users.types';
 
 const chatHistoryPath = path.resolve(
   __dirname,
@@ -31,7 +31,7 @@ const seed = async () => {
     return;
   }
 
-  await prismaService.loadUsers(loadUsersFromFile(chatUserPath));
+  await usersService.loadUsers(loadUsersFromFile(chatUserPath));
 
   if (!fs.existsSync(chatHistoryPath)) {
     console.log('PRISMA: ⚠️ Файлы с данными истории не найдены');
@@ -40,7 +40,7 @@ const seed = async () => {
 
   const chatHistory = readJson<IChatHistoryItem[]>(chatHistoryPath);
   if (chatHistory?.length) {
-    await prismaService.loadNewRecords(chatHistory);
+    await lyricsService.loadNewRecords(chatHistory);
   }
 };
 

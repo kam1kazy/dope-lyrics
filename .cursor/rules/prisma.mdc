@@ -1,6 +1,6 @@
 ---
 description: Prisma — миграции в репо, без reset без просьбы
-globs: server/prisma/**,server/src/services/db/**
+globs: server/prisma/**,server/src/modules/**
 alwaysApply: false
 ---
 

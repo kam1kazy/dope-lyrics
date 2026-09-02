@@ -1,9 +1,7 @@
-// HANDLERS
-// TYPES
-import { TypeBotClient } from '../../mtcute/index';
-import { ILyric } from '../../types/lyric';
-import { createJSONdata } from './createJSONdata';
-import { filterHistory } from './filterHistory';
+import type { ILyric } from '~/modules/lyrics/lyrics.types';
+import { createJsonData } from '~/modules/lyrics/parse/create-json-data';
+import { filterHistory } from '~/modules/lyrics/parse/filter-history';
+import type { TypeBotClient } from '~/mtcute/types';
 
 const floodWaitSeconds = (error: unknown): number | null => {
   if (typeof error !== 'object' || error === null || !('code' in error)) {
@@ -21,7 +19,6 @@ const floodWaitSeconds = (error: unknown): number | null => {
   return 30;
 };
 
-// Получаем историю чата
 export async function getChatHistory({
   tg,
   chatId,
@@ -42,10 +39,8 @@ export async function getChatHistory({
 
   console.log('MTCUTE: 🧻 Получаем историю чата...');
 
-  // Пошаговый парсинг
   while (true) {
     try {
-      // Делаем паузу перед каждым запросом
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       const history = await tg.getHistory(chatId, {
@@ -85,14 +80,13 @@ export async function getChatHistory({
         date: history[history.length - 1].date.getTime(),
       };
     } catch (error: unknown) {
-      // Обработка FLOOD_WAIT
       const waitSeconds = floodWaitSeconds(error);
       if (waitSeconds !== null) {
         console.log(
           `MTCUTE: ⏳ Ожидание ${waitSeconds} секунд из-за ограничения API...`
         );
         await new Promise((resolve) => setTimeout(resolve, waitSeconds * 1000));
-        continue; // Повторяем попытку после ожидания
+        continue;
       }
 
       console.error(
@@ -103,10 +97,9 @@ export async function getChatHistory({
     }
   }
 
-  // Создаем файл с полученной базой
   if (data.length) {
     console.log(`MTCUTE: 📥 История чата получена (${data.length} сообщений)`);
-    createJSONdata(data);
+    createJsonData(data);
     return true;
   }
 

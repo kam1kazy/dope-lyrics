@@ -5,17 +5,18 @@ import {
   MessageContext,
 } from '@mtcute/dispatcher';
 
-import { useAdminCheck } from '~/hooks/useAdminCheck';
-import { prismaService } from '~/services/db';
+import { parseBotEnv } from '~/config/env';
+import { lyricsService } from '~/modules/lyrics/lyrics.service';
+import { getChatHistory } from '~/modules/lyrics/parse/get-chat-history';
+import { assertAdmin } from '~/mtcute/guards/assert-admin';
+import { sendToBotChat } from '~/mtcute/send';
+import type { TypeBotClient } from '~/mtcute/types';
 
 import seed from '../../../prisma/script/seed';
-import * as env from '../../env';
-import { getChatHistory } from '../../handlers/getChatHistory';
-import { sendToBotChat } from '../../handlers/handlers';
-import { TypeBotClient } from '../index';
 
-const chatId = env.BOT_CHAT_ID;
-const channelId = env.BOT_CHANNEL_ID;
+const botEnv = parseBotEnv();
+const chatId = botEnv.BOT_CHAT_ID;
+const channelId = botEnv.BOT_CHANNEL_ID;
 
 interface ICommandChat {
   tg?: TypeBotClient | null;
@@ -26,11 +27,10 @@ interface ICommandChat {
   keyboard?: Parameters<typeof BotKeyboard.inline>[0];
 }
 
-// Получаем ID чата
 const commandChatId = async ({ tg, msg }: ICommandChat) => {
   if (!tg) return;
 
-  await useAdminCheck({
+  await assertAdmin({
     tg,
     msg: msg as filters.Modify<MessageContext, { command: string[] }>,
     action: async () => {
@@ -40,27 +40,25 @@ const commandChatId = async ({ tg, msg }: ICommandChat) => {
   });
 };
 
-// Открываем приложение
 const commandStartApp = async ({ tg, msg }: ICommandChat) => {
   if (!tg) return;
-  await useAdminCheck({
+  await assertAdmin({
     tg,
     msg: msg as filters.Modify<MessageContext, { command: string[] }>,
     action: async () => {
       const text = '📱 Вы хотите открыть приложение?';
       await tg.sendText(msg.chat.id, text, {
         replyMarkup: BotKeyboard.inline([
-          [BotKeyboard.url('Запустить', `https://${env.SITE_URL}/`)],
+          [BotKeyboard.url('Запустить', `https://${botEnv.SITE_URL}/`)],
         ]),
       });
     },
   });
 };
 
-// Управление базой данных
 const commandStartBd = async ({ tg, msg, keyboard }: ICommandChat) => {
   if (!tg) return;
-  await useAdminCheck({
+  await assertAdmin({
     tg,
     msg: msg as filters.Modify<MessageContext, { command: string[] }>,
     action: async () => {
@@ -72,10 +70,9 @@ const commandStartBd = async ({ tg, msg, keyboard }: ICommandChat) => {
   });
 };
 
-// Получаем историю чата
 const commandChatHistory = async ({ tgAdmin, msg }: ICommandChat) => {
   if (!tgAdmin) return;
-  await useAdminCheck({
+  await assertAdmin({
     tg: tgAdmin,
     msg: msg as filters.Modify<MessageContext, { command: string[] }>,
     action: async () => {
@@ -84,11 +81,10 @@ const commandChatHistory = async ({ tgAdmin, msg }: ICommandChat) => {
   });
 };
 
-// Заполняем базу данных
-const seedToBD = async ({ tgAdmin, msg, tg: _tg }: ICommandChat) => {
+const seedToDb = async ({ tgAdmin, msg }: ICommandChat) => {
   if (!tgAdmin) return;
 
-  await useAdminCheck({
+  await assertAdmin({
     tg: tgAdmin,
     msg: msg as filters.Modify<MessageContext, { command: string[] }>,
     msgCallback: msg as CallbackQueryContext,
@@ -104,10 +100,9 @@ const seedToBD = async ({ tgAdmin, msg, tg: _tg }: ICommandChat) => {
   });
 };
 
-// Очищаем базу данных
-const clearBD = async ({ tgAdmin, msg }: ICommandChat) => {
+const clearDb = async ({ tgAdmin, msg }: ICommandChat) => {
   if (!tgAdmin) return;
-  await useAdminCheck({
+  await assertAdmin({
     tg: tgAdmin,
     msg: msg as filters.Modify<MessageContext, { command: string[] }>,
     msgCallback: msg as CallbackQueryContext,
@@ -117,19 +112,18 @@ const clearBD = async ({ tgAdmin, msg }: ICommandChat) => {
         chatId,
         text: '🧹 Началась очистка базы...',
       });
-      await prismaService.clearDatabase();
+      await lyricsService.clearCatalog();
     },
   });
 };
 
-// Получение статистики
 const getStats = async ({ tgAdmin, msg }: ICommandChat) => {
   if (!tgAdmin) return;
-  await useAdminCheck({
+  await assertAdmin({
     tg: tgAdmin,
     msg: msg as filters.Modify<MessageContext, { command: string[] }>,
     action: async () => {
-      const stats = await prismaService.getStats();
+      const stats = await lyricsService.getStats();
 
       sendToBotChat({
         tg: tgAdmin,
@@ -141,11 +135,11 @@ const getStats = async ({ tgAdmin, msg }: ICommandChat) => {
 };
 
 export {
-  clearBD,
+  clearDb,
   commandChatHistory,
   commandChatId,
   commandStartApp,
   commandStartBd,
   getStats,
-  seedToBD,
+  seedToDb,
 };
