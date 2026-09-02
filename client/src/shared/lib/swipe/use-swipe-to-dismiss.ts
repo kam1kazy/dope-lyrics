@@ -2,12 +2,12 @@
 
 import {
   type PointerEvent as ReactPointerEvent,
+  useCallback,
   useRef,
   useState,
 } from 'react';
 
 const DISMISS_PX = 88;
-const HANDLE_ZONE_PX = 88;
 
 function isSwipeBlocked(target: EventTarget | null) {
   if (!(target instanceof HTMLElement)) {
@@ -16,7 +16,7 @@ function isSwipeBlocked(target: EventTarget | null) {
 
   return Boolean(
     target.closest(
-      'input, textarea, select, button, a, [data-swipe-ignore], [role="slider"]'
+      'input, textarea, select, button, a, [data-swipe-ignore], [role="slider"], [role="tab"], [role="tablist"]'
     )
   );
 }
@@ -34,20 +34,20 @@ export function useSwipeToDismiss({
   const draggingRef = useRef(false);
   const [offset, setOffset] = useState(0);
 
-  const reset = () => {
+  const onDismissRef = useRef(onDismiss);
+  onDismissRef.current = onDismiss;
+
+  const reset = useCallback(() => {
     draggingRef.current = false;
     setOffset(0);
-  };
+  }, []);
 
   const onPointerDown = (event: ReactPointerEvent<HTMLElement>) => {
     if (!enabled || event.button !== 0) {
       return;
     }
 
-    const rect = event.currentTarget.getBoundingClientRect();
-    const fromHandle = event.clientY - rect.top <= HANDLE_ZONE_PX;
-
-    if (!fromHandle && isSwipeBlocked(event.target)) {
+    if (isSwipeBlocked(event.target)) {
       return;
     }
 
@@ -65,6 +65,12 @@ export function useSwipeToDismiss({
     setOffset(next);
   };
 
+  const releaseCapture = (event: ReactPointerEvent<HTMLElement>) => {
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+  };
+
   const onPointerUp = (event: ReactPointerEvent<HTMLElement>) => {
     if (!draggingRef.current) {
       return;
@@ -72,10 +78,10 @@ export function useSwipeToDismiss({
 
     const next = Math.max(0, event.clientY - startYRef.current);
     draggingRef.current = false;
+    releaseCapture(event);
 
     if (next >= DISMISS_PX) {
-      setOffset(0);
-      onDismiss();
+      onDismissRef.current();
       return;
     }
 

@@ -11,8 +11,8 @@ export default function Home() {
     <Providers>
       <AppShell>
         <LyricList />
-        <ControlBar />
       </AppShell>
+      <ControlBar />
     </Providers>
   );
 }

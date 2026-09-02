@@ -13,8 +13,8 @@ export function Providers({ children }: { children: ReactNode }) {
     <ApolloProvider client={apolloClient}>
       <ThemeProvider
         attribute="class"
-        defaultTheme="dark"
-        forcedTheme="dark"
+        defaultTheme="system"
+        enableSystem
         disableTransitionOnChange
       >
         <LyricViewProvider>

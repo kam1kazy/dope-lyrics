@@ -1,9 +1,10 @@
 'use client';
 
 import { Settings } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { FilterPanel } from '@/features/filter-panel';
+import { usePlayback } from '@/shared/lib/playback/playback-context';
 import { useSwipeToDismiss } from '@/shared/lib/swipe/use-swipe-to-dismiss';
 import { cn } from '@/shared/lib/utils/cn';
 import { Button } from '@/shared/ui/shadcn/ui/button';
@@ -17,14 +18,30 @@ import {
 
 export const ControlBar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const { suppressToggle } = usePlayback();
+
+  const closeDrawer = () => {
+    suppressToggle();
+    setIsOpen(false);
+    document.body.style.removeProperty('pointer-events');
+  };
+
   const swipe = useSwipeToDismiss({
     enabled: isOpen,
-    onDismiss: () => setIsOpen(false),
+    onDismiss: closeDrawer,
   });
+  const resetSwipe = swipe.reset;
+
+  useEffect(() => {
+    if (!isOpen) {
+      resetSwipe();
+      document.body.style.removeProperty('pointer-events');
+    }
+  }, [isOpen, resetSwipe]);
 
   return (
     <>
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex justify-end p-4">
+      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-20 flex justify-end p-4">
         <Button
           type="button"
           variant="ghost"
@@ -45,23 +62,37 @@ export const ControlBar = () => {
         open={isOpen}
         onOpenChange={(open) => {
           if (!open) {
-            swipe.reset();
+            closeDrawer();
+            return;
           }
 
-          setIsOpen(open);
+          setIsOpen(true);
         }}
       >
         <DrawerContent
           {...swipe.contentProps}
-          className={cn(swipe.dragging && 'duration-0')}
+          overlayClassName={cn(!isOpen && 'pointer-events-none opacity-0')}
+          className={cn(
+            'min-h-0 overflow-hidden',
+            swipe.dragging && 'duration-0'
+          )}
           onClick={(event) => {
             event.stopPropagation();
           }}
+          onPointerDownOutside={() => {
+            suppressToggle();
+          }}
+          onInteractOutside={() => {
+            suppressToggle();
+          }}
+          onCloseAutoFocus={(event) => {
+            event.preventDefault();
+          }}
         >
-          <DrawerHeader className="mb-3 cursor-grab active:cursor-grabbing">
+          <DrawerHeader className="sr-only pointer-events-none">
             <DrawerTitle>Настройки</DrawerTitle>
-            <DrawerDescription className="sr-only">
-              Порядок, размер текста и фильтры показа
+            <DrawerDescription>
+              Внешний вид, порядок показа и фильтры каталога
             </DrawerDescription>
           </DrawerHeader>
           <FilterPanel />

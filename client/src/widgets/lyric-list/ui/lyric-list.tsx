@@ -29,7 +29,6 @@ export const LyricList = () => {
     dateFrom,
     dateTo,
     referencesOnly,
-    carouselSpeed,
   } = useLyricView();
   const deferredKeyword = useDeferredValue(keyword.trim());
   const queryTags = selectedTags.length > 0 ? selectedTags : null;
@@ -106,7 +105,7 @@ export const LyricList = () => {
       className="flex h-full min-h-0 w-full flex-col items-center overflow-hidden break-keep px-4 pt-4 text-center"
     >
       <Viewport
-        key={`${sortMode}-${shuffleSeed}-${selectedTags.join('|')}-${selectedEmojis.join('|')}-${deferredKeyword}-${dateFrom}-${dateTo}-${referencesOnly}-${carouselSpeed}`}
+        key={`${sortMode}-${shuffleSeed}-${selectedTags.join('|')}-${selectedEmojis.join('|')}-${deferredKeyword}-${dateFrom}-${dateTo}-${referencesOnly}`}
         data={carouselList}
       />
     </div>
