@@ -36,7 +36,6 @@ interface LyricViewContextValue {
   keyword: string;
   dateFrom: string;
   dateTo: string;
-  referencesOnly: boolean;
   setSortMode: (mode: SortMode) => void;
   setFontSize: (value: number) => void;
   setLineHeight: (value: number) => void;
@@ -47,7 +46,7 @@ interface LyricViewContextValue {
   setKeyword: (value: string) => void;
   setDateFrom: (value: string) => void;
   setDateTo: (value: string) => void;
-  setReferencesOnly: (value: boolean) => void;
+  setDemosOnly: (value: boolean) => void;
   resetSettings: () => void;
   resetFilters: () => void;
 }
@@ -70,7 +69,7 @@ export function LyricViewProvider({ children }: { children: ReactNode }) {
   const [keyword, setKeyword] = useState(LYRIC_VIEW_DEFAULTS.keyword);
   const [dateFrom, setDateFrom] = useState(LYRIC_VIEW_DEFAULTS.dateFrom);
   const [dateTo, setDateTo] = useState(LYRIC_VIEW_DEFAULTS.dateTo);
-  const [referencesOnly, setReferencesOnly] = useState(false);
+  const [demosOnly, setDemosOnly] = useState(false);
 
   const setSortMode = useCallback((mode: SortMode) => {
     setSortModeState(mode);
@@ -110,7 +109,7 @@ export function LyricViewProvider({ children }: { children: ReactNode }) {
     setKeyword(LYRIC_VIEW_DEFAULTS.keyword);
     setDateFrom(LYRIC_VIEW_DEFAULTS.dateFrom);
     setDateTo(LYRIC_VIEW_DEFAULTS.dateTo);
-    setReferencesOnly(false);
+    setDemosOnly(false);
   }, []);
 
   const value = useMemo(
@@ -126,7 +125,7 @@ export function LyricViewProvider({ children }: { children: ReactNode }) {
       keyword,
       dateFrom,
       dateTo,
-      referencesOnly,
+      demosOnly,
       setSortMode,
       setFontSize,
       setLineHeight,
@@ -137,7 +136,7 @@ export function LyricViewProvider({ children }: { children: ReactNode }) {
       setKeyword,
       setDateFrom,
       setDateTo,
-      setReferencesOnly,
+      setDemosOnly,
       resetSettings,
       resetFilters,
     }),
@@ -153,7 +152,7 @@ export function LyricViewProvider({ children }: { children: ReactNode }) {
       keyword,
       dateFrom,
       dateTo,
-      referencesOnly,
+      demosOnly,
       setSortMode,
       toggleTag,
       toggleEmoji,
@@ -216,7 +215,7 @@ export function hasActiveLyricFilters(options: {
   keyword: string;
   dateFrom: string;
   dateTo: string;
-  referencesOnly: boolean;
+  demosOnly: boolean;
 }): boolean {
   return (
     options.selectedTags.length > 0 ||
@@ -224,6 +223,6 @@ export function hasActiveLyricFilters(options: {
     options.keyword.trim().length > 0 ||
     options.dateFrom.trim().length > 0 ||
     options.dateTo.trim().length > 0 ||
-    options.referencesOnly
+    options.demosOnly
   );
 }

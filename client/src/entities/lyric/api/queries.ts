@@ -19,7 +19,7 @@ export const ALL_LYRICS = gql`
     $emojis: [String!]
     $dateFrom: String
     $dateTo: String
-    $referencesOnly: Boolean
+    $demosOnly: Boolean
   ) {
     lyrics(
       tags: $tags
@@ -27,7 +27,7 @@ export const ALL_LYRICS = gql`
       emojis: $emojis
       dateFrom: $dateFrom
       dateTo: $dateTo
-      referencesOnly: $referencesOnly
+      demosOnly: $demosOnly
     ) {
       id
 
@@ -36,6 +36,7 @@ export const ALL_LYRICS = gql`
       editDate
       isPinned
       isChannelPost
+      isReference
       replyToMessage
 
       message {

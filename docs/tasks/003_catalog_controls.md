@@ -14,10 +14,11 @@
 3. Ключевые слова — подстрока без регистра.
 4. Размер, межстрочие, скорость — слайдеры.
 5. Drawer со свайпом вниз.
-6. GraphQL: `lyrics(tags, keyword, emojis, dateFrom, dateTo, referencesOnly)`, `lyricTags`, `lyricEmojis`.
-7. Полка эталонов — кнопка `referencesOnly` (#эталон / #эталon).
+6. GraphQL: `lyrics(tags, keyword, emojis, dateFrom, dateTo, referencesOnly, demosOnly)`, `lyricTags`, `lyricEmojis`.
+7. Полка эталонов сначала была `referencesOnly` по тегу `#эталон`. Снято: эталон — `isReference` в базе, не чат. [`0006`](../decisions/0006-reference-is-app-flag.md).
 8. Период — два поля даты.
 9. Реакции — фильтр по эмодзи OR; на слайде видны реакции первой строки.
+10. Демки — `demosOnly` (`#текст_с_демки`). Это текущая полка, на которую можно опереться.
 
 ## Не делать
 

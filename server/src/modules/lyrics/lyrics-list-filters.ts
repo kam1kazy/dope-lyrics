@@ -1,5 +1,5 @@
 import type { Prisma } from '~/generated/prisma/client';
-import { REFERENCE_TAGS } from '~/modules/lyrics/reference-tags';
+import { DEMO_TAG } from '~/modules/lyrics/shelf-tags';
 
 export interface LyricsListOptions {
   limit: number;
@@ -10,6 +10,7 @@ export interface LyricsListOptions {
   dateFrom?: string | null;
   dateTo?: string | null;
   referencesOnly?: boolean | null;
+  demosOnly?: boolean | null;
 }
 
 export const normalizeTags = (tags: string[] | null | undefined): string[] => {
@@ -78,13 +79,20 @@ const buildDateWhere = (
 export const buildLyricsWhere = (
   options: Pick<
     LyricsListOptions,
-    'tags' | 'keyword' | 'emojis' | 'dateFrom' | 'dateTo' | 'referencesOnly'
+    | 'tags'
+    | 'keyword'
+    | 'emojis'
+    | 'dateFrom'
+    | 'dateTo'
+    | 'referencesOnly'
+    | 'demosOnly'
   >
 ): Prisma.LyricsWhereInput => {
   const tags = normalizeTags(options.tags);
   const emojis = normalizeEmojis(options.emojis);
   const keyword = normalizeKeyword(options.keyword);
   const referencesOnly = options.referencesOnly === true;
+  const demosOnly = options.demosOnly === true;
 
   const messageConditions: Prisma.MessageWhereInput[] = [
     { text: { not: null } },
@@ -107,11 +115,11 @@ export const buildLyricsWhere = (
     });
   }
 
-  if (referencesOnly) {
+  if (demosOnly) {
     messageConditions.push({
       hashtags: {
         is: {
-          tags: { hasSome: [...REFERENCE_TAGS] },
+          tags: { has: DEMO_TAG },
         },
       },
     });
@@ -136,6 +144,10 @@ export const buildLyricsWhere = (
       AND: messageConditions,
     },
   };
+
+  if (referencesOnly) {
+    where.isReference = true;
+  }
 
   const dateWhere = buildDateWhere(options.dateFrom, options.dateTo);
 

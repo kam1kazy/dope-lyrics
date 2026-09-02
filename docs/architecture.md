@@ -17,7 +17,7 @@ Telegram-чат
 Кнопки `/bd` и callback (`stats` / `history` / `seed` / `clear`) проверяют `BOT_ADMIN_ID`.
 
 Клиент: Next 16, React 19, Apollo Client 4 (`HttpLink`, хуки из `@apollo/client/react`), FSD, shadcn (Chakra снят). Фразы режутся по `\n`; скорость карусели — слайдер в drawer.
-Пауза — клик по экрану. Порядок на клиенте; теги, реакции, период, эталоны и ключевые слова — в GraphQL. Drawer закрывается свайпом вниз.
+Пауза — клик по экрану. Порядок на клиенте; теги, реакции, период, демки и ключевые слова — в GraphQL. Эталон — `isReference` в базе, не тег. Drawer закрывается свайпом вниз.
 
 Слои в `client/src`: `app` (роутер Next) → `widgets` → `features` → `entities` → `shared`.
 Импорт только вниз. Публичный API слайса — `index.ts`. Слой `pages` не используем: конфликт с Next `src/pages`.
@@ -95,5 +95,5 @@ HTTP: Elysia 1.4 + GraphQL Yoga 5 (не `@elysiajs/graphql-yoga`). Zod env, CORS
 | Linux-хост | Когда будет свой сервер: TLS, закрытый SSH, не светить Postgres |
 | Prisma generate | После клона без `setup` клиент не появится в `src/generated/prisma` |
 | Прод-Docker seed | Контейнер больше не сидит на каждый старт |
-| Фильтр каталога | `lyrics(tags, keyword, emojis, dateFrom, dateTo, referencesOnly)`; `lyricTags`, `lyricEmojis` |
+| Фильтр каталога | `lyrics(tags, keyword, emojis, dateFrom, dateTo, referencesOnly, demosOnly)`; эталон = `isReference`; демки = `#текст_с_демки`; `lyricTags`, `lyricEmojis` |
 | TS 7 / Prisma 8 | Не ставить: eslint peer `<6.1.0`, клиента Prisma 8 в реестре нет |

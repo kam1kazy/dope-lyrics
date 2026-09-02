@@ -25,6 +25,8 @@ model Lyrics {
   editDate       DateTime?
   isPinned       Boolean
   isChannelPost  Boolean
+  /// Эталон каталога: ставит приложение (позже ИИ), не хештег из Telegram.
+  isReference    Boolean  @default(false)
   replyToMessage Int?
 
   message Message?

@@ -13,6 +13,7 @@ type LyricsArgs = {
   dateFrom?: string | null;
   dateTo?: string | null;
   referencesOnly?: boolean | null;
+  demosOnly?: boolean | null;
 };
 
 const clampLimit = (value: number | null | undefined): number => {
@@ -61,6 +62,7 @@ export const resolvers = {
         dateFrom: args.dateFrom,
         dateTo: args.dateTo,
         referencesOnly: args.referencesOnly,
+        demosOnly: args.demosOnly,
       });
     },
   },

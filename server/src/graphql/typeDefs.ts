@@ -13,6 +13,7 @@ export const typeDefinitions = /* GraphQL */ `
     editDate: String
     isPinned: Boolean!
     isChannelPost: Boolean!
+    isReference: Boolean!
     replyToMessage: Int
 
     message: Message
@@ -114,6 +115,7 @@ export const typeDefinitions = /* GraphQL */ `
       dateFrom: String
       dateTo: String
       referencesOnly: Boolean
+      demosOnly: Boolean
     ): [Lyric!]!
   }
 `;

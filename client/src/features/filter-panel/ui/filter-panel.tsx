@@ -5,7 +5,6 @@ import {
   AlignVerticalSpaceAround,
   ArrowDownAZ,
   ArrowUpAZ,
-  BookMarked,
   CalendarRange,
   CircleGauge,
   Monitor,
@@ -32,6 +31,7 @@ import { Badge } from '@/shared/ui/shadcn/ui/badge';
 import { Button } from '@/shared/ui/shadcn/ui/button';
 import { Input } from '@/shared/ui/shadcn/ui/input';
 import { Label } from '@/shared/ui/shadcn/ui/label';
+import { Skeleton } from '@/shared/ui/shadcn/ui/skeleton';
 
 type PanelTab = 'settings' | 'filters';
 
@@ -59,6 +59,48 @@ const SORT_OPTIONS: {
   { mode: 'forward', label: 'По порядку', icon: ArrowDownAZ },
   { mode: 'reverse', label: 'В обратном порядке', icon: ArrowUpAZ },
 ];
+
+const TAG_SKELETON_WIDTHS = [
+  '4.5rem',
+  '3.25rem',
+  '5.5rem',
+  '3.75rem',
+  '4rem',
+  '6rem',
+  '3.5rem',
+  '5rem',
+] as const;
+
+function ChipSkeletons({
+  label,
+  kind,
+}: {
+  label: string;
+  kind: 'tags' | 'emojis';
+}) {
+  return (
+    <div
+      data-swipe-ignore
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+      aria-label={label}
+      className="flex max-h-28 flex-wrap gap-1.5 overflow-hidden"
+    >
+      {kind === 'tags'
+        ? TAG_SKELETON_WIDTHS.map((width) => (
+            <Skeleton
+              key={width}
+              className="h-5 rounded-md"
+              style={{ width }}
+            />
+          ))
+        : Array.from({ length: 8 }, (_, index) => (
+            <Skeleton key={index} className="size-8 rounded-md" />
+          ))}
+    </div>
+  );
+}
 
 function SliderRow({
   id,
@@ -288,8 +330,8 @@ function FiltersTab() {
     setDateFrom,
     dateTo,
     setDateTo,
-    referencesOnly,
-    setReferencesOnly,
+    demosOnly,
+    setDemosOnly,
     resetFilters,
   } = useLyricView();
   const canReset = hasActiveLyricFilters({
@@ -298,7 +340,7 @@ function FiltersTab() {
     keyword,
     dateFrom,
     dateTo,
-    referencesOnly,
+    demosOnly,
   });
 
   const { data: tagsData, loading: tagsLoading } = useQuery<{
@@ -315,13 +357,13 @@ function FiltersTab() {
     <div className="flex flex-col gap-4 pb-1">
       <Button
         type="button"
-        variant={referencesOnly ? 'default' : 'outline'}
+        variant={demosOnly ? 'default' : 'outline'}
         className="w-full justify-start gap-2"
-        aria-pressed={referencesOnly}
-        onClick={() => setReferencesOnly(!referencesOnly)}
+        aria-pressed={demosOnly}
+        onClick={() => setDemosOnly(!demosOnly)}
       >
-        <BookMarked className="size-4" />
-        Полка эталонов
+        <AudioLines className="size-4" />
+        Тексты из демок
       </Button>
 
       <div className="flex flex-col gap-2">
@@ -354,7 +396,7 @@ function FiltersTab() {
           Теги
         </Label>
         {tagsLoading ? (
-          <p className="text-muted-foreground text-xs">Загрузка тегов…</p>
+          <ChipSkeletons kind="tags" label="Загрузка тегов" />
         ) : tags.length === 0 ? (
           <p className="text-muted-foreground text-xs">Тегов пока нет</p>
         ) : (
@@ -391,7 +433,7 @@ function FiltersTab() {
           Реакции
         </Label>
         {emojisLoading ? (
-          <p className="text-muted-foreground text-xs">Загрузка реакций…</p>
+          <ChipSkeletons kind="emojis" label="Загрузка реакций" />
         ) : emojis.length === 0 ? (
           <p className="text-muted-foreground text-xs">Реакций пока нет</p>
         ) : (

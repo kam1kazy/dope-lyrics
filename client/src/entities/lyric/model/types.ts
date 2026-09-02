@@ -10,6 +10,7 @@ export interface ILyric {
   editDate: Date;
   isPinned: boolean;
   isChannelPost: boolean;
+  isReference: boolean;
   owner?: IUser | null;
   replyToMessage: number | null;
   media: IMedia | null;
