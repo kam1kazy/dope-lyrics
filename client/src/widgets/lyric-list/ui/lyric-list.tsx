@@ -26,7 +26,8 @@ export const LyricList = () => {
   const {
     sortMode,
     shuffleSeed,
-    shelfMode,
+    includedShelves,
+    excludedShelves,
     selectedTags,
     selectedEmojis,
     keyword,
@@ -48,10 +49,8 @@ export const LyricList = () => {
         emojis: queryEmojis,
         dateFrom: dateFrom.trim() || null,
         dateTo: dateTo.trim() || null,
-        referencesOnly: shelfMode === 'references',
-        favoritesOnly: shelfMode === 'favorites',
-        hiddenOnly: shelfMode === 'hidden',
-        censoredOnly: shelfMode === 'censored',
+        includeShelves: includedShelves,
+        excludeShelves: excludedShelves,
         oldestFirst: sortMode === 'reverse',
         mood: mood.length > 0 ? mood : null,
         delivery: delivery.length > 0 ? delivery : null,
@@ -62,12 +61,13 @@ export const LyricList = () => {
       dateFrom,
       dateTo,
       delivery,
+      excludedShelves,
+      includedShelves,
       keyword,
       mood,
       queryEmojis,
       queryTags,
       readiness,
-      shelfMode,
       songRole,
       sortMode,
     ]
@@ -101,7 +101,8 @@ export const LyricList = () => {
   }, [lyrics, shuffleSeed, sortMode]);
 
   const hasFilters = hasActiveLyricFilters({
-    shelfMode,
+    includedShelves,
+    excludedShelves,
     selectedTags,
     selectedEmojis,
     keyword,
@@ -151,7 +152,7 @@ export const LyricList = () => {
       className="flex h-full min-h-0 w-full flex-col items-center overflow-hidden break-keep px-4 pt-4 text-center"
     >
       <Viewport
-        key={`${activeQueryVariables.hiddenOnly}-${activeQueryVariables.favoritesOnly}-${activeQueryVariables.referencesOnly}-${activeQueryVariables.censoredOnly}-${activeQueryVariables.oldestFirst}-${sortMode}-${activeQueryVariables.tags?.join('|') ?? ''}-${activeQueryVariables.emojis?.join('|') ?? ''}-${activeQueryVariables.keyword ?? ''}-${activeQueryVariables.dateFrom ?? ''}-${activeQueryVariables.dateTo ?? ''}-${activeQueryVariables.mood?.join('|') ?? ''}-${activeQueryVariables.delivery?.join('|') ?? ''}-${activeQueryVariables.songRole?.join('|') ?? ''}-${activeQueryVariables.readiness}-${shuffleSeed}`}
+        key={`${activeQueryVariables.includeShelves?.join('|') ?? ''}-${activeQueryVariables.excludeShelves?.join('|') ?? ''}-${activeQueryVariables.oldestFirst}-${sortMode}-${activeQueryVariables.tags?.join('|') ?? ''}-${activeQueryVariables.emojis?.join('|') ?? ''}-${activeQueryVariables.keyword ?? ''}-${activeQueryVariables.dateFrom ?? ''}-${activeQueryVariables.dateTo ?? ''}-${activeQueryVariables.mood?.join('|') ?? ''}-${activeQueryVariables.delivery?.join('|') ?? ''}-${activeQueryVariables.songRole?.join('|') ?? ''}-${activeQueryVariables.readiness}-${shuffleSeed}`}
         data={carouselList}
         lyrics={lyrics}
         queryVariables={activeQueryVariables}

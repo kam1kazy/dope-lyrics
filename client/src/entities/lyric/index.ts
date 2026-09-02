@@ -1,5 +1,6 @@
 export {
   ALL_LYRICS,
+  CATALOG_STATS,
   INGEST_PENDING_LYRICS,
   LYRIC_DEMOS,
   LYRIC_EMOJIS,
@@ -26,6 +27,7 @@ export {
 export { updateLyricsCacheAfterFlagsChange } from './lib/update-lyrics-cache';
 export { usePaginatedLyrics } from './lib/use-paginated-lyrics';
 export type {
+  ICatalogStats,
   IChat,
   IEmoji,
   IHashtags,

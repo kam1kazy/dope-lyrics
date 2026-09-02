@@ -1,5 +1,6 @@
 import { lyricInclude } from '~/graphql/lyric-include';
 import { prisma } from '~/infrastructure/prisma';
+import { buildCatalogStats } from '~/modules/lyrics/catalog-stats';
 import { listLyricDemos } from '~/modules/lyrics/lyric-demos';
 import {
   type LyricProfilePatch,
@@ -68,6 +69,24 @@ export class LyricsService {
 
   listDemos() {
     return listLyricDemos();
+  }
+
+  async catalogStats() {
+    const rows = await this.prisma.lyrics.findMany({
+      select: {
+        isReference: true,
+        isFavorite: true,
+        isHidden: true,
+        isCensored: true,
+        songRole: true,
+        mood: true,
+        delivery: true,
+        roleProfiles: true,
+        readiness: true,
+      },
+    });
+
+    return buildCatalogStats(rows);
   }
 
   async updateFlags(

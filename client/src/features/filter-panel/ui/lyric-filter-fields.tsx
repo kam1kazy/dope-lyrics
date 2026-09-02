@@ -231,6 +231,7 @@ export function LyricFilterFields({
         hints={LYRIC_MOOD_HINTS}
         value={value.mood}
         multiple
+        toggleOnClick
         onChange={(mood) => onChange({ mood })}
       />
       <FacetChipGroup
@@ -240,6 +241,7 @@ export function LyricFilterFields({
         hints={LYRIC_DELIVERY_HINTS}
         value={value.delivery}
         multiple
+        toggleOnClick
         onChange={(delivery) => onChange({ delivery })}
       />
       <FacetChipGroup

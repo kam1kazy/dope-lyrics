@@ -7,12 +7,16 @@ import { cn } from '@/shared/lib/utils/cn';
 
 function TooltipProvider({
   delayDuration = 400,
+  skipDelayDuration = 0,
+  disableHoverableContent = true,
   ...props
 }: React.ComponentProps<typeof TooltipPrimitive.Provider>) {
   return (
     <TooltipPrimitive.Provider
       data-slot="tooltip-provider"
       delayDuration={delayDuration}
+      skipDelayDuration={skipDelayDuration}
+      disableHoverableContent={disableHoverableContent}
       {...props}
     />
   );
@@ -42,7 +46,7 @@ function TooltipContent({
         data-slot="tooltip-content"
         sideOffset={sideOffset}
         className={cn(
-          'bg-foreground text-background z-50 max-w-xs rounded-md px-2.5 py-1.5 text-xs text-balance shadow-md',
+          'bg-foreground text-background pointer-events-none z-50 max-w-xs rounded-md px-2.5 py-1.5 text-xs text-balance shadow-md',
           'animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95',
           'data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2',
           className

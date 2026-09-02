@@ -57,17 +57,39 @@ function eventElement(event: ReactPointerEvent<HTMLDivElement>) {
   return null;
 }
 
-function catalogIdFromEvent(event: ReactPointerEvent<HTMLDivElement>) {
-  const node = eventElement(event)?.closest('[data-catalog-id]');
-  const raw = node?.getAttribute('data-catalog-id');
+function catalogIdAtPoint(root: HTMLElement, x: number, y: number) {
+  const hits: { id: number; dist: number }[] = [];
 
-  if (!raw) {
-    return null;
+  for (const node of root.querySelectorAll<HTMLElement>('[data-catalog-id]')) {
+    if (node.style.visibility === 'hidden') {
+      continue;
+    }
+
+    const content = node.querySelector<HTMLElement>('[data-lyric-hit]') ?? node;
+    const rect = content.getBoundingClientRect();
+
+    if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+      continue;
+    }
+
+    const id = Number(node.getAttribute('data-catalog-id'));
+
+    if (!Number.isFinite(id)) {
+      continue;
+    }
+
+    const dx = x - (rect.left + rect.width / 2);
+    const dy = y - (rect.top + rect.height / 2);
+    hits.push({ id, dist: dx * dx + dy * dy });
   }
 
-  const id = Number(raw);
+  hits.sort((a, b) => a.dist - b.dist);
 
-  return Number.isFinite(id) ? id : null;
+  return hits[0]?.id ?? null;
+}
+
+function catalogIdFromEvent(event: ReactPointerEvent<HTMLDivElement>) {
+  return catalogIdAtPoint(event.currentTarget, event.clientX, event.clientY);
 }
 
 function isNearLastTap(
@@ -193,8 +215,15 @@ export function Viewport({
   hasMore,
   onNeedMore,
 }: ViewportProps) {
-  const { paused, canPlay, setPaused, setCanPlay, suppressToggle } =
-    usePlayback();
+  const {
+    paused,
+    canPlay,
+    setPaused,
+    setCanPlay,
+    suppressToggle,
+    beginOverlay,
+    endOverlay,
+  } = usePlayback();
   const { carouselSpeed, lineGap, fontSize } = useLyricView();
   const [deskOpen, setDeskOpen] = useState(false);
   const [deskLyricId, setDeskLyricId] = useState<number | null>(null);
@@ -435,6 +464,17 @@ export function Viewport({
     };
   }, []);
 
+  useEffect(() => {
+    if (!deskOpen) {
+      return;
+    }
+
+    beginOverlay();
+    return () => {
+      endOverlay();
+    };
+  }, [beginOverlay, deskOpen, endOverlay]);
+
   const openMessageDesk = (catalogId: number) => {
     clearTapToggle();
     suppressToggle();
@@ -443,16 +483,12 @@ export function Viewport({
     setDeskOpen(true);
   };
 
-  const lyricIdForPointer = (event: ReactPointerEvent<HTMLDivElement>) => {
-    return catalogIdFromEvent(event) ?? data[lastIndex]?.id ?? null;
-  };
-
   const tryOpenFromDoubleTap = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (!isNearLastTap(lastTapRef.current, event.clientX, event.clientY)) {
       return false;
     }
 
-    const catalogId = lyricIdForPointer(event);
+    const catalogId = catalogIdFromEvent(event);
 
     if (catalogId === null) {
       return false;

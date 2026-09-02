@@ -18,6 +18,9 @@ type LyricsArgs = {
   favoritesOnly?: boolean | null;
   hiddenOnly?: boolean | null;
   censoredOnly?: boolean | null;
+  includeCensored?: boolean | null;
+  includeShelves?: string[] | null;
+  excludeShelves?: string[] | null;
   demoName?: string | null;
   demosOnly?: boolean | null;
   oldestFirst?: boolean | null;
@@ -99,6 +102,9 @@ export const resolvers = {
         favoritesOnly: args.favoritesOnly,
         hiddenOnly: args.hiddenOnly,
         censoredOnly: args.censoredOnly,
+        includeCensored: args.includeCensored,
+        includeShelves: args.includeShelves,
+        excludeShelves: args.excludeShelves,
         demoName: args.demoName,
         demosOnly: args.demosOnly,
         oldestFirst: args.oldestFirst,
@@ -114,6 +120,13 @@ export const resolvers = {
       _context: GraphQLContext
     ) => {
       return fetchIngestPreview();
+    },
+    catalogStats: (
+      _parent: unknown,
+      _args: unknown,
+      _context: GraphQLContext
+    ) => {
+      return lyricsService.catalogStats();
     },
   },
   Mutation: {

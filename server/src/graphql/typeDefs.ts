@@ -166,6 +166,52 @@ export const typeDefinitions = /* GraphQL */ `
     count: Int!
   }
 
+  type CatalogShelfStat {
+    count: Int!
+    share: Float!
+  }
+
+  type CatalogMoodCount {
+    value: LyricMood!
+    count: Int!
+  }
+
+  type CatalogDeliveryCount {
+    value: LyricDelivery!
+    count: Int!
+  }
+
+  type CatalogReadinessCount {
+    value: LyricReadiness!
+    count: Int!
+  }
+
+  type CatalogRoleStats {
+    songRole: LyricSongRole!
+    phraseCount: Int!
+    mood: [CatalogMoodCount!]!
+    delivery: [CatalogDeliveryCount!]!
+  }
+
+  type CatalogUnscopedStats {
+    phraseCount: Int!
+    mood: [CatalogMoodCount!]!
+    delivery: [CatalogDeliveryCount!]!
+  }
+
+  type CatalogStats {
+    phraseCount: Int!
+    references: CatalogShelfStat!
+    favorites: CatalogShelfStat!
+    hidden: CatalogShelfStat!
+    censored: CatalogShelfStat!
+    withRole: CatalogShelfStat!
+    roles: [CatalogRoleStats!]!
+    unscoped: CatalogUnscopedStats!
+    readiness: [CatalogReadinessCount!]!
+    readinessNone: Int!
+  }
+
   type LyricIngestPreview {
     available: Boolean!
     pendingCount: Int!
@@ -193,6 +239,9 @@ export const typeDefinitions = /* GraphQL */ `
       favoritesOnly: Boolean
       hiddenOnly: Boolean
       censoredOnly: Boolean
+      includeCensored: Boolean
+      includeShelves: [String!]
+      excludeShelves: [String!]
       demoName: String
       demosOnly: Boolean
       oldestFirst: Boolean
@@ -202,6 +251,7 @@ export const typeDefinitions = /* GraphQL */ `
       readiness: LyricReadiness
     ): [Lyric!]!
     lyricIngestPreview: LyricIngestPreview!
+    catalogStats: CatalogStats!
   }
 
   type Mutation {

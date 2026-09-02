@@ -37,6 +37,52 @@ export interface ILyricDemo {
   count: number;
 }
 
+export type ICatalogShelfStat = {
+  count: number;
+  share: number;
+};
+
+export type ICatalogMoodCount = {
+  value: LyricMood;
+  count: number;
+};
+
+export type ICatalogDeliveryCount = {
+  value: LyricDelivery;
+  count: number;
+};
+
+export type ICatalogReadinessCount = {
+  value: LyricReadiness;
+  count: number;
+};
+
+export type ICatalogRoleStats = {
+  songRole: LyricSongRole;
+  phraseCount: number;
+  mood: ICatalogMoodCount[];
+  delivery: ICatalogDeliveryCount[];
+};
+
+export type ICatalogUnscopedStats = {
+  phraseCount: number;
+  mood: ICatalogMoodCount[];
+  delivery: ICatalogDeliveryCount[];
+};
+
+export type ICatalogStats = {
+  phraseCount: number;
+  references: ICatalogShelfStat;
+  favorites: ICatalogShelfStat;
+  hidden: ICatalogShelfStat;
+  censored: ICatalogShelfStat;
+  withRole: ICatalogShelfStat;
+  roles: ICatalogRoleStats[];
+  unscoped: ICatalogUnscopedStats;
+  readiness: ICatalogReadinessCount[];
+  readinessNone: number;
+};
+
 export interface IMessage {
   message_id: number;
   text: string;

@@ -19,16 +19,24 @@ import {
   UnfoldVertical,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
-import { type ReactNode, useEffect, useState } from 'react';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
 
 import { CatalogIngest } from '@/features/catalog-ingest';
 import {
   hasActiveLyricFilters,
   hasCustomLyricSettings,
-  type ShelfMode,
   type SortMode,
   useLyricView,
 } from '@/shared/lib/lyric-view/lyric-view-context';
+import {
+  clickShelfFlag,
+  isAllShelvesSelected,
+  isShelfFlagExcluded,
+  isShelfFlagOn,
+  selectAllShelves,
+  type ShelfFlag,
+  toggleExcludeShelfFlag,
+} from '@/shared/lib/lyric-view/shelf-filter';
 import { cn } from '@/shared/lib/utils/cn';
 import { Badge } from '@/shared/ui/shadcn/ui/badge';
 import { Button } from '@/shared/ui/shadcn/ui/button';
@@ -64,16 +72,17 @@ const SORT_OPTIONS: {
 ];
 
 const SHELF_OPTIONS: {
-  mode: ShelfMode;
+  flag: ShelfFlag;
   label: string;
   icon: typeof Bookmark;
 }[] = [
-  { mode: 'all', label: 'Все', icon: Layers },
-  { mode: 'favorites', label: 'Избранное', icon: Bookmark },
-  { mode: 'references', label: 'Эталоны', icon: Sparkles },
-  { mode: 'censored', label: 'Цензура', icon: Ban },
-  { mode: 'hidden', label: 'Скрытые', icon: EyeOff },
+  { flag: 'favorites', label: 'Избранное', icon: Bookmark },
+  { flag: 'references', label: 'Эталоны', icon: Sparkles },
+  { flag: 'censored', label: 'Цензура', icon: Ban },
+  { flag: 'hidden', label: 'Скрытые', icon: EyeOff },
 ];
+
+const SHELF_CLICK_DELAY_MS = 280;
 
 function SliderRow({
   id,
@@ -305,8 +314,9 @@ function SettingsTab({ checkIngest }: { checkIngest: boolean }) {
 
 function FiltersTab() {
   const {
-    shelfMode,
-    setShelfMode,
+    includedShelves,
+    excludedShelves,
+    setShelfSelection,
     selectedTags,
     selectedEmojis,
     keyword,
@@ -327,8 +337,30 @@ function FiltersTab() {
     toggleTag,
     toggleEmoji,
   } = useLyricView();
+  const shelfSelection = {
+    included: includedShelves,
+    excluded: excludedShelves,
+  };
+  const allShelves = isAllShelvesSelected(shelfSelection);
+  const clickTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (clickTimerRef.current != null) {
+        window.clearTimeout(clickTimerRef.current);
+      }
+    };
+  }, []);
+
+  const clearShelfClickTimer = () => {
+    if (clickTimerRef.current != null) {
+      window.clearTimeout(clickTimerRef.current);
+      clickTimerRef.current = null;
+    }
+  };
   const canReset = hasActiveLyricFilters({
-    shelfMode,
+    includedShelves,
+    excludedShelves,
     selectedTags,
     selectedEmojis,
     keyword,
@@ -349,25 +381,66 @@ function FiltersTab() {
         <div
           data-swipe-ignore
           className="flex flex-wrap gap-1.5 md:gap-2"
-          role="radiogroup"
+          role="group"
           aria-label="Полка каталога"
         >
-          {SHELF_OPTIONS.map(({ mode, label, icon: Icon }) => {
-            const selected = shelfMode === mode;
+          <button
+            type="button"
+            aria-pressed={allShelves}
+            aria-label="Все"
+            onClick={() => {
+              clearShelfClickTimer();
+              setShelfSelection(selectAllShelves());
+            }}
+            className="cursor-pointer"
+          >
+            <Badge
+              variant={allShelves ? 'default' : 'secondary'}
+              className="inline-flex items-center gap-1 px-2 py-0.5 text-xs md:gap-1.5 md:px-2.5 md:py-1 md:text-sm"
+            >
+              <Layers className="size-3 md:size-3.5" aria-hidden />
+              Все
+            </Badge>
+          </button>
+          {SHELF_OPTIONS.map(({ flag, label, icon: Icon }) => {
+            const selected = isShelfFlagOn(shelfSelection, flag);
+            const excluded = isShelfFlagExcluded(shelfSelection, flag);
 
             return (
               <button
-                key={mode}
+                key={flag}
                 type="button"
-                role="radio"
-                aria-checked={selected}
-                aria-label={label}
-                onClick={() => setShelfMode(mode)}
+                aria-pressed={selected}
+                aria-label={excluded ? `${label}, исключена из поиска` : label}
+                onMouseDown={(event) => {
+                  if (event.detail > 1) {
+                    event.preventDefault();
+                  }
+                }}
+                onClick={() => {
+                  clearShelfClickTimer();
+                  clickTimerRef.current = window.setTimeout(() => {
+                    clickTimerRef.current = null;
+                    setShelfSelection((current) =>
+                      clickShelfFlag(current, flag)
+                    );
+                  }, SHELF_CLICK_DELAY_MS);
+                }}
+                onDoubleClick={() => {
+                  clearShelfClickTimer();
+                  setShelfSelection((current) =>
+                    toggleExcludeShelfFlag(current, flag)
+                  );
+                }}
                 className="cursor-pointer"
               >
                 <Badge
-                  variant={selected ? 'default' : 'secondary'}
-                  className="inline-flex items-center gap-1 px-2 py-0.5 text-xs md:gap-1.5 md:px-2.5 md:py-1 md:text-sm"
+                  variant={selected || excluded ? 'default' : 'secondary'}
+                  className={cn(
+                    'inline-flex items-center gap-1 px-2 py-0.5 text-xs md:gap-1.5 md:px-2.5 md:py-1 md:text-sm',
+                    excluded &&
+                      'border-rose-500 bg-rose-600 text-white hover:bg-rose-600'
+                  )}
                 >
                   <Icon className="size-3 md:size-3.5" aria-hidden />
                   {label}

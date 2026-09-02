@@ -17,7 +17,10 @@ export const LyricItem = ({ item }: LyricItemProps) => {
     .filter((emoji): emoji is string => Boolean(emoji));
 
   return (
-    <div className="flex max-w-[90%] flex-col items-center gap-4">
+    <div
+      className="pointer-events-auto flex max-w-[90%] flex-col items-center gap-4"
+      data-lyric-hit
+    >
       {tags.length > 0 ? (
         <div className="flex flex-wrap items-center justify-center gap-2">
           {tags.map((tag, index) => (

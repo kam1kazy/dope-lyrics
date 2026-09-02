@@ -149,6 +149,18 @@ export function disableFacetValue<T extends string>(
   return current.filter((entry) => entry !== item);
 }
 
+export function toggleFacetValue<T extends string>(
+  current: readonly T[],
+  item: T,
+  multiple: boolean
+): T[] {
+  if (current.includes(item)) {
+    return disableFacetValue(current, item);
+  }
+
+  return selectFacetValue(current, item, multiple);
+}
+
 export function upsertRoleProfile(
   profiles: readonly LyricRoleProfile[],
   songRole: LyricSongRole,

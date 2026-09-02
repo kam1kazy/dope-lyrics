@@ -139,6 +139,7 @@
   padding: 1.5rem;
   text-align: center;
   white-space: break-spaces;
+  pointer-events: none;
   opacity: 0;
   visibility: hidden;
   will-change: transform, opacity;

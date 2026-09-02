@@ -14,6 +14,9 @@ export interface LyricsListOptions {
   favoritesOnly?: boolean | null;
   hiddenOnly?: boolean | null;
   censoredOnly?: boolean | null;
+  includeCensored?: boolean | null;
+  includeShelves?: string[] | null;
+  excludeShelves?: string[] | null;
   demoName?: string | null;
   demosOnly?: boolean | null;
   oldestFirst?: boolean | null;
@@ -167,6 +170,105 @@ const buildFacetWhere = (
   };
 };
 
+const SHELF_FLAGS = ['favorites', 'references', 'censored', 'hidden'] as const;
+
+type ShelfFlag = (typeof SHELF_FLAGS)[number];
+
+const isShelfFlag = (value: string): value is ShelfFlag => {
+  return (SHELF_FLAGS as readonly string[]).includes(value);
+};
+
+const normalizeShelfFlags = (
+  values: string[] | null | undefined
+): ShelfFlag[] | null => {
+  if (values == null) {
+    return null;
+  }
+
+  return [...new Set(values.filter(isShelfFlag))];
+};
+
+const buildShelfClause = (
+  includeShelves: string[] | null | undefined,
+  excludeShelves: string[] | null | undefined
+): Prisma.LyricsWhereInput | null => {
+  const included = normalizeShelfFlags(includeShelves);
+  const excluded = normalizeShelfFlags(excludeShelves);
+
+  if (included == null && excluded == null) {
+    return null;
+  }
+
+  const include = included ?? [];
+  const exclude = excluded ?? [];
+  const allowHidden = include.includes('hidden');
+  const clauses: Prisma.LyricsWhereInput[] = [];
+
+  if (include.length > 0) {
+    const or: Prisma.LyricsWhereInput[] = [];
+
+    if (include.includes('favorites')) {
+      or.push(
+        allowHidden
+          ? { isFavorite: true }
+          : { isFavorite: true, isHidden: false }
+      );
+    }
+
+    if (include.includes('references')) {
+      or.push(
+        allowHidden
+          ? { isReference: true }
+          : { isReference: true, isHidden: false }
+      );
+    }
+
+    if (include.includes('censored')) {
+      or.push(
+        allowHidden
+          ? { isCensored: true }
+          : { isCensored: true, isHidden: false }
+      );
+    }
+
+    if (allowHidden) {
+      or.push({ isHidden: true });
+    }
+
+    if (or.length > 0) {
+      clauses.push({ OR: or });
+    }
+  } else {
+    clauses.push({ isHidden: false });
+  }
+
+  if (exclude.includes('censored') && !include.includes('censored')) {
+    clauses.push({ isCensored: false });
+  }
+
+  if (exclude.includes('favorites') && !include.includes('favorites')) {
+    clauses.push({ isFavorite: false });
+  }
+
+  if (exclude.includes('references') && !include.includes('references')) {
+    clauses.push({ isReference: false });
+  }
+
+  if (exclude.includes('hidden')) {
+    clauses.push({ isHidden: false });
+  }
+
+  if (clauses.length === 0) {
+    return {};
+  }
+
+  if (clauses.length === 1) {
+    return clauses[0];
+  }
+
+  return { AND: clauses };
+};
+
 export const buildLyricsWhere = (
   options: Pick<
     LyricsListOptions,
@@ -179,6 +281,9 @@ export const buildLyricsWhere = (
     | 'favoritesOnly'
     | 'hiddenOnly'
     | 'censoredOnly'
+    | 'includeCensored'
+    | 'includeShelves'
+    | 'excludeShelves'
     | 'demoName'
     | 'demosOnly'
     | 'mood'
@@ -194,6 +299,7 @@ export const buildLyricsWhere = (
   const favoritesOnly = options.favoritesOnly === true;
   const hiddenOnly = options.hiddenOnly === true;
   const censoredOnly = options.censoredOnly === true;
+  const includeCensored = options.includeCensored === true;
   const demoName = options.demoName?.trim() ?? '';
   const demosOnly = options.demosOnly === true;
 
@@ -266,7 +372,15 @@ export const buildLyricsWhere = (
     },
   };
 
-  if (hiddenOnly) {
+  const shelfClause = buildShelfClause(
+    options.includeShelves,
+    options.excludeShelves
+  );
+  const andParts: Prisma.LyricsWhereInput[] = [];
+
+  if (shelfClause) {
+    andParts.push(shelfClause);
+  } else if (hiddenOnly) {
     where.isHidden = true;
   } else {
     where.isHidden = false;
@@ -281,6 +395,8 @@ export const buildLyricsWhere = (
 
     if (censoredOnly) {
       where.isCensored = true;
+    } else if (!includeCensored) {
+      where.isCensored = false;
     }
   }
 
@@ -298,7 +414,11 @@ export const buildLyricsWhere = (
   const facetWhere = buildFacetWhere(moods, deliveries, songRoles);
 
   if (facetWhere) {
-    where.AND = [facetWhere];
+    andParts.push(facetWhere);
+  }
+
+  if (andParts.length > 0) {
+    where.AND = andParts;
   }
 
   if (readiness) {

@@ -16,24 +16,21 @@ import type {
   LyricReadiness,
   LyricSongRole,
 } from '@/shared/lib/lyric-facets';
+import {
+  DEFAULT_SHELF_SELECTION,
+  isDefaultShelfSelection,
+  type ShelfFlag,
+  type ShelfSelection,
+} from '@/shared/lib/lyric-view/shelf-filter';
 
 export const SORT_MODES = ['shuffle', 'forward', 'reverse'] as const;
 
 export type SortMode = (typeof SORT_MODES)[number];
 
-export const SHELF_MODES = [
-  'all',
-  'favorites',
-  'hidden',
-  'references',
-  'censored',
-] as const;
-
-export type ShelfMode = (typeof SHELF_MODES)[number];
-
 export const LYRIC_VIEW_DEFAULTS = {
   sortMode: 'shuffle' as SortMode,
-  shelfMode: 'all' as ShelfMode,
+  includedShelves: DEFAULT_SHELF_SELECTION.included,
+  excludedShelves: DEFAULT_SHELF_SELECTION.excluded,
   fontSize: 31,
   lineHeight: 1.45,
   lineGap: 2,
@@ -143,7 +140,8 @@ function writePersistedSettings(settings: PersistedLyricSettings): void {
 interface LyricViewContextValue {
   sortMode: SortMode;
   shuffleSeed: number;
-  shelfMode: ShelfMode;
+  includedShelves: ShelfFlag[];
+  excludedShelves: ShelfFlag[];
   fontSize: number;
   lineHeight: number;
   lineGap: number;
@@ -158,7 +156,9 @@ interface LyricViewContextValue {
   songRole: LyricSongRole[];
   readiness: LyricReadiness | null;
   setSortMode: (mode: SortMode) => void;
-  setShelfMode: (mode: ShelfMode) => void;
+  setShelfSelection: (
+    selection: ShelfSelection | ((current: ShelfSelection) => ShelfSelection)
+  ) => void;
   setFontSize: (value: number) => void;
   setLineHeight: (value: number) => void;
   setLineGap: (value: number) => void;
@@ -182,9 +182,12 @@ export function LyricViewProvider({ children }: { children: ReactNode }) {
   const [sortMode, setSortModeState] = useState<SortMode>(
     LYRIC_VIEW_DEFAULTS.sortMode
   );
-  const [shelfMode, setShelfModeState] = useState<ShelfMode>(
-    LYRIC_VIEW_DEFAULTS.shelfMode
-  );
+  const [shelfSelection, setShelfSelectionState] = useState<ShelfSelection>({
+    included: [...LYRIC_VIEW_DEFAULTS.includedShelves],
+    excluded: [...LYRIC_VIEW_DEFAULTS.excludedShelves],
+  });
+  const includedShelves = shelfSelection.included;
+  const excludedShelves = shelfSelection.excluded;
   const [shuffleSeed, setShuffleSeed] = useState(1);
   const [fontSize, setFontSize] = useState(LYRIC_VIEW_DEFAULTS.fontSize);
   const [lineHeight, setLineHeight] = useState(LYRIC_VIEW_DEFAULTS.lineHeight);
@@ -245,9 +248,16 @@ export function LyricViewProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const setShelfMode = useCallback((mode: ShelfMode) => {
-    setShelfModeState(mode);
-  }, []);
+  const setShelfSelection = useCallback(
+    (
+      selection: ShelfSelection | ((current: ShelfSelection) => ShelfSelection)
+    ) => {
+      setShelfSelectionState((current) =>
+        typeof selection === 'function' ? selection(current) : selection
+      );
+    },
+    []
+  );
 
   const toggleTag = useCallback((tag: string) => {
     setSelectedTags((current) =>
@@ -274,7 +284,10 @@ export function LyricViewProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const resetFilters = useCallback(() => {
-    setShelfModeState(LYRIC_VIEW_DEFAULTS.shelfMode);
+    setShelfSelectionState({
+      included: [...LYRIC_VIEW_DEFAULTS.includedShelves],
+      excluded: [...LYRIC_VIEW_DEFAULTS.excludedShelves],
+    });
     setSelectedTags([]);
     setSelectedEmojis([]);
     setKeyword(LYRIC_VIEW_DEFAULTS.keyword);
@@ -290,7 +303,8 @@ export function LyricViewProvider({ children }: { children: ReactNode }) {
     () => ({
       sortMode,
       shuffleSeed,
-      shelfMode,
+      includedShelves,
+      excludedShelves,
       fontSize,
       lineHeight,
       lineGap,
@@ -305,7 +319,7 @@ export function LyricViewProvider({ children }: { children: ReactNode }) {
       songRole,
       readiness,
       setSortMode,
-      setShelfMode,
+      setShelfSelection,
       setFontSize,
       setLineHeight,
       setLineGap,
@@ -325,7 +339,8 @@ export function LyricViewProvider({ children }: { children: ReactNode }) {
     [
       sortMode,
       shuffleSeed,
-      shelfMode,
+      includedShelves,
+      excludedShelves,
       fontSize,
       lineHeight,
       lineGap,
@@ -340,7 +355,7 @@ export function LyricViewProvider({ children }: { children: ReactNode }) {
       songRole,
       readiness,
       setSortMode,
-      setShelfMode,
+      setShelfSelection,
       toggleTag,
       toggleEmoji,
       resetSettings,
@@ -397,7 +412,8 @@ export function hasCustomLyricSettings(options: {
 }
 
 export function hasActiveLyricFilters(options: {
-  shelfMode: ShelfMode;
+  includedShelves: ShelfFlag[];
+  excludedShelves: ShelfFlag[];
   selectedTags: string[];
   selectedEmojis: string[];
   keyword: string;
@@ -409,7 +425,10 @@ export function hasActiveLyricFilters(options: {
   readiness: LyricReadiness | null;
 }): boolean {
   return (
-    options.shelfMode !== LYRIC_VIEW_DEFAULTS.shelfMode ||
+    !isDefaultShelfSelection({
+      included: options.includedShelves,
+      excluded: options.excludedShelves,
+    }) ||
     options.selectedTags.length > 0 ||
     options.selectedEmojis.length > 0 ||
     options.keyword.trim().length > 0 ||

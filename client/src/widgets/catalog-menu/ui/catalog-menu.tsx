@@ -4,6 +4,7 @@ import {
   AudioLines,
   Bookmark,
   Bot,
+  ChartColumn,
   History,
   List,
   ListFilter,
@@ -16,6 +17,7 @@ import { CatalogDemosPanel } from '@/features/catalog-demos';
 import { CatalogFavoritesPanel } from '@/features/catalog-favorites';
 import { CatalogFilterPane } from '@/features/catalog-filters';
 import { CatalogListPanel } from '@/features/catalog-list';
+import { CatalogStatsPanel } from '@/features/catalog-stats';
 import {
   type CatalogSectionFilters,
   DEFAULT_CATALOG_SECTION_FILTERS,
@@ -28,7 +30,9 @@ import { cn } from '@/shared/lib/utils/cn';
 import { CatalogPanel } from '@/shared/ui/catalog-panel/catalog-panel';
 import { Button } from '@/shared/ui/shadcn/ui/button';
 
-type CatalogSection = 'list' | 'favorites' | 'demos';
+type CatalogSection = 'list' | 'favorites' | 'demos' | 'stats';
+
+type FilterableSection = Exclude<CatalogSection, 'stats'>;
 
 type MenuItem = {
   id: CatalogSection | 'references' | 'generations' | 'ai-settings';
@@ -41,6 +45,7 @@ const MENU_ITEMS: MenuItem[] = [
   { id: 'list', label: 'Список', icon: List },
   { id: 'favorites', label: 'Избранное', icon: Bookmark },
   { id: 'demos', label: 'Тексты из демок', icon: AudioLines },
+  { id: 'stats', label: 'Сводка', icon: ChartColumn },
   { id: 'references', label: 'Эталоны', icon: Sparkles, disabled: true },
   {
     id: 'generations',
@@ -55,13 +60,15 @@ const SECTION_TITLES: Record<CatalogSection, string> = {
   list: 'Список',
   favorites: 'Избранное',
   demos: 'Тексты из демок',
+  stats: 'Сводка',
 };
 
-const EMPTY_SECTION_FILTERS: Record<CatalogSection, CatalogSectionFilters> = {
-  list: { ...DEFAULT_CATALOG_SECTION_FILTERS },
-  favorites: { ...DEFAULT_CATALOG_SECTION_FILTERS },
-  demos: { ...DEFAULT_CATALOG_SECTION_FILTERS },
-};
+const EMPTY_SECTION_FILTERS: Record<FilterableSection, CatalogSectionFilters> =
+  {
+    list: { ...DEFAULT_CATALOG_SECTION_FILTERS },
+    favorites: { ...DEFAULT_CATALOG_SECTION_FILTERS },
+    demos: { ...DEFAULT_CATALOG_SECTION_FILTERS },
+  };
 
 export function CatalogMenu() {
   const [isOpen, setIsOpen] = useState(false);
@@ -111,11 +118,13 @@ export function CatalogMenu() {
     setFiltersOpen(false);
   };
 
-  const sectionFilters = activeSection
-    ? filtersBySection[activeSection]
+  const filterableSection: FilterableSection | null =
+    activeSection && activeSection !== 'stats' ? activeSection : null;
+  const sectionFilters = filterableSection
+    ? filtersBySection[filterableSection]
     : DEFAULT_CATALOG_SECTION_FILTERS;
-  const sectionHasFilters = activeSection
-    ? hasActiveCatalogSectionFilters(filtersBySection[activeSection])
+  const sectionHasFilters = filterableSection
+    ? hasActiveCatalogSectionFilters(filtersBySection[filterableSection])
     : false;
 
   return (
@@ -248,25 +257,27 @@ export function CatalogMenu() {
                   <h2 className="text-sm font-medium">
                     {SECTION_TITLES[activeSection]}
                   </h2>
-                  <Button
-                    type="button"
-                    variant={filtersOpen ? 'secondary' : 'ghost'}
-                    size="icon"
-                    className="relative ml-auto size-8"
-                    aria-label="Фильтры"
-                    aria-pressed={filtersOpen}
-                    onClick={() => {
-                      setFiltersOpen((open) => !open);
-                    }}
-                  >
-                    <ListFilter className="size-4" />
-                    {sectionHasFilters ? (
-                      <span
-                        className="bg-primary absolute top-1.5 right-1.5 size-1.5 rounded-full"
-                        aria-hidden
-                      />
-                    ) : null}
-                  </Button>
+                  {filterableSection ? (
+                    <Button
+                      type="button"
+                      variant={filtersOpen ? 'secondary' : 'ghost'}
+                      size="icon"
+                      className="relative ml-auto size-8"
+                      aria-label="Фильтры"
+                      aria-pressed={filtersOpen}
+                      onClick={() => {
+                        setFiltersOpen((open) => !open);
+                      }}
+                    >
+                      <ListFilter className="size-4" />
+                      {sectionHasFilters ? (
+                        <span
+                          className="bg-primary absolute top-1.5 right-1.5 size-1.5 rounded-full"
+                          aria-hidden
+                        />
+                      ) : null}
+                    </Button>
+                  ) : null}
                 </div>
 
                 <div className="relative flex min-h-0 flex-1 overflow-hidden">
@@ -278,8 +289,10 @@ export function CatalogMenu() {
                       <CatalogListPanel filters={sectionFilters} />
                     ) : activeSection === 'favorites' ? (
                       <CatalogFavoritesPanel filters={sectionFilters} />
-                    ) : (
+                    ) : activeSection === 'demos' ? (
                       <CatalogDemosPanel filters={sectionFilters} />
+                    ) : (
+                      <CatalogStatsPanel />
                     )}
                   </div>
 
@@ -296,12 +309,16 @@ export function CatalogMenu() {
                   >
                     <div className="h-full w-full sm:w-80">
                       <CatalogFilterPane
-                        sectionId={activeSection}
+                        sectionId={filterableSection ?? 'list'}
                         filters={sectionFilters}
                         onChange={(next) => {
+                          if (!filterableSection) {
+                            return;
+                          }
+
                           setFiltersBySection((current) => ({
                             ...current,
-                            [activeSection]: next,
+                            [filterableSection]: next,
                           }));
                         }}
                       />

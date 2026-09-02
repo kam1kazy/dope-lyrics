@@ -23,6 +23,9 @@ export const ALL_LYRICS = gql`
     $favoritesOnly: Boolean
     $hiddenOnly: Boolean
     $censoredOnly: Boolean
+    $includeCensored: Boolean
+    $includeShelves: [String!]
+    $excludeShelves: [String!]
     $demoName: String
     $demosOnly: Boolean
     $limit: Int
@@ -43,6 +46,9 @@ export const ALL_LYRICS = gql`
       favoritesOnly: $favoritesOnly
       hiddenOnly: $hiddenOnly
       censoredOnly: $censoredOnly
+      includeCensored: $includeCensored
+      includeShelves: $includeShelves
+      excludeShelves: $excludeShelves
       demoName: $demoName
       demosOnly: $demosOnly
       limit: $limit
@@ -155,6 +161,62 @@ export const INGEST_PENDING_LYRICS = gql`
     ingestPendingLyrics {
       available
       addedCount
+    }
+  }
+`;
+
+export const CATALOG_STATS = gql`
+  query CatalogStats {
+    catalogStats {
+      phraseCount
+      references {
+        count
+        share
+      }
+      favorites {
+        count
+        share
+      }
+      hidden {
+        count
+        share
+      }
+      censored {
+        count
+        share
+      }
+      withRole {
+        count
+        share
+      }
+      roles {
+        songRole
+        phraseCount
+        mood {
+          value
+          count
+        }
+        delivery {
+          value
+          count
+        }
+      }
+      unscoped {
+        phraseCount
+        mood {
+          value
+          count
+        }
+        delivery {
+          value
+          count
+        }
+      }
+      readiness {
+        value
+        count
+      }
+      readinessNone
     }
   }
 `;

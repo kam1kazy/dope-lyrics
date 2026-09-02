@@ -16,6 +16,9 @@ export type LyricsQueryVariables = {
   favoritesOnly: boolean | null;
   hiddenOnly: boolean | null;
   censoredOnly: boolean | null;
+  includeCensored: boolean | null;
+  includeShelves: string[] | null;
+  excludeShelves: string[] | null;
   demoName?: string | null;
   demosOnly?: boolean | null;
   limit?: number | null;
@@ -49,6 +52,9 @@ export function catalogLyricsVariables(
     favoritesOnly: null,
     hiddenOnly: null,
     censoredOnly: null,
+    includeCensored: null,
+    includeShelves: null,
+    excludeShelves: null,
     demoName: null,
     demosOnly: null,
     limit: LYRICS_PAGE_SIZE,
@@ -61,7 +67,8 @@ export function catalogLyricsVariables(
 
 export function catalogQueryVariablesForSection(
   section: 'list' | 'favorites' | 'demos',
-  filters: CatalogSectionFilters
+  filters: CatalogSectionFilters,
+  includeCensored = false
 ): LyricsQueryVariables {
   return catalogLyricsVariables({
     tags: filters.selectedTags.length > 0 ? filters.selectedTags : null,
@@ -76,5 +83,6 @@ export function catalogQueryVariablesForSection(
     delivery: filters.delivery.length > 0 ? filters.delivery : null,
     songRole: filters.songRole.length > 0 ? filters.songRole : null,
     readiness: filters.readiness,
+    includeCensored: includeCensored ? true : null,
   });
 }

@@ -1,6 +1,12 @@
 'use client';
 
-import { disableFacetValue, selectFacetValue } from '@/shared/lib/lyric-facets';
+import { useState } from 'react';
+
+import {
+  disableFacetValue,
+  selectFacetValue,
+  toggleFacetValue,
+} from '@/shared/lib/lyric-facets';
 import { cn } from '@/shared/lib/utils/cn';
 import { Badge } from '@/shared/ui/shadcn/ui/badge';
 import {
@@ -17,6 +23,7 @@ export function FacetChipGroup<T extends string>({
   value,
   multiple,
   accent,
+  toggleOnClick = false,
   onChange,
   onSelect,
   size = 'filter',
@@ -28,10 +35,12 @@ export function FacetChipGroup<T extends string>({
   value: readonly T[];
   multiple: boolean;
   accent?: T | null;
+  toggleOnClick?: boolean;
   onChange: (next: T[]) => void;
   onSelect?: (option: T) => void;
   size?: 'filter' | 'desk';
 }) {
+  const [openHint, setOpenHint] = useState<T | null>(null);
   const badgeClass =
     size === 'desk'
       ? 'px-2 py-0.5 text-xs sm:px-2.5 sm:py-1 sm:text-sm'
@@ -61,13 +70,28 @@ export function FacetChipGroup<T extends string>({
         }
         role="group"
         aria-label={label}
+        onPointerLeave={() => setOpenHint(null)}
       >
         {options.map((option) => {
           const selected = value.includes(option);
           const isAccent = accent === option;
+          const filled = accent !== undefined ? isAccent : selected;
+          const outlined = selected && !filled;
 
           return (
-            <Tooltip key={option}>
+            <Tooltip
+              key={option}
+              open={openHint === option}
+              onOpenChange={(open) => {
+                setOpenHint((current) => {
+                  if (open) {
+                    return option;
+                  }
+
+                  return current === option ? null : current;
+                });
+              }}
+            >
               <TooltipTrigger asChild>
                 <button
                   type="button"
@@ -79,20 +103,38 @@ export function FacetChipGroup<T extends string>({
                       event.preventDefault();
                     }
                   }}
-                  onClick={() => {
+                  onClick={(event) => {
+                    if (toggleOnClick && event.detail > 1) {
+                      return;
+                    }
+
+                    setOpenHint(null);
                     onSelect?.(option);
-                    onChange(selectFacetValue(value, option, multiple));
+                    onChange(
+                      toggleOnClick
+                        ? toggleFacetValue(value, option, multiple)
+                        : selectFacetValue(value, option, multiple)
+                    );
                   }}
-                  onDoubleClick={() =>
-                    onChange(disableFacetValue(value, option))
-                  }
-                  className="cursor-pointer"
+                  onDoubleClick={() => {
+                    if (toggleOnClick) {
+                      return;
+                    }
+
+                    onChange(disableFacetValue(value, option));
+                  }}
+                  className={cn(
+                    'cursor-pointer rounded-md',
+                    outlined && 'shadow-[0_1px_6px_rgba(255,255,255,0.35)]'
+                  )}
                 >
                   <Badge
-                    variant={selected ? 'default' : 'secondary'}
+                    variant="outline"
                     className={cn(
                       badgeClass,
-                      isAccent && 'ring-foreground/50 ring-2'
+                      filled && 'border-white bg-white text-black',
+                      outlined && 'border-white bg-black text-white',
+                      !selected && 'border-white/15 bg-black/40 text-white/60'
                     )}
                   >
                     {labels[option]}

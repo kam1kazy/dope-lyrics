@@ -2,7 +2,7 @@
 
 import { useMutation } from '@apollo/client/react';
 import { Ban, EyeOff, Sparkles, Star } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import {
   FacetChipGroup,
@@ -31,7 +31,6 @@ import {
   updateLyricsCacheAfterFlagsChange,
   upsertRoleProfile,
 } from '@/entities/lyric';
-import { useLyricView } from '@/shared/lib/lyric-view/lyric-view-context';
 import { usePlayback } from '@/shared/lib/playback/playback-context';
 import { cn } from '@/shared/lib/utils/cn';
 import { Badge } from '@/shared/ui/shadcn/ui/badge';
@@ -82,9 +81,9 @@ export function MessageDeskDialog({
   onOpenChange,
   onHidden,
 }: MessageDeskDialogProps) {
-  const { shelfMode } = useLyricView();
   const { suppressToggle } = usePlayback();
   const [tab, setTab] = useState<DeskTab>('text');
+  const [deskTitle, setDeskTitle] = useState('Сообщение');
   const [activeSongRole, setActiveSongRole] = useState<LyricSongRole | null>(
     null
   );
@@ -111,6 +110,16 @@ export function MessageDeskDialog({
       setActiveSongRole(null);
     }
   }, [open]);
+
+  useLayoutEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    setDeskTitle(lyric?.readiness === 'LINE' ? 'фразочка' : 'Сообщение');
+    // Заголовок только на открытии: смена готовности в открытой карточке его не трогает.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- lyric.readiness нарочно не в зависимостях
+  }, [open, lyric?.id]);
 
   useEffect(() => {
     setProfileOverride(null);
@@ -148,8 +157,7 @@ export function MessageDeskDialog({
       updateLyricsCacheAfterFlagsChange(
         cache,
         data.updateLyricFlags,
-        queryVariables,
-        shelfMode
+        queryVariables
       );
     },
   });
@@ -183,8 +191,7 @@ export function MessageDeskDialog({
       updateLyricsCacheAfterFlagsChange(
         cache,
         data.updateLyricProfile,
-        queryVariables,
-        shelfMode
+        queryVariables
       );
     },
   });
@@ -222,20 +229,25 @@ export function MessageDeskDialog({
     lyricId: number;
     fields: ProfileFields;
   }) => {
+    const roleProfiles = pending.fields.roleProfiles.map(
+      ({ songRole, mood, delivery }) => ({ songRole, mood, delivery })
+    );
+
     void updateProfile({
       variables: {
         id: pending.id,
         ...pending.fields,
+        roleProfiles,
       },
       optimisticResponse: {
         updateLyricProfile: {
           ...lyricTypename(pending.id, pending.lyricId),
           ...pending.fields,
-          roleProfiles: pending.fields.roleProfiles.map((item) => ({
+          roleProfiles: roleProfiles.map((item) => ({
             __typename: 'LyricRoleProfile' as const,
             ...item,
           })),
-          songRole: pending.fields.roleProfiles.map((item) => item.songRole),
+          songRole: roleProfiles.map((item) => item.songRole),
         },
       },
     }).catch((error: unknown) => {
@@ -373,7 +385,7 @@ export function MessageDeskDialog({
         }}
       >
         <DialogHeader className="gap-2 sm:gap-3 sm:pr-8">
-          <DialogTitle className="sm:text-xl">Сообщение</DialogTitle>
+          <DialogTitle className="sm:text-xl">{deskTitle}</DialogTitle>
           <DialogDescription className="sm:text-base">
             {tab === 'text'
               ? 'Полный текст из каталога.'
@@ -467,8 +479,8 @@ export function MessageDeskDialog({
 
                 for (const role of roles) {
                   roleProfiles = upsertRoleProfile(roleProfiles, role, {
-                    mood: profile.mood,
-                    delivery: profile.delivery,
+                    mood: [],
+                    delivery: [],
                   });
                 }
 
@@ -479,10 +491,6 @@ export function MessageDeskDialog({
                 patchProfile({ ...profile, roleProfiles });
               }}
             />
-            <p className="text-muted-foreground -mt-2 text-xs sm:-mt-3 sm:text-sm">
-              У каждой роли свои настроение и подача. Клик выбирает, двойной
-              клик снимает.
-            </p>
             <FacetChipGroup
               label="Настроение"
               options={LYRIC_MOODS}
@@ -490,6 +498,7 @@ export function MessageDeskDialog({
               hints={LYRIC_MOOD_HINTS}
               value={editingMood}
               multiple
+              toggleOnClick
               size="desk"
               onChange={(mood) => {
                 if (activeSongRole) {
@@ -514,6 +523,7 @@ export function MessageDeskDialog({
               hints={LYRIC_DELIVERY_HINTS}
               value={editingDelivery}
               multiple
+              toggleOnClick
               size="desk"
               onChange={(delivery) => {
                 if (activeSongRole) {

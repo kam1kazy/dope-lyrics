@@ -1,6 +1,10 @@
 import type { ApolloCache } from '@apollo/client';
 
-import type { ShelfMode } from '@/shared/lib/lyric-view/lyric-view-context';
+import {
+  lyricMatchesShelves,
+  SHELF_FLAGS,
+  type ShelfFlag,
+} from '@/shared/lib/lyric-view/shelf-filter';
 
 import { ALL_LYRICS } from '../api/queries';
 import type { ILyric } from '../model/types';
@@ -20,8 +24,27 @@ type UpdatedLyric = Pick<
   | 'readiness'
 >;
 
-function lyricMatchesShelf(lyric: ILyric, shelfMode: ShelfMode): boolean {
-  if (shelfMode === 'hidden') {
+function toShelfFlags(values: string[] | null): ShelfFlag[] {
+  return (values ?? []).filter((value): value is ShelfFlag =>
+    (SHELF_FLAGS as readonly string[]).includes(value)
+  );
+}
+
+function lyricMatchesQueryShelves(
+  lyric: ILyric,
+  queryVariables: LyricsQueryVariables
+): boolean {
+  if (
+    queryVariables.includeShelves != null ||
+    queryVariables.excludeShelves != null
+  ) {
+    return lyricMatchesShelves(lyric, {
+      included: toShelfFlags(queryVariables.includeShelves),
+      excluded: toShelfFlags(queryVariables.excludeShelves),
+    });
+  }
+
+  if (queryVariables.hiddenOnly) {
     return lyric.isHidden;
   }
 
@@ -29,16 +52,20 @@ function lyricMatchesShelf(lyric: ILyric, shelfMode: ShelfMode): boolean {
     return false;
   }
 
-  if (shelfMode === 'favorites') {
+  if (queryVariables.censoredOnly) {
+    return lyric.isCensored;
+  }
+
+  if (queryVariables.includeCensored !== true && lyric.isCensored) {
+    return false;
+  }
+
+  if (queryVariables.favoritesOnly) {
     return lyric.isFavorite;
   }
 
-  if (shelfMode === 'references') {
+  if (queryVariables.referencesOnly) {
     return lyric.isReference;
-  }
-
-  if (shelfMode === 'censored') {
-    return lyric.isCensored;
   }
 
   return true;
@@ -111,8 +138,7 @@ function lyricMatchesFacets(
 export function updateLyricsCacheAfterFlagsChange(
   cache: ApolloCache,
   updated: Partial<UpdatedLyric> & Pick<ILyric, 'id'>,
-  queryVariables: LyricsQueryVariables,
-  shelfMode: ShelfMode
+  queryVariables: LyricsQueryVariables
 ) {
   const existing = cache.readQuery<{ lyrics: ILyric[] }>({
     query: ALL_LYRICS,
@@ -129,7 +155,7 @@ export function updateLyricsCacheAfterFlagsChange(
     )
     .filter(
       (lyric) =>
-        lyricMatchesShelf(lyric, shelfMode) &&
+        lyricMatchesQueryShelves(lyric, queryVariables) &&
         lyricMatchesFacets(lyric, queryVariables)
     );
 
