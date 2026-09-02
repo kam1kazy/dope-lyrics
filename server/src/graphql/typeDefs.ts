@@ -115,7 +115,6 @@ export const typeDefinitions = /* GraphQL */ `
       dateFrom: String
       dateTo: String
       referencesOnly: Boolean
-      demosOnly: Boolean
     ): [Lyric!]!
   }
 `;

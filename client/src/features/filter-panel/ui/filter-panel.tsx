@@ -330,8 +330,6 @@ function FiltersTab() {
     setDateFrom,
     dateTo,
     setDateTo,
-    demosOnly,
-    setDemosOnly,
     resetFilters,
   } = useLyricView();
   const canReset = hasActiveLyricFilters({
@@ -340,7 +338,6 @@ function FiltersTab() {
     keyword,
     dateFrom,
     dateTo,
-    demosOnly,
   });
 
   const { data: tagsData, loading: tagsLoading } = useQuery<{
@@ -355,17 +352,6 @@ function FiltersTab() {
 
   return (
     <div className="flex flex-col gap-4 pb-1">
-      <Button
-        type="button"
-        variant={demosOnly ? 'default' : 'outline'}
-        className="w-full justify-start gap-2"
-        aria-pressed={demosOnly}
-        onClick={() => setDemosOnly(!demosOnly)}
-      >
-        <AudioLines className="size-4" />
-        Тексты из демок
-      </Button>
-
       <div className="flex flex-col gap-2">
         <Label className="text-muted-foreground flex items-center gap-1.5 text-xs font-normal">
           <CalendarRange className="size-3.5" aria-hidden />

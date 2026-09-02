@@ -46,7 +46,6 @@ interface LyricViewContextValue {
   setKeyword: (value: string) => void;
   setDateFrom: (value: string) => void;
   setDateTo: (value: string) => void;
-  setDemosOnly: (value: boolean) => void;
   resetSettings: () => void;
   resetFilters: () => void;
 }
@@ -69,7 +68,6 @@ export function LyricViewProvider({ children }: { children: ReactNode }) {
   const [keyword, setKeyword] = useState(LYRIC_VIEW_DEFAULTS.keyword);
   const [dateFrom, setDateFrom] = useState(LYRIC_VIEW_DEFAULTS.dateFrom);
   const [dateTo, setDateTo] = useState(LYRIC_VIEW_DEFAULTS.dateTo);
-  const [demosOnly, setDemosOnly] = useState(false);
 
   const setSortMode = useCallback((mode: SortMode) => {
     setSortModeState(mode);
@@ -109,7 +107,6 @@ export function LyricViewProvider({ children }: { children: ReactNode }) {
     setKeyword(LYRIC_VIEW_DEFAULTS.keyword);
     setDateFrom(LYRIC_VIEW_DEFAULTS.dateFrom);
     setDateTo(LYRIC_VIEW_DEFAULTS.dateTo);
-    setDemosOnly(false);
   }, []);
 
   const value = useMemo(
@@ -125,7 +122,6 @@ export function LyricViewProvider({ children }: { children: ReactNode }) {
       keyword,
       dateFrom,
       dateTo,
-      demosOnly,
       setSortMode,
       setFontSize,
       setLineHeight,
@@ -136,7 +132,6 @@ export function LyricViewProvider({ children }: { children: ReactNode }) {
       setKeyword,
       setDateFrom,
       setDateTo,
-      setDemosOnly,
       resetSettings,
       resetFilters,
     }),
@@ -152,7 +147,6 @@ export function LyricViewProvider({ children }: { children: ReactNode }) {
       keyword,
       dateFrom,
       dateTo,
-      demosOnly,
       setSortMode,
       toggleTag,
       toggleEmoji,
@@ -215,14 +209,12 @@ export function hasActiveLyricFilters(options: {
   keyword: string;
   dateFrom: string;
   dateTo: string;
-  demosOnly: boolean;
 }): boolean {
   return (
     options.selectedTags.length > 0 ||
     options.selectedEmojis.length > 0 ||
     options.keyword.trim().length > 0 ||
     options.dateFrom.trim().length > 0 ||
-    options.dateTo.trim().length > 0 ||
-    options.demosOnly
+    options.dateTo.trim().length > 0
   );
 }

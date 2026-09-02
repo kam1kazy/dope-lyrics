@@ -22,7 +22,7 @@ Chakra снят. Экран на **shadcn**, как в youways. Иконки Luc
 
 ## D. Инструмент — живая
 
-Порядок, теги, ключевые слова, эмодзи, период, тексты из демок — в GraphQL и drawer. Эталон — флаг приложения, не тег. [`tasks/003_catalog_controls.md`](./tasks/003_catalog_controls.md), [`decisions/0006-reference-is-app-flag.md`](./decisions/0006-reference-is-app-flag.md). Карточка сообщения — [`tasks/005_message_desk.md`](./tasks/005_message_desk.md).
+Порядок, теги, ключевые слова, эмодзи, период — в GraphQL и drawer. Эталон — флаг приложения, не тег. Полок в drawer нет. [`tasks/003_catalog_controls.md`](./tasks/003_catalog_controls.md), [`decisions/0006-reference-is-app-flag.md`](./decisions/0006-reference-is-app-flag.md). Карточка сообщения — [`tasks/005_message_desk.md`](./tasks/005_message_desk.md).
 
 ## E. Сигналы и ИИ — не сейчас
 

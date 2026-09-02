@@ -19,7 +19,6 @@ export const ALL_LYRICS = gql`
     $emojis: [String!]
     $dateFrom: String
     $dateTo: String
-    $demosOnly: Boolean
   ) {
     lyrics(
       tags: $tags
@@ -27,7 +26,6 @@ export const ALL_LYRICS = gql`
       emojis: $emojis
       dateFrom: $dateFrom
       dateTo: $dateTo
-      demosOnly: $demosOnly
     ) {
       id
 

@@ -28,7 +28,6 @@ export const LyricList = () => {
     keyword,
     dateFrom,
     dateTo,
-    demosOnly,
   } = useLyricView();
   const deferredKeyword = useDeferredValue(keyword.trim());
   const queryTags = selectedTags.length > 0 ? selectedTags : null;
@@ -41,7 +40,6 @@ export const LyricList = () => {
       emojis: queryEmojis,
       dateFrom: dateFrom.trim() || null,
       dateTo: dateTo.trim() || null,
-      demosOnly: demosOnly || null,
     },
   });
 
@@ -64,7 +62,6 @@ export const LyricList = () => {
     keyword: deferredKeyword,
     dateFrom,
     dateTo,
-    demosOnly,
   });
 
   if (loading) {
@@ -105,7 +102,7 @@ export const LyricList = () => {
       className="flex h-full min-h-0 w-full flex-col items-center overflow-hidden break-keep px-4 pt-4 text-center"
     >
       <Viewport
-        key={`${sortMode}-${shuffleSeed}-${selectedTags.join('|')}-${selectedEmojis.join('|')}-${deferredKeyword}-${dateFrom}-${dateTo}-${demosOnly}`}
+        key={`${sortMode}-${shuffleSeed}-${selectedTags.join('|')}-${selectedEmojis.join('|')}-${deferredKeyword}-${dateFrom}-${dateTo}`}
         data={carouselList}
       />
     </div>
