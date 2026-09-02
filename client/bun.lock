@@ -6,6 +6,7 @@
       "name": "dope-lyrics-client",
       "dependencies": {
         "@apollo/client": "^3.13.1",
+        "@chakra-ui/icons": "^2.2.4",
         "@chakra-ui/next-js": "^2.4.2",
         "@chakra-ui/react": "^2.10.5",
         "@emotion/react": "^11.14.0",
@@ -75,6 +76,8 @@
     "@chakra-ui/anatomy": ["@chakra-ui/anatomy@2.3.6", "", {}, "sha512-TjmjyQouIZzha/l8JxdBZN1pKZTj7sLpJ0YkFnQFyqHcbfWggW9jKWzY1E0VBnhtFz/xF3KC6UAVuZVSJx+y0g=="],
 
     "@chakra-ui/hooks": ["@chakra-ui/hooks@2.4.4", "", { "dependencies": { "@chakra-ui/utils": "2.2.4", "@zag-js/element-size": "0.31.1", "copy-to-clipboard": "3.3.3", "framesync": "6.1.2" }, "peerDependencies": { "react": ">=18" } }, "sha512-+gMwLIkabtddIL/GICU7JmnYtvfONP+fNiTfdYLV9/I1eyCz8igKgLmFJOGM6F+BpUev6hh+/+DX5ezGQ9VTbQ=="],
+
+    "@chakra-ui/icons": ["@chakra-ui/icons@2.2.4", "", { "peerDependencies": { "@chakra-ui/react": ">=2.0.0", "react": ">=18" } }, "sha512-l5QdBgwrAg3Sc2BRqtNkJpfuLw/pWRDwwT58J6c4PqQT6wzXxyNa8Q0PForu1ltB5qEiFb1kxr/F/HO1EwNa6g=="],
 
     "@chakra-ui/next-js": ["@chakra-ui/next-js@2.4.2", "", { "dependencies": { "@emotion/cache": "^11.11.0" }, "peerDependencies": { "@chakra-ui/react": ">=2.4.0", "@emotion/react": ">=11", "next": ">=13", "react": ">=18" } }, "sha512-loo82RyPbMyvJwRhhZVZovut9v2hFBSkqd1vQoNXgMrCRApLwrrttu5Iuodns15gLE3mqI+it5oEhxTtO5DrxA=="],
 

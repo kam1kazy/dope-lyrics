@@ -1,55 +1,52 @@
-import { useRef } from 'react'
-import { useQuery } from '@apollo/client'
-
+import { useQuery } from '@apollo/client';
 // STYLES
-import { VStack } from '@chakra-ui/react'
-
-// COMPONENTS
-import { ErrorText } from './system/error'
-import { Spinner } from './system/spinner'
-import { TotalCount } from './totalCount'
-import { Viewport } from './viewport/viewport'
-
-// GRAPHQL
-import { ALL_LYRICS } from '@/server/lyrics'
+import { VStack } from '@chakra-ui/react';
+import { useRef } from 'react';
 
 // HANDLERS
-import { CreateArrListCarousel } from '@/handlers/createArrListCarousel'
+import { CreateArrListCarousel } from '@/handlers/createArrListCarousel';
+// GRAPHQL
+import { ALL_LYRICS } from '@/server/lyrics';
+
+// COMPONENTS
+import { ErrorText } from './system/error';
+import { Spinner } from './system/spinner';
+import { TotalCount } from './totalCount';
+import { Viewport } from './viewport/viewport';
 
 export const LyricList = () => {
-  const ref = useRef<HTMLDivElement>(null)
+  const ref = useRef<HTMLDivElement>(null);
 
-  let carouselList: any[] = []
+  let carouselList: any[] = [];
 
   const { loading, error, data } = useQuery(ALL_LYRICS, {
     onError: (error) => {
-      console.error('Ошибка запроса ' + data + '  lyrics:', error)
+      console.error('Ошибка запроса ' + data + '  lyrics:', error);
     },
-  })
+  });
 
   if (loading) {
-    return <Spinner count={125} duration={900} size={0.375} />
+    return <Spinner count={125} duration={900} size={0.375} />;
   }
 
   if (error) {
-    return <ErrorText title={'Error'} />
+    return <ErrorText title={'Error'} />;
   }
 
-  if (data.length === 0) {
-    console.log(data.length)
-    return <ErrorText title={'Empty'} description={'Список пуст'} />
+  if (!data?.lyrics?.length) {
+    return <ErrorText title={'Empty'} description={'Список пуст'} />;
   }
 
   if (data) {
-    carouselList = CreateArrListCarousel(data.lyrics)
+    carouselList = CreateArrListCarousel(data.lyrics);
   } else {
     console.error(
       'Не удалось создать список: \n\n' + data + '\n\nlyrics:',
       error
-    )
+    );
     return (
       <ErrorText title={'Error'} description={'Не удалось создать список'} />
-    )
+    );
   }
 
   return (
@@ -89,5 +86,5 @@ export const LyricList = () => {
 
       <TotalCount count={data.lyrics.length} />
     </VStack>
-  )
-}
+  );
+};
