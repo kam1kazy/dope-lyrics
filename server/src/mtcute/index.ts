@@ -1,5 +1,5 @@
 // TELEGRAM BOT
-import { BotKeyboard, TelegramClient, tl } from '@mtcute/bun';
+import { BotKeyboard, TelegramClient } from '@mtcute/bun';
 import { CallbackDataBuilder, Dispatcher, filters } from '@mtcute/dispatcher';
 import fs from 'fs';
 import path from 'path';
@@ -95,7 +95,7 @@ dp.onNewMessage(filters.command('app'), async (msg) =>
 
 const BdButton = new CallbackDataBuilder('bd', 'id', 'action');
 
-const markup: tl.TypeKeyboardButton[][] = [
+const markup = [
   [
     BotKeyboard.callback(
       '🏄‍♂️ Статистика',

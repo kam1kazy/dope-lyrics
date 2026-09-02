@@ -1,4 +1,4 @@
-import { BotKeyboard, tl } from '@mtcute/core';
+import { BotKeyboard } from '@mtcute/core';
 import {
   CallbackQueryContext,
   filters,
@@ -23,7 +23,7 @@ interface ICommandChat {
   msg:
     | filters.Modify<MessageContext, { command: string[] }>
     | CallbackQueryContext;
-  keyboard?: tl.TypeKeyboardButton[][];
+  keyboard?: Parameters<typeof BotKeyboard.inline>[0];
 }
 
 // Получаем ID чата

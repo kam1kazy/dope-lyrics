@@ -2,8 +2,8 @@
 
 Сначала читай `docs/00_vision.md`, потом `docs/01_pillars.md`, `docs/02_loop.md`, `docs/tasks/current_task.md`.
 
-Стек: Bun, Elysia, GraphQL Yoga, Prisma, PostgreSQL, Next.js 14, Apollo, mtcute.
-Новый UI — shadcn. Chakra (весь kit) уйдёт в дорожке C, после просмотра живого прототипа. Сейчас не сносить.
+Стек: Bun, Elysia, GraphQL Yoga, Prisma, PostgreSQL, Next.js 14, Apollo, shadcn, mtcute.
+Chakra снят. Kit-файлы shadcn не править. JWT/tenant/cookie-сессии не тащить, пока нет входа.
 
 Документация в `docs/` — это бэклог. Jira нет. `guide/` — косметика GitHub, не трогать.
 

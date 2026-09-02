@@ -13,7 +13,7 @@
     "format": "bun run --cwd client format && bun run --cwd server format"
   },
   "devDependencies": {
-    "concurrently": "^9.1.2"
+    "concurrently": "^10.0.5"
   },
   "compileOptions": {
     "paths": {

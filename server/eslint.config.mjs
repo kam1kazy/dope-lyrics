@@ -13,6 +13,7 @@ export default defineConfig([
       'build/**',
       'dist/**',
       'bot-data/**',
+      'src/generated/**',
       'prisma/migrations/**',
       '*.config.js',
       '*.config.ts',

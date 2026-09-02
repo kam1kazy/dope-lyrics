@@ -1,5 +1,5 @@
 # Базовый образ
-FROM oven/bun:1.2.2-alpine AS base
+FROM oven/bun:1.4.0-alpine AS base
 WORKDIR /src
 RUN apk update && apk add --no-cache postgresql-client
 

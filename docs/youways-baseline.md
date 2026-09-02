@@ -96,7 +96,6 @@ TypeScript 7 как compiler — ещё в дорожке G, не в этом з
 
 ## 6. UI — shadcn
 
-Новый экран — shadcn, как в youways. Уходит **весь** Chakra (`react`, `next-js`, `icons`, emotion если не нужен), не только иконки.
+Новый экран — shadcn, как в youways. Chakra снят целиком (`react`, `next-js`, `icons`, emotion).
 
-Не сейчас: сначала оживить проект и посмотреть прототип. Снос — дорожка C.
-Не наращивать Chakra до этого. Иконки новых экранов — Lucide. Kit shadcn не править.
+Иконки — Lucide. Файлы kit shadcn не править: обёртки снаружи. Не возвращать Chakra.

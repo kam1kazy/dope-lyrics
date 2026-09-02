@@ -1,14 +1,13 @@
 import './app/process-error-handlers';
 
 import { cors } from '@elysiajs/cors';
-import { yoga } from '@elysiajs/graphql-yoga';
 import { swagger } from '@elysiajs/swagger';
 import { Elysia } from 'elysia';
 
 import { isOriginAllowed } from './config/cors';
 import { env, isProduction } from './config/env';
 import { securityPlugin, stopRateLimitCleanup } from './config/security';
-import { schema } from './graphql/schema';
+import { graphqlPath, yoga } from './graphql/schema';
 import { prisma } from './infrastructure/prisma';
 
 const app = new Elysia()
@@ -43,7 +42,7 @@ if (!isProduction) {
   app.use(swagger());
 }
 
-app.use(yoga(schema));
+app.all(`/${graphqlPath}`, ({ request }) => yoga.fetch(request));
 
 const server = app.listen({
   port: env.PORT,
@@ -53,7 +52,7 @@ const server = app.listen({
 export type App = typeof app;
 
 console.log(
-  `\n🦊 Elysia is running at http://${server.server?.hostname}:${server.server?.port}/${schema.path}`
+  `\n🦊 Elysia is running at http://${server.server?.hostname}:${server.server?.port}/${graphqlPath}`
 );
 
 let isShuttingDown = false;

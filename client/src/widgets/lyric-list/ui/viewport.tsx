@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import { LyricItem, type LyricSlide } from '@/entities/lyric';
 import { usePlayback } from '@/shared/lib/playback/playback-context';
@@ -10,43 +10,169 @@ interface ViewportProps {
   data: LyricSlide[];
 }
 
+const SLIDE_INTERVAL_MS = 2000;
+const ANIMATION_MS = 12000;
+const START_Y_VH = 52;
+const END_Y_VH = -58;
+const FADE_IN = 0.08;
+const FADE_OUT = 0.12;
+
+function slideOpacity(progress: number) {
+  if (progress < FADE_IN) {
+    return progress / FADE_IN;
+  }
+
+  if (progress > 1 - FADE_OUT) {
+    return (1 - progress) / FADE_OUT;
+  }
+
+  return 1;
+}
+
+function elapsedSinceStart(
+  originMs: number,
+  pausedAccumMs: number,
+  pauseStartedAt: number | null
+) {
+  const extraPause = pauseStartedAt === null ? 0 : Date.now() - pauseStartedAt;
+
+  return Math.max(0, Date.now() - originMs - pausedAccumMs - extraPause);
+}
+
+function applyPositions(
+  nodes: Map<number, HTMLDivElement>,
+  elapsedMs: number,
+  dataLength: number
+) {
+  const maxIndex = Math.max(dataLength - 1, 0);
+  const activeIndex = Math.min(
+    Math.floor(elapsedMs / SLIDE_INTERVAL_MS),
+    maxIndex
+  );
+
+  for (const [index, node] of nodes) {
+    const age = elapsedMs - index * SLIDE_INTERVAL_MS;
+
+    if (age < 0 || age > ANIMATION_MS) {
+      node.style.opacity = '0';
+      node.style.visibility = 'hidden';
+      continue;
+    }
+
+    const progress = age / ANIMATION_MS;
+    const y = START_Y_VH + (END_Y_VH - START_Y_VH) * progress;
+
+    node.style.visibility = 'visible';
+    node.style.opacity = String(slideOpacity(progress));
+    node.style.transform = `translate3d(0, ${y}vh, 0)`;
+  }
+
+  return activeIndex;
+}
+
 export function Viewport({ data }: ViewportProps) {
   const { paused } = usePlayback();
-  const [index, setIndex] = useState(0);
+  const originRef = useRef(Date.now());
+  const pausedAccumRef = useRef(0);
+  const pauseStartedRef = useRef<number | null>(null);
+  const nodesRef = useRef(new Map<number, HTMLDivElement>());
+  const [lastIndex, setLastIndex] = useState(0);
+  const dataLength = data.length;
+
+  useLayoutEffect(() => {
+    applyPositions(
+      nodesRef.current,
+      elapsedSinceStart(
+        originRef.current,
+        pausedAccumRef.current,
+        pauseStartedRef.current
+      ),
+      dataLength
+    );
+  }, [dataLength, lastIndex]);
 
   useEffect(() => {
+    const currentPositions = () =>
+      applyPositions(
+        nodesRef.current,
+        elapsedSinceStart(
+          originRef.current,
+          pausedAccumRef.current,
+          pauseStartedRef.current
+        ),
+        dataLength
+      );
+
     if (paused) {
+      if (pauseStartedRef.current === null) {
+        pauseStartedRef.current = Date.now();
+      }
+
+      setLastIndex(currentPositions());
       return;
     }
 
-    const intervalId = setInterval(() => {
-      setIndex((prevIndex) => {
-        if (prevIndex + 1 >= data.length) {
-          return prevIndex;
-        }
+    if (pauseStartedRef.current !== null) {
+      pausedAccumRef.current += Date.now() - pauseStartedRef.current;
+      pauseStartedRef.current = null;
+    }
 
-        return prevIndex + 1;
-      });
-    }, 2000);
+    let frame = 0;
+
+    const tick = () => {
+      const nextIndex = currentPositions();
+
+      setLastIndex((current) => (current === nextIndex ? current : nextIndex));
+      frame = requestAnimationFrame(tick);
+    };
+
+    const sync = () => {
+      setLastIndex(currentPositions());
+    };
+
+    frame = requestAnimationFrame(tick);
+    document.addEventListener('visibilitychange', sync);
+    window.addEventListener('focus', sync);
+    window.addEventListener('pageshow', sync);
 
     return () => {
-      clearInterval(intervalId);
+      cancelAnimationFrame(frame);
+      document.removeEventListener('visibilitychange', sync);
+      window.removeEventListener('focus', sync);
+      window.removeEventListener('pageshow', sync);
     };
-  }, [data.length, paused]);
+  }, [dataLength, paused]);
+
+  const firstVisible = Math.max(
+    0,
+    lastIndex - Math.ceil(ANIMATION_MS / SLIDE_INTERVAL_MS)
+  );
+  const visibleSlides = data.slice(firstVisible, lastIndex + 1);
 
   return (
     <div
       className="lyric-viewport relative min-h-0 w-full flex-1 overflow-hidden"
       data-paused={paused}
     >
-      {data.slice(0, index + 1).map((item) => (
-        <div
-          key={item.lyric_id + '_' + item.message?.message_id}
-          className="lyric"
-        >
-          <LyricItem item={item} />
-        </div>
-      ))}
+      {visibleSlides.map((item, offset) => {
+        const index = firstVisible + offset;
+
+        return (
+          <div
+            key={`${item.lyric_id}_${item.message?.message_id}_${index}`}
+            className="lyric"
+            ref={(node) => {
+              if (node) {
+                nodesRef.current.set(index, node);
+              } else {
+                nodesRef.current.delete(index);
+              }
+            }}
+          >
+            <LyricItem item={item} />
+          </div>
+        );
+      })}
 
       <div
         aria-hidden

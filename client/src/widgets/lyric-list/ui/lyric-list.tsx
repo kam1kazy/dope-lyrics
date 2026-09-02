@@ -1,14 +1,9 @@
 'use client';
 
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { useRef } from 'react';
 
-import {
-  ALL_LYRICS,
-  createCarouselList,
-  type ILyric,
-  type LyricSlide,
-} from '@/entities/lyric';
+import { ALL_LYRICS, createCarouselList, type ILyric } from '@/entities/lyric';
 import { ErrorText } from '@/shared/ui/error-text';
 import { Spinner } from '@/shared/ui/shadcn/ui/spinner';
 
@@ -17,13 +12,7 @@ import { Viewport } from './viewport';
 export const LyricList = () => {
   const ref = useRef<HTMLDivElement>(null);
 
-  let carouselList: LyricSlide[] = [];
-
-  const { loading, error, data } = useQuery<{ lyrics: ILyric[] }>(ALL_LYRICS, {
-    onError: (queryError) => {
-      console.error('Ошибка запроса lyrics:', queryError);
-    },
-  });
+  const { loading, error, data } = useQuery<{ lyrics: ILyric[] }>(ALL_LYRICS);
 
   if (loading) {
     return (
@@ -41,12 +30,7 @@ export const LyricList = () => {
     return <ErrorText title="Пусто" description="Список пуст" />;
   }
 
-  if (data) {
-    carouselList = createCarouselList(data.lyrics);
-  } else {
-    console.error('Не удалось создать список lyrics:', error);
-    return <ErrorText title="Ошибка" description="Не удалось создать список" />;
-  }
+  const carouselList = createCarouselList(data.lyrics);
 
   return (
     <div

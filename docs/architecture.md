@@ -16,9 +16,8 @@ Telegram-чат
 Команды бота: `/chatid`, `/app`, `/bd` (статистика, парсинг, посев, очистка).
 Кнопки `/bd` и callback (`stats` / `history` / `seed` / `clear`) проверяют `BOT_ADMIN_ID`.
 
-Клиент: Next 14, Apollo, FSD. Прототип на Chakra; после просмотра живого экрана kit целиком меняем на shadcn.
-Фразы режутся по `\n`, гаснут 12 секунд с шагом 2.
-Play, фильтры, настройки — заглушки.
+Клиент: Next 14, Apollo, FSD, shadcn (Chakra снят). Фразы режутся по `\n`, гаснут 12 секунд с шагом 2.
+Пауза — клик по экрану. Фильтры в drawer пока не ходят в запрос.
 
 Слои в `client/src`: `app` (роутер Next) → `widgets` → `features` → `entities` → `shared`.
 Импорт только вниз. Публичный API слайса — `index.ts`. Слой `pages` не используем: конфликт с Next `src/pages`.
@@ -57,7 +56,7 @@ User-сеанс в клоне мёртв. `API_ID` / `API_HASH` — [my.telegram
 ## Схема
 
 `Users` → `Lyrics` → `Message` + `Hashtags` / `Reactions` / `Chat` / `Media`.
-`lyric_id` без unique (повторный seed пропускает уже существующие id). Индексы по `lyric_id` и `date`.
+`lyric_id` без unique в схеме; повторный seed пропускает уже существующие id. Индексы по `lyric_id` и `date`.
 Seed ищет `Users.id = 1`.
 Хештеги — `String[]` на сообщение. GraphQL `lyrics(limit, offset)` без `password` / `email`, глубина запроса ограничена.
 
@@ -70,6 +69,7 @@ HTTP (Elysia): Zod env, CORS allowlist, security headers, rate limit, лимит
 | Миграции не в репо | Новые — коммитить, не возвращать в gitignore |
 | Apollo → `/graphql` | Без прокси локальный клиент не увидит API |
 | Жёсткий `env.ts` бота | Без секретов бота не стартовать |
-| `password` в типе User | Схема GraphQL больше не отдаёт `password` и `email` |
-| Auth / cookie-сессии | Когда появится вход — модель youways, не invent |
+| `password` / `email` в GraphQL | Схема больше не отдаёт; в Prisma-типе User могут остаться |
+| Auth / cookie-сессии | Когда появится вход — модель youways, не invent и не develop |
 | Linux-хост | Когда будет свой сервер: TLS, закрытый SSH, не светить Postgres |
+| Прод-Docker seed | Контейнер больше не сидит на каждый старт |

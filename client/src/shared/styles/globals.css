@@ -137,32 +137,9 @@
   padding: 1.5rem;
   text-align: center;
   white-space: break-spaces;
-  animation: lyric-float 12s ease-out forwards;
-}
-
-.lyric-viewport[data-paused='true'] .lyric {
-  animation-play-state: paused;
-}
-
-@keyframes lyric-float {
-  0% {
-    opacity: 0;
-    transform: translateY(40vh);
-  }
-
-  20% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
-  50% {
-    opacity: 1;
-  }
-
-  100% {
-    opacity: 0;
-    transform: translateY(0);
-  }
+  opacity: 0;
+  visibility: hidden;
+  will-change: transform, opacity;
 }
 
 @keyframes error-glitch {

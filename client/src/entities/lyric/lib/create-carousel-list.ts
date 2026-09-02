@@ -14,14 +14,16 @@ export const createCarouselList = (data: ILyric[]): LyricSlide[] => {
         : undefined;
 
     if (newTextList) {
-      for (let n = 0; n < newTextList.length; n++) {
+      const lines = newTextList.filter((line) => line !== '');
+
+      for (let n = 0; n < lines.length; n++) {
         const newItem: LyricSlide = {
           lyric_id: data[i].lyric_id,
           message: {
             message_id: n,
-            text: newTextList[n],
-            hashtags: data[i].message?.hashtags,
-            reactions: data[i].message?.reactions,
+            text: lines[n],
+            hashtags: n === 0 ? data[i].message?.hashtags : null,
+            reactions: n === 0 ? data[i].message?.reactions : null,
           },
         };
 

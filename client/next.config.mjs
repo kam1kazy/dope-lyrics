@@ -3,6 +3,9 @@
 const apiOrigin = process.env.BASE_URL || 'http://localhost:4000';
 
 const NextConfig = {
+  turbopack: {
+    root: import.meta.dirname,
+  },
   async rewrites() {
     return [
       {
