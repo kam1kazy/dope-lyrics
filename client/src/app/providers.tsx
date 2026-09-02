@@ -1,16 +1,23 @@
 'use client';
 
 import { ApolloProvider } from '@apollo/client';
-import { ChakraProvider } from '@chakra-ui/react';
 import type { ReactNode } from 'react';
 
 import { apolloClient } from '@/shared/api';
-import { theme } from '@/shared/styles';
+import { PlaybackProvider } from '@/shared/lib/playback/playback-context';
+import { ThemeProvider } from '@/shared/ui/shadcn/theme-provider';
 
 export function Providers({ children }: { children: ReactNode }) {
   return (
     <ApolloProvider client={apolloClient}>
-      <ChakraProvider theme={theme}>{children}</ChakraProvider>
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="dark"
+        forcedTheme="dark"
+        disableTransitionOnChange
+      >
+        <PlaybackProvider>{children}</PlaybackProvider>
+      </ThemeProvider>
     </ApolloProvider>
   );
 }

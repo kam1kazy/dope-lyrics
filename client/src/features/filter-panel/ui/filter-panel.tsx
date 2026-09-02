@@ -1,86 +1,58 @@
 'use client';
 
-import {
-  Box,
-  Collapse,
-  Divider,
-  Heading,
-  Input,
-  NumberDecrementStepper,
-  NumberIncrementStepper,
-  NumberInput,
-  NumberInputField,
-  NumberInputStepper,
-  Text,
-} from '@chakra-ui/react';
+import { cn } from '@/shared/lib/utils/cn';
+import { Input } from '@/shared/ui/shadcn/ui/input';
+import { Label } from '@/shared/ui/shadcn/ui/label';
+import { Separator } from '@/shared/ui/shadcn/ui/separator';
 
 export function FilterPanel({ isOpen }: { isOpen: boolean }) {
   return (
-    <Collapse
-      in={isOpen}
-      style={{ position: 'absolute', bottom: '61px', width: '98%' }}
+    <div
+      className={cn(
+        'pointer-events-auto absolute right-0 bottom-14 w-[min(100%,24rem)] origin-bottom-right rounded-md border bg-card p-6 text-card-foreground shadow-md transition-all duration-200',
+        isOpen
+          ? 'translate-y-0 scale-100 opacity-100'
+          : 'pointer-events-none translate-y-2 scale-95 opacity-0'
+      )}
+      aria-hidden={!isOpen}
     >
-      <Box
-        p="25px"
-        color="white"
-        mt="4"
-        bg="rgba(34, 60, 80, 1)"
-        rounded="md"
-        shadow="md"
-        fontSize="14px"
-        boxShadow={'0px 18px 26px 20px rgba(34, 60, 80, 0.35)'}
-      >
-        <Heading fontSize={'18px'} mb={'10px'} mt={'20px'}>
-          Фильтры
-        </Heading>
+      <h2 className="mb-2 text-lg font-semibold">Фильтры</h2>
+      <Separator className="mb-4" />
 
-        <Divider mb={'10px'} />
-
-        <Box
-          display={'flex'}
-          flexWrap={'wrap'}
-          justifyContent={'space-between'}
-          flexDirection={'column'}
-          rowGap={'10px'}
-          sx={{
-            '& > div': {
-              display: 'flex',
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-            },
-          }}
-        >
-          <div>
-            <Text alignContent={'center'}>Кол-во слов</Text>
-            <NumberInput width={'90px'} defaultValue={0} min={0}>
-              <NumberInputField />
-              <NumberInputStepper>
-                <NumberIncrementStepper />
-                <NumberDecrementStepper />
-              </NumberInputStepper>
-            </NumberInput>
-          </div>
-          <div>
-            <Text alignContent={'center'}>Кол-во абзацев</Text>
-            <NumberInput width={'90px'} defaultValue={0} min={0}>
-              <NumberInputField />
-              <NumberInputStepper>
-                <NumberIncrementStepper />
-                <NumberDecrementStepper />
-              </NumberInputStepper>
-            </NumberInput>
-          </div>
-          <div>
-            <Text alignContent={'center'}>Наименование тега</Text>
-            <Input width={'90px'} placeholder="Tags" />
-          </div>
-          <div>
-            <Text alignContent={'center'}>Ключевые слова</Text>
-            <Input width={'90px'} placeholder="Words" />
-          </div>
-        </Box>
-      </Box>
-    </Collapse>
+      <div className="flex flex-col gap-3 text-sm">
+        <div className="flex items-center justify-between gap-4">
+          <Label htmlFor="filter-word-count">Кол-во слов</Label>
+          <Input
+            id="filter-word-count"
+            type="number"
+            min={0}
+            defaultValue={0}
+            className="w-[90px]"
+          />
+        </div>
+        <div className="flex items-center justify-between gap-4">
+          <Label htmlFor="filter-paragraph-count">Кол-во абзацев</Label>
+          <Input
+            id="filter-paragraph-count"
+            type="number"
+            min={0}
+            defaultValue={0}
+            className="w-[90px]"
+          />
+        </div>
+        <div className="flex items-center justify-between gap-4">
+          <Label htmlFor="filter-tag">Наименование тега</Label>
+          <Input id="filter-tag" placeholder="Теги" className="w-[90px]" />
+        </div>
+        <div className="flex items-center justify-between gap-4">
+          <Label htmlFor="filter-keywords">Ключевые слова</Label>
+          <Input
+            id="filter-keywords"
+            placeholder="Слова"
+            className="w-[90px]"
+          />
+        </div>
+      </div>
+    </div>
   );
 }

@@ -1,15 +1,13 @@
 'use client';
 
-import { Flex } from '@chakra-ui/react';
-
 export interface TotalCountProps {
   count: number;
 }
 
 export const TotalCount = ({ count }: TotalCountProps) => {
   return (
-    <Flex justifyContent={'center'} borderTop={'2px'} mt={5}>
-      {count ? <b>Total lyrics: {count}</b> : null}
-    </Flex>
+    <div className="mt-5 flex justify-center border-t border-border pt-3">
+      {count ? <b>Всего текстов: {count}</b> : null}
+    </div>
   );
 };

@@ -1,6 +1,6 @@
 'use client';
 
-import { HStack, Tag, TagLabel, Text, VStack } from '@chakra-ui/react';
+import { Badge } from '@/shared/ui/shadcn/ui/badge';
 
 import type { LyricSlide } from '../model/types';
 
@@ -10,29 +10,20 @@ interface LyricItemProps {
 
 export const LyricItem = ({ item }: LyricItemProps) => {
   return (
-    <VStack spacing={3} key={item.lyric_id}>
-      <HStack spacing={4}>
+    <div className="flex flex-col items-center gap-3">
+      <div className="flex flex-wrap items-center justify-center gap-2">
         {item.message?.hashtags
           ? item.message.hashtags.tags.map((tag, index) => {
               return (
-                <Tag
-                  size={tag}
-                  key={tag + '_' + index}
-                  variant="subtle"
-                  colorScheme="cyan"
-                >
-                  <TagLabel p={'3px 5px'} cursor={'default'}>
-                    #{tag}
-                  </TagLabel>
-                </Tag>
+                <Badge variant="secondary" key={tag + '_' + index}>
+                  #{tag}
+                </Badge>
               );
             })
-          : 'No hashtags'}
-      </HStack>
+          : 'Нет хештегов'}
+      </div>
 
-      <HStack spacing={4}>
-        <Text whiteSpace="pre-wrap">{item.message?.text}</Text>
-      </HStack>
-    </VStack>
+      <p className="whitespace-pre-wrap">{item.message?.text}</p>
+    </div>
   );
 };

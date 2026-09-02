@@ -1,70 +1,49 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+
+import { Badge } from '@/shared/ui/shadcn/ui/badge';
+import { Button } from '@/shared/ui/shadcn/ui/button';
 import {
-  Badge,
-  Button,
-  FormControl,
   Popover,
-  PopoverBody,
-  PopoverCloseButton,
   PopoverContent,
   PopoverTrigger,
-  Radio,
-  RadioGroup,
-  Stack,
-  useDisclosure,
-} from '@chakra-ui/react';
-import { useEffect, useState } from 'react';
+} from '@/shared/ui/shadcn/ui/popover';
 
 export const RadioSelect = ({ settings }: { settings: string[] }) => {
   const [selectedOption, setOptions] = useState(settings[0]);
-  const { onClose } = useDisclosure();
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     setOptions(settings[0]);
   }, [settings]);
 
-  const handlerChangeStatus = (value: string) => {
-    setOptions(value);
-    onClose();
-  };
-
   return (
-    <Popover closeOnBlur={false}>
-      <PopoverTrigger>
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
         <Button
-          flex={'1 1'}
-          minW={'35px'}
-          maxW={'max-content'}
           variant="ghost"
-          color={'white'}
-          fontSize={'14px'}
-          p={2}
-          _hover={{ color: '#000', background: '#fff' }}
+          className="max-w-max min-w-[35px] flex-1 px-2 text-sm"
         >
           {selectedOption}
         </Button>
       </PopoverTrigger>
-      <PopoverContent>
-        <FormControl>
-          <PopoverCloseButton zIndex={5} />
-          <PopoverBody>
-            <RadioGroup
-              value={selectedOption}
-              onChange={(value) => {
-                handlerChangeStatus(value);
+      <PopoverContent className="w-auto">
+        <div className="flex flex-col gap-2">
+          {settings.map((option) => (
+            <Button
+              key={option}
+              variant="ghost"
+              className="justify-start"
+              onClick={() => {
+                setOptions(option);
+                setOpen(false);
               }}
             >
-              <Stack gap={[1, 3]} direction={['row', 'column']}>
-                {settings.map((option) => (
-                  <Radio value={option} key={option}>
-                    <Badge variant="outline">{option}</Badge>
-                  </Radio>
-                ))}
-              </Stack>
-            </RadioGroup>
-          </PopoverBody>
-        </FormControl>
+              <Badge variant="outline">{option}</Badge>
+            </Button>
+          ))}
+        </div>
       </PopoverContent>
     </Popover>
   );

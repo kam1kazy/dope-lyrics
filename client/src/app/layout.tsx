@@ -1,10 +1,13 @@
-import '@/shared/styles/style.css';
+import '@/shared/styles/globals.css';
 
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import type { ReactNode } from 'react';
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({
+  variable: '--font-geist-sans',
+  subsets: ['latin', 'cyrillic'],
+});
 
 export const metadata: Metadata = {
   title: 'DOPE LYRICS',
@@ -17,8 +20,8 @@ export default function RootLayout({
   children: ReactNode;
 }>) {
   return (
-    <html lang="ru">
-      <body className={inter.className}>{children}</body>
+    <html lang="ru" className="dark" suppressHydrationWarning>
+      <body className={`${inter.variable} antialiased`}>{children}</body>
     </html>
   );
 }
