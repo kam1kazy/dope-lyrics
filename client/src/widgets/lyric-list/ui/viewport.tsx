@@ -36,6 +36,8 @@ const FADE_IN = 0.08;
 const FADE_OUT = 0.12;
 const READABLE_PROGRESS = 0.42;
 const SCRUB_PX = 20;
+const SCRUB_HOLD_MS = 200;
+const SCRUB_CLICK_SLIP_PX = 64;
 const DOUBLE_TAP_MS = 400;
 const DOUBLE_TAP_PX = 48;
 
@@ -181,7 +183,8 @@ function hasReadableSlide(
 }
 
 export function Viewport({ data, lyrics, queryVariables }: ViewportProps) {
-  const { paused, setPaused, setCanPlay, suppressToggle } = usePlayback();
+  const { paused, canPlay, setPaused, setCanPlay, suppressToggle } =
+    usePlayback();
   const { carouselSpeed, lineGap, fontSize } = useLyricView();
   const [deskOpen, setDeskOpen] = useState(false);
   const [deskLyricId, setDeskLyricId] = useState<number | null>(null);
@@ -201,7 +204,13 @@ export function Viewport({ data, lyrics, queryVariables }: ViewportProps) {
   const pointerYRef = useRef(0);
   const pointerStartYRef = useRef(0);
   const lastTapRef = useRef({ t: 0, x: 0, y: 0 });
+  const pointerDownAtRef = useRef(0);
+  const tapToggleTimerRef = useRef<number | null>(null);
+  const pausedRef = useRef(paused);
+  const canPlayRef = useRef(canPlay);
   const timingRef = useRef({ slideIntervalMs, animationMs, dataLength: 0 });
+  pausedRef.current = paused;
+  canPlayRef.current = canPlay;
   const [lastIndex, setLastIndex] = useState(0);
   const [finished, setFinished] = useState(false);
   const dataLength = data.length;
@@ -382,7 +391,23 @@ export function Viewport({ data, lyrics, queryVariables }: ViewportProps) {
     slideIntervalMs,
   ]);
 
+  const clearTapToggle = () => {
+    if (tapToggleTimerRef.current === null) {
+      return;
+    }
+
+    window.clearTimeout(tapToggleTimerRef.current);
+    tapToggleTimerRef.current = null;
+  };
+
+  useEffect(() => {
+    return () => {
+      clearTapToggle();
+    };
+  }, []);
+
   const openMessageDesk = (catalogId: number) => {
+    clearTapToggle();
     suppressToggle();
     setPaused(true);
     setDeskLyricId(catalogId);
@@ -408,6 +433,7 @@ export function Viewport({ data, lyrics, queryVariables }: ViewportProps) {
     trackingRef.current = false;
     scrubbingRef.current = false;
     event.preventDefault();
+    event.stopPropagation();
     openMessageDesk(catalogId);
     return true;
   };
@@ -425,6 +451,11 @@ export function Viewport({ data, lyrics, queryVariables }: ViewportProps) {
       return;
     }
 
+    if (catalogIdFromEvent(event) !== null) {
+      suppressToggle();
+    }
+
+    pointerDownAtRef.current = Date.now();
     pointerYRef.current = event.clientY;
     pointerStartYRef.current = event.clientY;
     wasPlayingRef.current = !paused;
@@ -444,10 +475,18 @@ export function Viewport({ data, lyrics, queryVariables }: ViewportProps) {
     pointerYRef.current = event.clientY;
 
     if (!scrubbingRef.current) {
-      if (Math.abs(event.clientY - pointerStartYRef.current) < SCRUB_PX) {
+      const travel = Math.abs(event.clientY - pointerStartYRef.current);
+      const heldMs = Date.now() - pointerDownAtRef.current;
+
+      if (travel < SCRUB_PX) {
         return;
       }
 
+      if (heldMs < SCRUB_HOLD_MS && travel < SCRUB_CLICK_SLIP_PX) {
+        return;
+      }
+
+      clearTapToggle();
       scrubbingRef.current = true;
       trackingRef.current = false;
       lastTapRef.current = { t: 0, x: 0, y: 0 };
@@ -475,6 +514,7 @@ export function Viewport({ data, lyrics, queryVariables }: ViewportProps) {
 
     if (scrubbingRef.current) {
       scrubbingRef.current = false;
+      clearTapToggle();
       suppressToggle();
 
       if (wasPlayingRef.current) {
@@ -497,6 +537,22 @@ export function Viewport({ data, lyrics, queryVariables }: ViewportProps) {
       x: event.clientX,
       y: event.clientY,
     };
+
+    if (catalogIdFromEvent(event) === null) {
+      return;
+    }
+
+    suppressToggle();
+    clearTapToggle();
+    tapToggleTimerRef.current = window.setTimeout(() => {
+      tapToggleTimerRef.current = null;
+
+      if (!canPlayRef.current) {
+        return;
+      }
+
+      setPaused(!pausedRef.current);
+    }, DOUBLE_TAP_MS);
   };
 
   const firstVisible = Math.max(
