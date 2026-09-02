@@ -90,13 +90,59 @@ function roleProfileMatches(
   return true;
 }
 
+function lyricHasFacetValues(
+  lyric: ILyric,
+  field: 'mood' | 'delivery',
+  values: readonly string[]
+): boolean {
+  if (lyric[field].some((entry) => values.includes(entry))) {
+    return true;
+  }
+
+  return (lyric.roleProfiles ?? []).some((profile) =>
+    profile[field].some((entry) => values.includes(entry))
+  );
+}
+
 function lyricMatchesFacets(
   lyric: ILyric,
   queryVariables: LyricsQueryVariables
 ): boolean {
+  const includeReadiness = queryVariables.readiness ?? [];
+  const excludeReadiness = queryVariables.excludeReadiness ?? [];
+
   if (
-    queryVariables.readiness &&
-    lyric.readiness !== queryVariables.readiness
+    includeReadiness.length > 0 &&
+    (lyric.readiness == null || !includeReadiness.includes(lyric.readiness))
+  ) {
+    return false;
+  }
+
+  if (lyric.readiness != null && excludeReadiness.includes(lyric.readiness)) {
+    return false;
+  }
+
+  const excludeMoods = queryVariables.excludeMood ?? [];
+  const excludeDeliveries = queryVariables.excludeDelivery ?? [];
+  const excludeRoles = queryVariables.excludeSongRole ?? [];
+
+  if (
+    excludeMoods.length > 0 &&
+    lyricHasFacetValues(lyric, 'mood', excludeMoods)
+  ) {
+    return false;
+  }
+
+  if (
+    excludeDeliveries.length > 0 &&
+    lyricHasFacetValues(lyric, 'delivery', excludeDeliveries)
+  ) {
+    return false;
+  }
+
+  if (
+    excludeRoles.length > 0 &&
+    lyric.songRole.some((role) => excludeRoles.includes(role))
   ) {
     return false;
   }

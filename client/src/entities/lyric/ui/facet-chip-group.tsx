@@ -1,10 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import {
+  clickFacetFilter,
   disableFacetValue,
   selectFacetValue,
+  toggleExcludeFacetFilter,
   toggleFacetValue,
 } from '@/shared/lib/lyric-facets';
 import { cn } from '@/shared/lib/utils/cn';
@@ -15,16 +17,21 @@ import {
   TooltipTrigger,
 } from '@/shared/ui/shadcn/ui/tooltip';
 
+const EXCLUDE_CLICK_DELAY_MS = 280;
+
 export function FacetChipGroup<T extends string>({
   label,
   options,
   labels,
   hints,
   value,
+  excluded = [],
   multiple,
   accent,
   toggleOnClick = false,
+  allowExclude = false,
   onChange,
+  onExcludedChange,
   onSelect,
   size = 'filter',
 }: {
@@ -33,18 +40,42 @@ export function FacetChipGroup<T extends string>({
   labels: Record<T, string>;
   hints: Record<T, string>;
   value: readonly T[];
+  excluded?: readonly T[];
   multiple: boolean;
   accent?: T | null;
   toggleOnClick?: boolean;
+  allowExclude?: boolean;
   onChange: (next: T[]) => void;
+  onExcludedChange?: (next: T[]) => void;
   onSelect?: (option: T) => void;
   size?: 'filter' | 'desk';
 }) {
   const [openHint, setOpenHint] = useState<T | null>(null);
+  const clickTimerRef = useRef<number | null>(null);
   const badgeClass =
     size === 'desk'
       ? 'px-2 py-0.5 text-xs sm:px-2.5 sm:py-1 sm:text-sm'
       : 'px-2 py-0.5 text-xs md:px-2.5 md:py-1 md:text-sm';
+
+  useEffect(() => {
+    return () => {
+      if (clickTimerRef.current != null) {
+        window.clearTimeout(clickTimerRef.current);
+      }
+    };
+  }, []);
+
+  const clearClickTimer = () => {
+    if (clickTimerRef.current != null) {
+      window.clearTimeout(clickTimerRef.current);
+      clickTimerRef.current = null;
+    }
+  };
+
+  const applyFilter = (next: { included: T[]; excluded: T[] }) => {
+    onChange(next.included);
+    onExcludedChange?.(next.excluded);
+  };
 
   return (
     <div
@@ -74,6 +105,7 @@ export function FacetChipGroup<T extends string>({
       >
         {options.map((option) => {
           const selected = value.includes(option);
+          const isExcluded = excluded.includes(option);
           const isAccent = accent === option;
           const filled = accent !== undefined ? isAccent : selected;
           const outlined = selected && !filled;
@@ -97,13 +129,33 @@ export function FacetChipGroup<T extends string>({
                   type="button"
                   aria-pressed={selected}
                   aria-current={isAccent || undefined}
-                  aria-label={labels[option]}
+                  aria-label={
+                    isExcluded
+                      ? `${labels[option]}, исключено из поиска`
+                      : labels[option]
+                  }
                   onMouseDown={(event) => {
                     if (event.detail > 1) {
                       event.preventDefault();
                     }
                   }}
                   onClick={(event) => {
+                    if (allowExclude) {
+                      if (event.detail > 1) {
+                        return;
+                      }
+
+                      setOpenHint(null);
+                      clearClickTimer();
+                      clickTimerRef.current = window.setTimeout(() => {
+                        clickTimerRef.current = null;
+                        applyFilter(
+                          clickFacetFilter(value, excluded, option, multiple)
+                        );
+                      }, EXCLUDE_CLICK_DELAY_MS);
+                      return;
+                    }
+
                     if (toggleOnClick && event.detail > 1) {
                       return;
                     }
@@ -117,6 +169,14 @@ export function FacetChipGroup<T extends string>({
                     );
                   }}
                   onDoubleClick={() => {
+                    if (allowExclude) {
+                      clearClickTimer();
+                      applyFilter(
+                        toggleExcludeFacetFilter(value, excluded, option)
+                      );
+                      return;
+                    }
+
                     if (toggleOnClick) {
                       return;
                     }
@@ -132,9 +192,16 @@ export function FacetChipGroup<T extends string>({
                     variant="outline"
                     className={cn(
                       badgeClass,
-                      filled && 'border-white bg-white text-black',
-                      outlined && 'border-white bg-black text-white',
-                      !selected && 'border-white/15 bg-black/40 text-white/60'
+                      filled &&
+                        !isExcluded &&
+                        'border-white bg-white text-black',
+                      outlined &&
+                        !isExcluded &&
+                        'border-white bg-black text-white',
+                      !selected &&
+                        !isExcluded &&
+                        'border-white/15 bg-black/40 text-white/60',
+                      isExcluded && 'shelf-chip-excluded'
                     )}
                   >
                     {labels[option]}

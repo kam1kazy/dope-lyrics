@@ -1,9 +1,8 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 
 import {
-  applyLyricView,
   type ILyric,
   lyricMenuTitle,
   LyricsLoadMore,
@@ -11,7 +10,6 @@ import {
   usePaginatedLyrics,
 } from '@/entities/lyric';
 import { MessageDeskDialog } from '@/features/message-desk';
-import type { SortMode } from '@/shared/lib/lyric-view/lyric-view-context';
 import { useDebouncedValue } from '@/shared/lib/utils/use-debounced-value';
 import { ErrorText } from '@/shared/ui/error-text';
 import { Spinner } from '@/shared/ui/shadcn/ui/spinner';
@@ -20,15 +18,11 @@ const FILTER_QUERY_DEBOUNCE_MS = 220;
 
 interface CatalogLyricsListProps {
   queryVariables: LyricsQueryVariables;
-  sortMode: SortMode;
-  shuffleSeed: number;
   emptyMessage: string;
 }
 
 export function CatalogLyricsList({
   queryVariables,
-  sortMode,
-  shuffleSeed,
   emptyMessage,
 }: CatalogLyricsListProps) {
   const [selectedLyric, setSelectedLyric] = useState<ILyric | null>(null);
@@ -46,13 +40,6 @@ export function CatalogLyricsList({
     loadingMore,
     queryVariables: listQueryVariables,
   } = usePaginatedLyrics(debouncedQueryVariables);
-  const orderedLyrics = useMemo(() => {
-    if (!lyrics) {
-      return [];
-    }
-
-    return applyLyricView(lyrics, { sortMode, shuffleSeed });
-  }, [lyrics, shuffleSeed, sortMode]);
 
   const openLyric = (lyric: ILyric) => {
     setSelectedLyric(lyric);
@@ -71,7 +58,7 @@ export function CatalogLyricsList({
     return <ErrorText title="Ошибка" />;
   }
 
-  if (!orderedLyrics.length) {
+  if (!lyrics?.length) {
     return (
       <div className="text-muted-foreground flex h-full items-center justify-center p-6 text-center text-sm">
         {emptyMessage}
@@ -82,7 +69,7 @@ export function CatalogLyricsList({
   return (
     <>
       <ul className="flex flex-col gap-1 p-3">
-        {orderedLyrics.map((lyric) => (
+        {lyrics.map((lyric) => (
           <li key={lyric.id}>
             <button
               type="button"

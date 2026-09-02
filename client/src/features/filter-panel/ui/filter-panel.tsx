@@ -324,13 +324,21 @@ function FiltersTab() {
     dateTo,
     resetFilters,
     mood,
+    excludeMood,
     delivery,
+    excludeDelivery,
     songRole,
+    excludeSongRole,
     readiness,
+    excludeReadiness,
     setMood,
+    setExcludeMood,
     setDelivery,
+    setExcludeDelivery,
     setSongRole,
+    setExcludeSongRole,
     setReadiness,
+    setExcludeReadiness,
     setKeyword,
     setDateFrom,
     setDateTo,
@@ -367,9 +375,13 @@ function FiltersTab() {
     dateFrom,
     dateTo,
     mood,
+    excludeMood,
     delivery,
+    excludeDelivery,
     songRole,
+    excludeSongRole,
     readiness,
+    excludeReadiness,
   });
 
   return (
@@ -438,8 +450,7 @@ function FiltersTab() {
                   variant={selected || excluded ? 'default' : 'secondary'}
                   className={cn(
                     'inline-flex items-center gap-1 px-2 py-0.5 text-xs md:gap-1.5 md:px-2.5 md:py-1 md:text-sm',
-                    excluded &&
-                      'border-rose-500 bg-rose-600 text-white hover:bg-rose-600'
+                    excluded && 'shelf-chip-excluded hover:brightness-110'
                   )}
                 >
                   <Icon className="size-3 md:size-3.5" aria-hidden />
@@ -460,9 +471,13 @@ function FiltersTab() {
           dateFrom,
           dateTo,
           mood,
+          excludeMood,
           delivery,
+          excludeDelivery,
           songRole,
+          excludeSongRole,
           readiness,
+          excludeReadiness,
         }}
         onChange={(patch) => {
           if (patch.selectedTags) {
@@ -505,16 +520,32 @@ function FiltersTab() {
             setMood(patch.mood);
           }
 
+          if (patch.excludeMood !== undefined) {
+            setExcludeMood(patch.excludeMood);
+          }
+
           if (patch.delivery !== undefined) {
             setDelivery(patch.delivery);
+          }
+
+          if (patch.excludeDelivery !== undefined) {
+            setExcludeDelivery(patch.excludeDelivery);
           }
 
           if (patch.songRole !== undefined) {
             setSongRole(patch.songRole);
           }
 
+          if (patch.excludeSongRole !== undefined) {
+            setExcludeSongRole(patch.excludeSongRole);
+          }
+
           if (patch.readiness !== undefined) {
             setReadiness(patch.readiness);
+          }
+
+          if (patch.excludeReadiness !== undefined) {
+            setExcludeReadiness(patch.excludeReadiness);
           }
         }}
       />

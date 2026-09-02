@@ -38,9 +38,13 @@ export type LyricFilterFieldsValue = {
   dateFrom: string;
   dateTo: string;
   mood: LyricMood[];
+  excludeMood: LyricMood[];
   delivery: LyricDelivery[];
+  excludeDelivery: LyricDelivery[];
   songRole: LyricSongRole[];
-  readiness: LyricReadiness | null;
+  excludeSongRole: LyricSongRole[];
+  readiness: LyricReadiness[];
+  excludeReadiness: LyricReadiness[];
 };
 
 const TAG_SKELETON_WIDTHS = [
@@ -230,9 +234,11 @@ export function LyricFilterFields({
         labels={LYRIC_MOOD_LABELS}
         hints={LYRIC_MOOD_HINTS}
         value={value.mood}
+        excluded={value.excludeMood}
         multiple
-        toggleOnClick
+        allowExclude
         onChange={(mood) => onChange({ mood })}
+        onExcludedChange={(excludeMood) => onChange({ excludeMood })}
       />
       <FacetChipGroup
         label="Подача"
@@ -240,9 +246,11 @@ export function LyricFilterFields({
         labels={LYRIC_DELIVERY_LABELS}
         hints={LYRIC_DELIVERY_HINTS}
         value={value.delivery}
+        excluded={value.excludeDelivery}
         multiple
-        toggleOnClick
+        allowExclude
         onChange={(delivery) => onChange({ delivery })}
+        onExcludedChange={(excludeDelivery) => onChange({ excludeDelivery })}
       />
       <FacetChipGroup
         label="Роль в песне"
@@ -250,17 +258,23 @@ export function LyricFilterFields({
         labels={LYRIC_SONG_ROLE_LABELS}
         hints={LYRIC_SONG_ROLE_HINTS}
         value={value.songRole}
+        excluded={value.excludeSongRole}
         multiple
+        allowExclude
         onChange={(songRole) => onChange({ songRole })}
+        onExcludedChange={(excludeSongRole) => onChange({ excludeSongRole })}
       />
       <FacetChipGroup
         label="Готовность"
         options={LYRIC_READINESS}
         labels={LYRIC_READINESS_LABELS}
         hints={LYRIC_READINESS_HINTS}
-        value={value.readiness ? [value.readiness] : []}
-        multiple={false}
-        onChange={(next) => onChange({ readiness: next[0] ?? null })}
+        value={value.readiness}
+        excluded={value.excludeReadiness}
+        multiple
+        allowExclude
+        onChange={(readiness) => onChange({ readiness })}
+        onExcludedChange={(excludeReadiness) => onChange({ excludeReadiness })}
       />
 
       <div className="flex flex-col gap-2 md:gap-3">

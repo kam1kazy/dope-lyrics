@@ -15,9 +15,13 @@ export type CatalogSectionFilters = {
   dateFrom: string;
   dateTo: string;
   mood: LyricMood[];
+  excludeMood: LyricMood[];
   delivery: LyricDelivery[];
+  excludeDelivery: LyricDelivery[];
   songRole: LyricSongRole[];
-  readiness: LyricReadiness | null;
+  excludeSongRole: LyricSongRole[];
+  readiness: LyricReadiness[];
+  excludeReadiness: LyricReadiness[];
 };
 
 export const DEFAULT_CATALOG_SECTION_FILTERS: CatalogSectionFilters = {
@@ -29,9 +33,13 @@ export const DEFAULT_CATALOG_SECTION_FILTERS: CatalogSectionFilters = {
   dateFrom: '',
   dateTo: '',
   mood: [],
+  excludeMood: [],
   delivery: [],
+  excludeDelivery: [],
   songRole: [],
-  readiness: null,
+  excludeSongRole: [],
+  readiness: [],
+  excludeReadiness: [],
 };
 
 export function hasActiveCatalogSectionFilters(
@@ -45,8 +53,12 @@ export function hasActiveCatalogSectionFilters(
     filters.dateFrom.trim().length > 0 ||
     filters.dateTo.trim().length > 0 ||
     filters.mood.length > 0 ||
+    filters.excludeMood.length > 0 ||
     filters.delivery.length > 0 ||
+    filters.excludeDelivery.length > 0 ||
     filters.songRole.length > 0 ||
-    filters.readiness !== null
+    filters.excludeSongRole.length > 0 ||
+    filters.readiness.length > 0 ||
+    filters.excludeReadiness.length > 0
   );
 }

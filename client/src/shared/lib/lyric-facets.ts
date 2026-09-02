@@ -161,6 +161,50 @@ export function toggleFacetValue<T extends string>(
   return selectFacetValue(current, item, multiple);
 }
 
+export function clickFacetFilter<T extends string>(
+  included: readonly T[],
+  excluded: readonly T[],
+  item: T,
+  multiple: boolean
+): { included: T[]; excluded: T[] } {
+  if (excluded.includes(item)) {
+    return {
+      included: [...included],
+      excluded: excluded.filter((entry) => entry !== item),
+    };
+  }
+
+  if (included.includes(item)) {
+    return {
+      included: included.filter((entry) => entry !== item),
+      excluded: [...excluded],
+    };
+  }
+
+  return {
+    included: multiple ? [...included, item] : [item],
+    excluded: [...excluded],
+  };
+}
+
+export function toggleExcludeFacetFilter<T extends string>(
+  included: readonly T[],
+  excluded: readonly T[],
+  item: T
+): { included: T[]; excluded: T[] } {
+  if (excluded.includes(item)) {
+    return {
+      included: [...included],
+      excluded: excluded.filter((entry) => entry !== item),
+    };
+  }
+
+  return {
+    included: included.filter((entry) => entry !== item),
+    excluded: [...excluded, item],
+  };
+}
+
 export function upsertRoleProfile(
   profiles: readonly LyricRoleProfile[],
   songRole: LyricSongRole,

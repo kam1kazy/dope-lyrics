@@ -8,7 +8,10 @@ import {
   DEFAULT_CATALOG_SECTION_FILTERS,
   hasActiveCatalogSectionFilters,
 } from '@/shared/lib/catalog-section-filters';
-import type { SortMode } from '@/shared/lib/lyric-view/lyric-view-context';
+import {
+  nextShuffleSeed,
+  type SortMode,
+} from '@/shared/lib/lyric-view/lyric-view-context';
 import { cn } from '@/shared/lib/utils/cn';
 import { Button } from '@/shared/ui/shadcn/ui/button';
 import { Label } from '@/shared/ui/shadcn/ui/label';
@@ -78,11 +81,7 @@ export function CatalogFilterPane({
                   let shuffleSeed = filters.shuffleSeed;
 
                   if (mode === 'shuffle') {
-                    const nextSeed = Date.now();
-                    shuffleSeed =
-                      nextSeed === filters.shuffleSeed
-                        ? nextSeed + 1
-                        : nextSeed;
+                    shuffleSeed = nextShuffleSeed(filters.shuffleSeed);
                   }
 
                   onChange({

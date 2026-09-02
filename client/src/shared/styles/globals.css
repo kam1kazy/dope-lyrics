@@ -119,6 +119,12 @@
   --pause-wave: 214 54 52;
 }
 
+.shelf-chip-excluded {
+  background-color: rgb(var(--pause-wave) / 0.38) !important;
+  border-color: rgb(var(--pause-wave) / 0.22) !important;
+  color: rgb(255 255 255 / 0.9) !important;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

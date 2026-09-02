@@ -3,10 +3,8 @@
 import { useMemo, useRef } from 'react';
 
 import {
-  applyLyricView,
   catalogLyricsVariables,
   createCarouselList,
-  LYRICS_PAGE_SIZE,
   usePaginatedLyrics,
 } from '@/entities/lyric';
 import {
@@ -34,14 +32,19 @@ export const LyricList = () => {
     dateFrom,
     dateTo,
     mood,
+    excludeMood,
     delivery,
+    excludeDelivery,
     songRole,
+    excludeSongRole,
     readiness,
+    excludeReadiness,
+    settingsReady,
   } = useLyricView();
   const queryTags = selectedTags.length > 0 ? selectedTags : null;
   const queryEmojis = selectedEmojis.length > 0 ? selectedEmojis : null;
 
-  const queryVariables = useMemo(
+  const filterQueryVariables = useMemo(
     () =>
       catalogLyricsVariables({
         tags: queryTags,
@@ -51,17 +54,24 @@ export const LyricList = () => {
         dateTo: dateTo.trim() || null,
         includeShelves: includedShelves,
         excludeShelves: excludedShelves,
-        oldestFirst: sortMode === 'reverse',
         mood: mood.length > 0 ? mood : null,
+        excludeMood: excludeMood.length > 0 ? excludeMood : null,
         delivery: delivery.length > 0 ? delivery : null,
+        excludeDelivery: excludeDelivery.length > 0 ? excludeDelivery : null,
         songRole: songRole.length > 0 ? songRole : null,
-        readiness,
+        excludeSongRole: excludeSongRole.length > 0 ? excludeSongRole : null,
+        readiness: readiness.length > 0 ? readiness : null,
+        excludeReadiness: excludeReadiness.length > 0 ? excludeReadiness : null,
       }),
     [
       dateFrom,
       dateTo,
       delivery,
+      excludeDelivery,
+      excludeMood,
+      excludeReadiness,
       excludedShelves,
+      excludeSongRole,
       includedShelves,
       keyword,
       mood,
@@ -69,12 +79,19 @@ export const LyricList = () => {
       queryTags,
       readiness,
       songRole,
-      sortMode,
     ]
   );
-  const debouncedQueryVariables = useDebouncedValue(
-    queryVariables,
+  const debouncedFilterQueryVariables = useDebouncedValue(
+    filterQueryVariables,
     FILTER_QUERY_DEBOUNCE_MS
+  );
+  const queryVariables = useMemo(
+    () => ({
+      ...debouncedFilterQueryVariables,
+      oldestFirst: sortMode === 'reverse',
+      shuffleSeed: sortMode === 'shuffle' ? shuffleSeed : null,
+    }),
+    [debouncedFilterQueryVariables, shuffleSeed, sortMode]
   );
 
   const {
@@ -84,21 +101,17 @@ export const LyricList = () => {
     hasMore,
     loadMore,
     queryVariables: activeQueryVariables,
-  } = usePaginatedLyrics(debouncedQueryVariables);
+  } = usePaginatedLyrics(queryVariables, {
+    skip: !settingsReady,
+  });
 
   const carouselList = useMemo(() => {
     if (!lyrics) {
       return [];
     }
 
-    return createCarouselList(
-      applyLyricView(lyrics, {
-        sortMode,
-        shuffleSeed,
-        pageSize: LYRICS_PAGE_SIZE,
-      })
-    );
-  }, [lyrics, shuffleSeed, sortMode]);
+    return createCarouselList(lyrics);
+  }, [lyrics]);
 
   const hasFilters = hasActiveLyricFilters({
     includedShelves,
@@ -109,12 +122,16 @@ export const LyricList = () => {
     dateFrom,
     dateTo,
     mood,
+    excludeMood,
     delivery,
+    excludeDelivery,
     songRole,
+    excludeSongRole,
     readiness,
+    excludeReadiness,
   });
 
-  if (loading && !lyrics) {
+  if (!settingsReady || (loading && !lyrics)) {
     return (
       <div className="flex h-full w-full items-center justify-center">
         <Spinner className="size-8" />
@@ -152,7 +169,7 @@ export const LyricList = () => {
       className="flex h-full min-h-0 w-full flex-col items-center overflow-hidden break-keep px-4 pt-4 text-center"
     >
       <Viewport
-        key={`${activeQueryVariables.includeShelves?.join('|') ?? ''}-${activeQueryVariables.excludeShelves?.join('|') ?? ''}-${activeQueryVariables.oldestFirst}-${sortMode}-${activeQueryVariables.tags?.join('|') ?? ''}-${activeQueryVariables.emojis?.join('|') ?? ''}-${activeQueryVariables.keyword ?? ''}-${activeQueryVariables.dateFrom ?? ''}-${activeQueryVariables.dateTo ?? ''}-${activeQueryVariables.mood?.join('|') ?? ''}-${activeQueryVariables.delivery?.join('|') ?? ''}-${activeQueryVariables.songRole?.join('|') ?? ''}-${activeQueryVariables.readiness}-${shuffleSeed}`}
+        key={`${activeQueryVariables.includeShelves?.join('|') ?? ''}-${activeQueryVariables.excludeShelves?.join('|') ?? ''}-${activeQueryVariables.oldestFirst}-${sortMode}-${activeQueryVariables.tags?.join('|') ?? ''}-${activeQueryVariables.emojis?.join('|') ?? ''}-${activeQueryVariables.keyword ?? ''}-${activeQueryVariables.dateFrom ?? ''}-${activeQueryVariables.dateTo ?? ''}-${activeQueryVariables.mood?.join('|') ?? ''}-${activeQueryVariables.excludeMood?.join('|') ?? ''}-${activeQueryVariables.delivery?.join('|') ?? ''}-${activeQueryVariables.excludeDelivery?.join('|') ?? ''}-${activeQueryVariables.songRole?.join('|') ?? ''}-${activeQueryVariables.excludeSongRole?.join('|') ?? ''}-${activeQueryVariables.readiness?.join('|') ?? ''}-${activeQueryVariables.excludeReadiness?.join('|') ?? ''}-${shuffleSeed}`}
         data={carouselList}
         lyrics={lyrics}
         queryVariables={activeQueryVariables}

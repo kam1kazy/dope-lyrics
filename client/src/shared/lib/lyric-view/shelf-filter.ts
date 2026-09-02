@@ -14,18 +14,18 @@ export type ShelfSelection = {
 
 export const DEFAULT_SHELF_SELECTION: ShelfSelection = {
   included: [],
-  excluded: ['censored'],
+  excluded: ['hidden'],
 };
 
 export function isAllShelvesSelected(selection: ShelfSelection): boolean {
-  return selection.included.length === 0 && selection.excluded.length === 0;
+  return selection.included.length === 0;
 }
 
 export function isDefaultShelfSelection(selection: ShelfSelection): boolean {
   return (
     selection.included.length === 0 &&
     selection.excluded.length === 1 &&
-    selection.excluded[0] === 'censored'
+    selection.excluded[0] === 'hidden'
   );
 }
 
@@ -98,25 +98,26 @@ export function lyricMatchesShelves(
   selection: ShelfSelection
 ): boolean {
   const { included, excluded } = selection;
-  const allowHidden = included.includes('hidden');
+  const hideHidden =
+    excluded.includes('hidden') && !included.includes('hidden');
 
   if (included.length > 0) {
     const matchesInclude =
       (included.includes('favorites') &&
         lyric.isFavorite &&
-        (allowHidden || !lyric.isHidden)) ||
+        (!hideHidden || !lyric.isHidden)) ||
       (included.includes('references') &&
         lyric.isReference &&
-        (allowHidden || !lyric.isHidden)) ||
+        (!hideHidden || !lyric.isHidden)) ||
       (included.includes('censored') &&
         lyric.isCensored &&
-        (allowHidden || !lyric.isHidden)) ||
-      (allowHidden && lyric.isHidden);
+        (!hideHidden || !lyric.isHidden)) ||
+      (included.includes('hidden') && lyric.isHidden);
 
     if (!matchesInclude) {
       return false;
     }
-  } else if (lyric.isHidden) {
+  } else if (lyric.isHidden && excluded.includes('hidden')) {
     return false;
   }
 

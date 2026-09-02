@@ -13,6 +13,7 @@ import {
   type LyricsListOptions,
 } from '~/modules/lyrics/lyrics-list-filters';
 import { createLyricData } from '~/modules/lyrics/persist/create-lyric-data';
+import { shuffleIds, toShuffleSeed } from '~/modules/lyrics/shuffle-ids';
 import { usersService } from '~/modules/users/users.service';
 
 const INSERT_CONCURRENCY = 8;
@@ -20,9 +21,38 @@ const INSERT_CONCURRENCY = 8;
 export class LyricsService {
   private readonly prisma = prisma;
 
-  list(options: LyricsListOptions) {
+  async list(options: LyricsListOptions) {
+    const where = buildLyricsWhere(options);
+
+    if (options.shuffleSeed != null && Number.isFinite(options.shuffleSeed)) {
+      const rows = await this.prisma.lyrics.findMany({
+        where,
+        select: { id: true },
+        orderBy: { id: 'asc' },
+      });
+      const pageIds = shuffleIds(
+        rows.map((row) => row.id),
+        toShuffleSeed(options.shuffleSeed)
+      ).slice(options.offset, options.offset + options.limit);
+
+      if (pageIds.length === 0) {
+        return [];
+      }
+
+      const page = await this.prisma.lyrics.findMany({
+        where: { id: { in: pageIds } },
+        include: lyricInclude,
+      });
+      const byId = new Map(page.map((row) => [row.id, row]));
+
+      return pageIds.flatMap((id) => {
+        const row = byId.get(id);
+        return row ? [row] : [];
+      });
+    }
+
     return this.prisma.lyrics.findMany({
-      where: buildLyricsWhere(options),
+      where,
       take: options.limit,
       skip: options.offset,
       orderBy: { date: options.oldestFirst ? 'asc' : 'desc' },

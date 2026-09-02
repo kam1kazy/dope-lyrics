@@ -31,10 +31,15 @@ export const ALL_LYRICS = gql`
     $limit: Int
     $offset: Int
     $oldestFirst: Boolean
+    $shuffleSeed: Int
     $mood: [LyricMood!]
+    $excludeMood: [LyricMood!]
     $delivery: [LyricDelivery!]
+    $excludeDelivery: [LyricDelivery!]
     $songRole: [LyricSongRole!]
-    $readiness: LyricReadiness
+    $excludeSongRole: [LyricSongRole!]
+    $readiness: [LyricReadiness!]
+    $excludeReadiness: [LyricReadiness!]
   ) {
     lyrics(
       tags: $tags
@@ -54,10 +59,15 @@ export const ALL_LYRICS = gql`
       limit: $limit
       offset: $offset
       oldestFirst: $oldestFirst
+      shuffleSeed: $shuffleSeed
       mood: $mood
+      excludeMood: $excludeMood
       delivery: $delivery
+      excludeDelivery: $excludeDelivery
       songRole: $songRole
+      excludeSongRole: $excludeSongRole
       readiness: $readiness
+      excludeReadiness: $excludeReadiness
     ) {
       id
 

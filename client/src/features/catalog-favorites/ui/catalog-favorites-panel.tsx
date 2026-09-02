@@ -26,8 +26,6 @@ export function CatalogFavoritesPanel({
   return (
     <CatalogLyricsList
       queryVariables={queryVariables}
-      sortMode={filters.sortMode}
-      shuffleSeed={filters.shuffleSeed}
       emptyMessage="Пока ничего нет"
     />
   );

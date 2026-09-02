@@ -20,10 +20,15 @@ export interface LyricsListOptions {
   demoName?: string | null;
   demosOnly?: boolean | null;
   oldestFirst?: boolean | null;
+  shuffleSeed?: number | null;
   mood?: string[] | null;
+  excludeMood?: string[] | null;
   delivery?: string[] | null;
+  excludeDelivery?: string[] | null;
   songRole?: string[] | null;
-  readiness?: string | null;
+  excludeSongRole?: string[] | null;
+  readiness?: string[] | null;
+  excludeReadiness?: string[] | null;
 }
 
 export const normalizeTags = (tags: string[] | null | undefined): string[] => {
@@ -170,6 +175,55 @@ const buildFacetWhere = (
   };
 };
 
+const lyricHasJsonFacet = (
+  field: 'mood' | 'delivery',
+  values: string[]
+): Prisma.LyricsWhereInput => {
+  const onLyric: Prisma.LyricsWhereInput =
+    field === 'mood'
+      ? { mood: { hasSome: values } }
+      : { delivery: { hasSome: values } };
+
+  return {
+    OR: [
+      onLyric,
+      ...LYRIC_SONG_ROLES.flatMap((role) =>
+        values.map((value) => jsonFacetContains(role, field, value))
+      ),
+    ],
+  };
+};
+
+const buildExcludeFacetWhere = (
+  moods: string[],
+  deliveries: string[],
+  roles: string[]
+): Prisma.LyricsWhereInput | undefined => {
+  const parts: Prisma.LyricsWhereInput[] = [];
+
+  if (moods.length > 0) {
+    parts.push({ NOT: lyricHasJsonFacet('mood', moods) });
+  }
+
+  if (deliveries.length > 0) {
+    parts.push({ NOT: lyricHasJsonFacet('delivery', deliveries) });
+  }
+
+  if (roles.length > 0) {
+    parts.push({ NOT: { songRole: { hasSome: roles } } });
+  }
+
+  if (parts.length === 0) {
+    return undefined;
+  }
+
+  if (parts.length === 1) {
+    return parts[0];
+  }
+
+  return { AND: parts };
+};
+
 const SHELF_FLAGS = ['favorites', 'references', 'censored', 'hidden'] as const;
 
 type ShelfFlag = (typeof SHELF_FLAGS)[number];
@@ -201,7 +255,7 @@ const buildShelfClause = (
 
   const include = included ?? [];
   const exclude = excluded ?? [];
-  const allowHidden = include.includes('hidden');
+  const hideHidden = exclude.includes('hidden') && !include.includes('hidden');
   const clauses: Prisma.LyricsWhereInput[] = [];
 
   if (include.length > 0) {
@@ -209,36 +263,36 @@ const buildShelfClause = (
 
     if (include.includes('favorites')) {
       or.push(
-        allowHidden
-          ? { isFavorite: true }
-          : { isFavorite: true, isHidden: false }
+        hideHidden
+          ? { isFavorite: true, isHidden: false }
+          : { isFavorite: true }
       );
     }
 
     if (include.includes('references')) {
       or.push(
-        allowHidden
-          ? { isReference: true }
-          : { isReference: true, isHidden: false }
+        hideHidden
+          ? { isReference: true, isHidden: false }
+          : { isReference: true }
       );
     }
 
     if (include.includes('censored')) {
       or.push(
-        allowHidden
-          ? { isCensored: true }
-          : { isCensored: true, isHidden: false }
+        hideHidden
+          ? { isCensored: true, isHidden: false }
+          : { isCensored: true }
       );
     }
 
-    if (allowHidden) {
+    if (include.includes('hidden')) {
       or.push({ isHidden: true });
     }
 
     if (or.length > 0) {
       clauses.push({ OR: or });
     }
-  } else {
+  } else if (exclude.includes('hidden')) {
     clauses.push({ isHidden: false });
   }
 
@@ -287,9 +341,13 @@ export const buildLyricsWhere = (
     | 'demoName'
     | 'demosOnly'
     | 'mood'
+    | 'excludeMood'
     | 'delivery'
+    | 'excludeDelivery'
     | 'songRole'
+    | 'excludeSongRole'
     | 'readiness'
+    | 'excludeReadiness'
   >
 ): Prisma.LyricsWhereInput => {
   const tags = normalizeTags(options.tags);
@@ -407,9 +465,13 @@ export const buildLyricsWhere = (
   }
 
   const moods = normalizeTags(options.mood);
+  const excludeMoods = normalizeTags(options.excludeMood);
   const deliveries = normalizeTags(options.delivery);
+  const excludeDeliveries = normalizeTags(options.excludeDelivery);
   const songRoles = normalizeTags(options.songRole);
-  const readiness = options.readiness?.trim();
+  const excludeSongRoles = normalizeTags(options.excludeSongRole);
+  const readiness = normalizeTags(options.readiness);
+  const excludeReadiness = normalizeTags(options.excludeReadiness);
 
   const facetWhere = buildFacetWhere(moods, deliveries, songRoles);
 
@@ -417,12 +479,28 @@ export const buildLyricsWhere = (
     andParts.push(facetWhere);
   }
 
-  if (andParts.length > 0) {
-    where.AND = andParts;
+  const excludeFacetWhere = buildExcludeFacetWhere(
+    excludeMoods,
+    excludeDeliveries,
+    excludeSongRoles
+  );
+
+  if (excludeFacetWhere) {
+    andParts.push(excludeFacetWhere);
   }
 
-  if (readiness) {
-    where.readiness = readiness;
+  if (readiness.length > 0) {
+    andParts.push({ readiness: { in: readiness } });
+  }
+
+  if (excludeReadiness.length > 0) {
+    andParts.push({
+      OR: [{ readiness: null }, { readiness: { notIn: excludeReadiness } }],
+    });
+  }
+
+  if (andParts.length > 0) {
+    where.AND = andParts;
   }
 
   return where;

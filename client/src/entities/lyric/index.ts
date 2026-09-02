@@ -9,7 +9,6 @@ export {
   UPDATE_LYRIC_FLAGS,
   UPDATE_LYRIC_PROFILE,
 } from './api/queries';
-export { applyLyricView } from './lib/apply-lyric-view';
 export { createCarouselList } from './lib/create-carousel-list';
 export {
   formatDemoName,

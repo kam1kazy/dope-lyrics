@@ -24,10 +24,15 @@ type LyricsArgs = {
   demoName?: string | null;
   demosOnly?: boolean | null;
   oldestFirst?: boolean | null;
+  shuffleSeed?: number | null;
   mood?: string[] | null;
+  excludeMood?: string[] | null;
   delivery?: string[] | null;
+  excludeDelivery?: string[] | null;
   songRole?: string[] | null;
-  readiness?: string | null;
+  excludeSongRole?: string[] | null;
+  readiness?: string[] | null;
+  excludeReadiness?: string[] | null;
 };
 
 type UpdateLyricFlagsArgs = {
@@ -108,10 +113,15 @@ export const resolvers = {
         demoName: args.demoName,
         demosOnly: args.demosOnly,
         oldestFirst: args.oldestFirst,
+        shuffleSeed: args.shuffleSeed,
         mood: args.mood,
+        excludeMood: args.excludeMood,
         delivery: args.delivery,
+        excludeDelivery: args.excludeDelivery,
         songRole: args.songRole,
+        excludeSongRole: args.excludeSongRole,
         readiness: args.readiness,
+        excludeReadiness: args.excludeReadiness,
       });
     },
     lyricIngestPreview: (

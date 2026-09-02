@@ -245,10 +245,15 @@ export const typeDefinitions = /* GraphQL */ `
       demoName: String
       demosOnly: Boolean
       oldestFirst: Boolean
+      shuffleSeed: Int
       mood: [LyricMood!]
+      excludeMood: [LyricMood!]
       delivery: [LyricDelivery!]
+      excludeDelivery: [LyricDelivery!]
       songRole: [LyricSongRole!]
-      readiness: LyricReadiness
+      excludeSongRole: [LyricSongRole!]
+      readiness: [LyricReadiness!]
+      excludeReadiness: [LyricReadiness!]
     ): [Lyric!]!
     lyricIngestPreview: LyricIngestPreview!
     catalogStats: CatalogStats!

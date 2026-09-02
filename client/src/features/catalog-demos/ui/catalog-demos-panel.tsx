@@ -26,8 +26,6 @@ export function CatalogDemosPanel({
   return (
     <CatalogLyricsList
       queryVariables={queryVariables}
-      sortMode={filters.sortMode}
-      shuffleSeed={filters.shuffleSeed}
       emptyMessage="Демок пока нет"
     />
   );

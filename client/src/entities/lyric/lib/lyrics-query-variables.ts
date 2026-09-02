@@ -24,17 +24,26 @@ export type LyricsQueryVariables = {
   limit?: number | null;
   offset?: number | null;
   oldestFirst?: boolean | null;
+  shuffleSeed?: number | null;
   mood: LyricMood[] | null;
+  excludeMood: LyricMood[] | null;
   delivery: LyricDelivery[] | null;
+  excludeDelivery: LyricDelivery[] | null;
   songRole: LyricSongRole[] | null;
-  readiness: LyricReadiness | null;
+  excludeSongRole: LyricSongRole[] | null;
+  readiness: LyricReadiness[] | null;
+  excludeReadiness: LyricReadiness[] | null;
 };
 
 export const EMPTY_LYRIC_FACET_FILTERS = {
   mood: null,
+  excludeMood: null,
   delivery: null,
+  excludeDelivery: null,
   songRole: null,
+  excludeSongRole: null,
   readiness: null,
+  excludeReadiness: null,
 } as const;
 
 export const LYRICS_PAGE_SIZE = 40;
@@ -60,6 +69,7 @@ export function catalogLyricsVariables(
     limit: LYRICS_PAGE_SIZE,
     offset: 0,
     oldestFirst: false,
+    shuffleSeed: null,
     ...EMPTY_LYRIC_FACET_FILTERS,
     ...overrides,
   };
@@ -79,10 +89,18 @@ export function catalogQueryVariablesForSection(
     favoritesOnly: section === 'favorites' ? true : null,
     demosOnly: section === 'demos' ? true : null,
     oldestFirst: filters.sortMode === 'reverse',
+    shuffleSeed: filters.sortMode === 'shuffle' ? filters.shuffleSeed : null,
     mood: filters.mood.length > 0 ? filters.mood : null,
+    excludeMood: filters.excludeMood.length > 0 ? filters.excludeMood : null,
     delivery: filters.delivery.length > 0 ? filters.delivery : null,
+    excludeDelivery:
+      filters.excludeDelivery.length > 0 ? filters.excludeDelivery : null,
     songRole: filters.songRole.length > 0 ? filters.songRole : null,
-    readiness: filters.readiness,
+    excludeSongRole:
+      filters.excludeSongRole.length > 0 ? filters.excludeSongRole : null,
+    readiness: filters.readiness.length > 0 ? filters.readiness : null,
+    excludeReadiness:
+      filters.excludeReadiness.length > 0 ? filters.excludeReadiness : null,
     includeCensored: includeCensored ? true : null,
   });
 }

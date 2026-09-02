@@ -39,9 +39,13 @@ export const LYRIC_VIEW_DEFAULTS = {
   dateFrom: '',
   dateTo: '',
   mood: [] as LyricMood[],
+  excludeMood: [] as LyricMood[],
   delivery: [] as LyricDelivery[],
+  excludeDelivery: [] as LyricDelivery[],
   songRole: [] as LyricSongRole[],
-  readiness: null as LyricReadiness | null,
+  excludeSongRole: [] as LyricSongRole[],
+  readiness: [] as LyricReadiness[],
+  excludeReadiness: [] as LyricReadiness[],
 };
 
 const SETTINGS_STORAGE_KEY = 'dope-lyrics.lyric-settings';
@@ -65,10 +69,12 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
 
-function nextShuffleSeed(current: number): number {
-  const next = Date.now();
+const GRAPHQL_INT_MAX = 2_147_483_647;
 
-  return next === current ? current + 1 : next;
+export function nextShuffleSeed(current = 0): number {
+  const next = Date.now() % GRAPHQL_INT_MAX || 1;
+
+  return next === current ? (current % (GRAPHQL_INT_MAX - 1)) + 1 : next;
 }
 
 function parsePersistedSettings(raw: string): PersistedLyricSettings | null {
@@ -152,9 +158,14 @@ interface LyricViewContextValue {
   dateFrom: string;
   dateTo: string;
   mood: LyricMood[];
+  excludeMood: LyricMood[];
   delivery: LyricDelivery[];
+  excludeDelivery: LyricDelivery[];
   songRole: LyricSongRole[];
-  readiness: LyricReadiness | null;
+  excludeSongRole: LyricSongRole[];
+  readiness: LyricReadiness[];
+  excludeReadiness: LyricReadiness[];
+  settingsReady: boolean;
   setSortMode: (mode: SortMode) => void;
   setShelfSelection: (
     selection: ShelfSelection | ((current: ShelfSelection) => ShelfSelection)
@@ -169,9 +180,13 @@ interface LyricViewContextValue {
   setDateFrom: (value: string) => void;
   setDateTo: (value: string) => void;
   setMood: (value: LyricMood[]) => void;
+  setExcludeMood: (value: LyricMood[]) => void;
   setDelivery: (value: LyricDelivery[]) => void;
+  setExcludeDelivery: (value: LyricDelivery[]) => void;
   setSongRole: (value: LyricSongRole[]) => void;
-  setReadiness: (value: LyricReadiness | null) => void;
+  setExcludeSongRole: (value: LyricSongRole[]) => void;
+  setReadiness: (value: LyricReadiness[]) => void;
+  setExcludeReadiness: (value: LyricReadiness[]) => void;
   resetSettings: () => void;
   resetFilters: () => void;
 }
@@ -188,7 +203,7 @@ export function LyricViewProvider({ children }: { children: ReactNode }) {
   });
   const includedShelves = shelfSelection.included;
   const excludedShelves = shelfSelection.excluded;
-  const [shuffleSeed, setShuffleSeed] = useState(1);
+  const [shuffleSeed, setShuffleSeed] = useState(() => nextShuffleSeed());
   const [fontSize, setFontSize] = useState(LYRIC_VIEW_DEFAULTS.fontSize);
   const [lineHeight, setLineHeight] = useState(LYRIC_VIEW_DEFAULTS.lineHeight);
   const [lineGap, setLineGap] = useState(LYRIC_VIEW_DEFAULTS.lineGap);
@@ -201,14 +216,26 @@ export function LyricViewProvider({ children }: { children: ReactNode }) {
   const [dateFrom, setDateFrom] = useState(LYRIC_VIEW_DEFAULTS.dateFrom);
   const [dateTo, setDateTo] = useState(LYRIC_VIEW_DEFAULTS.dateTo);
   const [mood, setMood] = useState<LyricMood[]>(LYRIC_VIEW_DEFAULTS.mood);
+  const [excludeMood, setExcludeMood] = useState<LyricMood[]>(
+    LYRIC_VIEW_DEFAULTS.excludeMood
+  );
   const [delivery, setDelivery] = useState<LyricDelivery[]>(
     LYRIC_VIEW_DEFAULTS.delivery
+  );
+  const [excludeDelivery, setExcludeDelivery] = useState<LyricDelivery[]>(
+    LYRIC_VIEW_DEFAULTS.excludeDelivery
   );
   const [songRole, setSongRole] = useState<LyricSongRole[]>(
     LYRIC_VIEW_DEFAULTS.songRole
   );
-  const [readiness, setReadiness] = useState<LyricReadiness | null>(
+  const [excludeSongRole, setExcludeSongRole] = useState<LyricSongRole[]>(
+    LYRIC_VIEW_DEFAULTS.excludeSongRole
+  );
+  const [readiness, setReadiness] = useState<LyricReadiness[]>(
     LYRIC_VIEW_DEFAULTS.readiness
+  );
+  const [excludeReadiness, setExcludeReadiness] = useState<LyricReadiness[]>(
+    LYRIC_VIEW_DEFAULTS.excludeReadiness
   );
   const [settingsReady, setSettingsReady] = useState(false);
 
@@ -277,6 +304,7 @@ export function LyricViewProvider({ children }: { children: ReactNode }) {
 
   const resetSettings = useCallback(() => {
     setSortModeState(LYRIC_VIEW_DEFAULTS.sortMode);
+    setShuffleSeed(nextShuffleSeed());
     setFontSize(LYRIC_VIEW_DEFAULTS.fontSize);
     setLineHeight(LYRIC_VIEW_DEFAULTS.lineHeight);
     setLineGap(LYRIC_VIEW_DEFAULTS.lineGap);
@@ -294,9 +322,13 @@ export function LyricViewProvider({ children }: { children: ReactNode }) {
     setDateFrom(LYRIC_VIEW_DEFAULTS.dateFrom);
     setDateTo(LYRIC_VIEW_DEFAULTS.dateTo);
     setMood(LYRIC_VIEW_DEFAULTS.mood);
+    setExcludeMood(LYRIC_VIEW_DEFAULTS.excludeMood);
     setDelivery(LYRIC_VIEW_DEFAULTS.delivery);
+    setExcludeDelivery(LYRIC_VIEW_DEFAULTS.excludeDelivery);
     setSongRole(LYRIC_VIEW_DEFAULTS.songRole);
+    setExcludeSongRole(LYRIC_VIEW_DEFAULTS.excludeSongRole);
     setReadiness(LYRIC_VIEW_DEFAULTS.readiness);
+    setExcludeReadiness(LYRIC_VIEW_DEFAULTS.excludeReadiness);
   }, []);
 
   const value = useMemo(
@@ -315,9 +347,14 @@ export function LyricViewProvider({ children }: { children: ReactNode }) {
       dateFrom,
       dateTo,
       mood,
+      excludeMood,
       delivery,
+      excludeDelivery,
       songRole,
+      excludeSongRole,
       readiness,
+      excludeReadiness,
+      settingsReady,
       setSortMode,
       setShelfSelection,
       setFontSize,
@@ -330,9 +367,13 @@ export function LyricViewProvider({ children }: { children: ReactNode }) {
       setDateFrom,
       setDateTo,
       setMood,
+      setExcludeMood,
       setDelivery,
+      setExcludeDelivery,
       setSongRole,
+      setExcludeSongRole,
       setReadiness,
+      setExcludeReadiness,
       resetSettings,
       resetFilters,
     }),
@@ -351,9 +392,14 @@ export function LyricViewProvider({ children }: { children: ReactNode }) {
       dateFrom,
       dateTo,
       mood,
+      excludeMood,
       delivery,
+      excludeDelivery,
       songRole,
+      excludeSongRole,
       readiness,
+      excludeReadiness,
+      settingsReady,
       setSortMode,
       setShelfSelection,
       toggleTag,
@@ -420,9 +466,13 @@ export function hasActiveLyricFilters(options: {
   dateFrom: string;
   dateTo: string;
   mood: LyricMood[];
+  excludeMood: LyricMood[];
   delivery: LyricDelivery[];
+  excludeDelivery: LyricDelivery[];
   songRole: LyricSongRole[];
-  readiness: LyricReadiness | null;
+  excludeSongRole: LyricSongRole[];
+  readiness: LyricReadiness[];
+  excludeReadiness: LyricReadiness[];
 }): boolean {
   return (
     !isDefaultShelfSelection({
@@ -435,8 +485,12 @@ export function hasActiveLyricFilters(options: {
     options.dateFrom.trim().length > 0 ||
     options.dateTo.trim().length > 0 ||
     options.mood.length > 0 ||
+    options.excludeMood.length > 0 ||
     options.delivery.length > 0 ||
+    options.excludeDelivery.length > 0 ||
     options.songRole.length > 0 ||
-    options.readiness !== null
+    options.excludeSongRole.length > 0 ||
+    options.readiness.length > 0 ||
+    options.excludeReadiness.length > 0
   );
 }
