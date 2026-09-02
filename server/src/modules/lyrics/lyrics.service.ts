@@ -14,6 +14,12 @@ import {
 } from '~/modules/lyrics/lyrics-list-filters';
 import { createLyricData } from '~/modules/lyrics/persist/create-lyric-data';
 import { shuffleIds, toShuffleSeed } from '~/modules/lyrics/shuffle-ids';
+import {
+  assembleSlotsFromPools,
+  parseCollageSlotsInput,
+  slotsFromJson,
+  TRACK_FRAME,
+} from '~/modules/lyrics/track-assemble';
 import { usersService } from '~/modules/users/users.service';
 
 const INSERT_CONCURRENCY = 8;
@@ -117,6 +123,98 @@ export class LyricsService {
     });
 
     return buildCatalogStats(rows);
+  }
+
+  async assembleTrack() {
+    const uniqueRoles = [...new Set(TRACK_FRAME)];
+    const pools: Record<string, number[]> = {};
+
+    await Promise.all(
+      uniqueRoles.map(async (role) => {
+        const rows = await this.prisma.lyrics.findMany({
+          where: {
+            isCensored: false,
+            songRole: { has: role },
+            message: {
+              AND: [{ text: { not: null } }, { NOT: { text: '' } }],
+            },
+          },
+          select: { id: true },
+        });
+        pools[role] = rows.map((row) => row.id);
+      })
+    );
+
+    const slots = assembleSlotsFromPools(pools);
+    const lyricIds = slots
+      .map((slot) => slot.lyricId)
+      .filter((id): id is number => id !== null);
+
+    const lyrics =
+      lyricIds.length === 0
+        ? []
+        : await this.prisma.lyrics.findMany({
+            where: { id: { in: lyricIds } },
+            include: lyricInclude,
+          });
+    const byId = new Map(lyrics.map((row) => [row.id, row]));
+
+    return {
+      slots: slots.map((slot) => ({
+        songRole: slot.songRole,
+        lyricId: slot.lyricId,
+        lyric: slot.lyricId !== null ? (byId.get(slot.lyricId) ?? null) : null,
+      })),
+    };
+  }
+
+  async likeCollage(slotsInput: unknown) {
+    const slots = parseCollageSlotsInput(slotsInput);
+    const row = await this.prisma.lyricCollage.create({
+      data: { slots },
+    });
+
+    return this.hydrateCollage(row.id, row.createdAt, row.slots);
+  }
+
+  async listCollages() {
+    const rows = await this.prisma.lyricCollage.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return Promise.all(
+      rows.map((row) => this.hydrateCollage(row.id, row.createdAt, row.slots))
+    );
+  }
+
+  private async hydrateCollage(
+    id: number,
+    createdAt: Date,
+    slotsJson: unknown
+  ) {
+    const slots = slotsFromJson(slotsJson);
+    const lyricIds = slots
+      .map((slot) => slot.lyricId)
+      .filter((lyricId): lyricId is number => lyricId !== null);
+
+    const lyrics =
+      lyricIds.length === 0
+        ? []
+        : await this.prisma.lyrics.findMany({
+            where: { id: { in: lyricIds } },
+            include: lyricInclude,
+          });
+    const byId = new Map(lyrics.map((row) => [row.id, row]));
+
+    return {
+      id,
+      createdAt: createdAt.toISOString(),
+      slots: slots.map((slot) => ({
+        songRole: slot.songRole,
+        lyricId: slot.lyricId,
+        lyric: slot.lyricId !== null ? (byId.get(slot.lyricId) ?? null) : null,
+      })),
+    };
   }
 
   async updateFlags(

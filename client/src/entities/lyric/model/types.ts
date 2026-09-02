@@ -83,6 +83,26 @@ export type ICatalogStats = {
   readinessNone: number;
 };
 
+export type IAssembledTrackSlot = {
+  songRole: LyricSongRole;
+  lyricId: number | null;
+  lyric:
+    | (Pick<ILyric, 'id'> & {
+        message: Pick<IMessage, 'text'> | null;
+      })
+    | null;
+};
+
+export type IAssembledTrack = {
+  slots: IAssembledTrackSlot[];
+};
+
+export type ILyricCollage = {
+  id: number;
+  createdAt: string;
+  slots: IAssembledTrackSlot[];
+};
+
 export interface IMessage {
   message_id: number;
   text: string;

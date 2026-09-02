@@ -1,7 +1,10 @@
 export {
   ALL_LYRICS,
+  ASSEMBLE_TRACK,
   CATALOG_STATS,
   INGEST_PENDING_LYRICS,
+  LIKE_COLLAGE,
+  LYRIC_COLLAGES,
   LYRIC_DEMOS,
   LYRIC_EMOJIS,
   LYRIC_INGEST_PREVIEW,
@@ -26,11 +29,14 @@ export {
 export { updateLyricsCacheAfterFlagsChange } from './lib/update-lyrics-cache';
 export { usePaginatedLyrics } from './lib/use-paginated-lyrics';
 export type {
+  IAssembledTrack,
+  IAssembledTrackSlot,
   ICatalogStats,
   IChat,
   IEmoji,
   IHashtags,
   ILyric,
+  ILyricCollage,
   ILyricDemo,
   IMedia,
   IMessage,

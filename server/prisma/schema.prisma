@@ -138,3 +138,13 @@ model Hashtags {
   message   Message @relation(fields: messageId, references: id)
   messageId Int     @unique
 }
+
+/// Лайкнутая случайная склейка трека; seed не трогает.
+model LyricCollage {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  /// [{ songRole, lyricId }] — lyricId null = пустой слот.
+  slots     Json
+
+  @@index([createdAt])
+}

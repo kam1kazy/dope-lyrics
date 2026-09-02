@@ -51,6 +51,10 @@ type UpdateLyricProfileArgs = {
   readiness?: string | null;
 };
 
+type LikeCollageArgs = {
+  slots: unknown;
+};
+
 const clampLimit = (value: number | null | undefined): number => {
   const fallback = env.GRAPHQL_MAX_LIMIT;
   const requested = value ?? fallback;
@@ -138,6 +142,20 @@ export const resolvers = {
     ) => {
       return lyricsService.catalogStats();
     },
+    assembleTrack: (
+      _parent: unknown,
+      _args: unknown,
+      _context: GraphQLContext
+    ) => {
+      return lyricsService.assembleTrack();
+    },
+    lyricCollages: (
+      _parent: unknown,
+      _args: unknown,
+      _context: GraphQLContext
+    ) => {
+      return lyricsService.listCollages();
+    },
   },
   Mutation: {
     updateLyricFlags: (
@@ -170,6 +188,13 @@ export const resolvers = {
       _context: GraphQLContext
     ) => {
       return fetchIngestApply();
+    },
+    likeCollage: (
+      _parent: unknown,
+      args: LikeCollageArgs,
+      _context: GraphQLContext
+    ) => {
+      return lyricsService.likeCollage(args.slots);
     },
   },
   Lyric: {

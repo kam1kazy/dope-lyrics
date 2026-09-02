@@ -212,6 +212,27 @@ export const typeDefinitions = /* GraphQL */ `
     readinessNone: Int!
   }
 
+  type AssembledTrackSlot {
+    songRole: LyricSongRole!
+    lyricId: Int
+    lyric: Lyric
+  }
+
+  type AssembledTrack {
+    slots: [AssembledTrackSlot!]!
+  }
+
+  type LyricCollage {
+    id: Int!
+    createdAt: String!
+    slots: [AssembledTrackSlot!]!
+  }
+
+  input CollageSlotInput {
+    songRole: LyricSongRole!
+    lyricId: Int
+  }
+
   type LyricIngestPreview {
     available: Boolean!
     pendingCount: Int!
@@ -257,6 +278,8 @@ export const typeDefinitions = /* GraphQL */ `
     ): [Lyric!]!
     lyricIngestPreview: LyricIngestPreview!
     catalogStats: CatalogStats!
+    assembleTrack: AssembledTrack!
+    lyricCollages: [LyricCollage!]!
   }
 
   type Mutation {
@@ -275,5 +298,6 @@ export const typeDefinitions = /* GraphQL */ `
       readiness: LyricReadiness
     ): Lyric!
     ingestPendingLyrics: LyricIngestResult!
+    likeCollage(slots: [CollageSlotInput!]!): LyricCollage!
   }
 `;

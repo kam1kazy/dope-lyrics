@@ -255,3 +255,48 @@ export const UPDATE_LYRIC_FLAGS = gql`
     }
   }
 `;
+
+const COLLAGE_SLOT_FIELDS = `
+  songRole
+  lyricId
+  lyric {
+    id
+    message {
+      text
+    }
+  }
+`;
+
+export const ASSEMBLE_TRACK = gql`
+  query AssembleTrack {
+    assembleTrack {
+      slots {
+        ${COLLAGE_SLOT_FIELDS}
+      }
+    }
+  }
+`;
+
+export const LYRIC_COLLAGES = gql`
+  query LyricCollages {
+    lyricCollages {
+      id
+      createdAt
+      slots {
+        ${COLLAGE_SLOT_FIELDS}
+      }
+    }
+  }
+`;
+
+export const LIKE_COLLAGE = gql`
+  mutation LikeCollage($slots: [CollageSlotInput!]!) {
+    likeCollage(slots: $slots) {
+      id
+      createdAt
+      slots {
+        ${COLLAGE_SLOT_FIELDS}
+      }
+    }
+  }
+`;

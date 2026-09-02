@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
+import { CatalogAssemblePanel } from '@/features/catalog-assemble';
 import { CatalogDemosPanel } from '@/features/catalog-demos';
 import { CatalogFavoritesPanel } from '@/features/catalog-favorites';
 import { CatalogFilterPane } from '@/features/catalog-filters';
@@ -30,12 +31,12 @@ import { cn } from '@/shared/lib/utils/cn';
 import { CatalogPanel } from '@/shared/ui/catalog-panel/catalog-panel';
 import { Button } from '@/shared/ui/shadcn/ui/button';
 
-type CatalogSection = 'list' | 'favorites' | 'demos' | 'stats';
+type CatalogSection = 'list' | 'favorites' | 'demos' | 'stats' | 'history';
 
-type FilterableSection = Exclude<CatalogSection, 'stats'>;
+type FilterableSection = Exclude<CatalogSection, 'stats' | 'history'>;
 
 type MenuItem = {
-  id: CatalogSection | 'references' | 'generations' | 'ai-settings';
+  id: CatalogSection | 'references' | 'ai-settings';
   label: string;
   icon: typeof Bookmark;
   disabled?: boolean;
@@ -47,12 +48,7 @@ const MENU_ITEMS: MenuItem[] = [
   { id: 'demos', label: 'Тексты из демок', icon: AudioLines },
   { id: 'stats', label: 'Сводка', icon: ChartColumn },
   { id: 'references', label: 'Эталоны', icon: Sparkles, disabled: true },
-  {
-    id: 'generations',
-    label: 'История',
-    icon: History,
-    disabled: true,
-  },
+  { id: 'history', label: 'История', icon: History },
   { id: 'ai-settings', label: 'Настройки ИИ', icon: Bot, disabled: true },
 ];
 
@@ -61,6 +57,7 @@ const SECTION_TITLES: Record<CatalogSection, string> = {
   favorites: 'Избранное',
   demos: 'Тексты из демок',
   stats: 'Сводка',
+  history: 'История',
 };
 
 const EMPTY_SECTION_FILTERS: Record<FilterableSection, CatalogSectionFilters> =
@@ -119,7 +116,9 @@ export function CatalogMenu() {
   };
 
   const filterableSection: FilterableSection | null =
-    activeSection && activeSection !== 'stats' ? activeSection : null;
+    activeSection && activeSection !== 'stats' && activeSection !== 'history'
+      ? activeSection
+      : null;
   const sectionFilters = filterableSection
     ? filtersBySection[filterableSection]
     : DEFAULT_CATALOG_SECTION_FILTERS;
@@ -213,7 +212,6 @@ export function CatalogMenu() {
                     if (
                       disabled ||
                       id === 'references' ||
-                      id === 'generations' ||
                       id === 'ai-settings'
                     ) {
                       return;
@@ -291,6 +289,8 @@ export function CatalogMenu() {
                       <CatalogFavoritesPanel filters={sectionFilters} />
                     ) : activeSection === 'demos' ? (
                       <CatalogDemosPanel filters={sectionFilters} />
+                    ) : activeSection === 'history' ? (
+                      <CatalogAssemblePanel />
                     ) : (
                       <CatalogStatsPanel />
                     )}
