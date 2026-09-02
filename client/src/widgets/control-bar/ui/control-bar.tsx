@@ -4,6 +4,8 @@ import { Settings } from 'lucide-react';
 import { useState } from 'react';
 
 import { FilterPanel } from '@/features/filter-panel';
+import { useSwipeToDismiss } from '@/shared/lib/swipe/use-swipe-to-dismiss';
+import { cn } from '@/shared/lib/utils/cn';
 import { Button } from '@/shared/ui/shadcn/ui/button';
 import {
   Drawer,
@@ -15,6 +17,10 @@ import {
 
 export const ControlBar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const swipe = useSwipeToDismiss({
+    enabled: isOpen,
+    onDismiss: () => setIsOpen(false),
+  });
 
   return (
     <>
@@ -35,16 +41,27 @@ export const ControlBar = () => {
         </Button>
       </div>
 
-      <Drawer open={isOpen} onOpenChange={setIsOpen}>
+      <Drawer
+        open={isOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            swipe.reset();
+          }
+
+          setIsOpen(open);
+        }}
+      >
         <DrawerContent
+          {...swipe.contentProps}
+          className={cn(swipe.dragging && 'duration-0')}
           onClick={(event) => {
             event.stopPropagation();
           }}
         >
-          <DrawerHeader>
-            <DrawerTitle>Фильтры</DrawerTitle>
+          <DrawerHeader className="mb-3 cursor-grab active:cursor-grabbing">
+            <DrawerTitle>Настройки</DrawerTitle>
             <DrawerDescription className="sr-only">
-              Настройки отображения текстов
+              Порядок, размер текста и фильтры показа
             </DrawerDescription>
           </DrawerHeader>
           <FilterPanel />

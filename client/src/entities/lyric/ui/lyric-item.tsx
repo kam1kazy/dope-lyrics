@@ -1,5 +1,6 @@
 'use client';
 
+import { useLyricView } from '@/shared/lib/lyric-view/lyric-view-context';
 import { Badge } from '@/shared/ui/shadcn/ui/badge';
 
 import type { LyricSlide } from '../model/types';
@@ -9,6 +10,7 @@ interface LyricItemProps {
 }
 
 export const LyricItem = ({ item }: LyricItemProps) => {
+  const { fontSize, lineHeight } = useLyricView();
   const tags = item.message?.hashtags?.tags ?? [];
 
   return (
@@ -27,7 +29,10 @@ export const LyricItem = ({ item }: LyricItemProps) => {
         </div>
       ) : null}
 
-      <p className="text-2xl leading-snug font-medium tracking-wide whitespace-pre-wrap sm:text-3xl">
+      <p
+        className="font-medium tracking-wide whitespace-pre-wrap"
+        style={{ fontSize: `${fontSize}px`, lineHeight }}
+      >
         {item.message?.text}
       </p>
     </div>

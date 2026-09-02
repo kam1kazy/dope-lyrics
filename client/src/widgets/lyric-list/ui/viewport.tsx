@@ -3,6 +3,10 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import { LyricItem, type LyricSlide } from '@/entities/lyric';
+import {
+  slideTiming,
+  useLyricView,
+} from '@/shared/lib/lyric-view/lyric-view-context';
 import { usePlayback } from '@/shared/lib/playback/playback-context';
 import { cn } from '@/shared/lib/utils/cn';
 
@@ -10,8 +14,6 @@ interface ViewportProps {
   data: LyricSlide[];
 }
 
-const SLIDE_INTERVAL_MS = 2000;
-const ANIMATION_MS = 12000;
 const START_Y_VH = 52;
 const END_Y_VH = -58;
 const FADE_IN = 0.08;
@@ -42,24 +44,26 @@ function elapsedSinceStart(
 function applyPositions(
   nodes: Map<number, HTMLDivElement>,
   elapsedMs: number,
-  dataLength: number
+  dataLength: number,
+  slideIntervalMs: number,
+  animationMs: number
 ) {
   const maxIndex = Math.max(dataLength - 1, 0);
   const activeIndex = Math.min(
-    Math.floor(elapsedMs / SLIDE_INTERVAL_MS),
+    Math.floor(elapsedMs / slideIntervalMs),
     maxIndex
   );
 
   for (const [index, node] of nodes) {
-    const age = elapsedMs - index * SLIDE_INTERVAL_MS;
+    const age = elapsedMs - index * slideIntervalMs;
 
-    if (age < 0 || age > ANIMATION_MS) {
+    if (age < 0 || age > animationMs) {
       node.style.opacity = '0';
       node.style.visibility = 'hidden';
       continue;
     }
 
-    const progress = age / ANIMATION_MS;
+    const progress = age / animationMs;
     const y = START_Y_VH + (END_Y_VH - START_Y_VH) * progress;
 
     node.style.visibility = 'visible';
@@ -72,6 +76,8 @@ function applyPositions(
 
 export function Viewport({ data }: ViewportProps) {
   const { paused } = usePlayback();
+  const { carouselSpeed } = useLyricView();
+  const { slideIntervalMs, animationMs } = slideTiming(carouselSpeed);
   const originRef = useRef(Date.now());
   const pausedAccumRef = useRef(0);
   const pauseStartedRef = useRef<number | null>(null);
@@ -87,9 +93,11 @@ export function Viewport({ data }: ViewportProps) {
         pausedAccumRef.current,
         pauseStartedRef.current
       ),
-      dataLength
+      dataLength,
+      slideIntervalMs,
+      animationMs
     );
-  }, [dataLength, lastIndex]);
+  }, [animationMs, dataLength, lastIndex, slideIntervalMs]);
 
   useEffect(() => {
     const currentPositions = () =>
@@ -100,7 +108,9 @@ export function Viewport({ data }: ViewportProps) {
           pausedAccumRef.current,
           pauseStartedRef.current
         ),
-        dataLength
+        dataLength,
+        slideIntervalMs,
+        animationMs
       );
 
     if (paused) {
@@ -141,11 +151,11 @@ export function Viewport({ data }: ViewportProps) {
       window.removeEventListener('focus', sync);
       window.removeEventListener('pageshow', sync);
     };
-  }, [dataLength, paused]);
+  }, [animationMs, dataLength, paused, slideIntervalMs]);
 
   const firstVisible = Math.max(
     0,
-    lastIndex - Math.ceil(ANIMATION_MS / SLIDE_INTERVAL_MS)
+    lastIndex - Math.ceil(animationMs / slideIntervalMs)
   );
   const visibleSlides = data.slice(firstVisible, lastIndex + 1);
 

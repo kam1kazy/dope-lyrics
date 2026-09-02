@@ -10,7 +10,9 @@
     "deploy": "cd server && bun run deploy",
     "lint": "bun run --cwd client lint && bun run --cwd server lint",
     "fix": "bun run --cwd client fix && bun run --cwd server fix",
-    "format": "bun run --cwd client format && bun run --cwd server format"
+    "format": "bun run --cwd client format && bun run --cwd server format",
+    "kill": "bun run --cwd client kill-port && bun run --cwd server kill-port",
+    "kill-port": "bun run kill"
   },
   "devDependencies": {
     "concurrently": "^10.0.5"

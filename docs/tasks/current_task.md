@@ -1,25 +1,27 @@
 # Current task
 
-Фаза: **C. Интерфейс** — [`../roadmap.md`](../roadmap.md)
+Фаза: первый срез **D** закрыт на клиенте. Kit **C** (shadcn) тоже.
 
-A и B закрыты. Kit сменён: Chakra нет, экран на shadcn. Класс защиты API с youways — в `server/` (не tenant, не JWT, не cookie-сессии).
-
----
-
-**Current:** добить экран на shadcn, не возвращая Chakra.
-
-- kit-файлы shadcn не править: обёртки снаружи;
-- иконки — Lucide;
-- композиция может уйти от «телефона 640px»;
-- empty / error по-русски;
-- Play уже есть (клик по экрану). Отдельная кнопка — если понадобится по дизайну.
-
-План kit: [`004_ui_shadcn.md`](004_ui_shadcn.md)
+A–B закрыты. Chakra нет. Защита API с youways — в `server/`. `bun run fix` зелёный.
 
 ---
 
-**Дальше:** D — фильтры как запрос, сортировка, хештег. [`003_catalog_controls.md`](003_catalog_controls.md)
+**Сделано только что**
 
-**Не сейчас:** ИИ (E); Linux-хост и регистрация (F). TS 7 / Prisma 8 — пока eslint и клиент Prisma не пустят ([`002_youways_baseline.md`](002_youways_baseline.md)). Эталон auth — youways, не develop.
+- Drawer: три иконки порядка (случайно / по порядку / обратно; повторный тап по случайному — новый shuffle).
+- Слайдеры размера, межстрочия, скорости — сразу на экране.
+- Чипы тегов из данных, несколько, «хотя бы один».
+- Ключевые слова — подстрока без регистра по тексту всего сообщения.
+- Свайп вниз закрывает drawer; слайдеры, поиск и теги жест не перехватывают.
+- Сервер: без самописного `dataMessage.ts`, история через `Message` / `MessageEntity` / `Peer` из `@mtcute/core`, `ILyric[]`, `editDate: Date | null`.
 
-OpenSpec: если пойдёт новый экран целиком — `/opsx-propose ui-shadcn`.
+Планы: [`004_ui_shadcn.md`](004_ui_shadcn.md), [`003_catalog_controls.md`](003_catalog_controls.md).
+
+---
+
+**Current:** остаток инструмента, не новый kit.
+
+1. Фильтр в GraphQL (`tag` / `keyword`), не только после полной выгрузки.
+2. Дальше по D: эмодзи, даты, эталоны.
+
+**Не сейчас:** ИИ (E); Linux-хост и регистрация (F); TS 7 / Prisma 8; возвращать Chakra или `any`.

@@ -1,8 +1,9 @@
-import { IHashtagData, IMessage } from '~/types/dataMessage';
-import { IEmoji } from '~/types/lyric';
+import { Message, MessageEntity, Peer } from '@mtcute/core';
+
+import { IEmoji, ILyric, IMedia } from '~/types/lyric';
 
 interface IProps {
-  message: IMessage;
+  message: Message;
   handlerCountParagraphs: (text: string) => number;
   handlerCountWords: (text: string) => number;
   handlerCountReactions: (
@@ -10,8 +11,39 @@ interface IProps {
     type: 'total' | 'paid' | 'free'
   ) => number | void;
   handlerWithoutHashtags: (text: string) => string;
-  hashtagStringsOnly: (entities: IHashtagData[]) => any[];
+  hashtagStringsOnly: (entities: readonly MessageEntity[]) => string[];
 }
+
+const peerIsAdmin = (peer: Peer): boolean => {
+  return peer.type === 'chat' ? peer.isAdmin : false;
+};
+
+const peerChatTitle = (peer: Peer): string => {
+  return peer.type === 'chat' ? peer.title : peer.displayName;
+};
+
+const peerChatType = (peer: Peer): string => {
+  return peer.type === 'chat' ? peer.chatType : peer.type;
+};
+
+const toReactionEmoji = (emoji: string | { toString(): string }): string => {
+  return typeof emoji === 'string' ? emoji : emoji.toString();
+};
+
+const toLyricMedia = (media: Message['media']): IMedia | null => {
+  if (media === null || !('mimeType' in media)) {
+    return null;
+  }
+
+  return {
+    mime: media.mimeType,
+    duration:
+      'duration' in media && typeof media.duration === 'number'
+        ? media.duration
+        : 0,
+    convert: false,
+  };
+};
 
 const messageObject = ({
   message,
@@ -20,7 +52,17 @@ const messageObject = ({
   handlerCountReactions,
   handlerWithoutHashtags,
   hashtagStringsOnly,
-}: IProps) => {
+}: IProps): ILyric => {
+  const reactionList = message.reactions?.reactions ?? [];
+  const emojis: IEmoji[] = reactionList.map((reaction) => {
+    return {
+      emoji: toReactionEmoji(reaction.emoji),
+      isPaid: reaction.isPaid,
+      count: reaction.count,
+      order: reaction.order,
+    };
+  });
+
   return {
     userId: 0,
     lyric_id: message.id,
@@ -30,63 +72,39 @@ const messageObject = ({
       word_count: handlerCountWords(message.text ?? ''),
       paragraph_count: handlerCountParagraphs(message.text ?? ''),
 
-      reactions: message.reactions?.reactions
+      reactions: emojis.length
         ? {
-            emojis: message.reactions?.reactions
-              ? message.reactions?.reactions.map((emoji: IEmoji) => {
-                  return {
-                    emoji: emoji.emoji,
-                    isPaid: emoji.isPaid,
-                    count: emoji.count,
-                    order: emoji.order,
-                  };
-                })
-              : [],
-            uniqueCount: message.reactions?.reactions.length,
-            totalFreeCount: handlerCountReactions(
-              message.reactions?.reactions,
-              'free'
-            ),
-            totalPaidCount: handlerCountReactions(
-              message.reactions?.reactions,
-              'paid'
-            ),
-            totalCount: handlerCountReactions(
-              message.reactions?.reactions,
-              'total'
-            ),
+            emojis,
+            uniqueCount: emojis.length,
+            totalFreeCount: handlerCountReactions(emojis, 'free'),
+            totalPaidCount: handlerCountReactions(emojis, 'paid'),
+            totalCount: handlerCountReactions(emojis, 'total'),
           }
         : null,
 
-      hashtags: message.entities?.length
+      hashtags: message.entities.length
         ? {
             tags: hashtagStringsOnly(message.entities),
-            count: message.entities?.length,
+            count: message.entities.length,
           }
         : null,
     },
     user: {
       id: message.sender.id,
-      username: message.sender.username,
-      isAdmin: message.sender.isAdmin,
+      username: message.sender.username ?? undefined,
+      isAdmin: peerIsAdmin(message.sender),
     },
     chat: {
       id: message.chat.id,
-      title: message.chat.title,
-      type: message.chat.chatType,
+      title: peerChatTitle(message.chat),
+      type: peerChatType(message.chat),
     },
-    date: new Date(Date.parse(message.date)),
-    editDate: message.editDate ? new Date(Date.parse(message.editDate)) : null,
+    date: message.date,
+    editDate: message.editDate,
     isPinned: message.isPinned,
     isChannelPost: message.isChannelPost,
     replyToMessage: message.replyToMessage?.id ?? null,
-    media: message.media?.mimeType
-      ? {
-          mime: message.media.mimeType,
-          duration: message.media.duration,
-          convert: false,
-        }
-      : null,
+    media: toLyricMedia(message.media),
   };
 };
 

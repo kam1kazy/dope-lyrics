@@ -8,7 +8,7 @@ export interface ILyric {
   user: IUserLyric | null;
   chat: IChat | null;
   date: Date;
-  editDate: Date;
+  editDate: Date | null;
   isPinned: boolean;
   isChannelPost: boolean;
   owner?: IUser | null;

@@ -1,5 +1,6 @@
+import { Message } from '@mtcute/core';
+
 // TYPES
-import { IMessage } from '../../types/dataMessage';
 import { ILyric } from '../../types/lyric';
 // HANDLERS
 import {
@@ -13,15 +14,15 @@ import {
 import messageObject from './objMessage';
 
 // Создаем массив с нужными данными из полученной Data
-const filterHistory = (data: any) => {
+const filterHistory = (data: Message[]): ILyric[] | false => {
   // Убираем из полученной истории чата системные сообщения
-  const filterData = data.filter((message: IMessage) => {
+  const filterData = data.filter((message) => {
     return message.action === null;
   });
 
   // Создаем новый массив из отфильтрованного исходника
   try {
-    const chatHistory: ILyric[] = filterData.map((message: IMessage) => {
+    const chatHistory: ILyric[] = filterData.map((message) => {
       return messageObject({
         message,
         handlerCountParagraphs,

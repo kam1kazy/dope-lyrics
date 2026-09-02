@@ -1,4 +1,5 @@
 export { ALL_LYRICS } from './api/queries';
+export { applyLyricView, collectTags } from './lib/apply-lyric-view';
 export { createCarouselList } from './lib/create-carousel-list';
 export type {
   IChat,

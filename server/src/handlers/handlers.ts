@@ -1,6 +1,7 @@
+import { MessageEntity } from '@mtcute/core';
+
 // TYPES
 import { TypeBotClient } from '../mtcute/index';
-import { IHashtagData } from '../types/dataMessage';
 import { IEmoji } from '../types/lyric';
 
 interface ISendToBotChat {
@@ -8,7 +9,7 @@ interface ISendToBotChat {
   chatId: number;
   text: number | string;
   url?: string;
-  options?: any;
+  options?: Parameters<TypeBotClient['sendText']>[2];
 }
 
 // Кол-во слов
@@ -56,8 +57,8 @@ const handlerWithoutHashtags = (lyric: string) => {
 };
 
 // Вырезать хэштеги из массива объектов
-const hashtagStringsOnly = (data: IHashtagData[]) => {
-  const hashtagStrings: string[] = data.map((hashtag: IHashtagData) =>
+const hashtagStringsOnly = (data: readonly MessageEntity[]) => {
+  const hashtagStrings: string[] = data.map((hashtag) =>
     hashtag.text.replace(/^#/, '')
   );
 

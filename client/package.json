@@ -15,7 +15,8 @@
     "sort-imports": "eslint --fix \"src/**/*.{js,jsx,ts,tsx}\"",
     "typecheck": "tsc --noEmit",
     "check": "bun run lint && bun run format:check && bun run typecheck",
-    "fix": "bun run lint:fix && bun run format && bun run typecheck"
+    "fix": "bun run lint:fix && bun run format && bun run typecheck",
+    "kill-port": "for p in 3000 3001 3002 3003 3004 3005 3006 3007 3008 3009; do pids=$(lsof -ti tcp:$p); [ -n \"$pids\" ] && kill -9 $pids; done"
   },
   "engines": {
     "bun": "^1.4.0"
