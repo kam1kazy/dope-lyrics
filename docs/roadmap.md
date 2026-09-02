@@ -47,11 +47,18 @@ Postgres, GraphQL, Next на компе. Экран открывается.
 
 ## G. Тулчейн и свежие версии
 
-Lint/`fix` уже стоят. Осталось:
+Пакеты подняты до рабочего «самого свежего, что ставится вместе». Typecheck, lint, `next build` — зелёные.
 
-- TypeScript 7 как compiler;
-- поднять runtime-зависимости и чинить что сломается;
-- Dockerfile: Bun/Node, Postgres, nginx — актуальные теги (сейчас bun 1.2.2 и postgres 16.4). Прод-образ больше не сидит на каждый старт.
+**Взяли:** Next 16.3, React 19.2, Apollo Client 4.2, Prisma 7.10 + `@prisma/adapter-pg`, GraphQL 17 + Yoga 5, Elysia 1.4, mtcute 0.32, ESLint 10, Bun-образы 1.4.0.
+
+**Не брали latest любой ценой:**
+
+- TypeScript 7 — `typescript-eslint` 8.69 требует `<6.1.0`. В проекте **5.9.3**.
+- Prisma CLI 8 RC — стабильный `@prisma/client` сейчас 7.10.0; CLI и клиент в паре на 7.10.0.
+
+После `git clone`: из `server/` снова `bun prisma generate` (уже в корневом `setup`). Клиент генерируется в `server/src/generated/prisma`, URL — в `server/prisma.config.ts`.
+
+**Осталось в G:** Postgres-образ в `db/Dockerfile` всё ещё `16.4` (локально youways на 18); TS 7 — когда eslint это позволит.
 
 Перед push — `bun run fix` в затронутых пакетах.
 

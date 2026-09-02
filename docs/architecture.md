@@ -16,7 +16,7 @@ Telegram-чат
 Команды бота: `/chatid`, `/app`, `/bd` (статистика, парсинг, посев, очистка).
 Кнопки `/bd` и callback (`stats` / `history` / `seed` / `clear`) проверяют `BOT_ADMIN_ID`.
 
-Клиент: Next 14, Apollo, FSD, shadcn (Chakra снят). Фразы режутся по `\n`, гаснут 12 секунд с шагом 2.
+Клиент: Next 16, React 19, Apollo Client 4 (`HttpLink`, хуки из `@apollo/client/react`), FSD, shadcn (Chakra снят). Фразы режутся по `\n`, гаснут 12 секунд с шагом 2.
 Пауза — клик по экрану. Фильтры в drawer пока не ходят в запрос.
 
 Слои в `client/src`: `app` (роутер Next) → `widgets` → `features` → `entities` → `shared`.
@@ -60,7 +60,9 @@ User-сеанс в клоне мёртв. `API_ID` / `API_HASH` — [my.telegram
 Seed ищет `Users.id = 1`.
 Хештеги — `String[]` на сообщение. GraphQL `lyrics(limit, offset)` без `password` / `email`, глубина запроса ограничена.
 
-HTTP (Elysia): Zod env, CORS allowlist, security headers, rate limit, лимит тела, `/health`, GraphiQL/Swagger только не в production, 500 без stack trace, graceful shutdown. Один PrismaClient.
+HTTP: Elysia 1.4 + GraphQL Yoga 5 (не `@elysiajs/graphql-yoga`). Zod env, CORS, security headers, rate limit, лимит тела, `/health`, GraphiQL/Swagger только не в production, 500 без stack, graceful shutdown. Один PrismaClient 7 (`@prisma/adapter-pg`, выход генерации `server/src/generated/prisma`, URL в `prisma.config.ts`).
+
+После чистой установки: `bun prisma generate` из `server/` (корневой `setup`).
 
 ## Техдолг
 
@@ -72,4 +74,6 @@ HTTP (Elysia): Zod env, CORS allowlist, security headers, rate limit, лимит
 | `password` / `email` в GraphQL | Схема больше не отдаёт; в Prisma-типе User могут остаться |
 | Auth / cookie-сессии | Когда появится вход — модель youways, не invent и не develop |
 | Linux-хост | Когда будет свой сервер: TLS, закрытый SSH, не светить Postgres |
+| Prisma generate | После клона без `setup` клиент не появится в `src/generated/prisma` |
 | Прод-Docker seed | Контейнер больше не сидит на каждый старт |
+| TS 7 / Prisma 8 | Не ставить: eslint peer `<6.1.0`, клиента Prisma 8 в реестре нет |

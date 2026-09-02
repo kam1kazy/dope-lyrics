@@ -8,7 +8,7 @@
 1. Регистрацию и сессии брать из youways (httpOnly cookie, refresh, rate limit), не из `origin/develop`.
 2. Защиту API и Linux-хоста выравнивать с youways, без мультитенантности.
 3. Зависимости и Docker-образы — свежие; разломы чинить, не откатывать.
-4. Перенести `fix` + eslint + prettier с поддержкой TypeScript 7.
+4. Перенести `fix` + eslint + prettier. TypeScript 7 — когда `@typescript-eslint` пустит (сейчас 5.9.3).
 
 ## Почему
 

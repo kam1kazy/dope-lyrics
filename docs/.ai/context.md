@@ -2,8 +2,9 @@
 
 Сначала читай `docs/00_vision.md`, потом `docs/01_pillars.md`, `docs/02_loop.md`, `docs/tasks/current_task.md`.
 
-Стек: Bun, Elysia, GraphQL Yoga, Prisma, PostgreSQL, Next.js 14, Apollo, shadcn, mtcute.
+Стек: Bun, Elysia 1.4, GraphQL Yoga 5, Prisma 7, PostgreSQL, Next.js 16, React 19, Apollo Client 4, shadcn, mtcute.
 Chakra снят. Kit-файлы shadcn не править. JWT/tenant/cookie-сессии не тащить, пока нет входа.
+TS 7 и Prisma 8 RC не ставить, пока peer/клиент не пустят (сейчас TS 5.9.3, Prisma 7.10).
 
 Документация в `docs/` — это бэклог. Jira нет. `guide/` — косметика GitHub, не трогать.
 

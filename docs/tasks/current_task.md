@@ -20,6 +20,6 @@ A и B закрыты. Kit сменён: Chakra нет, экран на shadcn. 
 
 **Дальше:** D — фильтры как запрос, сортировка, хештег. [`003_catalog_controls.md`](003_catalog_controls.md)
 
-**Не сейчас:** ИИ (E); Linux-хост и регистрация (F) — когда появится вход / свой сервер. Эталон — youways, не develop.
+**Не сейчас:** ИИ (E); Linux-хост и регистрация (F). TS 7 / Prisma 8 — пока eslint и клиент Prisma не пустят ([`002_youways_baseline.md`](002_youways_baseline.md)). Эталон auth — youways, не develop.
 
 OpenSpec: если пойдёт новый экран целиком — `/opsx-propose ui-shadcn`.

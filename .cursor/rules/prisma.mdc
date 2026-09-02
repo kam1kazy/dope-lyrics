@@ -8,6 +8,8 @@ alwaysApply: false
 
 Папка `server/prisma/migrations` раньше была в `.gitignore`. Новые миграции **коммитим**. Не советовать снова игнорировать их.
 
+Prisma **7.10** + `@prisma/adapter-pg`. URL — `server/prisma.config.ts`, не в `schema.prisma`. Клиент генерируется в `server/src/generated/prisma` (`provider = "prisma-client"`). После клона без корневого `setup` — из `server/`: `bun prisma generate`. Не ставить CLI 8 RC, пока `@prisma/client` 8 нет в реестре.
+
 - Схему менять только под задачу, без нормализации «на будущее».
 - `migrate reset` / `db push --force-reset` — только если пользователь явно просит стереть данные.
 - Seed ждёт `Users.id = 1` и файлы в `server/bot-data/data/`. Не выдумывать продакшен-пользователя.

@@ -50,28 +50,47 @@ YouWays — эталон сессий, защиты и тулчейна.
 
 ## 3. Зависимости — свежие, чинить что всплывёт
 
-Отталкиваемся от **последних стабильных** пакетов на момент работы, не от lock февраля 2025.
+Отталкиваемся от **последних стабильных**, которые ставятся **вместе**, не от lock февраля 2025 и не от `latest` любой ценой.
 
 Порядок:
 
 1. Обновить runtime и библиотеки (Bun/Node, Prisma, Elysia, Next, mtcute, …).
-2. Собрать, прогнать typecheck / lint.
+2. Собрать, прогнать typecheck / lint / `next build`.
 3. Фиксить разломы точечно. Не даунгрейдить «чтобы как было».
 
-TypeScript: цель — **TS 7** (или актуальный контур youways + их мост для Next, см. `client/scripts/link-typescript7-tsc-for-next.mjs`). Сейчас в dope-lyrics стоит TS 5.7 — это потолок каркаса, не цель.
+**Снимок 2 сентября 2026** (рабочий набор):
+
+| Пакет | Версия |
+| --- | --- |
+| Next / React | 16.3.4 / 19.2.8 |
+| Apollo Client | 4.2.12 (`HttpLink`, хуки из `@apollo/client/react`, `rxjs`) |
+| Prisma | 7.10.0 + `@prisma/adapter-pg`. Генерация: `server/src/generated/prisma`. URL: `server/prisma.config.ts` |
+| GraphQL / Yoga | 17.0.2 / 5.22.0 (Yoga напрямую, не `@elysiajs/graphql-yoga`) |
+| Elysia / mtcute | 1.4.30 / 0.32.1 |
+| ESLint | 10.9 |
+| TypeScript | **5.9.3** |
+
+**Не ставить сейчас:**
+
+- TypeScript **7.0.2** — `@typescript-eslint` 8.69 падает, peer только `<6.1.0`.
+- Prisma CLI **8.0.0-rc** — `@prisma/client` 8 под неё не публикуется (`latest` клиента 7.10.0). Держать CLI и клиент в паре.
+
+После клона: `bun prisma generate` из `server/` (корневой `setup` это делает).
+
+TypeScript 7 — цель, когда eslint-peer пустит. Мост youways (`link-typescript7-tsc-for-next.mjs`) сюда не копировать, пока TS 7 нельзя.
 
 ---
 
 ## 4. Docker-образы — последние
 
-Сейчас в репо: `oven/bun:1.2.2-alpine`, `postgres:16.4-alpine`.
+Образы приложения: `oven/bun:1.4.0-alpine` (`client/` и `server/`). Postgres в `db/Dockerfile` всё ещё `16.4-alpine` (локально youways крутит 18 на 5432). Прод-контейнер API больше не сидит на каждый старт.
 
-При обновлении образов:
+При следующем обновлении образов:
 
 | Слой | Сейчас | Куда |
 | --- | --- | --- |
-| API / клиент | bun 1.2.2 | свежий `oven/bun` (или Node, если решим как youways) |
-| Postgres | 16.4 | свежий `postgres:*-alpine` (18 уже крутится локально у youways) |
+| API / клиент | bun 1.4.0 | свежий `oven/bun` (или Node, если решим как youways) |
+| Postgres | 16.4 | свежий `postgres:*-alpine` |
 | nginx | stable-alpine | актуальный stable |
 
 Пиннить digest или minor по факту сборки. `latest` без записи в доке — только если так сознательно, как server Dockerfile в youways.
@@ -83,14 +102,14 @@ TypeScript: цель — **TS 7** (или актуальный контур youw
 Уже перенесено в `client/` и `server/` (Bun, не npm):
 
 - `lint` / `lint:fix` / `format` / `typecheck` / `fix`
-- eslint 9 + prettier 3 + `simple-import-sort`
+- eslint 10 + prettier 3 + `simple-import-sort`
 - правила Cursor: `.cursor/rules/lint.mdc`
 - хук `afterFileEdit` на один файл
 
 Перед push: `bun run fix` в затронутом пакете. Чинить errors и warnings.
 Раннер только Bun. `package-lock.json` в репо не держим.
 
-TypeScript 7 как compiler — ещё в дорожке G, не в этом заходе. Конфиг eslint к TS 7 готов.
+TypeScript 7 как compiler — когда `@typescript-eslint` пустит TS ≥6. Сейчас 5.9.3, это потолок peer, не цель навсегда.
 
 ---
 

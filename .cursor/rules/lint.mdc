@@ -7,7 +7,7 @@ alwaysApply: true
 
 Пакетный менеджер проекта — **только Bun**. Не `npm install`, не `package-lock.json`.
 
-В `client/` и `server/`: eslint 9, prettier 3, `simple-import-sort`.
+В `client/` и `server/`: eslint 10, prettier 3, `simple-import-sort`.
 
 | Скрипт | Что делает |
 | --- | --- |
