@@ -5,13 +5,16 @@ import {
   AlignVerticalSpaceAround,
   ArrowDownAZ,
   ArrowUpAZ,
+  BookMarked,
+  CalendarRange,
   Gauge,
   Shuffle,
+  Smile,
   Type,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 
-import { ALL_LYRICS, collectTags, type ILyric } from '@/entities/lyric';
+import { LYRIC_EMOJIS, LYRIC_TAGS } from '@/entities/lyric';
 import {
   type SortMode,
   useLyricView,
@@ -101,12 +104,27 @@ export function FilterPanel() {
     setCarouselSpeed,
     selectedTags,
     toggleTag,
+    selectedEmojis,
+    toggleEmoji,
     keyword,
     setKeyword,
+    dateFrom,
+    setDateFrom,
+    dateTo,
+    setDateTo,
+    referencesOnly,
+    setReferencesOnly,
   } = useLyricView();
 
-  const { data, loading } = useQuery<{ lyrics: ILyric[] }>(ALL_LYRICS);
-  const tags = collectTags(data?.lyrics ?? []);
+  const { data: tagsData, loading: tagsLoading } = useQuery<{
+    lyricTags: string[];
+  }>(LYRIC_TAGS);
+  const { data: emojisData, loading: emojisLoading } = useQuery<{
+    lyricEmojis: string[];
+  }>(LYRIC_EMOJIS);
+
+  const tags = tagsData?.lyricTags ?? [];
+  const emojis = emojisData?.lyricEmojis ?? [];
 
   return (
     <div className="flex flex-col gap-4 pb-1">
@@ -141,6 +159,17 @@ export function FilterPanel() {
           );
         })}
       </div>
+
+      <Button
+        type="button"
+        variant={referencesOnly ? 'default' : 'outline'}
+        className="w-full justify-start gap-2"
+        aria-pressed={referencesOnly}
+        onClick={() => setReferencesOnly(!referencesOnly)}
+      >
+        <BookMarked className="size-4" />
+        Полка эталонов
+      </Button>
 
       <Separator />
 
@@ -183,10 +212,37 @@ export function FilterPanel() {
       <Separator />
 
       <div className="flex flex-col gap-2">
+        <Label className="text-muted-foreground flex items-center gap-1.5 text-xs font-normal">
+          <CalendarRange className="size-3.5" aria-hidden />
+          Период
+        </Label>
+        <div className="grid grid-cols-2 gap-2">
+          <Input
+            id="filter-date-from"
+            type="date"
+            value={dateFrom}
+            aria-label="Дата с"
+            onChange={(event) => setDateFrom(event.target.value)}
+            className="h-9"
+          />
+          <Input
+            id="filter-date-to"
+            type="date"
+            value={dateTo}
+            aria-label="Дата по"
+            onChange={(event) => setDateTo(event.target.value)}
+            className="h-9"
+          />
+        </div>
+      </div>
+
+      <Separator />
+
+      <div className="flex flex-col gap-2">
         <Label className="text-muted-foreground text-xs font-normal">
           Теги
         </Label>
-        {loading ? (
+        {tagsLoading ? (
           <p className="text-muted-foreground text-xs">Загрузка тегов…</p>
         ) : tags.length === 0 ? (
           <p className="text-muted-foreground text-xs">Тегов пока нет</p>
@@ -210,6 +266,45 @@ export function FilterPanel() {
                     className="px-2 py-0.5 text-xs"
                   >
                     #{tag}
+                  </Badge>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <Label className="text-muted-foreground flex items-center gap-1.5 text-xs font-normal">
+          <Smile className="size-3.5" aria-hidden />
+          Реакции
+        </Label>
+        {emojisLoading ? (
+          <p className="text-muted-foreground text-xs">Загрузка реакций…</p>
+        ) : emojis.length === 0 ? (
+          <p className="text-muted-foreground text-xs">Реакций пока нет</p>
+        ) : (
+          <div
+            data-swipe-ignore
+            className="flex max-h-28 flex-wrap gap-1.5 overflow-y-auto"
+          >
+            {emojis.map((emoji) => {
+              const selected = selectedEmojis.includes(emoji);
+
+              return (
+                <button
+                  key={emoji}
+                  type="button"
+                  onClick={() => toggleEmoji(emoji)}
+                  className="cursor-pointer"
+                  aria-label={`Реакция ${emoji}`}
+                  aria-pressed={selected}
+                >
+                  <Badge
+                    variant={selected ? 'default' : 'secondary'}
+                    className="px-2 py-0.5 text-base leading-none"
+                  >
+                    {emoji}
                   </Badge>
                 </button>
               );

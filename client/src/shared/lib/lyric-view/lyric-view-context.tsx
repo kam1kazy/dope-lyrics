@@ -19,6 +19,8 @@ export const LYRIC_VIEW_DEFAULTS = {
   lineHeight: 1.35,
   carouselSpeed: 5,
   keyword: '',
+  dateFrom: '',
+  dateTo: '',
 };
 
 interface LyricViewContextValue {
@@ -28,13 +30,21 @@ interface LyricViewContextValue {
   lineHeight: number;
   carouselSpeed: number;
   selectedTags: string[];
+  selectedEmojis: string[];
   keyword: string;
+  dateFrom: string;
+  dateTo: string;
+  referencesOnly: boolean;
   setSortMode: (mode: SortMode) => void;
   setFontSize: (value: number) => void;
   setLineHeight: (value: number) => void;
   setCarouselSpeed: (value: number) => void;
   toggleTag: (tag: string) => void;
+  toggleEmoji: (emoji: string) => void;
   setKeyword: (value: string) => void;
+  setDateFrom: (value: string) => void;
+  setDateTo: (value: string) => void;
+  setReferencesOnly: (value: boolean) => void;
 }
 
 const LyricViewContext = createContext<LyricViewContextValue | null>(null);
@@ -50,7 +60,11 @@ export function LyricViewProvider({ children }: { children: ReactNode }) {
     LYRIC_VIEW_DEFAULTS.carouselSpeed
   );
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedEmojis, setSelectedEmojis] = useState<string[]>([]);
   const [keyword, setKeyword] = useState(LYRIC_VIEW_DEFAULTS.keyword);
+  const [dateFrom, setDateFrom] = useState(LYRIC_VIEW_DEFAULTS.dateFrom);
+  const [dateTo, setDateTo] = useState(LYRIC_VIEW_DEFAULTS.dateTo);
+  const [referencesOnly, setReferencesOnly] = useState(false);
 
   const setSortMode = useCallback((mode: SortMode) => {
     setSortModeState(mode);
@@ -68,6 +82,14 @@ export function LyricViewProvider({ children }: { children: ReactNode }) {
     );
   }, []);
 
+  const toggleEmoji = useCallback((emoji: string) => {
+    setSelectedEmojis((current) =>
+      current.includes(emoji)
+        ? current.filter((item) => item !== emoji)
+        : [...current, emoji]
+    );
+  }, []);
+
   const value = useMemo(
     () => ({
       sortMode,
@@ -76,13 +98,21 @@ export function LyricViewProvider({ children }: { children: ReactNode }) {
       lineHeight,
       carouselSpeed,
       selectedTags,
+      selectedEmojis,
       keyword,
+      dateFrom,
+      dateTo,
+      referencesOnly,
       setSortMode,
       setFontSize,
       setLineHeight,
       setCarouselSpeed,
       toggleTag,
+      toggleEmoji,
       setKeyword,
+      setDateFrom,
+      setDateTo,
+      setReferencesOnly,
     }),
     [
       sortMode,
@@ -91,9 +121,14 @@ export function LyricViewProvider({ children }: { children: ReactNode }) {
       lineHeight,
       carouselSpeed,
       selectedTags,
+      selectedEmojis,
       keyword,
+      dateFrom,
+      dateTo,
+      referencesOnly,
       setSortMode,
       toggleTag,
+      toggleEmoji,
     ]
   );
 
@@ -120,4 +155,22 @@ export function slideTiming(carouselSpeed: number) {
   const animationMs = (12000 * 5) / speed;
 
   return { slideIntervalMs, animationMs };
+}
+
+export function hasActiveLyricFilters(options: {
+  selectedTags: string[];
+  selectedEmojis: string[];
+  keyword: string;
+  dateFrom: string;
+  dateTo: string;
+  referencesOnly: boolean;
+}): boolean {
+  return (
+    options.selectedTags.length > 0 ||
+    options.selectedEmojis.length > 0 ||
+    options.keyword.trim().length > 0 ||
+    options.dateFrom.trim().length > 0 ||
+    options.dateTo.trim().length > 0 ||
+    options.referencesOnly
+  );
 }

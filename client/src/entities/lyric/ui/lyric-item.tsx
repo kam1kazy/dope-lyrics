@@ -12,6 +12,9 @@ interface LyricItemProps {
 export const LyricItem = ({ item }: LyricItemProps) => {
   const { fontSize, lineHeight } = useLyricView();
   const tags = item.message?.hashtags?.tags ?? [];
+  const reactionEmojis = (item.message?.reactions?.emojis ?? [])
+    .map((entry) => entry.emoji)
+    .filter((emoji): emoji is string => Boolean(emoji));
 
   return (
     <div className="flex max-w-[90%] flex-col items-center gap-4">
@@ -25,6 +28,17 @@ export const LyricItem = ({ item }: LyricItemProps) => {
             >
               #{tag}
             </Badge>
+          ))}
+        </div>
+      ) : null}
+
+      {reactionEmojis.length > 0 ? (
+        <div
+          className="text-muted-foreground flex flex-wrap items-center justify-center gap-1.5 text-lg"
+          aria-label="Реакции"
+        >
+          {reactionEmojis.map((emoji, index) => (
+            <span key={`${emoji}_${index}`}>{emoji}</span>
           ))}
         </div>
       ) : null}

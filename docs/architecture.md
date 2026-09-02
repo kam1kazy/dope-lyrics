@@ -17,7 +17,7 @@ Telegram-чат
 Кнопки `/bd` и callback (`stats` / `history` / `seed` / `clear`) проверяют `BOT_ADMIN_ID`.
 
 Клиент: Next 16, React 19, Apollo Client 4 (`HttpLink`, хуки из `@apollo/client/react`), FSD, shadcn (Chakra снят). Фразы режутся по `\n`; скорость карусели — слайдер в drawer.
-Пауза — клик по экрану. Порядок, теги (OR), ключевые слова и типографика считаются на клиенте после `lyrics`. Drawer закрывается свайпом вниз.
+Пауза — клик по экрану. Порядок на клиенте; теги, реакции, период, эталоны и ключевые слова — в GraphQL. Drawer закрывается свайпом вниз.
 
 Слои в `client/src`: `app` (роутер Next) → `widgets` → `features` → `entities` → `shared`.
 Импорт только вниз. Публичный API слайса — `index.ts`. Слой `pages` не используем: конфликт с Next `src/pages`.
@@ -77,7 +77,7 @@ User-сеанс в клоне мёртв. `API_ID` / `API_HASH` — [my.telegram
 `Users` → `Lyrics` → `Message` + `Hashtags` / `Reactions` / `Chat` / `Media`.
 `lyric_id` без unique в схеме; повторный seed пропускает уже существующие id. Индексы по `lyric_id` и `date`.
 Seed ищет `Users.id = 1`.
-Хештеги — `String[]` на сообщение. GraphQL `lyrics(limit, offset)` без `password` / `email`, глубина запроса ограничена.
+Хештеги — `String[]` на сообщение. GraphQL `lyrics(limit, offset, tags, keyword)` и `lyricTags`; без `password` / `email`, глубина запроса ограничена.
 
 HTTP: Elysia 1.4 + GraphQL Yoga 5 (не `@elysiajs/graphql-yoga`). Zod env, CORS, security headers, rate limit, лимит тела, `/health`, GraphiQL/Swagger только не в production, 500 без stack, graceful shutdown. Один PrismaClient 7 (`@prisma/adapter-pg`, выход генерации `server/src/generated/prisma`, URL в `prisma.config.ts`).
 
@@ -95,5 +95,5 @@ HTTP: Elysia 1.4 + GraphQL Yoga 5 (не `@elysiajs/graphql-yoga`). Zod env, CORS
 | Linux-хост | Когда будет свой сервер: TLS, закрытый SSH, не светить Postgres |
 | Prisma generate | После клона без `setup` клиент не появится в `src/generated/prisma` |
 | Прод-Docker seed | Контейнер больше не сидит на каждый старт |
-| Фильтр каталога | Теги и слова считаются на клиенте; в GraphQL ещё нет `tag`/`keyword` |
+| Фильтр каталога | `lyrics(tags, keyword, emojis, dateFrom, dateTo, referencesOnly)`; `lyricTags`, `lyricEmojis` |
 | TS 7 / Prisma 8 | Не ставить: eslint peer `<6.1.0`, клиента Prisma 8 в реестре нет |

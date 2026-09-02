@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@apollo/client/react';
-import { useMemo, useRef } from 'react';
+import { useDeferredValue, useMemo, useRef } from 'react';
 
 import {
   ALL_LYRICS,
@@ -9,7 +9,10 @@ import {
   createCarouselList,
   type ILyric,
 } from '@/entities/lyric';
-import { useLyricView } from '@/shared/lib/lyric-view/lyric-view-context';
+import {
+  hasActiveLyricFilters,
+  useLyricView,
+} from '@/shared/lib/lyric-view/lyric-view-context';
 import { ErrorText } from '@/shared/ui/error-text';
 import { Spinner } from '@/shared/ui/shadcn/ui/spinner';
 
@@ -17,9 +20,31 @@ import { Viewport } from './viewport';
 
 export const LyricList = () => {
   const ref = useRef<HTMLDivElement>(null);
-  const { sortMode, shuffleSeed, selectedTags, keyword, carouselSpeed } =
-    useLyricView();
-  const { loading, error, data } = useQuery<{ lyrics: ILyric[] }>(ALL_LYRICS);
+  const {
+    sortMode,
+    shuffleSeed,
+    selectedTags,
+    selectedEmojis,
+    keyword,
+    dateFrom,
+    dateTo,
+    referencesOnly,
+    carouselSpeed,
+  } = useLyricView();
+  const deferredKeyword = useDeferredValue(keyword.trim());
+  const queryTags = selectedTags.length > 0 ? selectedTags : null;
+  const queryEmojis = selectedEmojis.length > 0 ? selectedEmojis : null;
+
+  const { loading, error, data } = useQuery<{ lyrics: ILyric[] }>(ALL_LYRICS, {
+    variables: {
+      tags: queryTags,
+      keyword: deferredKeyword || null,
+      emojis: queryEmojis,
+      dateFrom: dateFrom.trim() || null,
+      dateTo: dateTo.trim() || null,
+      referencesOnly: referencesOnly || null,
+    },
+  });
 
   const carouselList = useMemo(() => {
     if (!data?.lyrics) {
@@ -30,11 +55,18 @@ export const LyricList = () => {
       applyLyricView(data.lyrics, {
         sortMode,
         shuffleSeed,
-        selectedTags,
-        keyword,
       })
     );
-  }, [data?.lyrics, keyword, selectedTags, shuffleSeed, sortMode]);
+  }, [data?.lyrics, shuffleSeed, sortMode]);
+
+  const hasFilters = hasActiveLyricFilters({
+    selectedTags,
+    selectedEmojis,
+    keyword: deferredKeyword,
+    dateFrom,
+    dateTo,
+    referencesOnly,
+  });
 
   if (loading) {
     return (
@@ -49,7 +81,14 @@ export const LyricList = () => {
   }
 
   if (!data?.lyrics?.length) {
-    return <ErrorText title="Пусто" description="Список пуст" />;
+    return (
+      <ErrorText
+        title="Пусто"
+        description={
+          hasFilters ? 'Нет текстов по выбранным фильтрам' : 'Список пуст'
+        }
+      />
+    );
   }
 
   if (!carouselList.length) {
@@ -67,7 +106,7 @@ export const LyricList = () => {
       className="flex h-full min-h-0 w-full flex-col items-center overflow-hidden break-keep px-4 pt-4 text-center"
     >
       <Viewport
-        key={`${sortMode}-${shuffleSeed}-${selectedTags.join('|')}-${keyword}-${carouselSpeed}`}
+        key={`${sortMode}-${shuffleSeed}-${selectedTags.join('|')}-${selectedEmojis.join('|')}-${deferredKeyword}-${dateFrom}-${dateTo}-${referencesOnly}-${carouselSpeed}`}
         data={carouselList}
       />
     </div>

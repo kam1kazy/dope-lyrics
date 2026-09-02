@@ -1,6 +1,10 @@
 import { lyricInclude } from '~/graphql/lyric-include';
 import { prisma } from '~/infrastructure/prisma';
 import type { IChatHistoryItem } from '~/modules/lyrics/lyrics.types';
+import {
+  buildLyricsWhere,
+  type LyricsListOptions,
+} from '~/modules/lyrics/lyrics-list-filters';
 import { createLyricData } from '~/modules/lyrics/persist/create-lyric-data';
 import { usersService } from '~/modules/users/users.service';
 
@@ -9,13 +13,44 @@ const INSERT_CONCURRENCY = 8;
 export class LyricsService {
   private readonly prisma = prisma;
 
-  list(limit: number, offset: number) {
+  list(options: LyricsListOptions) {
     return this.prisma.lyrics.findMany({
-      take: limit,
-      skip: offset,
+      where: buildLyricsWhere(options),
+      take: options.limit,
+      skip: options.offset,
       orderBy: { date: 'desc' },
       include: lyricInclude,
     });
+  }
+
+  async listTags(): Promise<string[]> {
+    const rows = await this.prisma.hashtags.findMany({
+      select: { tags: true },
+    });
+
+    const uniqueTags = new Set<string>();
+
+    for (const row of rows) {
+      for (const tag of row.tags) {
+        const value = tag.trim();
+
+        if (value) {
+          uniqueTags.add(value);
+        }
+      }
+    }
+
+    return [...uniqueTags].sort((a, b) => a.localeCompare(b, 'ru'));
+  }
+
+  async listEmojis(): Promise<string[]> {
+    const rows = await this.prisma.emoji.findMany({
+      select: { emoji: true },
+      distinct: ['emoji'],
+      orderBy: { emoji: 'asc' },
+    });
+
+    return rows.map((row) => row.emoji).filter(Boolean);
   }
 
   async clearCatalog() {

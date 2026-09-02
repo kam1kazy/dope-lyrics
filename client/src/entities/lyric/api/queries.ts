@@ -1,8 +1,34 @@
 import { gql } from '@apollo/client';
 
+export const LYRIC_TAGS = gql`
+  query LyricTags {
+    lyricTags
+  }
+`;
+
+export const LYRIC_EMOJIS = gql`
+  query LyricEmojis {
+    lyricEmojis
+  }
+`;
+
 export const ALL_LYRICS = gql`
-  query AllLyrics {
-    lyrics {
+  query AllLyrics(
+    $tags: [String!]
+    $keyword: String
+    $emojis: [String!]
+    $dateFrom: String
+    $dateTo: String
+    $referencesOnly: Boolean
+  ) {
+    lyrics(
+      tags: $tags
+      keyword: $keyword
+      emojis: $emojis
+      dateFrom: $dateFrom
+      dateTo: $dateTo
+      referencesOnly: $referencesOnly
+    ) {
       id
 
       lyric_id

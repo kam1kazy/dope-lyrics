@@ -1,5 +1,5 @@
-export { ALL_LYRICS } from './api/queries';
-export { applyLyricView, collectTags } from './lib/apply-lyric-view';
+export { ALL_LYRICS, LYRIC_EMOJIS, LYRIC_TAGS } from './api/queries';
+export { applyLyricView } from './lib/apply-lyric-view';
 export { createCarouselList } from './lib/create-carousel-list';
 export type {
   IChat,

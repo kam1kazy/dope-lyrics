@@ -103,6 +103,17 @@ export const typeDefinitions = /* GraphQL */ `
 
   type Query {
     users: [User!]!
-    lyrics(limit: Int, offset: Int): [Lyric!]!
+    lyricTags: [String!]!
+    lyricEmojis: [String!]!
+    lyrics(
+      limit: Int
+      offset: Int
+      tags: [String!]
+      keyword: String
+      emojis: [String!]
+      dateFrom: String
+      dateTo: String
+      referencesOnly: Boolean
+    ): [Lyric!]!
   }
 `;
