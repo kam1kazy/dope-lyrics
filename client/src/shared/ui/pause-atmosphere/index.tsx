@@ -114,7 +114,36 @@ const BOTTOM_WISPS: Wisp[] = [
   },
 ];
 
-const FADE_MS = 720;
+const ENTER_MS = 1180;
+const EXIT_MS = 860;
+const REDUCED_MS = 180;
+
+function clamp01(value: number) {
+  return Math.min(1, Math.max(0, value));
+}
+
+function easeOutCubic(t: number) {
+  return 1 - Math.pow(1 - t, 3);
+}
+
+function easeInCubic(t: number) {
+  return t * t * t;
+}
+
+function easeOutBack(t: number) {
+  const overshoot = 1.18;
+  const inner = overshoot + 1;
+  return 1 + inner * Math.pow(t - 1, 3) + overshoot * Math.pow(t - 1, 2);
+}
+
+function staggered(progress: number, delay: number) {
+  const span = 1 - delay;
+  if (span <= 0) {
+    return clamp01(progress);
+  }
+
+  return clamp01((progress - delay) / span);
+}
 
 function readRgb(canvas: HTMLCanvasElement) {
   const raw = getComputedStyle(canvas).getPropertyValue('--pause-wave').trim();
@@ -195,8 +224,13 @@ export function PauseAtmosphere({ active }: { active: boolean }) {
     let height = 0;
     let particles: Particle[] = [];
     let raf = 0;
-    let fadeUntil = 0;
     let lastTs = performance.now();
+    let revealFrom = 0;
+    let revealTo = 0;
+    let revealStart = 0;
+    let revealDur = ENTER_MS;
+    let lastActive = false;
+    let linearReveal = 0;
     let rgb = readRgb(canvas);
     let dark = isDarkTheme();
 
@@ -212,7 +246,43 @@ export function PauseAtmosphere({ active }: { active: boolean }) {
       particles = createParticles(width, height);
     };
 
-    const drawBottomRibbon = (layer: WaveLayer, t: number, breath: number) => {
+    const sampleReveal = (now: number, reduced: boolean) => {
+      const on = activeRef.current;
+      if (on !== lastActive) {
+        lastActive = on;
+        revealFrom = linearReveal;
+        revealTo = on ? 1 : 0;
+        revealStart = now;
+        revealDur = reduced ? REDUCED_MS : on ? ENTER_MS : EXIT_MS;
+      }
+
+      const u = clamp01((now - revealStart) / Math.max(revealDur, 1));
+      linearReveal = revealFrom + (revealTo - revealFrom) * u;
+      return linearReveal;
+    };
+
+    const layerMotion = (
+      progress: number,
+      delay: number,
+      entering: boolean
+    ) => {
+      const local = staggered(progress, delay);
+      const rise = entering ? easeOutCubic(local) : easeInCubic(local);
+      const inflate = entering ? easeOutBack(local) : rise;
+      return { rise, inflate };
+    };
+
+    const drawBottomRibbon = (
+      layer: WaveLayer,
+      t: number,
+      breath: number,
+      rise: number,
+      inflate: number
+    ) => {
+      if (rise <= 0.001) {
+        return;
+      }
+
       const step = width > 900 ? 5 : 4;
       ctx.beginPath();
       ctx.moveTo(0, height);
@@ -220,7 +290,8 @@ export function PauseAtmosphere({ active }: { active: boolean }) {
         const nx = x / Math.max(width, 1);
         const y =
           height -
-          (layer.base * (0.84 + breath * 0.16) + waveOffset(nx, t, layer)) *
+          (layer.base * (0.84 + breath * 0.16) * rise +
+            waveOffset(nx, t, layer) * inflate) *
             bottomTaper(x, width);
         ctx.lineTo(x, y);
       }
@@ -229,11 +300,12 @@ export function PauseAtmosphere({ active }: { active: boolean }) {
 
       const gradient = ctx.createLinearGradient(
         0,
-        height - layer.base * 1.35,
+        height - layer.base * 1.35 * rise,
         0,
         height
       );
-      const peak = dark ? layer.alpha : layer.alpha * 0.72;
+      const peak =
+        (dark ? layer.alpha : layer.alpha * 0.72) * Math.min(1, rise * 1.35);
       gradient.addColorStop(0, `rgb(${rgb} / 0)`);
       gradient.addColorStop(0.45, `rgb(${rgb} / ${peak * 0.55})`);
       gradient.addColorStop(1, `rgb(${rgb} / ${peak})`);
@@ -241,7 +313,17 @@ export function PauseAtmosphere({ active }: { active: boolean }) {
       ctx.fill();
     };
 
-    const drawBottomWisp = (wisp: Wisp, t: number, breath: number) => {
+    const drawBottomWisp = (
+      wisp: Wisp,
+      t: number,
+      breath: number,
+      rise: number,
+      inflate: number
+    ) => {
+      if (rise <= 0.001) {
+        return;
+      }
+
       ctx.beginPath();
       const step = 6;
       let started = false;
@@ -253,11 +335,14 @@ export function PauseAtmosphere({ active }: { active: boolean }) {
         }
         const y =
           height -
-          (wisp.base * (0.88 + breath * 0.12) +
-            Math.sin(nx * wisp.freq + t * wisp.speed + wisp.phase) * wisp.amp +
+          (wisp.base * (0.88 + breath * 0.12) * rise +
+            Math.sin(nx * wisp.freq + t * wisp.speed + wisp.phase) *
+              wisp.amp *
+              inflate +
             Math.sin(nx * wisp.freq * 1.7 + t * wisp.speed * 0.6) *
               wisp.amp *
-              0.35) *
+              0.35 *
+              inflate) *
             taper;
         if (!started) {
           ctx.moveTo(x, y);
@@ -266,15 +351,19 @@ export function PauseAtmosphere({ active }: { active: boolean }) {
           ctx.lineTo(x, y);
         }
       }
-      ctx.strokeStyle = `rgb(${rgb} / ${wisp.alpha * (dark ? 1 : 0.7)})`;
-      ctx.lineWidth = wisp.width;
+      ctx.strokeStyle = `rgb(${rgb} / ${wisp.alpha * (dark ? 1 : 0.7) * rise})`;
+      ctx.lineWidth = wisp.width * (0.45 + 0.55 * inflate);
       ctx.lineCap = 'round';
       ctx.stroke();
     };
 
-    const drawCornerGlow = (breath: number) => {
+    const drawCornerGlow = (breath: number, rise: number) => {
+      if (rise <= 0.001) {
+        return;
+      }
+
       const radius =
-        Math.min(width * 0.72, height * 0.42) * (0.92 + breath * 0.08);
+        Math.min(width * 0.72, height * 0.42) * (0.92 + breath * 0.08) * rise;
       const originX = width * 0.22;
       const glow = ctx.createRadialGradient(
         originX,
@@ -284,7 +373,7 @@ export function PauseAtmosphere({ active }: { active: boolean }) {
         height,
         radius
       );
-      const peak = dark ? 0.2 + breath * 0.06 : 0.1 + breath * 0.03;
+      const peak = (dark ? 0.2 + breath * 0.06 : 0.1 + breath * 0.03) * rise;
       glow.addColorStop(0, `rgb(${rgb} / ${peak})`);
       glow.addColorStop(0.4, `rgb(${rgb} / ${peak * 0.35})`);
       glow.addColorStop(1, `rgb(${rgb} / 0)`);
@@ -292,7 +381,16 @@ export function PauseAtmosphere({ active }: { active: boolean }) {
       ctx.fillRect(0, height - radius, width, radius);
     };
 
-    const drawParticles = (now: number, dt: number, reduced: boolean) => {
+    const drawParticles = (
+      now: number,
+      dt: number,
+      reduced: boolean,
+      rise: number
+    ) => {
+      if (rise <= 0.12) {
+        return;
+      }
+
       for (const particle of particles) {
         if (!reduced) {
           particle.x += particle.vx * dt;
@@ -312,7 +410,10 @@ export function PauseAtmosphere({ active }: { active: boolean }) {
         }
 
         const alpha =
-          (dark ? 0.55 : 0.4) * pulse * Math.min(1, edgeFade + 0.15);
+          (dark ? 0.55 : 0.4) *
+          pulse *
+          Math.min(1, edgeFade + 0.15) *
+          Math.min(1, (rise - 0.12) / 0.55);
         ctx.beginPath();
         ctx.fillStyle = `rgb(${rgb} / ${alpha})`;
         ctx.arc(particle.x, particle.y, particle.r, 0, Math.PI * 2);
@@ -335,30 +436,35 @@ export function PauseAtmosphere({ active }: { active: boolean }) {
       ctx.globalCompositeOperation = dark ? 'lighter' : 'source-over';
 
       const reduced = reducedMotion.matches;
+      const progress = sampleReveal(now, reduced);
+      const entering = revealTo >= revealFrom;
       const t = reduced ? 0 : now / 1000;
       const breath = reduced ? 0.5 : 0.5 + 0.5 * Math.sin(now * 0.00042);
+      const glow = layerMotion(progress, 0, entering);
 
-      drawCornerGlow(breath);
-      for (const layer of BOTTOM_LAYERS) {
-        drawBottomRibbon(layer, t, breath);
-      }
-      for (const wisp of BOTTOM_WISPS) {
-        drawBottomWisp(wisp, t, breath);
-      }
-      drawParticles(now, reduced ? 0 : dt, reduced);
+      drawCornerGlow(breath, glow.rise);
+      BOTTOM_LAYERS.forEach((layer, index) => {
+        const delay = reduced ? 0 : (BOTTOM_LAYERS.length - 1 - index) * 0.08;
+        const motion = layerMotion(progress, delay, entering);
+        drawBottomRibbon(layer, t, breath, motion.rise, motion.inflate);
+      });
+      BOTTOM_WISPS.forEach((wisp, index) => {
+        const delay = reduced ? 0 : 0.06 + index * 0.07;
+        const motion = layerMotion(progress, delay, entering);
+        drawBottomWisp(wisp, t, breath, motion.rise, motion.inflate);
+      });
+      drawParticles(now, reduced ? 0 : dt, reduced, glow.rise);
       ctx.globalCompositeOperation = 'source-over';
     };
 
     const tick = (now: number) => {
       raf = 0;
-      if (activeRef.current) {
-        fadeUntil = now + FADE_MS;
-      }
-      if (!activeRef.current && now >= fadeUntil) {
+      draw(now);
+      const retracting = !activeRef.current && linearReveal <= 0.001;
+      if (retracting) {
         ctx.clearRect(0, 0, width, height);
         return;
       }
-      draw(now);
       raf = requestAnimationFrame(tick);
     };
 

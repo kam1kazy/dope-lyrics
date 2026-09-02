@@ -149,18 +149,6 @@
   position: fixed;
   inset: 0;
   z-index: 10;
-  opacity: 0;
-  transition: opacity 0.7s ease;
-}
-
-.lyric-app[data-paused='true'] .lyric-pause-atmosphere {
-  opacity: 1;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .lyric-pause-atmosphere {
-    transition: opacity 0.25s ease;
-  }
 }
 
 @keyframes error-glitch {
