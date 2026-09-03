@@ -29,6 +29,7 @@ import {
   type CatalogSectionFilters,
   DEFAULT_CATALOG_SECTION_FILTERS,
   DEFAULT_GENERATOR_SECTION_FILTERS,
+  DEFAULT_LIST_SECTION_FILTERS,
   hasActiveCatalogSectionFilters,
 } from '@/shared/lib/catalog-section-filters';
 import { usePlayback } from '@/shared/lib/playback/playback-context';
@@ -69,7 +70,7 @@ const SECTION_TITLES: Record<CatalogSection, string> = {
 
 const EMPTY_SECTION_FILTERS: Record<FilterableSection, CatalogSectionFilters> =
   {
-    list: { ...DEFAULT_CATALOG_SECTION_FILTERS },
+    list: { ...DEFAULT_LIST_SECTION_FILTERS },
     favorites: { ...DEFAULT_CATALOG_SECTION_FILTERS },
     demos: { ...DEFAULT_CATALOG_SECTION_FILTERS },
   };
@@ -138,11 +139,18 @@ export function CatalogMenu() {
     activeSection && activeSection !== 'stats' && activeSection !== 'generator'
       ? activeSection
       : null;
+  const sectionDefaults =
+    filterableSection === 'list'
+      ? DEFAULT_LIST_SECTION_FILTERS
+      : DEFAULT_CATALOG_SECTION_FILTERS;
   const sectionFilters = filterableSection
     ? filtersBySection[filterableSection]
     : DEFAULT_CATALOG_SECTION_FILTERS;
   const sectionHasFilters = filterableSection
-    ? hasActiveCatalogSectionFilters(filtersBySection[filterableSection])
+    ? hasActiveCatalogSectionFilters(
+        filtersBySection[filterableSection],
+        sectionDefaults
+      )
     : false;
   const generatorHasSettings =
     generatorPreset !== 'HIT' ||
@@ -256,14 +264,6 @@ export function CatalogMenu() {
                 </Button>
               );
             })}
-            <Button
-              type="button"
-              variant="ghost"
-              className="mt-auto h-auto justify-start px-2 py-2 text-left text-sm font-normal sm:hidden"
-              onClick={closeMenu}
-            >
-              Закрыть
-            </Button>
           </nav>
 
           <div
@@ -425,6 +425,10 @@ export function CatalogMenu() {
                         <CatalogFilterPane
                           sectionId={filterableSection ?? 'list'}
                           filters={sectionFilters}
+                          showShelves={filterableSection === 'list'}
+                          shelfVariant="icons"
+                          shelvesFirst
+                          defaults={sectionDefaults}
                           onChange={(next) => {
                             if (!filterableSection) {
                               return;

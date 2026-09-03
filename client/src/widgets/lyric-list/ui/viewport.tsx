@@ -227,6 +227,9 @@ export function Viewport({
   const { carouselSpeed, lineGap, fontSize } = useLyricView();
   const [deskOpen, setDeskOpen] = useState(false);
   const [deskLyricId, setDeskLyricId] = useState<number | null>(null);
+  const [deskLyricSnapshot, setDeskLyricSnapshot] = useState<ILyric | null>(
+    null
+  );
   const { slideIntervalMs, animationMs } = slideTiming(
     carouselSpeed,
     lineGap,
@@ -479,6 +482,7 @@ export function Viewport({
     clearTapToggle();
     suppressToggle();
     setPaused(true);
+    setDeskLyricSnapshot(lyrics.find((item) => item.id === catalogId) ?? null);
     setDeskLyricId(catalogId);
     setDeskOpen(true);
   };
@@ -635,10 +639,19 @@ export function Viewport({
     lastIndex - Math.ceil(animationMs / slideIntervalMs)
   );
   const visibleSlides = finished ? [] : data.slice(firstVisible, lastIndex + 1);
-  const deskLyric = useMemo(
-    () => lyrics.find((item) => item.id === deskLyricId) ?? null,
-    [deskLyricId, lyrics]
-  );
+  const deskLyric = useMemo(() => {
+    const live = lyrics.find((item) => item.id === deskLyricId);
+
+    if (live) {
+      return live;
+    }
+
+    if (deskLyricSnapshot?.id === deskLyricId) {
+      return deskLyricSnapshot;
+    }
+
+    return null;
+  }, [deskLyricId, deskLyricSnapshot, lyrics]);
 
   return (
     <div
@@ -688,9 +701,13 @@ export function Viewport({
         lyric={deskLyric}
         open={deskOpen}
         queryVariables={queryVariables}
-        onOpenChange={setDeskOpen}
-        onHidden={() => {
-          setDeskOpen(false);
+        onOpenChange={(open) => {
+          setDeskOpen(open);
+
+          if (!open) {
+            setDeskLyricId(null);
+            setDeskLyricSnapshot(null);
+          }
         }}
       />
 

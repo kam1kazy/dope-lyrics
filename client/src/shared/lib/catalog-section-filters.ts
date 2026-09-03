@@ -61,6 +61,11 @@ export const DEFAULT_CATALOG_SECTION_FILTERS: CatalogSectionFilters = {
   excludeReadiness: [],
 };
 
+export const DEFAULT_LIST_SECTION_FILTERS: CatalogSectionFilters = {
+  ...DEFAULT_CATALOG_SECTION_FILTERS,
+  excludeShelves: ['hidden'],
+};
+
 export const DEFAULT_GENERATOR_SECTION_FILTERS: CatalogSectionFilters = {
   ...DEFAULT_CATALOG_SECTION_FILTERS,
   excludeShelves: ['hidden'],

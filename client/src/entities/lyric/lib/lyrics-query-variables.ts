@@ -125,6 +125,11 @@ export function catalogQueryVariablesForSection(
     readiness: filters.readiness.length > 0 ? filters.readiness : null,
     excludeReadiness:
       filters.excludeReadiness.length > 0 ? filters.excludeReadiness : null,
-    includeCensored: includeCensored ? true : null,
+    includeShelves:
+      section === 'list' && filters.includeShelves.length > 0
+        ? filters.includeShelves
+        : null,
+    excludeShelves: section === 'list' ? filters.excludeShelves : null,
+    includeCensored: section === 'list' ? null : includeCensored ? true : null,
   });
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import { Ban, Bookmark, EyeOff, Layers, Sparkles } from 'lucide-react';
-import { useEffect, useRef } from 'react';
+import { type MouseEvent, useEffect, useRef } from 'react';
 
 import {
   clickShelfFlag,
@@ -15,6 +15,7 @@ import {
 } from '@/shared/lib/lyric-view/shelf-filter';
 import { cn } from '@/shared/lib/utils/cn';
 import { Badge } from '@/shared/ui/shadcn/ui/badge';
+import { Button } from '@/shared/ui/shadcn/ui/button';
 import { Label } from '@/shared/ui/shadcn/ui/label';
 
 const SHELF_OPTIONS: {
@@ -28,16 +29,29 @@ const SHELF_OPTIONS: {
   { flag: 'hidden', label: 'Скрытые', icon: EyeOff },
 ];
 
+const SHELF_ICON_OPTIONS: {
+  flag: ShelfFlag;
+  label: string;
+  icon: typeof Bookmark;
+}[] = [
+  { flag: 'favorites', label: 'Избранное', icon: Bookmark },
+  { flag: 'references', label: 'Эталон', icon: Sparkles },
+  { flag: 'hidden', label: 'Скрыть', icon: EyeOff },
+  { flag: 'censored', label: 'Цензура', icon: Ban },
+];
+
 const SHELF_CLICK_DELAY_MS = 280;
 
 export function ShelfFilterChips({
   selection,
   onChange,
+  variant = 'labeled',
 }: {
   selection: ShelfSelection;
   onChange: (
     next: ShelfSelection | ((current: ShelfSelection) => ShelfSelection)
   ) => void;
+  variant?: 'labeled' | 'icons';
 }) {
   const allShelves = isAllShelvesSelected(selection);
   const clickTimerRef = useRef<number | null>(null);
@@ -56,6 +70,64 @@ export function ShelfFilterChips({
       clickTimerRef.current = null;
     }
   };
+
+  const bindFlagClicks = (flag: ShelfFlag) => ({
+    onMouseDown: (event: MouseEvent<HTMLButtonElement>) => {
+      if (event.detail > 1) {
+        event.preventDefault();
+      }
+    },
+    onClick: () => {
+      clearShelfClickTimer();
+      clickTimerRef.current = window.setTimeout(() => {
+        clickTimerRef.current = null;
+        onChange((current) => clickShelfFlag(current, flag));
+      }, SHELF_CLICK_DELAY_MS);
+    },
+    onDoubleClick: () => {
+      clearShelfClickTimer();
+      onChange((current) => toggleExcludeShelfFlag(current, flag));
+    },
+  });
+
+  if (variant === 'icons') {
+    return (
+      <div
+        data-swipe-ignore
+        role="group"
+        aria-label="Полка каталога"
+        className="bg-muted grid grid-cols-4 rounded-lg p-1"
+      >
+        {SHELF_ICON_OPTIONS.map(({ flag, label, icon: Icon }) => {
+          const selected = isShelfFlagOn(selection, flag);
+          const excluded = isShelfFlagExcluded(selection, flag);
+
+          return (
+            <Button
+              key={flag}
+              type="button"
+              size="icon-sm"
+              variant="ghost"
+              aria-pressed={selected}
+              aria-label={excluded ? `${label}, исключено из поиска` : label}
+              title={excluded ? `${label} — исключено` : label}
+              className={cn(
+                'h-8 w-full rounded-md',
+                excluded
+                  ? 'shelf-chip-excluded hover:brightness-110'
+                  : selected
+                    ? 'bg-background text-foreground shadow-sm'
+                    : 'text-muted-foreground'
+              )}
+              {...bindFlagClicks(flag)}
+            >
+              <Icon className="size-4" />
+            </Button>
+          );
+        })}
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-2">
@@ -94,23 +166,8 @@ export function ShelfFilterChips({
               type="button"
               aria-pressed={selected}
               aria-label={excluded ? `${label}, исключена из поиска` : label}
-              onMouseDown={(event) => {
-                if (event.detail > 1) {
-                  event.preventDefault();
-                }
-              }}
-              onClick={() => {
-                clearShelfClickTimer();
-                clickTimerRef.current = window.setTimeout(() => {
-                  clickTimerRef.current = null;
-                  onChange((current) => clickShelfFlag(current, flag));
-                }, SHELF_CLICK_DELAY_MS);
-              }}
-              onDoubleClick={() => {
-                clearShelfClickTimer();
-                onChange((current) => toggleExcludeShelfFlag(current, flag));
-              }}
               className="cursor-pointer"
+              {...bindFlagClicks(flag)}
             >
               <Badge
                 variant={selected || excluded ? 'default' : 'secondary'}

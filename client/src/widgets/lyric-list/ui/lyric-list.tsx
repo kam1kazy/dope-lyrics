@@ -113,6 +113,12 @@ export const LyricList = () => {
     return createCarouselList(lyrics);
   }, [lyrics]);
 
+  const hasRenderedCarousel = useRef(false);
+
+  if (carouselList.length > 0) {
+    hasRenderedCarousel.current = true;
+  }
+
   const hasFilters = hasActiveLyricFilters({
     includedShelves,
     excludedShelves,
@@ -143,7 +149,7 @@ export const LyricList = () => {
     return <ErrorText title="Ошибка" />;
   }
 
-  if (!lyrics?.length) {
+  if (!lyrics?.length && !hasRenderedCarousel.current) {
     return (
       <ErrorText
         title="Пусто"
@@ -154,7 +160,7 @@ export const LyricList = () => {
     );
   }
 
-  if (!carouselList.length) {
+  if (!carouselList.length && !hasRenderedCarousel.current) {
     return (
       <ErrorText
         title="Пусто"
@@ -171,7 +177,7 @@ export const LyricList = () => {
       <Viewport
         key={`${activeQueryVariables.includeShelves?.join('|') ?? ''}-${activeQueryVariables.excludeShelves?.join('|') ?? ''}-${activeQueryVariables.oldestFirst}-${sortMode}-${activeQueryVariables.tags?.join('|') ?? ''}-${activeQueryVariables.emojis?.join('|') ?? ''}-${activeQueryVariables.keyword ?? ''}-${activeQueryVariables.dateFrom ?? ''}-${activeQueryVariables.dateTo ?? ''}-${activeQueryVariables.mood?.join('|') ?? ''}-${activeQueryVariables.excludeMood?.join('|') ?? ''}-${activeQueryVariables.delivery?.join('|') ?? ''}-${activeQueryVariables.excludeDelivery?.join('|') ?? ''}-${activeQueryVariables.songRole?.join('|') ?? ''}-${activeQueryVariables.excludeSongRole?.join('|') ?? ''}-${activeQueryVariables.readiness?.join('|') ?? ''}-${activeQueryVariables.excludeReadiness?.join('|') ?? ''}-${shuffleSeed}`}
         data={carouselList}
-        lyrics={lyrics}
+        lyrics={lyrics ?? []}
         queryVariables={activeQueryVariables}
         hasMore={hasMore}
         onNeedMore={loadMore}

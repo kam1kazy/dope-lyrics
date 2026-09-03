@@ -571,29 +571,7 @@ export function MessageDeskDialog({
           <p className="text-destructive text-sm">{flagsError}</p>
         ) : null}
 
-        <DialogFooter className="flex-wrap gap-2 pt-1 sm:justify-start sm:gap-3">
-          <Button
-            type="button"
-            variant={flags.isHidden ? 'secondary' : 'outline'}
-            disabled={!lyric}
-            className="gap-2 sm:h-10"
-            onClick={() =>
-              patchFlags(
-                { isHidden: !flags.isHidden },
-                {
-                  closeOnSuccess: !flags.isHidden,
-                  onHidden: !flags.isHidden,
-                }
-              )
-            }
-          >
-            <EyeOff
-              className={cn('size-4', flags.isHidden && 'text-rose-400')}
-              aria-hidden
-            />
-            {flags.isHidden ? 'Вернуть в карусель' : 'Скрыть'}
-          </Button>
-
+        <DialogFooter className="grid grid-cols-2 gap-2 pt-1 sm:flex sm:flex-row sm:flex-wrap sm:justify-start sm:gap-3">
           <Button
             type="button"
             variant={flags.isFavorite ? 'secondary' : 'outline'}
@@ -608,7 +586,10 @@ export function MessageDeskDialog({
               )}
               aria-hidden
             />
-            {flags.isFavorite ? 'Убрать из избранного' : 'В избранное'}
+            <span className="sm:hidden">Избранное</span>
+            <span className="hidden sm:inline">
+              {flags.isFavorite ? 'Убрать из избранного' : 'В избранное'}
+            </span>
           </Button>
 
           <Button
@@ -625,7 +606,33 @@ export function MessageDeskDialog({
               )}
               aria-hidden
             />
-            {flags.isReference ? 'Снять эталон' : 'Эталон'}
+            {flags.isReference ? (
+              <>
+                <span className="sm:hidden">Эталон</span>
+                <span className="hidden sm:inline">Снять эталон</span>
+              </>
+            ) : (
+              'Эталон'
+            )}
+          </Button>
+
+          <Button
+            type="button"
+            variant={flags.isHidden ? 'secondary' : 'outline'}
+            disabled={!lyric}
+            className="gap-2 sm:h-10"
+            onClick={() => patchFlags({ isHidden: !flags.isHidden })}
+          >
+            <EyeOff
+              className={cn('size-4', flags.isHidden && 'text-rose-400')}
+              aria-hidden
+            />
+            <span className="sm:hidden">
+              {flags.isHidden ? 'Скрыто' : 'Скрыть'}
+            </span>
+            <span className="hidden sm:inline">
+              {flags.isHidden ? 'Вернуть в карусель' : 'Скрыть'}
+            </span>
           </Button>
 
           <Button
@@ -639,7 +646,14 @@ export function MessageDeskDialog({
               className={cn('size-4', flags.isCensored && 'text-rose-400')}
               aria-hidden
             />
-            {flags.isCensored ? 'Снять цензуру' : 'Цензура'}
+            {flags.isCensored ? (
+              <>
+                <span className="sm:hidden">Цензура</span>
+                <span className="hidden sm:inline">Снять цензуру</span>
+              </>
+            ) : (
+              'Цензура'
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

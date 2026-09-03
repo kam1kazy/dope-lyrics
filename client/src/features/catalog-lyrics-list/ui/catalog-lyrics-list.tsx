@@ -46,54 +46,51 @@ export function CatalogLyricsList({
     setDeskOpen(true);
   };
 
-  if (loading && !lyrics) {
-    return (
-      <div className="flex h-full items-center justify-center p-6">
-        <Spinner className="size-6" />
-      </div>
-    );
-  }
-
-  if (error) {
-    return <ErrorText title="Ошибка" />;
-  }
-
-  if (!lyrics?.length) {
-    return (
-      <div className="text-muted-foreground flex h-full items-center justify-center p-6 text-center text-sm">
-        {emptyMessage}
-      </div>
-    );
-  }
+  const deskLyric =
+    lyrics?.find((item) => item.id === selectedLyric?.id) ?? selectedLyric;
 
   return (
     <>
-      <ul className="flex flex-col gap-1 p-3">
-        {lyrics.map((lyric) => (
-          <li key={lyric.id}>
-            <button
-              type="button"
-              className="hover:bg-muted w-full rounded-md px-3 py-2 text-left transition-colors"
-              onClick={() => {
-                openLyric(lyric);
-              }}
-            >
-              <span className="block truncate text-sm">
-                {lyricMenuTitle(lyric.message?.text)}
-              </span>
-            </button>
-          </li>
-        ))}
-      </ul>
+      {loading && !lyrics ? (
+        <div className="flex h-full items-center justify-center p-6">
+          <Spinner className="size-6" />
+        </div>
+      ) : error ? (
+        <ErrorText title="Ошибка" />
+      ) : !lyrics?.length ? (
+        <div className="text-muted-foreground flex h-full items-center justify-center p-6 text-center text-sm">
+          {emptyMessage}
+        </div>
+      ) : (
+        <>
+          <ul className="flex flex-col gap-1 p-3">
+            {lyrics.map((lyric) => (
+              <li key={lyric.id}>
+                <button
+                  type="button"
+                  className="hover:bg-muted w-full rounded-md px-3 py-2 text-left transition-colors"
+                  onClick={() => {
+                    openLyric(lyric);
+                  }}
+                >
+                  <span className="block truncate text-sm">
+                    {lyricMenuTitle(lyric.message?.text)}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
 
-      <LyricsLoadMore
-        hasMore={hasMore}
-        loadingMore={loadingMore}
-        onVisible={loadMore}
-      />
+          <LyricsLoadMore
+            hasMore={hasMore}
+            loadingMore={loadingMore}
+            onVisible={loadMore}
+          />
+        </>
+      )}
 
       <MessageDeskDialog
-        lyric={selectedLyric}
+        lyric={deskLyric}
         open={deskOpen}
         queryVariables={listQueryVariables}
         onOpenChange={setDeskOpen}
