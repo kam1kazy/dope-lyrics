@@ -38,11 +38,6 @@ export const typeDefinitions = /* GraphQL */ `
     READY
   }
 
-  enum TrackFormPreset {
-    HIT
-    CANVAS
-  }
-
   type User {
     id: Int!
     username: String!
@@ -86,6 +81,16 @@ export const typeDefinitions = /* GraphQL */ `
   type SplitLyricPayload {
     top: Lyric!
     bottom: Lyric!
+  }
+
+  input LyricLineRange {
+    afterLine: Int!
+    untilLine: Int!
+  }
+
+  type SliceLyricPayload {
+    source: Lyric!
+    created: Lyric!
   }
 
   input LyricRoleProfileInput {
@@ -285,6 +290,13 @@ export const typeDefinitions = /* GraphQL */ `
     excludeReadiness: [LyricReadiness!]
   }
 
+  input TrackFormQuotas {
+    intro: Int!
+    verse: Int!
+    hook: Int!
+    bridge: Int!
+  }
+
   type Query {
     users: [User!]!
     lyricTags: [String!]!
@@ -321,7 +333,7 @@ export const typeDefinitions = /* GraphQL */ `
     lyricIngestPreview: LyricIngestPreview!
     catalogStats: CatalogStats!
     assembleTrack(
-      preset: TrackFormPreset
+      form: TrackFormQuotas!
       hideAdlibs: Boolean
       filter: LyricPoolFilter
     ): AssembledTrack!
@@ -346,6 +358,11 @@ export const typeDefinitions = /* GraphQL */ `
     ): Lyric!
     updateLyricText(id: Int!, text: String!): Lyric!
     splitLyric(id: Int!, afterLine: Int!): SplitLyricPayload!
+    sliceLyric(
+      id: Int!
+      ranges: [LyricLineRange!]!
+      ripDonor: Boolean!
+    ): SliceLyricPayload!
     ingestPendingLyrics: LyricIngestResult!
     likeCollage(slots: [CollageSlotInput!]!): LyricCollage!
     unlikeCollage(id: Int!): Int!

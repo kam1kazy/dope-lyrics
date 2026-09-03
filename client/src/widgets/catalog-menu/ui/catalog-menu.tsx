@@ -14,11 +14,15 @@ import {
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
-import type { ILyricCollage, TrackFormPreset } from '@/entities/lyric';
+import type { ILyricCollage, TrackFormQuotas } from '@/entities/lyric';
 import {
   CatalogAssembleHistory,
   CatalogAssemblePanel,
   CatalogGeneratorPane,
+  DEFAULT_TRACK_FORM_QUOTAS,
+  quotasEqual,
+  readGeneratorForm,
+  writeGeneratorForm,
 } from '@/features/catalog-assemble';
 import { CatalogDemosPanel } from '@/features/catalog-demos';
 import { CatalogFavoritesPanel } from '@/features/catalog-favorites';
@@ -82,8 +86,9 @@ export function CatalogMenu() {
   );
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
-  const [generatorPreset, setGeneratorPreset] =
-    useState<TrackFormPreset>('HIT');
+  const [generatorForm, setGeneratorForm] = useState<TrackFormQuotas>(
+    DEFAULT_TRACK_FORM_QUOTAS
+  );
   const [hideAdlibs, setHideAdlibs] = useState(false);
   const [generatorFilters, setGeneratorFilters] =
     useState<CatalogSectionFilters>(DEFAULT_GENERATOR_SECTION_FILTERS);
@@ -97,6 +102,10 @@ export function CatalogMenu() {
     usePlayback();
   const [catalogLit, setCatalogLit] = useState(false);
   const playing = !paused && canPlay;
+
+  useEffect(() => {
+    setGeneratorForm(readGeneratorForm());
+  }, []);
 
   const closeMenu = () => {
     suppressToggle();
@@ -153,7 +162,7 @@ export function CatalogMenu() {
       )
     : false;
   const generatorHasSettings =
-    generatorPreset !== 'HIT' ||
+    !quotasEqual(generatorForm, DEFAULT_TRACK_FORM_QUOTAS) ||
     hideAdlibs ||
     hasActiveCatalogSectionFilters(
       generatorFilters,
@@ -373,7 +382,7 @@ export function CatalogMenu() {
                       <CatalogDemosPanel filters={sectionFilters} />
                     ) : activeSection === 'generator' ? (
                       <CatalogAssemblePanel
-                        preset={generatorPreset}
+                        form={generatorForm}
                         hideAdlibs={hideAdlibs}
                         filters={generatorFilters}
                         selectedCollage={selectedCollage}
@@ -414,10 +423,13 @@ export function CatalogMenu() {
                         />
                       ) : activeSection === 'generator' ? (
                         <CatalogGeneratorPane
-                          preset={generatorPreset}
+                          form={generatorForm}
                           hideAdlibs={hideAdlibs}
                           filters={generatorFilters}
-                          onPresetChange={setGeneratorPreset}
+                          onFormChange={(next) => {
+                            setGeneratorForm(next);
+                            writeGeneratorForm(next);
+                          }}
                           onHideAdlibsChange={setHideAdlibs}
                           onFiltersChange={setGeneratorFilters}
                         />

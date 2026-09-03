@@ -14,36 +14,63 @@ export const TRACK_FRAME = [
 
 export type TrackFrameRole = (typeof TRACK_FRAME)[number];
 
-export const TRACK_FORM_PRESETS = ['HIT', 'CANVAS'] as const;
+export type TrackFormQuotas = {
+  intro: number;
+  verse: number;
+  hook: number;
+  bridge: number;
+};
 
-export type TrackFormPreset = (typeof TRACK_FORM_PRESETS)[number];
-
-export const isTrackFormPreset = (value: string): value is TrackFormPreset =>
-  (TRACK_FORM_PRESETS as readonly string[]).includes(value);
-
-type LineQuota = {
-  min: number;
-  max: number;
+export const DEFAULT_TRACK_FORM_QUOTAS: TrackFormQuotas = {
+  intro: 0,
+  verse: 6,
+  hook: 2,
+  bridge: 0,
 };
 
 const PARAGRAPH_LINES = 4;
 
-export const TRACK_QUOTAS: Record<
-  TrackFormPreset,
-  Record<TrackFrameRole, LineQuota>
-> = {
-  HIT: {
-    INTRO: { min: 0, max: 4 * PARAGRAPH_LINES },
-    VERSE: { min: 4 * PARAGRAPH_LINES, max: 6 * PARAGRAPH_LINES },
-    HOOK: { min: 1 * PARAGRAPH_LINES, max: 2 * PARAGRAPH_LINES },
-    BRIDGE: { min: 0, max: 4 * PARAGRAPH_LINES },
-  },
-  CANVAS: {
-    INTRO: { min: 0, max: 4 * PARAGRAPH_LINES },
-    VERSE: { min: 4 * PARAGRAPH_LINES, max: 8 * PARAGRAPH_LINES },
-    HOOK: { min: 1 * PARAGRAPH_LINES, max: 4 * PARAGRAPH_LINES },
-    BRIDGE: { min: 0, max: 4 * PARAGRAPH_LINES },
-  },
+const parseQuotaCount = (value: unknown, label: string): number => {
+  if (typeof value !== 'number' || !Number.isInteger(value)) {
+    throw new GraphQLError(`${label}: нужно целое число`);
+  }
+
+  if (value < 0) {
+    throw new GraphQLError(`${label}: число не может быть меньше нуля`);
+  }
+
+  return value;
+};
+
+export const parseTrackFormQuotas = (raw: unknown): TrackFormQuotas => {
+  if (raw == null || typeof raw !== 'object') {
+    return DEFAULT_TRACK_FORM_QUOTAS;
+  }
+
+  const record = raw as Record<string, unknown>;
+
+  return {
+    intro: parseQuotaCount(record.intro, 'Интро'),
+    verse: parseQuotaCount(record.verse, 'Куплет'),
+    hook: parseQuotaCount(record.hook, 'Хук'),
+    bridge: parseQuotaCount(record.bridge, 'Бридж'),
+  };
+};
+
+const paragraphsForRole = (
+  quotas: TrackFormQuotas,
+  role: TrackFrameRole
+): number => {
+  switch (role) {
+    case 'INTRO':
+      return quotas.intro;
+    case 'VERSE':
+      return quotas.verse;
+    case 'HOOK':
+      return quotas.hook;
+    case 'BRIDGE':
+      return quotas.bridge;
+  }
 };
 
 export type CollagePartStored = {
@@ -108,23 +135,12 @@ const randomInt = (min: number, max: number): number => {
   return min + Math.floor(Math.random() * (max - min + 1));
 };
 
-const pickSlotTarget = (quota: LineQuota, hasCandidates: boolean): number => {
-  if (!hasCandidates) {
+const pickSlotTarget = (paragraphs: number, hasCandidates: boolean): number => {
+  if (!hasCandidates || paragraphs < 1) {
     return 0;
   }
 
-  const minParagraphs = Math.floor(quota.min / QUATRAIN_LINES);
-  const maxParagraphs = Math.floor(quota.max / QUATRAIN_LINES);
-
-  if (maxParagraphs < 1) {
-    return quota.max;
-  }
-
-  if (quota.min === 0) {
-    return randomInt(0, maxParagraphs) * QUATRAIN_LINES;
-  }
-
-  return randomInt(minParagraphs, maxParagraphs) * QUATRAIN_LINES;
+  return paragraphs * QUATRAIN_LINES;
 };
 
 const pickWindowSize = (): number => {
@@ -196,11 +212,11 @@ const buildSlotPool = (
 
 const fillSlot = (
   pool: PoolLyric[],
-  quota: LineQuota,
+  paragraphs: number,
   used: Set<number>
 ): CollagePartStored[] => {
   const parts: CollagePartStored[] = [];
-  const target = pickSlotTarget(quota, pool.length > 0);
+  const target = pickSlotTarget(paragraphs, pool.length > 0);
   if (target < 1) {
     return parts;
   }
@@ -249,7 +265,7 @@ const fillSlot = (
 /** Слоты по каркасу: квота строк, без повтора lyricId, второй хук копирует первый. */
 export const assembleSlotsFromPools = (
   catalog: PoolLyric[],
-  preset: TrackFormPreset
+  quotas: TrackFormQuotas
 ): CollageSlotStored[] => {
   const used = new Set<number>();
   const slots: CollageSlotStored[] = TRACK_FRAME.map((songRole) => ({
@@ -260,9 +276,9 @@ export const assembleSlotsFromPools = (
 
   for (const index of FILL_FRAME_INDEXES) {
     const songRole = TRACK_FRAME[index];
-    const quota = TRACK_QUOTAS[preset][songRole];
+    const paragraphs = paragraphsForRole(quotas, songRole);
     const pool = buildSlotPool(catalog, songRole, used);
-    const parts = fillSlot(pool, quota, used);
+    const parts = fillSlot(pool, paragraphs, used);
 
     slots[index] = { songRole, parts };
 

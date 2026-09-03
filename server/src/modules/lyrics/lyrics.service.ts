@@ -18,6 +18,8 @@ import {
 } from '~/modules/lyrics/lyric-glue';
 import {
   assertNonEmptyLyricText,
+  buildSliceFromRanges,
+  type LyricLineRange,
   readinessAfterTextChange,
   splitTextAtLine,
   textCounts,
@@ -31,14 +33,13 @@ import { createLyricData } from '~/modules/lyrics/persist/create-lyric-data';
 import { shuffleIds, toShuffleSeed } from '~/modules/lyrics/shuffle-ids';
 import {
   assembleSlotsFromPools,
-  isTrackFormPreset,
   lyricIdsFromSlots,
   parseCollageSlotsInput,
+  parseTrackFormQuotas,
   type PoolLyric,
   remapCollageSlotsAfterSplit,
   slotsFromJson,
   splitGeneratorLines,
-  type TrackFormPreset,
 } from '~/modules/lyrics/track-assemble';
 import { usersService } from '~/modules/users/users.service';
 
@@ -149,7 +150,7 @@ export class LyricsService {
   }
 
   async assembleTrack(
-    presetRaw?: string | null,
+    formRaw?: unknown,
     filter?: Pick<
       LyricsListOptions,
       | 'tags'
@@ -169,10 +170,7 @@ export class LyricsService {
       | 'excludeReadiness'
     > | null
   ) {
-    const preset: TrackFormPreset =
-      typeof presetRaw === 'string' && isTrackFormPreset(presetRaw)
-        ? presetRaw
-        : 'HIT';
+    const quotas = parseTrackFormQuotas(formRaw);
     const includeCensored = (filter?.includeShelves ?? []).includes('censored');
     const baseWhere = buildLyricsWhere({
       tags: filter?.tags,
@@ -209,7 +207,7 @@ export class LyricsService {
       songRoles: row.songRole,
     }));
 
-    const slots = assembleSlotsFromPools(catalog, preset);
+    const slots = assembleSlotsFromPools(catalog, quotas);
 
     return this.hydrateSlots(slots);
   }
@@ -689,6 +687,159 @@ export class LyricsService {
       }
 
       return { top: topRow, bottom: bottomRow };
+    });
+  }
+
+  async sliceLyric(
+    id: number,
+    rangesInput: LyricLineRange[],
+    ripDonor: boolean
+  ) {
+    const row = await this.prisma.lyrics.findUnique({
+      where: { id },
+      include: lyricInclude,
+    });
+
+    const sourceMessage = row?.message;
+
+    if (!row || !sourceMessage?.text) {
+      throw new GraphQLError('Фраза не найдена');
+    }
+
+    const sourceText = sourceMessage.text;
+    const built = buildSliceFromRanges(sourceText, rangesInput, id);
+    const createdCounts = textCounts(built.createdText);
+    const editedAt = new Date();
+    const lineCount = splitGeneratorLines(sourceText).length;
+
+    return this.prisma.$transaction(async (tx) => {
+      const created = await tx.lyrics.create({
+        data: {
+          lyric_id: row.lyric_id,
+          date: row.date,
+          editDate: editedAt,
+          isPinned: row.isPinned,
+          isChannelPost: row.isChannelPost,
+          isReference: row.isReference,
+          isHidden: row.isHidden,
+          isFavorite: row.isFavorite,
+          isCensored: row.isCensored,
+          isDonor: false,
+          mood: row.mood,
+          delivery: row.delivery,
+          songRole: row.songRole,
+          roleProfiles: row.roleProfiles ?? {},
+          readiness: readinessAfterTextChange(
+            row.readiness,
+            createdCounts.paragraph_count
+          ),
+          replyToMessage: row.replyToMessage,
+          userId: row.userId,
+          message: {
+            create: {
+              message_id: sourceMessage.message_id,
+              text: built.createdText,
+              word_count: createdCounts.word_count,
+              paragraph_count: createdCounts.paragraph_count,
+              hashtags: sourceMessage.hashtags
+                ? {
+                    create: {
+                      tags: sourceMessage.hashtags.tags,
+                      count: sourceMessage.hashtags.count,
+                    },
+                  }
+                : undefined,
+            },
+          },
+          user: row.user
+            ? {
+                create: {
+                  id: row.user.id,
+                  username: row.user.username,
+                  displayName: row.user.displayName,
+                  isAdmin: row.user.isAdmin,
+                },
+              }
+            : undefined,
+          chat: row.chat
+            ? {
+                create: {
+                  id: row.chat.id,
+                  title: row.chat.title,
+                  type: row.chat.type,
+                },
+              }
+            : undefined,
+        },
+        include: lyricInclude,
+      });
+
+      if (!ripDonor) {
+        return { source: row, created };
+      }
+
+      const rip = ripCleanedRangesFromText(sourceText, built.cleanedTaken);
+      const markDonor = rip.removed && !rip.emptied;
+      const nextText = markDonor ? rip.nextText : sourceText;
+      const nextCounts = textCounts(nextText);
+
+      let source = row;
+
+      if (rip.emptied || markDonor) {
+        source = await tx.lyrics.update({
+          where: { id },
+          data: rip.emptied
+            ? { isHidden: true }
+            : {
+                isDonor: true,
+                editDate: editedAt,
+                readiness: readinessAfterTextChange(
+                  row.readiness,
+                  nextCounts.paragraph_count
+                ),
+                message: {
+                  update: {
+                    text: nextText,
+                    word_count: nextCounts.word_count,
+                    paragraph_count: nextCounts.paragraph_count,
+                  },
+                },
+              },
+          include: lyricInclude,
+        });
+      }
+
+      if (markDonor) {
+        const shiftMap = cleanedIndexShiftMap(lineCount, built.cleanedTaken);
+        const collages = await tx.lyricCollage.findMany();
+
+        for (const collage of collages) {
+          const collageSlots = slotsFromJson(collage.slots);
+          if (!lyricIdsFromSlots(collageSlots).includes(id)) {
+            continue;
+          }
+
+          const nextSlots = remapCollageSlotsAfterRip(
+            collageSlots,
+            id,
+            created.id,
+            shiftMap,
+            built.placements,
+            true
+          );
+
+          if (JSON.stringify(nextSlots) === JSON.stringify(collageSlots)) {
+            continue;
+          }
+
+          await tx.lyricCollage.update({
+            where: { id: collage.id },
+            data: { slots: nextSlots },
+          });
+        }
+      }
+
+      return { source, created };
     });
   }
 

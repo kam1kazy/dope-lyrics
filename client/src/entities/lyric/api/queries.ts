@@ -289,6 +289,24 @@ export const SPLIT_LYRIC = gql`
   }
 `;
 
+export const SLICE_LYRIC = gql`
+  ${LYRIC_LIST_FIELDS}
+  mutation SliceLyric(
+    $id: Int!
+    $ranges: [LyricLineRange!]!
+    $ripDonor: Boolean!
+  ) {
+    sliceLyric(id: $id, ranges: $ranges, ripDonor: $ripDonor) {
+      source {
+        ...LyricListFields
+      }
+      created {
+        ...LyricListFields
+      }
+    }
+  }
+`;
+
 const COLLAGE_SLOT_FIELDS = `
   songRole
   parts {
@@ -306,11 +324,11 @@ const COLLAGE_SLOT_FIELDS = `
 
 export const ASSEMBLE_TRACK = gql`
   query AssembleTrack(
-    $preset: TrackFormPreset
+    $form: TrackFormQuotas!
     $hideAdlibs: Boolean
     $filter: LyricPoolFilter
   ) {
-    assembleTrack(preset: $preset, hideAdlibs: $hideAdlibs, filter: $filter) {
+    assembleTrack(form: $form, hideAdlibs: $hideAdlibs, filter: $filter) {
       slots {
         ${COLLAGE_SLOT_FIELDS}
       }

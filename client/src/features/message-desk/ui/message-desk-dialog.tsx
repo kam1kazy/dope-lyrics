@@ -37,11 +37,13 @@ import {
   type LyricSongRole,
   type LyricsQueryVariables,
   patchRoleProfile,
+  SLICE_LYRIC,
   SPLIT_LYRIC,
   UPDATE_LYRIC_FLAGS,
   UPDATE_LYRIC_PROFILE,
   UPDATE_LYRIC_TEXT,
   updateLyricsCacheAfterFlagsChange,
+  updateLyricsCacheAfterSlice,
   updateLyricsCacheAfterSplit,
   updateLyricsCacheAfterTextChange,
   upsertRoleProfile,
@@ -49,11 +51,17 @@ import {
 import {
   canSplitLyricText,
   defaultAfterLine,
+  defaultUntilLine,
   isValidAfterLine,
+  isValidLineRange,
   lyricHalves,
+  lyricRangeText,
   previewLyricHalf,
+  rangeConflictsWithChunks,
+  type SliceChunk,
   splitLyricLines,
 } from '@/features/message-desk/lib/lyric-text-lines';
+import { SliceChunkList } from '@/features/message-desk/ui/slice-chunk-list';
 import { SplitTextView } from '@/features/message-desk/ui/split-text-view';
 import { usePlayback } from '@/shared/lib/playback/playback-context';
 import { cn } from '@/shared/lib/utils/cn';
@@ -115,12 +123,15 @@ export function MessageDeskDialog({
   const [tab, setTab] = useState<DeskTab>('text');
   const [textMode, setTextMode] = useState<TextMode>('view');
   const [afterLine, setAfterLine] = useState(0);
+  const [untilLine, setUntilLine] = useState<number | null>(null);
+  const [sliceChunks, setSliceChunks] = useState<SliceChunk[]>([]);
   const [draftText, setDraftText] = useState('');
   const [textError, setTextError] = useState<string | null>(null);
   const [splitPick, setSplitPick] = useState<{
     top: string;
     bottom: string;
   } | null>(null);
+  const [slicePrompt, setSlicePrompt] = useState(false);
   const [discardPrompt, setDiscardPrompt] = useState<DiscardPrompt>(null);
   const lastTextTapRef = useRef(0);
   const holdTimerRef = useRef<number | null>(null);
@@ -151,6 +162,9 @@ export function MessageDeskDialog({
       setTextMode('view');
       setTextError(null);
       setSplitPick(null);
+      setSlicePrompt(false);
+      setUntilLine(null);
+      setSliceChunks([]);
       setDiscardPrompt(null);
       setProfileError(null);
       setFlagsError(null);
@@ -187,6 +201,9 @@ export function MessageDeskDialog({
     setTextError(null);
     setTextMode('view');
     setSplitPick(null);
+    setSlicePrompt(false);
+    setUntilLine(null);
+    setSliceChunks([]);
     setDiscardPrompt(null);
     setDraftText(lyric?.message?.text ?? '');
     setActiveSongRole(lyric?.roleProfiles?.[0]?.songRole ?? null);
@@ -332,6 +349,29 @@ export function MessageDeskDialog({
     },
   });
 
+  const [sliceLyric] = useMutation<
+    { sliceLyric: { source: ILyric; created: ILyric } },
+    {
+      id: number;
+      ranges: { afterLine: number; untilLine: number }[];
+      ripDonor: boolean;
+    }
+  >(SLICE_LYRIC, {
+    refetchQueries: [{ query: LYRIC_COLLAGES }],
+    update(cache, { data }) {
+      if (!data?.sliceLyric) {
+        return;
+      }
+
+      updateLyricsCacheAfterSlice(
+        cache,
+        data.sliceLyric.source,
+        data.sliceLyric.created,
+        queryVariables
+      );
+    },
+  });
+
   const tags = lyric?.message?.hashtags?.tags ?? [];
   const reactionEmojis = (lyric?.message?.reactions?.emojis ?? [])
     .map((entry) => entry.emoji)
@@ -372,6 +412,10 @@ export function MessageDeskDialog({
   const enterSplitMode = () => {
     setTextError(null);
     setAfterLine(defaultAfterLine(sourceText));
+    setUntilLine(null);
+    setSliceChunks([]);
+    setSlicePrompt(false);
+    setMoreOpen(false);
     setTextMode('split');
   };
 
@@ -379,6 +423,28 @@ export function MessageDeskDialog({
     setTextMode('view');
     setTextError(null);
     setSplitPick(null);
+    setSlicePrompt(false);
+    setUntilLine(null);
+    setSliceChunks([]);
+  };
+
+  const toggleSecondCut = () => {
+    setTextError(null);
+
+    if (untilLine !== null) {
+      setUntilLine(null);
+      return;
+    }
+
+    setUntilLine(defaultUntilLine(sourceText, afterLine));
+  };
+
+  const handleAfterLineChange = (next: number) => {
+    setAfterLine(next);
+
+    if (untilLine !== null && untilLine <= next) {
+      setUntilLine(defaultUntilLine(sourceText, next));
+    }
   };
 
   const clearTextHold = () => {
@@ -484,6 +550,32 @@ export function MessageDeskDialog({
     setSplitPick(lyricHalves(sourceText, afterLine));
   };
 
+  const addSliceChunk = () => {
+    if (
+      untilLine === null ||
+      !isValidLineRange(sourceText, afterLine, untilLine)
+    ) {
+      return;
+    }
+
+    const range = { afterLine, untilLine };
+
+    if (rangeConflictsWithChunks(range, sliceChunks)) {
+      setTextError('Эта зона уже в списке кусков');
+      return;
+    }
+
+    const chunk: SliceChunk = {
+      id: `${afterLine}-${untilLine}-${Date.now()}`,
+      afterLine,
+      untilLine,
+      text: lyricRangeText(sourceText, afterLine, untilLine),
+    };
+
+    setTextError(null);
+    setSliceChunks((prev) => [...prev, chunk]);
+  };
+
   const chooseSplitPart = (part: 'top' | 'bottom') => {
     if (!lyric) {
       return;
@@ -510,6 +602,56 @@ export function MessageDeskDialog({
         setTextError(errorMessage(error, 'Не удалось разрезать фразу'));
       });
   };
+
+  const confirmSlice = (ripDonor: boolean) => {
+    if (!lyric || sliceChunks.length === 0) {
+      return;
+    }
+
+    setTextError(null);
+
+    void sliceLyric({
+      variables: {
+        id: lyric.id,
+        ranges: sliceChunks.map(({ afterLine: a, untilLine: u }) => ({
+          afterLine: a,
+          untilLine: u,
+        })),
+        ripDonor,
+      },
+    })
+      .then((result) => {
+        const payload = result.data?.sliceLyric;
+
+        if (!payload) {
+          return;
+        }
+
+        onLyricChange?.(payload.source);
+        setSlicePrompt(false);
+        setSliceChunks([]);
+        setUntilLine(null);
+        setTextMode('view');
+      })
+      .catch((error: unknown) => {
+        setSlicePrompt(false);
+        setTextError(errorMessage(error, 'Не удалось сохранить куски'));
+      });
+  };
+
+  const takenLineIndexes = sliceChunks.flatMap((chunk) => {
+    const indexes: number[] = [];
+
+    for (
+      let index = chunk.afterLine + 1;
+      index <= chunk.untilLine;
+      index += 1
+    ) {
+      indexes.push(index);
+    }
+
+    return indexes;
+  });
 
   const persistProfile = (pending: {
     id: number;
@@ -769,12 +911,33 @@ export function MessageDeskDialog({
               ) : null}
 
               {textMode === 'split' ? (
-                <SplitTextView
-                  text={sourceText}
-                  afterLine={afterLine}
-                  onAfterLineChange={setAfterLine}
-                  onHold={exitSplitMode}
-                />
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:gap-4">
+                  <div className="min-w-0 flex-1">
+                    <SplitTextView
+                      text={sourceText}
+                      afterLine={afterLine}
+                      untilLine={untilLine}
+                      takenLineIndexes={takenLineIndexes}
+                      onAfterLineChange={handleAfterLineChange}
+                      onUntilLineChange={setUntilLine}
+                      onToggleSecondCut={toggleSecondCut}
+                      onHold={exitSplitMode}
+                    />
+                  </div>
+                  {untilLine !== null || sliceChunks.length > 0 ? (
+                    <div className="w-full shrink-0 lg:w-56">
+                      <SliceChunkList
+                        chunks={sliceChunks}
+                        onReorder={setSliceChunks}
+                        onRemove={(id) => {
+                          setSliceChunks((prev) =>
+                            prev.filter((chunk) => chunk.id !== id)
+                          );
+                        }}
+                      />
+                    </div>
+                  ) : null}
+                </div>
               ) : textMode === 'edit' ? (
                 <div className="relative">
                   <textarea
@@ -965,7 +1128,56 @@ export function MessageDeskDialog({
         {textMode === 'edit' ? null : (
           <DialogFooter className="flex shrink-0 flex-col gap-2 pt-1 sm:gap-3">
             {tab === 'text' && textMode === 'split' ? (
-              <div className="flex justify-end gap-1">
+              <div className="flex w-full flex-wrap items-center justify-between gap-1">
+                <div className="flex flex-wrap gap-1">
+                  {untilLine === null ? (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="gap-2"
+                      disabled={!isValidAfterLine(sourceText, afterLine)}
+                      onClick={openSplitPick}
+                    >
+                      <Scissors className="size-4 text-sky-400" aria-hidden />
+                      Разрезать
+                    </Button>
+                  ) : (
+                    <>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        className="gap-2"
+                        disabled={
+                          !isValidLineRange(sourceText, afterLine, untilLine) ||
+                          rangeConflictsWithChunks(
+                            { afterLine, untilLine },
+                            sliceChunks
+                          )
+                        }
+                        onClick={addSliceChunk}
+                      >
+                        <Scissors className="size-4 text-sky-400" aria-hidden />
+                        В список
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        className="gap-2"
+                        disabled={sliceChunks.length === 0}
+                        onClick={() => {
+                          setTextError(null);
+                          setSlicePrompt(true);
+                        }}
+                      >
+                        <Check
+                          className="size-4 text-emerald-400"
+                          aria-hidden
+                        />
+                        Сохранить
+                      </Button>
+                    </>
+                  )}
+                </div>
                 <Button
                   type="button"
                   variant="ghost"
@@ -975,158 +1187,154 @@ export function MessageDeskDialog({
                   <X className="size-4 text-rose-400" aria-hidden />
                   Отмена
                 </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="gap-2"
-                  disabled={!isValidAfterLine(sourceText, afterLine)}
-                  onClick={openSplitPick}
-                >
-                  <Scissors className="size-4 text-sky-400" aria-hidden />
-                  Разделить
-                </Button>
               </div>
-            ) : null}
-            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-row sm:flex-wrap sm:justify-start sm:gap-3 lg:justify-between w-full">
-              <Button
-                type="button"
-                variant={flags.isFavorite ? 'ghost' : 'ghost'}
-                disabled={!lyric}
-                className="gap-2 sm:h-10"
-                onClick={() => patchFlags({ isFavorite: !flags.isFavorite })}
-              >
-                <Star
-                  className={cn(
-                    'size-4',
-                    flags.isFavorite && 'fill-amber-400 text-amber-400'
-                  )}
-                  aria-hidden
-                />
-                <span className="sm:hidden">Избранное</span>
-                <span className="hidden sm:inline">
-                  {flags.isFavorite ? 'Избранное' : 'Избранное'}
-                </span>
-              </Button>
-
-              <Button
-                type="button"
-                variant={flags.isReference ? 'ghost' : 'ghost'}
-                disabled={!lyric}
-                className="gap-2 sm:h-10"
-                onClick={() => patchFlags({ isReference: !flags.isReference })}
-              >
-                <Sparkles
-                  className={cn(
-                    'size-4',
-                    flags.isReference && 'fill-violet-400 text-violet-400'
-                  )}
-                  aria-hidden
-                />
-                {flags.isReference ? (
-                  <>
-                    <span className="sm:hidden">Эталон</span>
-                    <span className="hidden sm:inline">Эталон</span>
-                  </>
-                ) : (
-                  'Эталон'
-                )}
-              </Button>
-
-              <Button
-                type="button"
-                variant={flags.isHidden ? 'ghost' : 'ghost'}
-                disabled={!lyric}
-                className="gap-2 sm:h-10"
-                onClick={() => patchFlags({ isHidden: !flags.isHidden })}
-              >
-                <EyeOff
-                  className={cn('size-4', flags.isHidden && 'text-rose-400')}
-                  aria-hidden
-                />
-                <span className="sm:hidden">
-                  {flags.isHidden ? 'Скрыто' : 'Скрыть'}
-                </span>
-                <span className="hidden sm:inline">
-                  {flags.isHidden ? 'Скрыть' : 'Скрыть'}
-                </span>
-              </Button>
-
-              <div ref={moreMenuRef} className="relative w-full sm:w-auto ml-auto">
+            ) : (
+              <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-row sm:flex-wrap sm:justify-start sm:gap-3 lg:justify-between w-full">
                 <Button
                   type="button"
-                  variant="ghost"
+                  variant={flags.isFavorite ? 'ghost' : 'ghost'}
                   disabled={!lyric}
-                  aria-expanded={moreOpen}
-                  aria-haspopup="menu"
-                  className="relative w-full gap-2 sm:h-10 sm:w-auto"
-                  onClick={() => setMoreOpen((openMenu) => !openMenu)}
+                  className="gap-2 sm:h-10"
+                  onClick={() => patchFlags({ isFavorite: !flags.isFavorite })}
                 >
-                  <MoreHorizontal className="size-4" aria-hidden />
-                  {flags.isCensored || flags.isDonor ? (
-                    <>
-                      <span
-                        className="bg-primary absolute top-1.5 right-1.5 size-1.5 rounded-full"
-                        aria-hidden
-                      />
-                      <span className="sr-only">есть метки</span>
-                    </>
-                  ) : null}
+                  <Star
+                    className={cn(
+                      'size-4',
+                      flags.isFavorite && 'fill-amber-400 text-amber-400'
+                    )}
+                    aria-hidden
+                  />
+                  <span className="sm:hidden">Избранное</span>
+                  <span className="hidden sm:inline">
+                    {flags.isFavorite ? 'Избранное' : 'Избранное'}
+                  </span>
                 </Button>
-                {moreOpen ? (
-                  <div
-                    role="menu"
-                    className="bg-popover text-popover-foreground absolute inset-x-0 bottom-full z-10 mb-1 rounded-md border p-1 shadow-md sm:inset-x-auto sm:right-0 sm:min-w-[12rem]"
+
+                <Button
+                  type="button"
+                  variant={flags.isReference ? 'ghost' : 'ghost'}
+                  disabled={!lyric}
+                  className="gap-2 sm:h-10"
+                  onClick={() =>
+                    patchFlags({ isReference: !flags.isReference })
+                  }
+                >
+                  <Sparkles
+                    className={cn(
+                      'size-4',
+                      flags.isReference && 'fill-violet-400 text-violet-400'
+                    )}
+                    aria-hidden
+                  />
+                  {flags.isReference ? (
+                    <>
+                      <span className="sm:hidden">Эталон</span>
+                      <span className="hidden sm:inline">Эталон</span>
+                    </>
+                  ) : (
+                    'Эталон'
+                  )}
+                </Button>
+
+                <Button
+                  type="button"
+                  variant={flags.isHidden ? 'ghost' : 'ghost'}
+                  disabled={!lyric}
+                  className="gap-2 sm:h-10"
+                  onClick={() => patchFlags({ isHidden: !flags.isHidden })}
+                >
+                  <EyeOff
+                    className={cn('size-4', flags.isHidden && 'text-rose-400')}
+                    aria-hidden
+                  />
+                  <span className="sm:hidden">
+                    {flags.isHidden ? 'Скрыто' : 'Скрыть'}
+                  </span>
+                  <span className="hidden sm:inline">
+                    {flags.isHidden ? 'Скрыть' : 'Скрыть'}
+                  </span>
+                </Button>
+
+                <div
+                  ref={moreMenuRef}
+                  className="relative w-full sm:w-auto ml-auto"
+                >
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    disabled={!lyric}
+                    aria-expanded={moreOpen}
+                    aria-haspopup="menu"
+                    className="relative w-full gap-2 sm:h-10 sm:w-auto"
+                    onClick={() => setMoreOpen((openMenu) => !openMenu)}
                   >
-                    <button
-                      type="button"
-                      role="menuitemcheckbox"
-                      aria-checked={flags.isCensored}
-                      className="hover:bg-accent flex w-full items-center gap-2 rounded-sm px-2 py-2 text-left text-sm"
-                      onClick={() =>
-                        patchFlags({ isCensored: !flags.isCensored })
-                      }
-                    >
-                      <Ban
-                        className={cn(
-                          'size-4',
-                          flags.isCensored && 'text-rose-400'
-                        )}
-                        aria-hidden
-                      />
-                      Цензура
-                      {flags.isCensored ? (
+                    <MoreHorizontal className="size-4" aria-hidden />
+                    {flags.isCensored || flags.isDonor ? (
+                      <>
                         <span
-                          className="bg-rose-400 ml-auto size-1.5 rounded-full"
+                          className="bg-primary absolute top-1.5 right-1.5 size-1.5 rounded-full"
                           aria-hidden
                         />
-                      ) : null}
-                    </button>
-                    <button
-                      type="button"
-                      role="menuitemcheckbox"
-                      aria-checked={flags.isDonor}
-                      className="hover:bg-accent flex w-full items-center gap-2 rounded-sm px-2 py-2 text-left text-sm"
-                      onClick={() => patchFlags({ isDonor: !flags.isDonor })}
+                        <span className="sr-only">есть метки</span>
+                      </>
+                    ) : null}
+                  </Button>
+                  {moreOpen ? (
+                    <div
+                      role="menu"
+                      className="bg-popover text-popover-foreground absolute inset-x-0 bottom-full z-10 mb-1 rounded-md border p-1 shadow-md sm:inset-x-auto sm:right-0 sm:min-w-[12rem]"
                     >
-                      <Split
-                        className={cn(
-                          'size-4',
-                          flags.isDonor && 'text-sky-400'
-                        )}
-                        aria-hidden
-                      />
-                      Донор
-                      {flags.isDonor ? (
-                        <span
-                          className="bg-sky-400 ml-auto size-1.5 rounded-full"
+                      <button
+                        type="button"
+                        role="menuitemcheckbox"
+                        aria-checked={flags.isCensored}
+                        className="hover:bg-accent flex w-full items-center gap-2 rounded-sm px-2 py-2 text-left text-sm"
+                        onClick={() =>
+                          patchFlags({ isCensored: !flags.isCensored })
+                        }
+                      >
+                        <Ban
+                          className={cn(
+                            'size-4',
+                            flags.isCensored && 'text-rose-400'
+                          )}
                           aria-hidden
                         />
-                      ) : null}
-                    </button>
-                  </div>
-                ) : null}
+                        Цензура
+                        {flags.isCensored ? (
+                          <span
+                            className="bg-rose-400 ml-auto size-1.5 rounded-full"
+                            aria-hidden
+                          />
+                        ) : null}
+                      </button>
+                      <button
+                        type="button"
+                        role="menuitemcheckbox"
+                        aria-checked={flags.isDonor}
+                        className="hover:bg-accent flex w-full items-center gap-2 rounded-sm px-2 py-2 text-left text-sm"
+                        onClick={() => patchFlags({ isDonor: !flags.isDonor })}
+                      >
+                        <Split
+                          className={cn(
+                            'size-4',
+                            flags.isDonor && 'text-sky-400'
+                          )}
+                          aria-hidden
+                        />
+                        Донор
+                        {flags.isDonor ? (
+                          <span
+                            className="bg-sky-400 ml-auto size-1.5 rounded-full"
+                            aria-hidden
+                          />
+                        ) : null}
+                      </button>
+                    </div>
+                  ) : null}
+                </div>
               </div>
-            </div>
+            )}
           </DialogFooter>
         )}
 
@@ -1164,6 +1372,42 @@ export function MessageDeskDialog({
                 {previewLyricHalf(splitPick.bottom)}
               </span>
             </Button>
+          </div>
+        ) : null}
+
+        {slicePrompt ? (
+          <div
+            className="bg-background/95 absolute inset-0 z-20 flex flex-col justify-end gap-3 p-6"
+            onClick={(event) => {
+              if (event.target === event.currentTarget) {
+                setSlicePrompt(false);
+              }
+            }}
+          >
+            <p className="text-lg font-semibold">Вырезать из донора?</p>
+            <p className="text-muted-foreground text-sm">
+              Новая запись соберётся из кусков. Можно оставить исходный текст
+              как был или вырезать взятое.
+            </p>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Button type="button" onClick={() => confirmSlice(false)}>
+                Оставить
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => confirmSlice(true)}
+              >
+                Вырезать
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => setSlicePrompt(false)}
+              >
+                Отмена
+              </Button>
+            </div>
           </div>
         ) : null}
 

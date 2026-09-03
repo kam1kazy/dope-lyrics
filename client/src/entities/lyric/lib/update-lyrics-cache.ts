@@ -302,6 +302,15 @@ export function updateLyricsCacheAfterSplit(
   });
 }
 
+export function updateLyricsCacheAfterSlice(
+  cache: ApolloCache,
+  source: ILyric,
+  created: ILyric,
+  queryVariables: LyricsQueryVariables
+) {
+  updateLyricsCacheAfterSplit(cache, source, created, queryVariables);
+}
+
 export function prependLyricToLyricsCache(
   cache: ApolloCache,
   lyric: ILyric,

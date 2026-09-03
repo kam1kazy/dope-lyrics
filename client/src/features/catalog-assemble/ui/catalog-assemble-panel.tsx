@@ -15,7 +15,7 @@ import {
   type ILyricCollage,
   LIKE_COLLAGE,
   LYRIC_COLLAGES,
-  type TrackFormPreset,
+  type TrackFormQuotas,
   UNLIKE_COLLAGE,
 } from '@/entities/lyric';
 import type { CatalogSectionFilters } from '@/shared/lib/catalog-section-filters';
@@ -98,13 +98,13 @@ function slotsToInput(slots: IAssembledTrackSlot[]) {
 }
 
 export function CatalogAssemblePanel({
-  preset,
+  form,
   hideAdlibs,
   filters,
   selectedCollage,
   onCloseSelected,
 }: {
-  preset: TrackFormPreset;
+  form: TrackFormQuotas;
   hideAdlibs: boolean;
   filters: CatalogSectionFilters;
   selectedCollage: ILyricCollage | null;
@@ -217,7 +217,7 @@ export function CatalogAssemblePanel({
   const handleAssemble = async () => {
     const result = await assemble({
       variables: {
-        preset,
+        form,
         hideAdlibs,
         filter: assembleTrackFilterFromSection(filters),
       },
@@ -316,10 +316,9 @@ export function CatalogAssemblePanel({
           <div className="flex flex-col gap-3">
             <p className="text-lg font-semibold">Оригиналы скрыть?</p>
             <p className="text-muted-foreground text-sm">
-              Сборка станет одной записью каталога. 
+              Сборка станет одной записью каталога.
               <br />
-              При «Скрыть» доноров спрячем
-              и вырежем взятые куски.
+              При «Скрыть» доноров спрячем и вырежем взятые куски.
               <br />
               <br />
             </p>
@@ -347,7 +346,7 @@ export function CatalogAssemblePanel({
               <Button
                 type="button"
                 variant="ghost"
-                className='ml-auto'
+                className="ml-auto"
                 disabled={glueLoading}
                 onClick={() => {
                   setGluePromptOpen(false);
@@ -404,7 +403,7 @@ export function CatalogAssemblePanel({
                 <Button
                   type="button"
                   size="sm"
-                  variant='outline'
+                  variant="outline"
                   disabled={assembleLoading}
                   onClick={() => {
                     void handleAssemble();

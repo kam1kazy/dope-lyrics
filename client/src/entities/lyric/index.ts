@@ -10,6 +10,7 @@ export {
   LYRIC_EMOJIS,
   LYRIC_INGEST_PREVIEW,
   LYRIC_TAGS,
+  SLICE_LYRIC,
   SPLIT_LYRIC,
   UNLIKE_COLLAGE,
   UPDATE_LYRIC_FLAGS,
@@ -34,6 +35,7 @@ export {
 export {
   prependLyricToLyricsCache,
   updateLyricsCacheAfterFlagsChange,
+  updateLyricsCacheAfterSlice,
   updateLyricsCacheAfterSplit,
   updateLyricsCacheAfterTextChange,
 } from './lib/update-lyrics-cache';
@@ -55,6 +57,7 @@ export type {
   IUserLyric,
   LyricSlide,
   TrackFormPreset,
+  TrackFormQuotas,
 } from './model/types';
 export { FacetChipGroup } from './ui/facet-chip-group';
 export { LyricItem } from './ui/lyric-item';

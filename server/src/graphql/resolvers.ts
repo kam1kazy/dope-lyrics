@@ -62,6 +62,12 @@ type SplitLyricArgs = {
   afterLine: number;
 };
 
+type SliceLyricArgs = {
+  id: number;
+  ranges: { afterLine: number; untilLine: number }[];
+  ripDonor: boolean;
+};
+
 type AssembleTrackFilter = {
   tags?: string[] | null;
   keyword?: string | null;
@@ -81,7 +87,7 @@ type AssembleTrackFilter = {
 };
 
 type AssembleTrackArgs = {
-  preset?: string | null;
+  form?: unknown;
   hideAdlibs?: boolean | null;
   filter?: AssembleTrackFilter | null;
 };
@@ -191,7 +197,7 @@ export const resolvers = {
       args: AssembleTrackArgs,
       _context: GraphQLContext
     ) => {
-      return lyricsService.assembleTrack(args.preset, args.filter);
+      return lyricsService.assembleTrack(args.form, args.filter);
     },
     lyricCollages: (
       _parent: unknown,
@@ -240,6 +246,17 @@ export const resolvers = {
       _context: GraphQLContext
     ) => {
       return lyricsService.splitLyric(args.id, args.afterLine);
+    },
+    sliceLyric: (
+      _parent: unknown,
+      args: SliceLyricArgs,
+      _context: GraphQLContext
+    ) => {
+      return lyricsService.sliceLyric(
+        args.id,
+        args.ranges,
+        Boolean(args.ripDonor)
+      );
     },
     ingestPendingLyrics: (
       _parent: unknown,

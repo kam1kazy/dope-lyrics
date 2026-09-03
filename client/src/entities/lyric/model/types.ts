@@ -87,6 +87,13 @@ export type ICatalogStats = {
 
 export type TrackFormPreset = 'HIT' | 'CANVAS';
 
+export type TrackFormQuotas = {
+  intro: number;
+  verse: number;
+  hook: number;
+  bridge: number;
+};
+
 export type IAssembledTrackPart = {
   lyricId: number;
   startLine: number;
