@@ -33,10 +33,12 @@ export default function RootLayout({
   return (
     <html lang="ru" suppressHydrationWarning>
       <body className={`${inter.variable} antialiased`}>
-        <Script
-          src="https://telegram.org/js/telegram-web-app.js"
-          strategy="beforeInteractive"
-        />
+        {process.env.NODE_ENV === 'production' ? (
+          <Script
+            src="https://telegram.org/js/telegram-web-app.js"
+            strategy="afterInteractive"
+          />
+        ) : null}
         {children}
       </body>
     </html>

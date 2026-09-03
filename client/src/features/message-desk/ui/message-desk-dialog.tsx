@@ -39,7 +39,9 @@ import {
   canSplitLyricText,
   defaultAfterLine,
   isValidAfterLine,
+  lyricHalves,
   previewLyricHalf,
+  splitLyricLines,
 } from '@/features/message-desk/lib/lyric-text-lines';
 import { SplitTextView } from '@/features/message-desk/ui/split-text-view';
 import { usePlayback } from '@/shared/lib/playback/playback-context';
@@ -79,6 +81,8 @@ type FlagFields = Pick<
 >;
 
 const PROFILE_SAVE_DEBOUNCE_MS = 280;
+const SPLIT_HOLD_MS = 500;
+const SPLIT_HOLD_MOVE_PX = 10;
 
 function lyricTypename(id: number, lyricId: number | undefined) {
   return {
@@ -103,11 +107,14 @@ export function MessageDeskDialog({
   const [draftText, setDraftText] = useState('');
   const [textError, setTextError] = useState<string | null>(null);
   const [splitPick, setSplitPick] = useState<{
-    top: ILyric;
-    bottom: ILyric;
+    top: string;
+    bottom: string;
   } | null>(null);
   const [discardPrompt, setDiscardPrompt] = useState<DiscardPrompt>(null);
   const lastTextTapRef = useRef(0);
+  const holdTimerRef = useRef<number | null>(null);
+  const holdOriginRef = useRef<{ x: number; y: number } | null>(null);
+  const holdConsumedRef = useRef(false);
   const [deskTitle, setDeskTitle] = useState('Сообщение');
   const [activeSongRole, setActiveSongRole] = useState<LyricSongRole | null>(
     null
@@ -139,6 +146,14 @@ export function MessageDeskDialog({
       setActiveSongRole(null);
     }
   }, [open]);
+
+  useEffect(() => {
+    return () => {
+      if (holdTimerRef.current !== null) {
+        window.clearTimeout(holdTimerRef.current);
+      }
+    };
+  }, []);
 
   useLayoutEffect(() => {
     if (!open) {
@@ -312,6 +327,47 @@ export function MessageDeskDialog({
   const exitSplitMode = () => {
     setTextMode('view');
     setTextError(null);
+    setSplitPick(null);
+  };
+
+  const clearTextHold = () => {
+    if (holdTimerRef.current !== null) {
+      window.clearTimeout(holdTimerRef.current);
+      holdTimerRef.current = null;
+    }
+
+    holdOriginRef.current = null;
+  };
+
+  const startTextHold = (clientX: number, clientY: number) => {
+    if (!canSplit) {
+      return;
+    }
+
+    clearTextHold();
+    holdOriginRef.current = { x: clientX, y: clientY };
+    holdTimerRef.current = window.setTimeout(() => {
+      holdTimerRef.current = null;
+      holdOriginRef.current = null;
+      lastTextTapRef.current = 0;
+      holdConsumedRef.current = true;
+      enterSplitMode();
+    }, SPLIT_HOLD_MS);
+  };
+
+  const moveTextHold = (clientX: number, clientY: number) => {
+    const origin = holdOriginRef.current;
+
+    if (!origin) {
+      return;
+    }
+
+    const dx = clientX - origin.x;
+    const dy = clientY - origin.y;
+
+    if (dx * dx + dy * dy > SPLIT_HOLD_MOVE_PX * SPLIT_HOLD_MOVE_PX) {
+      clearTextHold();
+    }
   };
 
   const enterEditMode = () => {
@@ -368,7 +424,16 @@ export function MessageDeskDialog({
     discardEdit();
   };
 
-  const confirmSplit = () => {
+  const openSplitPick = () => {
+    if (!isValidAfterLine(sourceText, afterLine)) {
+      return;
+    }
+
+    setTextError(null);
+    setSplitPick(lyricHalves(sourceText, afterLine));
+  };
+
+  const chooseSplitPart = (part: 'top' | 'bottom') => {
     if (!lyric) {
       return;
     }
@@ -385,21 +450,14 @@ export function MessageDeskDialog({
           return;
         }
 
+        onLyricChange?.(part === 'top' ? payload.top : payload.bottom);
+        setSplitPick(null);
         setTextMode('view');
-        setSplitPick(payload);
       })
       .catch((error: unknown) => {
+        setSplitPick(null);
         setTextError(errorMessage(error, 'Не удалось разрезать фразу'));
       });
-  };
-
-  const chooseSplitPart = (part: 'top' | 'bottom') => {
-    if (!splitPick) {
-      return;
-    }
-
-    onLyricChange?.(part === 'top' ? splitPick.top : splitPick.bottom);
-    setSplitPick(null);
   };
 
   const persistProfile = (pending: {
@@ -535,6 +593,11 @@ export function MessageDeskDialog({
           return;
         }
 
+        if (!nextOpen && splitPick) {
+          setSplitPick(null);
+          return;
+        }
+
         if (!nextOpen) {
           suppressToggle();
           flushPendingProfile();
@@ -547,7 +610,7 @@ export function MessageDeskDialog({
       }}
     >
       <DialogContent
-        className="relative max-h-[min(85svh,640px)] gap-5 overflow-y-auto p-6 sm:max-w-xl sm:gap-7 sm:p-8 md:max-h-[min(88svh,800px)]"
+        className="flex max-h-[min(85svh,640px)] flex-col gap-5 overflow-hidden p-6 sm:max-w-xl sm:gap-6 sm:p-8 md:max-h-[min(88svh,800px)]"
         onClick={(event) => {
           event.stopPropagation();
         }}
@@ -570,7 +633,7 @@ export function MessageDeskDialog({
           suppressToggle();
         }}
       >
-        <DialogHeader className="gap-2 sm:gap-3 sm:pr-8">
+        <DialogHeader className="shrink-0 gap-2 sm:gap-3 sm:pr-8">
           <DialogTitle className="sm:text-xl">{deskTitle}</DialogTitle>
           <DialogDescription className="sm:text-base">
             {tab === 'text'
@@ -579,374 +642,397 @@ export function MessageDeskDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div
-          role="tablist"
-          aria-label="Разделы карточки"
-          className="bg-muted grid grid-cols-2 rounded-lg p-1 sm:p-1.5"
-        >
-          {(
-            [
-              { id: 'text', label: 'Текст' },
-              { id: 'profile', label: 'Профиль' },
-            ] as const
-          ).map(({ id, label }) => {
-            const selected = tab === id;
+        <div className="flex min-h-0 w-full flex-1 flex-col gap-3 overflow-y-auto sm:gap-4">
+          <div
+            role="tablist"
+            aria-label="Разделы карточки"
+            className="bg-muted grid w-full shrink-0 grid-cols-2 items-center rounded-lg p-1"
+          >
+            {(
+              [
+                { id: 'text', label: 'Текст' },
+                { id: 'profile', label: 'Профиль' },
+              ] as const
+            ).map(({ id, label }) => {
+              const selected = tab === id;
 
-            return (
-              <Button
-                key={id}
-                type="button"
-                role="tab"
-                aria-selected={selected}
-                variant="ghost"
-                className={cn(
-                  'h-8 rounded-md text-sm sm:h-10 sm:text-base',
-                  selected
-                    ? 'bg-background text-foreground shadow-sm'
-                    : 'text-muted-foreground'
-                )}
-                onClick={() => {
-                  if (id === tab) {
-                    return;
+              return (
+                <Button
+                  key={id}
+                  type="button"
+                  role="tab"
+                  size="sm"
+                  aria-selected={selected}
+                  variant="ghost"
+                  className={cn(
+                    'h-8 w-full rounded-md text-sm leading-none',
+                    selected
+                      ? 'bg-background text-foreground shadow-sm'
+                      : 'text-muted-foreground'
+                  )}
+                  onClick={() => {
+                    if (id === tab) {
+                      return;
+                    }
+
+                    if (isDraftDirty) {
+                      setDiscardPrompt('edit');
+                      return;
+                    }
+
+                    setTextMode('view');
+                    setTab(id);
+                  }}
+                >
+                  {label}
+                </Button>
+              );
+            })}
+          </div>
+
+          {lyric && tab === 'text' ? (
+            <div className="flex flex-col gap-3 sm:gap-4">
+              {tags.length > 0 ? (
+                <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                  {tags.map((tag) => (
+                    <Badge
+                      key={tag}
+                      variant="secondary"
+                      className="text-xs sm:px-2.5 sm:py-1 sm:text-sm"
+                    >
+                      #{tag}
+                    </Badge>
+                  ))}
+                </div>
+              ) : null}
+
+              {reactionEmojis.length > 0 ? (
+                <div
+                  className="text-muted-foreground flex flex-wrap gap-1.5 text-lg sm:gap-2 sm:text-xl"
+                  aria-label="Реакции"
+                >
+                  {reactionEmojis.map((emoji) => (
+                    <span key={emoji}>{emoji}</span>
+                  ))}
+                </div>
+              ) : null}
+
+              {textMode === 'split' ? (
+                <SplitTextView
+                  text={sourceText}
+                  afterLine={afterLine}
+                  onAfterLineChange={setAfterLine}
+                  onHold={exitSplitMode}
+                />
+              ) : textMode === 'edit' ? (
+                <div className="relative">
+                  <textarea
+                    value={draftText}
+                    rows={Math.max(splitLyricLines(draftText).length, 2)}
+                    onChange={(event) => setDraftText(event.target.value)}
+                    className="border-input bg-background w-full resize-none rounded-md border px-3 py-2 pr-20 text-sm leading-relaxed whitespace-pre-wrap sm:text-base sm:leading-7"
+                    aria-label="Текст фразы"
+                  />
+                  <div className="absolute top-2 right-2 flex gap-1">
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="ghost"
+                      className="size-8"
+                      onClick={saveEdit}
+                      aria-label="Сохранить"
+                    >
+                      <Check className="size-4" />
+                    </Button>
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="ghost"
+                      className="size-8"
+                      onClick={requestExitEdit}
+                      aria-label="Выйти без сохранения"
+                    >
+                      <X className="size-4" />
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <p
+                  className="text-sm leading-relaxed whitespace-pre-wrap sm:text-base sm:leading-7"
+                  onContextMenu={(event) => {
+                    if (canSplit) {
+                      event.preventDefault();
+                    }
+                  }}
+                  onPointerDown={(event) => {
+                    startTextHold(event.clientX, event.clientY);
+                  }}
+                  onPointerMove={(event) => {
+                    moveTextHold(event.clientX, event.clientY);
+                  }}
+                  onPointerUp={() => {
+                    clearTextHold();
+
+                    if (holdConsumedRef.current) {
+                      holdConsumedRef.current = false;
+                      return;
+                    }
+
+                    const now = Date.now();
+
+                    if (now - lastTextTapRef.current < 400) {
+                      lastTextTapRef.current = 0;
+                      enterEditMode();
+                      return;
+                    }
+
+                    lastTextTapRef.current = now;
+                  }}
+                  onPointerCancel={clearTextHold}
+                >
+                  {lyric.message?.text}
+                </p>
+              )}
+              {textError ? (
+                <p className="text-destructive text-sm">{textError}</p>
+              ) : null}
+            </div>
+          ) : null}
+
+          {lyric && tab === 'profile' ? (
+            <div className="flex flex-col gap-5 sm:gap-7">
+              <FacetChipGroup
+                label="Роль в песне"
+                options={LYRIC_SONG_ROLES}
+                labels={LYRIC_SONG_ROLE_LABELS}
+                hints={LYRIC_SONG_ROLE_HINTS}
+                value={profile.roleProfiles.map((item) => item.songRole)}
+                multiple
+                accent={activeSongRole}
+                size="desk"
+                onSelect={(role) => setActiveSongRole(role)}
+                onChange={(roles) => {
+                  let roleProfiles = profile.roleProfiles.filter((item) =>
+                    roles.includes(item.songRole)
+                  );
+
+                  for (const role of roles) {
+                    roleProfiles = upsertRoleProfile(roleProfiles, role, {
+                      mood: [],
+                      delivery: [],
+                    });
                   }
 
-                  if (isDraftDirty) {
-                    setDiscardPrompt('edit');
-                    return;
+                  if (activeSongRole && !roles.includes(activeSongRole)) {
+                    setActiveSongRole(roles[0] ?? null);
                   }
 
-                  setTextMode('view');
-                  setTab(id);
+                  patchProfile({ ...profile, roleProfiles });
                 }}
-              >
-                {label}
-              </Button>
-            );
-          })}
+              />
+              <FacetChipGroup
+                label="Настроение"
+                options={LYRIC_MOODS}
+                labels={LYRIC_MOOD_LABELS}
+                hints={LYRIC_MOOD_HINTS}
+                value={editingMood}
+                multiple
+                toggleOnClick
+                size="desk"
+                onChange={(mood) => {
+                  if (activeSongRole) {
+                    patchProfile({
+                      ...profile,
+                      roleProfiles: patchRoleProfile(
+                        profile.roleProfiles,
+                        activeSongRole,
+                        { mood }
+                      ),
+                    });
+                    return;
+                  }
+
+                  patchProfile({ ...profile, mood });
+                }}
+              />
+              <FacetChipGroup
+                label="Подача"
+                options={LYRIC_DELIVERIES}
+                labels={LYRIC_DELIVERY_LABELS}
+                hints={LYRIC_DELIVERY_HINTS}
+                value={editingDelivery}
+                multiple
+                toggleOnClick
+                size="desk"
+                onChange={(delivery) => {
+                  if (activeSongRole) {
+                    patchProfile({
+                      ...profile,
+                      roleProfiles: patchRoleProfile(
+                        profile.roleProfiles,
+                        activeSongRole,
+                        { delivery }
+                      ),
+                    });
+                    return;
+                  }
+
+                  patchProfile({ ...profile, delivery });
+                }}
+              />
+              <FacetChipGroup
+                label="Готовность"
+                options={LYRIC_READINESS}
+                labels={LYRIC_READINESS_LABELS}
+                hints={LYRIC_READINESS_HINTS}
+                value={profile.readiness ? [profile.readiness] : []}
+                multiple={false}
+                size="desk"
+                onChange={(next) => {
+                  const readiness = next[0] ?? null;
+                  patchProfile({ ...profile, readiness });
+
+                  if (readiness === 'READY' && !flags.isHidden) {
+                    patchFlags(
+                      { isHidden: true },
+                      { closeOnSuccess: true, onHidden: true }
+                    );
+                  }
+                }}
+              />
+              {profileError ? (
+                <p className="text-destructive text-sm">{profileError}</p>
+              ) : null}
+            </div>
+          ) : null}
         </div>
 
-        {lyric && tab === 'text' ? (
-          <div className="flex flex-col gap-4 sm:gap-6">
-            {tags.length > 0 ? (
-              <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                {tags.map((tag) => (
-                  <Badge
-                    key={tag}
-                    variant="secondary"
-                    className="text-xs sm:px-2.5 sm:py-1 sm:text-sm"
-                  >
-                    #{tag}
-                  </Badge>
-                ))}
-              </div>
-            ) : null}
-
-            {reactionEmojis.length > 0 ? (
-              <div
-                className="text-muted-foreground flex flex-wrap gap-1.5 text-lg sm:gap-2 sm:text-xl"
-                aria-label="Реакции"
-              >
-                {reactionEmojis.map((emoji) => (
-                  <span key={emoji}>{emoji}</span>
-                ))}
-              </div>
-            ) : null}
-
-            {textMode === 'split' ? (
-              <SplitTextView
-                text={sourceText}
-                afterLine={afterLine}
-                onAfterLineChange={setAfterLine}
-              />
-            ) : textMode === 'edit' ? (
-              <div className="relative">
-                <textarea
-                  value={draftText}
-                  onChange={(event) => setDraftText(event.target.value)}
-                  className="border-input bg-background min-h-40 w-full resize-y rounded-md border px-3 py-2 pr-20 pb-12 text-sm leading-relaxed whitespace-pre-wrap sm:text-base sm:leading-7"
-                  aria-label="Текст фразы"
-                />
-                <div className="absolute right-2 bottom-2 flex gap-1">
-                  <Button
-                    type="button"
-                    size="icon"
-                    variant="secondary"
-                    className="size-8"
-                    onClick={saveEdit}
-                    aria-label="Сохранить"
-                  >
-                    <Check className="size-4" />
-                  </Button>
-                  <Button
-                    type="button"
-                    size="icon"
-                    variant="outline"
-                    className="size-8"
-                    onClick={requestExitEdit}
-                    aria-label="Выйти без сохранения"
-                  >
-                    <X className="size-4" />
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <p
-                className="text-sm leading-relaxed whitespace-pre-wrap sm:text-base sm:leading-7"
-                onPointerUp={() => {
-                  const now = Date.now();
-
-                  if (now - lastTextTapRef.current < 400) {
-                    lastTextTapRef.current = 0;
-                    enterEditMode();
-                    return;
-                  }
-
-                  lastTextTapRef.current = now;
-                }}
-              >
-                {lyric.message?.text}
-              </p>
-            )}
-            {textError ? (
-              <p className="text-destructive text-sm">{textError}</p>
-            ) : null}
-          </div>
-        ) : null}
-
-        {lyric && tab === 'profile' ? (
-          <div className="flex flex-col gap-5 sm:gap-7">
-            <FacetChipGroup
-              label="Роль в песне"
-              options={LYRIC_SONG_ROLES}
-              labels={LYRIC_SONG_ROLE_LABELS}
-              hints={LYRIC_SONG_ROLE_HINTS}
-              value={profile.roleProfiles.map((item) => item.songRole)}
-              multiple
-              accent={activeSongRole}
-              size="desk"
-              onSelect={(role) => setActiveSongRole(role)}
-              onChange={(roles) => {
-                let roleProfiles = profile.roleProfiles.filter((item) =>
-                  roles.includes(item.songRole)
-                );
-
-                for (const role of roles) {
-                  roleProfiles = upsertRoleProfile(roleProfiles, role, {
-                    mood: [],
-                    delivery: [],
-                  });
-                }
-
-                if (activeSongRole && !roles.includes(activeSongRole)) {
-                  setActiveSongRole(roles[0] ?? null);
-                }
-
-                patchProfile({ ...profile, roleProfiles });
-              }}
-            />
-            <FacetChipGroup
-              label="Настроение"
-              options={LYRIC_MOODS}
-              labels={LYRIC_MOOD_LABELS}
-              hints={LYRIC_MOOD_HINTS}
-              value={editingMood}
-              multiple
-              toggleOnClick
-              size="desk"
-              onChange={(mood) => {
-                if (activeSongRole) {
-                  patchProfile({
-                    ...profile,
-                    roleProfiles: patchRoleProfile(
-                      profile.roleProfiles,
-                      activeSongRole,
-                      { mood }
-                    ),
-                  });
-                  return;
-                }
-
-                patchProfile({ ...profile, mood });
-              }}
-            />
-            <FacetChipGroup
-              label="Подача"
-              options={LYRIC_DELIVERIES}
-              labels={LYRIC_DELIVERY_LABELS}
-              hints={LYRIC_DELIVERY_HINTS}
-              value={editingDelivery}
-              multiple
-              toggleOnClick
-              size="desk"
-              onChange={(delivery) => {
-                if (activeSongRole) {
-                  patchProfile({
-                    ...profile,
-                    roleProfiles: patchRoleProfile(
-                      profile.roleProfiles,
-                      activeSongRole,
-                      { delivery }
-                    ),
-                  });
-                  return;
-                }
-
-                patchProfile({ ...profile, delivery });
-              }}
-            />
-            <FacetChipGroup
-              label="Готовность"
-              options={LYRIC_READINESS}
-              labels={LYRIC_READINESS_LABELS}
-              hints={LYRIC_READINESS_HINTS}
-              value={profile.readiness ? [profile.readiness] : []}
-              multiple={false}
-              size="desk"
-              onChange={(next) => {
-                const readiness = next[0] ?? null;
-                patchProfile({ ...profile, readiness });
-
-                if (readiness === 'READY' && !flags.isHidden) {
-                  patchFlags(
-                    { isHidden: true },
-                    { closeOnSuccess: true, onHidden: true }
-                  );
-                }
-              }}
-            />
-            {profileError ? (
-              <p className="text-destructive text-sm">{profileError}</p>
-            ) : null}
-          </div>
-        ) : null}
-
         {flagsError ? (
-          <p className="text-destructive text-sm">{flagsError}</p>
+          <p className="text-destructive shrink-0 text-sm">{flagsError}</p>
         ) : null}
 
-        <DialogFooter className="grid grid-cols-2 gap-2 pt-1 sm:flex sm:flex-row sm:flex-wrap sm:justify-start sm:gap-3">
-          {tab === 'text' && textMode !== 'edit' ? (
-            <Button
-              type="button"
-              variant={textMode === 'split' ? 'secondary' : 'outline'}
-              disabled={
-                !lyric ||
-                (textMode !== 'split' && !canSplit) ||
-                (textMode === 'split' &&
-                  !isValidAfterLine(sourceText, afterLine))
-              }
-              className="gap-2 sm:h-10"
-              onClick={() => {
-                if (textMode === 'split') {
-                  confirmSplit();
-                  return;
-                }
+        {textMode === 'edit' ? null : (
+          <DialogFooter className="flex shrink-0 flex-col gap-2 pt-1 sm:gap-3">
+            {tab === 'text' && textMode === 'split' ? (
+              <div className="flex justify-end gap-1">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="gap-2"
+                  onClick={exitSplitMode}
+                >
+                  <X className="size-4 text-rose-400" aria-hidden />
+                  Отмена
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="gap-2"
+                  disabled={!isValidAfterLine(sourceText, afterLine)}
+                  onClick={openSplitPick}
+                >
+                  <Scissors className="size-4 text-sky-400" aria-hidden />
+                  Разделить
+                </Button>
+              </div>
+            ) : null}
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-row sm:flex-wrap sm:justify-start sm:gap-3">
+              <Button
+                type="button"
+                variant={flags.isFavorite ? 'secondary' : 'outline'}
+                disabled={!lyric}
+                className="gap-2 sm:h-10"
+                onClick={() => patchFlags({ isFavorite: !flags.isFavorite })}
+              >
+                <Star
+                  className={cn(
+                    'size-4',
+                    flags.isFavorite && 'fill-amber-400 text-amber-400'
+                  )}
+                  aria-hidden
+                />
+                <span className="sm:hidden">Избранное</span>
+                <span className="hidden sm:inline">
+                  {flags.isFavorite ? 'Убрать из избранного' : 'В избранное'}
+                </span>
+              </Button>
 
-                enterSplitMode();
-              }}
-            >
-              <Scissors className="size-4" aria-hidden />
-              Разрезать
-            </Button>
-          ) : null}
-          {tab === 'text' && textMode === 'split' ? (
-            <Button
-              type="button"
-              variant="outline"
-              className="gap-2 sm:h-10"
-              onClick={exitSplitMode}
-            >
-              <X className="size-4" aria-hidden />
-              Отмена
-            </Button>
-          ) : null}
-          <Button
-            type="button"
-            variant={flags.isFavorite ? 'secondary' : 'outline'}
-            disabled={!lyric}
-            className="gap-2 sm:h-10"
-            onClick={() => patchFlags({ isFavorite: !flags.isFavorite })}
-          >
-            <Star
-              className={cn(
-                'size-4',
-                flags.isFavorite && 'fill-amber-400 text-amber-400'
-              )}
-              aria-hidden
-            />
-            <span className="sm:hidden">Избранное</span>
-            <span className="hidden sm:inline">
-              {flags.isFavorite ? 'Убрать из избранного' : 'В избранное'}
-            </span>
-          </Button>
+              <Button
+                type="button"
+                variant={flags.isReference ? 'secondary' : 'outline'}
+                disabled={!lyric}
+                className="gap-2 sm:h-10"
+                onClick={() => patchFlags({ isReference: !flags.isReference })}
+              >
+                <Sparkles
+                  className={cn(
+                    'size-4',
+                    flags.isReference && 'fill-violet-400 text-violet-400'
+                  )}
+                  aria-hidden
+                />
+                {flags.isReference ? (
+                  <>
+                    <span className="sm:hidden">Эталон</span>
+                    <span className="hidden sm:inline">Снять эталон</span>
+                  </>
+                ) : (
+                  'Эталон'
+                )}
+              </Button>
 
-          <Button
-            type="button"
-            variant={flags.isReference ? 'secondary' : 'outline'}
-            disabled={!lyric}
-            className="gap-2 sm:h-10"
-            onClick={() => patchFlags({ isReference: !flags.isReference })}
-          >
-            <Sparkles
-              className={cn(
-                'size-4',
-                flags.isReference && 'fill-violet-400 text-violet-400'
-              )}
-              aria-hidden
-            />
-            {flags.isReference ? (
-              <>
-                <span className="sm:hidden">Эталон</span>
-                <span className="hidden sm:inline">Снять эталон</span>
-              </>
-            ) : (
-              'Эталон'
-            )}
-          </Button>
+              <Button
+                type="button"
+                variant={flags.isCensored ? 'secondary' : 'outline'}
+                disabled={!lyric}
+                className="gap-2 sm:h-10"
+                onClick={() => patchFlags({ isCensored: !flags.isCensored })}
+              >
+                <Ban
+                  className={cn('size-4', flags.isCensored && 'text-rose-400')}
+                  aria-hidden
+                />
+                {flags.isCensored ? (
+                  <>
+                    <span className="sm:hidden">Цензура</span>
+                    <span className="hidden sm:inline">Снять цензуру</span>
+                  </>
+                ) : (
+                  'Цензура'
+                )}
+              </Button>
 
-          <Button
-            type="button"
-            variant={flags.isHidden ? 'secondary' : 'outline'}
-            disabled={!lyric}
-            className="gap-2 sm:h-10"
-            onClick={() => patchFlags({ isHidden: !flags.isHidden })}
-          >
-            <EyeOff
-              className={cn('size-4', flags.isHidden && 'text-rose-400')}
-              aria-hidden
-            />
-            <span className="sm:hidden">
-              {flags.isHidden ? 'Скрыто' : 'Скрыть'}
-            </span>
-            <span className="hidden sm:inline">
-              {flags.isHidden ? 'Вернуть в карусель' : 'Скрыть'}
-            </span>
-          </Button>
-
-          <Button
-            type="button"
-            variant={flags.isCensored ? 'secondary' : 'outline'}
-            disabled={!lyric}
-            className="gap-2 sm:h-10"
-            onClick={() => patchFlags({ isCensored: !flags.isCensored })}
-          >
-            <Ban
-              className={cn('size-4', flags.isCensored && 'text-rose-400')}
-              aria-hidden
-            />
-            {flags.isCensored ? (
-              <>
-                <span className="sm:hidden">Цензура</span>
-                <span className="hidden sm:inline">Снять цензуру</span>
-              </>
-            ) : (
-              'Цензура'
-            )}
-          </Button>
-        </DialogFooter>
+              <Button
+                type="button"
+                variant={flags.isHidden ? 'secondary' : 'outline'}
+                disabled={!lyric}
+                className="gap-2 sm:h-10"
+                onClick={() => patchFlags({ isHidden: !flags.isHidden })}
+              >
+                <EyeOff
+                  className={cn('size-4', flags.isHidden && 'text-rose-400')}
+                  aria-hidden
+                />
+                <span className="sm:hidden">
+                  {flags.isHidden ? 'Скрыто' : 'Скрыть'}
+                </span>
+                <span className="hidden sm:inline">
+                  {flags.isHidden ? 'Вернуть в карусель' : 'Скрыть'}
+                </span>
+              </Button>
+            </div>
+          </DialogFooter>
+        )}
 
         {splitPick ? (
-          <div className="bg-background/95 absolute inset-0 z-20 flex flex-col gap-4 overflow-y-auto p-6">
+          <div
+            className="bg-background/95 absolute inset-0 z-20 flex flex-col gap-4 overflow-y-auto p-6"
+            onClick={(event) => {
+              if (event.target === event.currentTarget) {
+                setSplitPick(null);
+              }
+            }}
+          >
             <p className="text-lg font-semibold">
               Какую часть оставить открытой?
             </p>
@@ -958,7 +1044,7 @@ export function MessageDeskDialog({
             >
               <span className="font-medium">Верх</span>
               <span className="text-muted-foreground text-sm">
-                {previewLyricHalf(splitPick.top.message?.text ?? '')}
+                {previewLyricHalf(splitPick.top)}
               </span>
             </Button>
             <Button
@@ -969,7 +1055,7 @@ export function MessageDeskDialog({
             >
               <span className="font-medium">Низ</span>
               <span className="text-muted-foreground text-sm">
-                {previewLyricHalf(splitPick.bottom.message?.text ?? '')}
+                {previewLyricHalf(splitPick.bottom)}
               </span>
             </Button>
           </div>

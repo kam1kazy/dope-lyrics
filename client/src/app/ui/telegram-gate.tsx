@@ -3,8 +3,8 @@
 import { type ReactNode, useEffect, useState } from 'react';
 
 import {
-  getTelegramInitData,
   prepareTelegramWebApp,
+  whenTelegramWebAppReady,
 } from '@/shared/lib/telegram-webapp';
 
 const isProductionBuild = process.env.NODE_ENV === 'production';
@@ -14,14 +14,28 @@ export function TelegramGate({ children }: { children: ReactNode }) {
   const [allowed, setAllowed] = useState(!isProductionBuild);
 
   useEffect(() => {
-    prepareTelegramWebApp();
-
     if (!isProductionBuild) {
       return;
     }
 
-    setAllowed(Boolean(getTelegramInitData()));
-    setReady(true);
+    let cancelled = false;
+
+    void whenTelegramWebAppReady().then((webApp) => {
+      if (cancelled) {
+        return;
+      }
+
+      if (webApp) {
+        prepareTelegramWebApp();
+      }
+
+      setAllowed(Boolean(webApp?.initData));
+      setReady(true);
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   if (!ready) {

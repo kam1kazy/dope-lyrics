@@ -294,7 +294,7 @@ export function CatalogMenu() {
                       setActiveSection(null);
                     }}
                   >
-                    Назад
+                    назад
                   </Button>
                   <h2 className="text-sm font-medium">
                     {SECTION_TITLES[activeSection]}

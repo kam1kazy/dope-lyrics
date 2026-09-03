@@ -48,6 +48,18 @@ export const defaultAfterLine = (text: string): number => {
   return candidates[Math.floor((candidates.length - 1) / 2)] ?? 0;
 };
 
+export const lyricHalves = (
+  text: string,
+  afterLine: number
+): { top: string; bottom: string } => {
+  const lines = splitLyricLines(text);
+
+  return {
+    top: lines.slice(0, afterLine + 1).join('\n'),
+    bottom: lines.slice(afterLine + 1).join('\n'),
+  };
+};
+
 export const previewLyricHalf = (text: string, maxLines = 4): string => {
   const lines = splitLyricLines(text).filter((line) => line.trim().length > 0);
 

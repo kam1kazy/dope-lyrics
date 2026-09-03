@@ -14,6 +14,7 @@
 - [x] 3.1 Режим разреза в `client/src/features/message-desk/ui/message-desk-dialog.tsx`: пунктир, ножницы, «Разрезать», отмена, диалог выбора части
 - [x] 3.2 Прокинуть выбранную фразу после разреза из стола в `client/src/widgets/lyric-list/ui/viewport.tsx` и `client/src/features/catalog-lyrics-list/ui/catalog-lyrics-list.tsx`
 - [x] 3.3 Правка: двойной тап, textarea, галка/крестик, диалог грязного выхода (существующий Dialog)
+- [x] 3.4 UX: линия overlay, вход зажатием, «Отмена / Разделить» текстом, выбор части до мутации, ghost в правке
 
 ## 4. Проверка
 
