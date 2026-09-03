@@ -12,7 +12,7 @@ import {
   Shuffle,
   Sparkles,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import type { ILyricCollage, TrackFormQuotas } from '@/entities/lyric';
 import {
@@ -79,11 +79,19 @@ const EMPTY_SECTION_FILTERS: Record<FilterableSection, CatalogSectionFilters> =
     demos: { ...DEFAULT_CATALOG_SECTION_FILTERS },
   };
 
+const SECTION_ANIMATION_MS = 200;
+const SECTION_TOGGLE_GUARD_MS = 500;
+
 export function CatalogMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<CatalogSection | null>(
     null
   );
+  const [renderedSection, setRenderedSection] = useState<CatalogSection | null>(
+    null
+  );
+  const activeSectionRef = useRef<CatalogSection | null>(null);
+  const sectionToggleGuardUntilRef = useRef(0);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [generatorForm, setGeneratorForm] = useState<TrackFormQuotas>(
@@ -131,6 +139,7 @@ export function CatalogMenu() {
       };
     }
 
+    activeSectionRef.current = null;
     setActiveSection(null);
     setFiltersOpen(false);
     setHistoryOpen(false);
@@ -138,15 +147,60 @@ export function CatalogMenu() {
     document.body.style.removeProperty('pointer-events');
   }, [beginOverlay, endOverlay, isOpen]);
 
-  const openSection = (section: CatalogSection) => {
+  useEffect(() => {
+    if (!isOpen) {
+      setRenderedSection(null);
+      return;
+    }
+
+    if (activeSection) {
+      setRenderedSection(activeSection);
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setRenderedSection(null);
+    }, SECTION_ANIMATION_MS);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [activeSection, isOpen]);
+
+  const selectSection = (section: CatalogSection) => {
+    const now = Date.now();
+    const current = activeSectionRef.current;
+    const changesWidth = current === null || current === section;
+
+    if (changesWidth && now < sectionToggleGuardUntilRef.current) {
+      return;
+    }
+
+    if (current === section) {
+      sectionToggleGuardUntilRef.current = now + SECTION_TOGGLE_GUARD_MS;
+      activeSectionRef.current = null;
+      setActiveSection(null);
+      setFiltersOpen(false);
+      setHistoryOpen(false);
+      return;
+    }
+
+    if (current === null) {
+      sectionToggleGuardUntilRef.current = now + SECTION_TOGGLE_GUARD_MS;
+    }
+
+    activeSectionRef.current = section;
     setActiveSection(section);
+    setRenderedSection(section);
     setFiltersOpen(false);
     setHistoryOpen(false);
   };
 
   const filterableSection: FilterableSection | null =
-    activeSection && activeSection !== 'stats' && activeSection !== 'generator'
-      ? activeSection
+    renderedSection &&
+    renderedSection !== 'stats' &&
+    renderedSection !== 'generator'
+      ? renderedSection
       : null;
   const sectionDefaults =
     filterableSection === 'list'
@@ -218,7 +272,7 @@ export function CatalogMenu() {
             ? 'max-w-[min(100%,60rem)]'
             : activeSection
               ? 'max-w-[min(100%,640px)]'
-              : 'max-sm:max-w-48 sm:max-w-[min(100%,640px)]'
+              : 'max-w-48'
         }
         onOpenChange={(open) => {
           if (!open) {
@@ -232,11 +286,11 @@ export function CatalogMenu() {
           suppressToggle();
         }}
       >
-        <div className="flex h-full min-h-0 w-full">
+        <div className="flex h-full min-h-0 w-full overflow-hidden">
           <nav
             data-swipe-ignore
             className={cn(
-              'border-border flex h-full w-48 shrink-0 flex-col gap-1 border-r p-3',
+              'border-border flex h-full w-48 shrink-0 flex-col gap-1 border-r p-3 select-none',
               activeSection && 'hidden sm:flex'
             )}
             aria-label="Разделы каталога"
@@ -256,6 +310,7 @@ export function CatalogMenu() {
                   )}
                   aria-disabled={disabled}
                   disabled={disabled}
+                  aria-pressed={isActive}
                   onClick={() => {
                     if (
                       disabled ||
@@ -265,7 +320,7 @@ export function CatalogMenu() {
                       return;
                     }
 
-                    openSection(id);
+                    selectSection(id);
                   }}
                 >
                   <Icon className="size-4 shrink-0" aria-hidden />
@@ -277,11 +332,12 @@ export function CatalogMenu() {
 
           <div
             className={cn(
-              'flex min-h-0 min-w-0 flex-1 flex-col',
-              !activeSection && 'hidden sm:flex'
+              'flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden',
+              !renderedSection && 'hidden',
+              !activeSection && 'max-sm:hidden'
             )}
           >
-            {activeSection ? (
+            {renderedSection ? (
               <>
                 <div className="border-border flex items-center gap-2 border-b px-4 py-3">
                   <Button
@@ -300,15 +356,16 @@ export function CatalogMenu() {
                         return;
                       }
 
+                      activeSectionRef.current = null;
                       setActiveSection(null);
                     }}
                   >
                     назад
                   </Button>
                   <h2 className="text-sm font-medium">
-                    {SECTION_TITLES[activeSection]}
+                    {SECTION_TITLES[renderedSection]}
                   </h2>
-                  {activeSection === 'generator' ? (
+                  {renderedSection === 'generator' ? (
                     <div className="ml-auto flex items-center gap-1">
                       <Button
                         type="button"
@@ -374,13 +431,13 @@ export function CatalogMenu() {
                     className="min-h-0 min-w-0 flex-1 overflow-y-auto"
                     data-lyrics-scroll
                   >
-                    {activeSection === 'list' ? (
+                    {renderedSection === 'list' ? (
                       <CatalogListPanel filters={sectionFilters} />
-                    ) : activeSection === 'favorites' ? (
+                    ) : renderedSection === 'favorites' ? (
                       <CatalogFavoritesPanel filters={sectionFilters} />
-                    ) : activeSection === 'demos' ? (
+                    ) : renderedSection === 'demos' ? (
                       <CatalogDemosPanel filters={sectionFilters} />
-                    ) : activeSection === 'generator' ? (
+                    ) : renderedSection === 'generator' ? (
                       <CatalogAssemblePanel
                         form={generatorForm}
                         hideAdlibs={hideAdlibs}
@@ -399,15 +456,15 @@ export function CatalogMenu() {
                     data-swipe-ignore
                     className={cn(
                       'border-border bg-background flex min-h-0 flex-col overflow-hidden',
-                      'max-sm:absolute max-sm:inset-0 max-sm:z-10 max-sm:transition-transform max-sm:duration-300 max-sm:ease-out',
-                      'sm:shrink-0 sm:transition-[width] sm:duration-300 sm:ease-out',
+                      'max-sm:absolute max-sm:inset-0 max-sm:z-10 max-sm:transition-transform max-sm:duration-200 max-sm:ease-out',
+                      'sm:shrink-0 sm:transition-[width] sm:duration-200 sm:ease-out',
                       sidePaneOpen
                         ? 'max-sm:translate-x-0 sm:w-80 sm:border-l'
                         : 'pointer-events-none max-sm:translate-x-full sm:w-0 sm:border-l-transparent'
                     )}
                   >
                     <div className="flex h-0 min-h-0 w-full flex-1 flex-col overflow-y-auto sm:w-80">
-                      {activeSection === 'generator' && historyOpen ? (
+                      {renderedSection === 'generator' && historyOpen ? (
                         <CatalogAssembleHistory
                           hideAdlibs={hideAdlibs}
                           selectedId={selectedCollage?.id ?? null}
@@ -421,7 +478,7 @@ export function CatalogMenu() {
                             }
                           }}
                         />
-                      ) : activeSection === 'generator' ? (
+                      ) : renderedSection === 'generator' ? (
                         <CatalogGeneratorPane
                           form={generatorForm}
                           hideAdlibs={hideAdlibs}
@@ -458,11 +515,7 @@ export function CatalogMenu() {
                   </div>
                 </div>
               </>
-            ) : (
-              <div className="text-muted-foreground hidden flex-1 items-center justify-center p-6 text-center text-sm sm:flex">
-                Выберите раздел
-              </div>
-            )}
+            ) : null}
           </div>
         </div>
       </CatalogPanel>

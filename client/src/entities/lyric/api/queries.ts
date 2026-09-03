@@ -182,6 +182,7 @@ export const CATALOG_STATS = gql`
   query CatalogStats {
     catalogStats {
       phraseCount
+      addedLastMonth
       references {
         count
         share
@@ -234,6 +235,20 @@ export const CATALOG_STATS = gql`
         count
       }
       readinessNone
+      themes {
+        kind
+        value
+        count
+      }
+    }
+  }
+`;
+
+export const CATALOG_ACTIVITY = gql`
+  query CatalogActivity($days: Int!) {
+    catalogActivity(days: $days) {
+      date
+      count
     }
   }
 `;

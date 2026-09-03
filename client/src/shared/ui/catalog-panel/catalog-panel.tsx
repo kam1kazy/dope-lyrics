@@ -30,7 +30,7 @@ export function CatalogPanel({
         />
         <DialogPrimitive.Content
           className={cn(
-            'bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left fixed inset-y-0 left-0 z-50 flex w-full max-w-[min(100%,640px)] overflow-hidden outline-none duration-300 ease-out transition-[max-width]',
+            'bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left fixed inset-y-0 left-0 z-50 flex w-full max-w-[min(100%,640px)] overflow-hidden outline-none duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] transition-[max-width]',
             className
           )}
           onClick={(event) => {

@@ -2,7 +2,12 @@ import { GraphQLError } from 'graphql';
 
 import { lyricInclude } from '~/graphql/lyric-include';
 import { prisma } from '~/infrastructure/prisma';
-import { buildCatalogStats } from '~/modules/lyrics/catalog-stats';
+import {
+  activityRangeStart,
+  buildCatalogActivity,
+  buildCatalogStats,
+  isCatalogActivityDays,
+} from '~/modules/lyrics/catalog-stats';
 import { listLyricDemos } from '~/modules/lyrics/lyric-demos';
 import {
   type LyricProfilePatch,
@@ -131,22 +136,55 @@ export class LyricsService {
   }
 
   async catalogStats() {
+    const monthAgo = new Date();
+    monthAgo.setUTCDate(monthAgo.getUTCDate() - 30);
+
+    const [rows, addedLastMonth] = await Promise.all([
+      this.prisma.lyrics.findMany({
+        select: {
+          isReference: true,
+          isFavorite: true,
+          isHidden: true,
+          isCensored: true,
+          isDonor: true,
+          songRole: true,
+          mood: true,
+          delivery: true,
+          roleProfiles: true,
+          readiness: true,
+        },
+      }),
+      this.prisma.lyrics.count({
+        where: {
+          date: { gte: monthAgo },
+        },
+      }),
+    ]);
+
+    return buildCatalogStats(rows, addedLastMonth);
+  }
+
+  async catalogActivity(daysRaw: number) {
+    if (!isCatalogActivityDays(daysRaw)) {
+      throw new GraphQLError('Период активности: только 7, 30 или 90 дней', {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
+    }
+
+    const start = activityRangeStart(daysRaw);
     const rows = await this.prisma.lyrics.findMany({
+      where: {
+        date: { gte: start },
+      },
       select: {
-        isReference: true,
-        isFavorite: true,
-        isHidden: true,
-        isCensored: true,
-        isDonor: true,
-        songRole: true,
-        mood: true,
-        delivery: true,
-        roleProfiles: true,
-        readiness: true,
+        date: true,
       },
     });
 
-    return buildCatalogStats(rows);
+    return buildCatalogActivity(
+      rows.map((row) => row.date),
+      daysRaw
+    );
   }
 
   async assembleTrack(

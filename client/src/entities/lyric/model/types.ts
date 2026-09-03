@@ -71,8 +71,22 @@ export type ICatalogUnscopedStats = {
   delivery: ICatalogDeliveryCount[];
 };
 
+export type CatalogThemeKind = 'MOOD' | 'DELIVERY';
+
+export type ICatalogThemeCount = {
+  kind: CatalogThemeKind;
+  value: string;
+  count: number;
+};
+
+export type ICatalogActivityPoint = {
+  date: string;
+  count: number;
+};
+
 export type ICatalogStats = {
   phraseCount: number;
+  addedLastMonth: number;
   references: ICatalogShelfStat;
   favorites: ICatalogShelfStat;
   hidden: ICatalogShelfStat;
@@ -83,6 +97,7 @@ export type ICatalogStats = {
   unscoped: ICatalogUnscopedStats;
   readiness: ICatalogReadinessCount[];
   readinessNone: number;
+  themes: ICatalogThemeCount[];
 };
 
 export type TrackFormPreset = 'HIT' | 'CANVAS';

@@ -132,11 +132,13 @@ function QueueActionButton({
   hint,
   disabled,
   onClick,
+  className,
   children,
 }: {
   hint: string;
   disabled: boolean;
   onClick: () => void;
+  className?: string;
   children: ReactNode;
 }) {
   return (
@@ -146,7 +148,7 @@ function QueueActionButton({
           type="button"
           variant="ghost"
           disabled={disabled}
-          className="h-10 gap-2 px-2"
+          className={cn('h-10 gap-2 px-2', className)}
           onClick={onClick}
         >
           {children}
@@ -167,7 +169,8 @@ export function MessageDeskDialog({
   showQueueActions = false,
 }: MessageDeskDialogProps) {
   const { suppressToggle, setPaused } = usePlayback();
-  const { addToQueue, playNow, clearQueue, queue } = useCarouselSession();
+  const { addToQueue, removeFromQueue, playNow, clearQueue, queue } =
+    useCarouselSession();
   const inQueue = lyric ? queue.some((item) => item.id === lyric.id) : false;
   const [tab, setTab] = useState<DeskTab>('text');
   const [textMode, setTextMode] = useState<TextMode>('view');
@@ -1393,27 +1396,35 @@ export function MessageDeskDialog({
                       disabled={!lyric}
                       onClick={() => {
                         clearQueue();
+                        toast('Карусель очищена');
                       }}
                     >
                       <ListX className="size-4 text-rose-400" aria-hidden />
                       Очистить
                     </QueueActionButton>
                     <QueueActionButton
-                      hint="В свою карусель — дальше только добавленные"
+                      hint={
+                        inQueue
+                          ? 'Убрать из своей карусели'
+                          : 'В свою карусель — дальше только добавленные'
+                      }
                       disabled={!lyric}
+                      className={cn(inQueue && 'bg-muted')}
                       onClick={() => {
                         if (!lyric) {
                           return;
                         }
 
+                        if (inQueue) {
+                          removeFromQueue(lyric.id);
+                          return;
+                        }
+
                         addToQueue(lyric);
-                        toast('Добавлено в карусель');
                       }}
                     >
                       <ListPlus className="size-4 text-sky-400" aria-hidden />
-                      <span className={cn(inQueue && 'underline')}>
-                        Добавить
-                      </span>
+                      Добавить
                     </QueueActionButton>
                     <QueueActionButton
                       hint="Поставить сверху и сразу запустить"

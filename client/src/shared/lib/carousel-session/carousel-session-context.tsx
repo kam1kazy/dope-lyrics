@@ -20,6 +20,7 @@ interface CarouselSessionValue {
   prepend: ILyric | null;
   sessionKey: number;
   addToQueue: (lyric: ILyric) => void;
+  removeFromQueue: (lyricId: number) => void;
   playNow: (lyric: ILyric) => void;
   clearQueue: () => void;
   resetToCatalog: () => void;
@@ -44,6 +45,14 @@ export function CarouselSessionProvider({ children }: { children: ReactNode }) {
       setMode('queue');
       setPrepend(null);
       setQueue((current) => [...current, lyric]);
+      bumpSession();
+    },
+    [bumpSession]
+  );
+
+  const removeFromQueue = useCallback(
+    (lyricId: number) => {
+      setQueue((current) => current.filter((item) => item.id !== lyricId));
       bumpSession();
     },
     [bumpSession]
@@ -87,6 +96,7 @@ export function CarouselSessionProvider({ children }: { children: ReactNode }) {
       prepend,
       sessionKey,
       addToQueue,
+      removeFromQueue,
       playNow,
       clearQueue,
       resetToCatalog,
@@ -98,6 +108,7 @@ export function CarouselSessionProvider({ children }: { children: ReactNode }) {
       playNow,
       prepend,
       queue,
+      removeFromQueue,
       resetToCatalog,
       sessionKey,
     ]

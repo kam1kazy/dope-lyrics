@@ -1,6 +1,7 @@
 export {
   ALL_LYRICS,
   ASSEMBLE_TRACK,
+  CATALOG_ACTIVITY,
   CATALOG_STATS,
   GLUE_LYRICS,
   INGEST_PENDING_LYRICS,
@@ -41,10 +42,13 @@ export {
 } from './lib/update-lyrics-cache';
 export { usePaginatedLyrics } from './lib/use-paginated-lyrics';
 export type {
+  CatalogThemeKind,
   IAssembledTrack,
   IAssembledTrackPart,
   IAssembledTrackSlot,
+  ICatalogActivityPoint,
   ICatalogStats,
+  ICatalogThemeCount,
   IChat,
   IEmoji,
   IHashtags,

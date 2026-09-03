@@ -215,8 +215,25 @@ export const typeDefinitions = /* GraphQL */ `
     delivery: [CatalogDeliveryCount!]!
   }
 
+  enum CatalogThemeKind {
+    MOOD
+    DELIVERY
+  }
+
+  type CatalogThemeCount {
+    kind: CatalogThemeKind!
+    value: String!
+    count: Int!
+  }
+
+  type CatalogActivityPoint {
+    date: String!
+    count: Int!
+  }
+
   type CatalogStats {
     phraseCount: Int!
+    addedLastMonth: Int!
     references: CatalogShelfStat!
     favorites: CatalogShelfStat!
     hidden: CatalogShelfStat!
@@ -227,6 +244,7 @@ export const typeDefinitions = /* GraphQL */ `
     unscoped: CatalogUnscopedStats!
     readiness: [CatalogReadinessCount!]!
     readinessNone: Int!
+    themes: [CatalogThemeCount!]!
   }
 
   type AssembledTrackPart {
@@ -332,6 +350,7 @@ export const typeDefinitions = /* GraphQL */ `
     ): [Lyric!]!
     lyricIngestPreview: LyricIngestPreview!
     catalogStats: CatalogStats!
+    catalogActivity(days: Int!): [CatalogActivityPoint!]!
     assembleTrack(
       form: TrackFormQuotas!
       hideAdlibs: Boolean

@@ -192,6 +192,13 @@ export const resolvers = {
     ) => {
       return lyricsService.catalogStats();
     },
+    catalogActivity: (
+      _parent: unknown,
+      args: { days: number },
+      _context: GraphQLContext
+    ) => {
+      return lyricsService.catalogActivity(args.days);
+    },
     assembleTrack: (
       _parent: unknown,
       args: AssembleTrackArgs,
