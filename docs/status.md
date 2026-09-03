@@ -2,17 +2,18 @@
 
 Продукт: [00_vision.md](./00_vision.md). Текущая задача: [tasks/current_task.md](./tasks/current_task.md).
 
-Снимок: **3 сентября 2026**. Дорожка D: каталог, профиль ролей, сводка. `lyric-facets` в архиве. `bun run typecheck` зелёный на клиенте и сервере после последнего среза.
+Снимок: **3 сентября 2026**. Дорожка D закрыта. Начало **E без ИИ** влито и заархивировано: конструктор трека, история склеек, разрез и правка текста. `bun run typecheck` зелёный на клиенте и сервере.
 
 | Кусок | Сейчас |
 | --- | --- |
-| Код | Локально линия `main`. `origin/develop` впереди — [git.md](./git.md) |
+| Код | Локально `main` (ahead of `origin/main`). `origin/develop` — склад — [git.md](./git.md) |
 | Контур | GraphQL + Next, данные с TG, карусель |
-| UI | shadcn. Меню каталога: список, избранное, демки, сводка. Карточка: профиль по ролям, цензура |
-| Фильтры | `lyrics(...)` по тегам, полкам, ролям/настроению/подаче; `catalogStats` |
+| UI | shadcn. Меню: список, избранное, демки, сводка, **генератор** (сборка + история в шапке). Карточка: профиль, полки, разрез и правка текста |
+| Фильтры | `lyrics(...)` по тегам, полкам, ролям/настроению/подаче; фильтр пула генератора |
+| Склейка | `assembleTrack` / `likeCollage` / `unlikeCollage` / `lyricCollages` |
 | Сервер | Модули (`app`, `modules/lyrics`, `graphql`, `mtcute`) |
-| Lint | После профила/сводки — typecheck зелёный; перед push — `bun run fix` |
-| Auth | Production GraphQL: `initData` Mini App + `BOT_ADMIN_ID`. Регистрации youways нет |
-| OpenSpec | Активного change нет. В `openspec/specs/`: `lyric-facets`, `catalog-analytics` |
+| Lint | typecheck зелёный; перед push — `bun run fix` |
+| Auth | Production GraphQL: `initData` Mini App + `BOT_ADMIN_ID` |
+| OpenSpec | Активных change нет. В `openspec/specs/`: `lyric-facets`, `catalog-analytics`, `lyric-split-and-edit`, `track-assemble`, `collage-history`, `track-generator`, `generator-history`. Архив: `2026-09-03-lyric-facets`, `lyric-split-and-edit`, `track-assemble`, `track-generator` |
 
-Дальше — конструктор трека из кусков (начало E без ИИ), не генерация. Mini App: [0007](./decisions/0007-mini-app-initdata.md).
+Актуальный UI истории — `generator-history` (иконка в шапке генератора); `collage-history` — первый срез со сборкой в «Истории». Дальше — шлифовка без ИИ. Mini App: [0007](./decisions/0007-mini-app-initdata.md).
