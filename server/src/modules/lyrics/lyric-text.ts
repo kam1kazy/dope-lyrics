@@ -83,7 +83,7 @@ const assertValidLineRange = (lines: string[], range: LyricLineRange): void => {
   if (
     !Number.isInteger(afterLine) ||
     !Number.isInteger(untilLine) ||
-    afterLine < 0 ||
+    afterLine < -1 ||
     untilLine <= afterLine ||
     untilLine >= lines.length
   ) {

@@ -40,6 +40,7 @@ export function SplitTextView({
   const lineRefs = useRef<Array<HTMLParagraphElement | null>>([]);
   const holdTimerRef = useRef<number | null>(null);
   const holdOriginRef = useRef<{ x: number; y: number } | null>(null);
+  const dragEdgeRef = useRef<'after' | 'until' | null>(null);
   const takenSet = new Set(takenLineIndexes);
   const dual = untilLine !== null;
   const canSecond = canEnableSecondCut(text);
@@ -54,58 +55,115 @@ export function SplitTextView({
     holdOriginRef.current = null;
   };
 
-  const snapToPointer = (clientY: number) => {
+  const gapYAfter = (lineIndex: number): number | null => {
+    if (lineIndex === -1) {
+      const first = lineRefs.current[0];
+      return first ? first.getBoundingClientRect().top : null;
+    }
+
+    const current = lineRefs.current[lineIndex];
+    const next = lineRefs.current[lineIndex + 1];
+
+    if (current && next) {
+      return (
+        (current.getBoundingClientRect().bottom +
+          next.getBoundingClientRect().top) /
+        2
+      );
+    }
+
+    if (current && !next) {
+      return current.getBoundingClientRect().bottom;
+    }
+
+    return null;
+  };
+
+  const pickDragEdge = (clientY: number): 'after' | 'until' => {
+    const afterY = gapYAfter(afterLine);
+    const untilY = untilLine === null ? null : gapYAfter(untilLine);
+
+    if (afterY === null) {
+      return 'until';
+    }
+
+    if (untilY === null) {
+      return 'after';
+    }
+
+    return Math.abs(clientY - untilY) < Math.abs(clientY - afterY)
+      ? 'until'
+      : 'after';
+  };
+
+  const snapAfter = (clientY: number, maxAfter: number) => {
     let bestAfter = afterLine;
-    let bestUntil = untilLine ?? afterLine + 1;
     let bestAfterDist = Number.POSITIVE_INFINITY;
-    let bestUntilDist = Number.POSITIVE_INFINITY;
 
-    for (let index = 0; index < lines.length - 1; index += 1) {
-      const current = lineRefs.current[index];
-      const next = lineRefs.current[index + 1];
+    for (let index = -1; index <= maxAfter; index += 1) {
+      const gapY = gapYAfter(index);
 
-      if (!current || !next) {
+      if (gapY === null) {
         continue;
       }
 
-      const gapY =
-        (current.getBoundingClientRect().bottom +
-          next.getBoundingClientRect().top) /
-        2;
+      if (dual) {
+        if (untilLine === null || !isValidLineRange(text, index, untilLine)) {
+          continue;
+        }
+      } else if (index >= 0 && !isValidAfterLine(text, index)) {
+        continue;
+      }
+
       const dist = Math.abs(clientY - gapY);
 
-      if (dual) {
-        const until = untilLine ?? afterLine + 1;
-
-        if (isValidAfterLine(text, index) && index < until) {
-          if (dist < bestAfterDist) {
-            bestAfterDist = dist;
-            bestAfter = index;
-          }
-        }
-
-        if (isValidLineRange(text, afterLine, index) && index > afterLine) {
-          if (dist < bestUntilDist) {
-            bestUntilDist = dist;
-            bestUntil = index;
-          }
-        }
-      } else if (isValidAfterLine(text, index) && dist < bestAfterDist) {
+      if (dist < bestAfterDist) {
         bestAfterDist = dist;
         bestAfter = index;
       }
     }
 
-    if (!dual) {
+    if (bestAfterDist < Number.POSITIVE_INFINITY) {
       onAfterLineChange(bestAfter);
+    }
+  };
+
+  const snapUntil = (clientY: number) => {
+    let bestUntil = untilLine ?? afterLine + 1;
+    let bestUntilDist = Number.POSITIVE_INFINITY;
+
+    for (let index = afterLine + 1; index < lines.length; index += 1) {
+      const gapY = gapYAfter(index);
+
+      if (gapY === null || !isValidLineRange(text, afterLine, index)) {
+        continue;
+      }
+
+      const dist = Math.abs(clientY - gapY);
+
+      if (dist < bestUntilDist) {
+        bestUntilDist = dist;
+        bestUntil = index;
+      }
+    }
+
+    if (bestUntilDist < Number.POSITIVE_INFINITY) {
+      onUntilLineChange(bestUntil);
+    }
+  };
+
+  const snapToPointer = (clientY: number) => {
+    if (!dual) {
+      snapAfter(clientY, lines.length - 2);
       return;
     }
 
-    if (bestAfterDist <= bestUntilDist) {
-      onAfterLineChange(bestAfter);
-    } else {
-      onUntilLineChange(bestUntil);
+    if (dragEdgeRef.current === 'until') {
+      snapUntil(clientY);
+      return;
     }
+
+    snapAfter(clientY, (untilLine ?? afterLine + 1) - 1);
   };
 
   const renderCut = (kind: 'after' | 'until') => {
@@ -168,10 +226,15 @@ export function SplitTextView({
 
   return (
     <div
-      className="relative touch-none select-none px-5"
+      className={cn(
+        'relative touch-none select-none px-5',
+        afterLine === -1 && 'pt-10',
+        dual && untilLine === lines.length - 1 && 'pb-6'
+      )}
       onPointerDown={(event) => {
         event.currentTarget.setPointerCapture(event.pointerId);
         holdOriginRef.current = { x: event.clientX, y: event.clientY };
+        dragEdgeRef.current = dual ? pickDragEdge(event.clientY) : 'after';
         holdTimerRef.current = window.setTimeout(() => {
           holdTimerRef.current = null;
           holdOriginRef.current = null;
@@ -203,8 +266,14 @@ export function SplitTextView({
 
         snapToPointer(event.clientY);
       }}
-      onPointerUp={clearHold}
-      onPointerCancel={clearHold}
+      onPointerUp={() => {
+        clearHold();
+        dragEdgeRef.current = null;
+      }}
+      onPointerCancel={() => {
+        clearHold();
+        dragEdgeRef.current = null;
+      }}
       onContextMenu={(event) => {
         event.preventDefault();
       }}
@@ -216,13 +285,14 @@ export function SplitTextView({
 
         return (
           <div key={`${index}-${line.slice(0, 12)}`}>
+            {afterLine === -1 && index === 0 ? renderCut('after') : null}
             <p
               ref={(node) => {
                 lineRefs.current[index] = node;
               }}
               className={cn(
                 'text-sm leading-relaxed sm:text-base sm:leading-7',
-                inZone && 'bg-sky-400/15 rounded-sm',
+                inZone && 'bg-sky-400/10 rounded-sm',
                 taken && 'opacity-35'
               )}
             >

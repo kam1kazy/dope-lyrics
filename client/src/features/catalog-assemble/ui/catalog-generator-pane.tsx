@@ -202,7 +202,7 @@ export function CatalogGeneratorPane({
               {moreOpen ? 'Скрыть' : 'Показать ещё'}
             </button>
             <p className="text-muted-foreground text-xs leading-relaxed">
-              Абзац = 4 строки. 0 — слот не набирать.
+              Абзац = 4 строки.
             </p>
           </div>
 

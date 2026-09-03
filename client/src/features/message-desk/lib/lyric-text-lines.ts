@@ -57,7 +57,7 @@ export const isValidLineRange = (
   if (
     !Number.isInteger(afterLine) ||
     !Number.isInteger(untilLine) ||
-    afterLine < 0 ||
+    afterLine < -1 ||
     untilLine <= afterLine ||
     untilLine >= lines.length
   ) {
@@ -163,4 +163,46 @@ export const rangeConflictsWithChunks = (
   chunks: LyricLineRange[]
 ): boolean => {
   return chunks.some((chunk) => rangesOverlap(range, chunk));
+};
+
+export const untakenRangesInZone = (
+  range: LyricLineRange,
+  chunks: LyricLineRange[],
+  text: string
+): LyricLineRange[] => {
+  const start = range.afterLine + 1;
+  const end = range.untilLine;
+  const result: LyricLineRange[] = [];
+  let runStart: number | null = null;
+
+  const flush = (runEnd: number) => {
+    if (runStart === null) {
+      return;
+    }
+
+    const next = { afterLine: runStart - 1, untilLine: runEnd };
+
+    if (isValidLineRange(text, next.afterLine, next.untilLine)) {
+      result.push(next);
+    }
+  };
+
+  for (let index = start; index <= end; index += 1) {
+    if (!isLineTaken(index, chunks)) {
+      if (runStart === null) {
+        runStart = index;
+      }
+
+      continue;
+    }
+
+    flush(index - 1);
+    runStart = null;
+  }
+
+  if (runStart !== null) {
+    flush(end);
+  }
+
+  return result;
 };

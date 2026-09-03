@@ -55,6 +55,28 @@ describe('buildSliceFromRanges', () => {
     ).toThrow('пересекаются');
   });
 
+  test('диапазон с первой до последней строки', () => {
+    const text = 'a\nb\nc';
+    const built = buildSliceFromRanges(
+      text,
+      [{ afterLine: -1, untilLine: 2 }],
+      1
+    );
+
+    expect(built.createdText).toBe('a\nb\nc');
+    expect(built.cleanedTaken).toEqual([{ startLine: 0, endLine: 3 }]);
+  });
+
+  test('первая строка — afterLine перед началом', () => {
+    const built = buildSliceFromRanges(
+      'a\nb\nc',
+      [{ afterLine: -1, untilLine: 0 }],
+      1
+    );
+
+    expect(built.createdText).toBe('a');
+  });
+
   test('пустой фрагмент — ошибка', () => {
     expect(() =>
       buildSliceFromRanges('a\n\n\nb', [{ afterLine: 0, untilLine: 2 }], 1)

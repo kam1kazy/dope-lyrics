@@ -57,9 +57,9 @@ import {
   lyricHalves,
   lyricRangeText,
   previewLyricHalf,
-  rangeConflictsWithChunks,
   type SliceChunk,
   splitLyricLines,
+  untakenRangesInZone,
 } from '@/features/message-desk/lib/lyric-text-lines';
 import { SliceChunkList } from '@/features/message-desk/ui/slice-chunk-list';
 import { SplitTextView } from '@/features/message-desk/ui/split-text-view';
@@ -558,22 +558,26 @@ export function MessageDeskDialog({
       return;
     }
 
-    const range = { afterLine, untilLine };
+    const free = untakenRangesInZone(
+      { afterLine, untilLine },
+      sliceChunks,
+      sourceText
+    );
 
-    if (rangeConflictsWithChunks(range, sliceChunks)) {
-      setTextError('Эта зона уже в списке кусков');
+    if (free.length === 0) {
       return;
     }
 
-    const chunk: SliceChunk = {
-      id: `${afterLine}-${untilLine}-${Date.now()}`,
-      afterLine,
-      untilLine,
-      text: lyricRangeText(sourceText, afterLine, untilLine),
-    };
+    const now = Date.now();
+    const nextChunks: SliceChunk[] = free.map((range, index) => ({
+      id: `${range.afterLine}-${range.untilLine}-${now}-${index}`,
+      afterLine: range.afterLine,
+      untilLine: range.untilLine,
+      text: lyricRangeText(sourceText, range.afterLine, range.untilLine),
+    }));
 
     setTextError(null);
-    setSliceChunks((prev) => [...prev, chunk]);
+    setSliceChunks((prev) => [...prev, ...nextChunks]);
   };
 
   const chooseSplitPart = (part: 'top' | 'bottom') => {
@@ -1149,10 +1153,11 @@ export function MessageDeskDialog({
                         className="gap-2"
                         disabled={
                           !isValidLineRange(sourceText, afterLine, untilLine) ||
-                          rangeConflictsWithChunks(
+                          untakenRangesInZone(
                             { afterLine, untilLine },
-                            sliceChunks
-                          )
+                            sliceChunks,
+                            sourceText
+                          ).length === 0
                         }
                         onClick={addSliceChunk}
                       >
@@ -1377,7 +1382,7 @@ export function MessageDeskDialog({
 
         {slicePrompt ? (
           <div
-            className="bg-background/95 absolute inset-0 z-20 flex flex-col justify-end gap-3 p-6"
+            className="bg-background/95 absolute inset-0 z-20 flex flex-col gap-3 p-6 justify-center items-center center"
             onClick={(event) => {
               if (event.target === event.currentTarget) {
                 setSlicePrompt(false);
@@ -1386,11 +1391,18 @@ export function MessageDeskDialog({
           >
             <p className="text-lg font-semibold">Вырезать из донора?</p>
             <p className="text-muted-foreground text-sm">
-              Новая запись соберётся из кусков. Можно оставить исходный текст
-              как был или вырезать взятое.
+              Соберет в одну запись каталога из выбранных кусков.
+              <br />
+              Оригиналы можно оставить или спрятать.
+              <br />
+              <br />
             </p>
             <div className="flex flex-col gap-2 sm:flex-row">
-              <Button type="button" onClick={() => confirmSlice(false)}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => confirmSlice(false)}
+              >
                 Оставить
               </Button>
               <Button
