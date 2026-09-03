@@ -333,3 +333,9 @@ export const LIKE_COLLAGE = gql`
     }
   }
 `;
+
+export const UNLIKE_COLLAGE = gql`
+  mutation UnlikeCollage($id: Int!) {
+    unlikeCollage(id: $id)
+  }
+`;

@@ -90,11 +90,6 @@ export function CatalogStatsPanel() {
 
   return (
     <div className="flex flex-col gap-6 p-4">
-      <p className="text-muted-foreground text-xs leading-relaxed">
-        Считаются куски песни: фраза с куплетом и хуком входит в оба ряда. Это
-        не уникальные тексты.
-      </p>
-
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
         <StatCard label="Фраз" count={stats.phraseCount} />
         <StatCard

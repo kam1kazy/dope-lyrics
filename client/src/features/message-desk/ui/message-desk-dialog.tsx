@@ -936,10 +936,10 @@ export function MessageDeskDialog({
                 </Button>
               </div>
             ) : null}
-            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-row sm:flex-wrap sm:justify-start sm:gap-3">
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-row sm:flex-wrap sm:justify-start sm:gap-3 lg:justify-between w-full">
               <Button
                 type="button"
-                variant={flags.isFavorite ? 'secondary' : 'outline'}
+                variant={flags.isFavorite ? 'ghost' : 'ghost'}
                 disabled={!lyric}
                 className="gap-2 sm:h-10"
                 onClick={() => patchFlags({ isFavorite: !flags.isFavorite })}
@@ -953,13 +953,13 @@ export function MessageDeskDialog({
                 />
                 <span className="sm:hidden">Избранное</span>
                 <span className="hidden sm:inline">
-                  {flags.isFavorite ? 'Убрать из избранного' : 'В избранное'}
+                  {flags.isFavorite ? 'Избранное' : 'Избранное'}
                 </span>
               </Button>
 
               <Button
                 type="button"
-                variant={flags.isReference ? 'secondary' : 'outline'}
+                variant={flags.isReference ? 'ghost' : 'ghost'}
                 disabled={!lyric}
                 className="gap-2 sm:h-10"
                 onClick={() => patchFlags({ isReference: !flags.isReference })}
@@ -974,7 +974,7 @@ export function MessageDeskDialog({
                 {flags.isReference ? (
                   <>
                     <span className="sm:hidden">Эталон</span>
-                    <span className="hidden sm:inline">Снять эталон</span>
+                    <span className="hidden sm:inline">Эталон</span>
                   </>
                 ) : (
                   'Эталон'
@@ -983,7 +983,7 @@ export function MessageDeskDialog({
 
               <Button
                 type="button"
-                variant={flags.isCensored ? 'secondary' : 'outline'}
+                variant={flags.isCensored ? 'ghost' : 'ghost'}
                 disabled={!lyric}
                 className="gap-2 sm:h-10"
                 onClick={() => patchFlags({ isCensored: !flags.isCensored })}
@@ -995,7 +995,7 @@ export function MessageDeskDialog({
                 {flags.isCensored ? (
                   <>
                     <span className="sm:hidden">Цензура</span>
-                    <span className="hidden sm:inline">Снять цензуру</span>
+                    <span className="hidden sm:inline">Цензура</span>
                   </>
                 ) : (
                   'Цензура'
@@ -1004,7 +1004,7 @@ export function MessageDeskDialog({
 
               <Button
                 type="button"
-                variant={flags.isHidden ? 'secondary' : 'outline'}
+                variant={flags.isHidden ? 'ghost' : 'ghost'}
                 disabled={!lyric}
                 className="gap-2 sm:h-10"
                 onClick={() => patchFlags({ isHidden: !flags.isHidden })}
@@ -1017,7 +1017,7 @@ export function MessageDeskDialog({
                   {flags.isHidden ? 'Скрыто' : 'Скрыть'}
                 </span>
                 <span className="hidden sm:inline">
-                  {flags.isHidden ? 'Вернуть в карусель' : 'Скрыть'}
+                  {flags.isHidden ? 'Скрыть' : 'Скрыть'}
                 </span>
               </Button>
             </div>

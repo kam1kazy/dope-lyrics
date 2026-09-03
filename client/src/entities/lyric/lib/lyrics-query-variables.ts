@@ -112,8 +112,13 @@ export function catalogQueryVariablesForSection(
     dateTo: filters.dateTo.trim() || null,
     favoritesOnly: section === 'favorites' ? true : null,
     demosOnly: section === 'demos' ? true : null,
-    oldestFirst: filters.sortMode === 'reverse',
-    shuffleSeed: filters.sortMode === 'shuffle' ? filters.shuffleSeed : null,
+    oldestFirst: section === 'list' ? false : filters.sortMode === 'reverse',
+    shuffleSeed:
+      section === 'list'
+        ? null
+        : filters.sortMode === 'shuffle'
+          ? filters.shuffleSeed
+          : null,
     mood: filters.mood.length > 0 ? filters.mood : null,
     excludeMood: filters.excludeMood.length > 0 ? filters.excludeMood : null,
     delivery: filters.delivery.length > 0 ? filters.delivery : null,

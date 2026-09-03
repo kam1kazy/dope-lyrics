@@ -209,7 +209,7 @@ export function CatalogMenu() {
             ? 'max-w-[min(100%,60rem)]'
             : activeSection
               ? 'max-w-[min(100%,640px)]'
-              : 'max-sm:max-w-44 sm:max-w-[min(100%,640px)]'
+              : 'max-sm:max-w-48 sm:max-w-[min(100%,640px)]'
         }
         onOpenChange={(open) => {
           if (!open) {
@@ -227,7 +227,7 @@ export function CatalogMenu() {
           <nav
             data-swipe-ignore
             className={cn(
-              'border-border flex h-full w-44 shrink-0 flex-col gap-1 border-r p-3',
+              'border-border flex h-full w-48 shrink-0 flex-col gap-1 border-r p-3',
               activeSection && 'hidden sm:flex'
             )}
             aria-label="Разделы каталога"
@@ -241,7 +241,7 @@ export function CatalogMenu() {
                   type="button"
                   variant={isActive ? 'secondary' : 'ghost'}
                   className={cn(
-                    'h-auto justify-start gap-2 px-2 py-2 text-left text-sm font-normal',
+                    'h-auto justify-start gap-2 py-2 pr-2 pl-2 text-left text-sm font-normal whitespace-normal has-[>svg]:pr-3 has-[>svg]:pl-2',
                     disabled &&
                       'text-muted-foreground pointer-events-none opacity-50'
                   )}
@@ -425,6 +425,7 @@ export function CatalogMenu() {
                         <CatalogFilterPane
                           sectionId={filterableSection ?? 'list'}
                           filters={sectionFilters}
+                          hideSort={filterableSection === 'list'}
                           showShelves={filterableSection === 'list'}
                           shelfVariant="icons"
                           shelvesFirst

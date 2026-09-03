@@ -19,12 +19,13 @@ export function CatalogAssembleHistory({
   onSelect: (collage: ILyricCollage) => void;
 }) {
   const { loading, error, data } = useQuery<{ lyricCollages: ILyricCollage[] }>(
-    LYRIC_COLLAGES
+    LYRIC_COLLAGES,
+    { fetchPolicy: 'cache-and-network' }
   );
 
   const history = data?.lyricCollages ?? [];
 
-  if (loading) {
+  if (loading && data === undefined) {
     return (
       <div className="flex h-full items-center justify-center p-6">
         <Spinner className="size-6" />

@@ -345,5 +345,6 @@ export const typeDefinitions = /* GraphQL */ `
     splitLyric(id: Int!, afterLine: Int!): SplitLyricPayload!
     ingestPendingLyrics: LyricIngestResult!
     likeCollage(slots: [CollageSlotInput!]!): LyricCollage!
+    unlikeCollage(id: Int!): Int!
   }
 `;

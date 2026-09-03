@@ -11,7 +11,9 @@ import {
   type IAssembledTrackSlot,
   type ILyricCollage,
   LIKE_COLLAGE,
+  LYRIC_COLLAGES,
   type TrackFormPreset,
+  UNLIKE_COLLAGE,
 } from '@/entities/lyric';
 import type { CatalogSectionFilters } from '@/shared/lib/catalog-section-filters';
 import { ErrorText } from '@/shared/ui/error-text';
@@ -49,6 +51,7 @@ export function CatalogAssemblePanel({
 }) {
   const [draft, setDraft] = useState<IAssembledTrackSlot[] | null>(null);
   const [likedDraftKey, setLikedDraftKey] = useState<string | null>(null);
+  const [likedCollageId, setLikedCollageId] = useState<number | null>(null);
 
   const [assemble, { loading: assembleLoading, error: assembleError }] =
     useLazyQuery<{ assembleTrack: IAssembledTrack }>(ASSEMBLE_TRACK, {
@@ -64,8 +67,48 @@ export function CatalogAssemblePanel({
       }[];
     }
   >(LIKE_COLLAGE, {
-    refetchQueries: ['LyricCollages'],
+    update(cache, { data }) {
+      const created = data?.likeCollage;
+      if (!created) {
+        return;
+      }
+
+      const existing = cache.readQuery<{ lyricCollages: ILyricCollage[] }>({
+        query: LYRIC_COLLAGES,
+      });
+      const previous = existing?.lyricCollages ?? [];
+      if (previous.some((row) => row.id === created.id)) {
+        return;
+      }
+
+      cache.writeQuery({
+        query: LYRIC_COLLAGES,
+        data: { lyricCollages: [created, ...previous] },
+      });
+    },
   });
+
+  const [unlikeCollage, { loading: unlikeLoading, error: unlikeError }] =
+    useMutation<{ unlikeCollage: number }, { id: number }>(UNLIKE_COLLAGE, {
+      update(cache, { data }) {
+        const removedId = data?.unlikeCollage;
+        if (removedId == null) {
+          return;
+        }
+
+        const existing = cache.readQuery<{ lyricCollages: ILyricCollage[] }>({
+          query: LYRIC_COLLAGES,
+        });
+        const previous = existing?.lyricCollages ?? [];
+
+        cache.writeQuery({
+          query: LYRIC_COLLAGES,
+          data: {
+            lyricCollages: previous.filter((row) => row.id !== removedId),
+          },
+        });
+      },
+    });
 
   const draftKeyValue = useMemo(
     () => (draft ? draftKey(draft) : null),
@@ -91,11 +134,37 @@ export function CatalogAssemblePanel({
 
     setDraft(nextSlots);
     setLikedDraftKey(null);
+    setLikedCollageId(null);
     onCloseSelected();
+  };
+
+  const handleUnlike = async (id: number) => {
+    const result = await unlikeCollage({ variables: { id } });
+    if (result.data?.unlikeCollage == null) {
+      return;
+    }
+
+    if (selectedCollage?.id === id) {
+      setDraft(selectedCollage.slots);
+      setLikedDraftKey(null);
+      setLikedCollageId(null);
+      onCloseSelected();
+      return;
+    }
+
+    if (likedCollageId === id) {
+      setLikedDraftKey(null);
+      setLikedCollageId(null);
+    }
   };
 
   const handleLike = async () => {
     if (!draft) {
+      return;
+    }
+
+    if (alreadyLiked && likedCollageId !== null) {
+      await handleUnlike(likedCollageId);
       return;
     }
 
@@ -112,12 +181,17 @@ export function CatalogAssemblePanel({
       },
     });
 
-    if (!result.data?.likeCollage) {
+    const created = result.data?.likeCollage;
+    if (!created) {
       return;
     }
 
     setLikedDraftKey(draftKey(draft));
+    setLikedCollageId(created.id);
   };
+
+  const heartBusy = likeLoading || unlikeLoading;
+  const heartFilled = viewingHistory || alreadyLiked;
 
   return (
     <div className="flex flex-col gap-6 p-4">
@@ -133,10 +207,17 @@ export function CatalogAssemblePanel({
                 size="icon"
                 variant="secondary"
                 className="size-8"
-                disabled
-                aria-label="Сохранено в истории"
+                disabled={heartBusy}
+                aria-label="Убрать из истории"
+                onClick={() => {
+                  void handleUnlike(selectedCollage.id);
+                }}
               >
-                <Heart className="size-4" fill="currentColor" />
+                {unlikeLoading ? (
+                  <Spinner className="size-4" />
+                ) : (
+                  <Heart className="size-4" fill="currentColor" />
+                )}
               </Button>
               <Button
                 type="button"
@@ -150,12 +231,10 @@ export function CatalogAssemblePanel({
               </Button>
             </>
           ) : (
-            <>
-              <h3 className="text-sm font-medium">Сборка</h3>
+            <div className="flex justify-between w-full">
               <Button
                 type="button"
                 size="sm"
-                className="ml-auto"
                 disabled={assembleLoading}
                 onClick={() => {
                   void handleAssemble();
@@ -166,35 +245,37 @@ export function CatalogAssemblePanel({
               <Button
                 type="button"
                 size="icon"
-                variant={alreadyLiked ? 'secondary' : 'outline'}
+                variant={heartFilled ? 'secondary' : 'outline'}
                 className="size-8"
-                disabled={!draft || likeLoading || alreadyLiked}
-                aria-label="Лайк — сохранить в историю"
+                disabled={!draft || heartBusy}
+                aria-label={
+                  alreadyLiked
+                    ? 'Убрать из истории'
+                    : 'Лайк — сохранить в историю'
+                }
                 onClick={() => {
                   void handleLike();
                 }}
               >
-                {likeLoading ? (
+                {heartBusy ? (
                   <Spinner className="size-4" />
                 ) : (
                   <Heart
                     className="size-4"
-                    fill={alreadyLiked ? 'currentColor' : 'none'}
+                    fill={heartFilled ? 'currentColor' : 'none'}
                   />
                 )}
               </Button>
-            </>
+            </div>
           )}
         </div>
 
-        {assembleError || likeError ? (
+        {assembleError || likeError || unlikeError ? (
           <ErrorText title="Не удалось собрать или сохранить" />
         ) : null}
 
         {!slots ? (
-          <p className="text-muted-foreground text-sm">
-            Нажмите «Собрать», чтобы склеить куски по выбранной форме.
-          </p>
+          <p className="text-muted-foreground text-sm"></p>
         ) : (
           <div className="flex flex-col gap-4">
             {slots.map((slot, index) => (

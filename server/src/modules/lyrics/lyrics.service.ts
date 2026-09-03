@@ -69,11 +69,13 @@ export class LyricsService {
       });
     }
 
+    const dateOrder = options.oldestFirst ? 'asc' : 'desc';
+
     return this.prisma.lyrics.findMany({
       where,
       take: options.limit,
       skip: options.offset,
-      orderBy: { date: options.oldestFirst ? 'asc' : 'desc' },
+      orderBy: [{ date: dateOrder }, { lyric_id: dateOrder }],
       include: lyricInclude,
     });
   }
@@ -210,6 +212,20 @@ export class LyricsService {
     });
 
     return this.hydrateCollage(row.id, row.createdAt, row.slots);
+  }
+
+  async unlikeCollage(id: number) {
+    const row = await this.prisma.lyricCollage.findUnique({
+      where: { id },
+      select: { id: true },
+    });
+
+    if (!row) {
+      throw new GraphQLError('Склейка не найдена');
+    }
+
+    await this.prisma.lyricCollage.delete({ where: { id } });
+    return id;
   }
 
   async listCollages() {

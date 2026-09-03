@@ -89,6 +89,10 @@ type LikeCollageArgs = {
   slots: unknown;
 };
 
+type UnlikeCollageArgs = {
+  id: number;
+};
+
 const clampLimit = (value: number | null | undefined): number => {
   const fallback = env.GRAPHQL_MAX_LIMIT;
   const requested = value ?? fallback;
@@ -243,6 +247,13 @@ export const resolvers = {
       _context: GraphQLContext
     ) => {
       return lyricsService.likeCollage(args.slots);
+    },
+    unlikeCollage: (
+      _parent: unknown,
+      args: UnlikeCollageArgs,
+      _context: GraphQLContext
+    ) => {
+      return lyricsService.unlikeCollage(args.id);
     },
   },
   Lyric: {

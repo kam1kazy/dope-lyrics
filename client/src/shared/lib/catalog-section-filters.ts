@@ -63,6 +63,7 @@ export const DEFAULT_CATALOG_SECTION_FILTERS: CatalogSectionFilters = {
 
 export const DEFAULT_LIST_SECTION_FILTERS: CatalogSectionFilters = {
   ...DEFAULT_CATALOG_SECTION_FILTERS,
+  sortMode: 'forward',
   excludeShelves: ['hidden'],
 };
 
