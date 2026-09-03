@@ -16,4 +16,4 @@
 | Auth | Production GraphQL: `initData` Mini App + `BOT_ADMIN_ID` |
 | OpenSpec | Активных change нет. В `openspec/specs/`: `lyric-facets`, `catalog-analytics`, `lyric-split-and-edit`, `track-assemble`, `collage-history`, `track-generator`, `generator-history`. Архив: `2026-09-03-lyric-facets`, `lyric-split-and-edit`, `track-assemble`, `track-generator` |
 
-Актуальный UI истории — `generator-history` (иконка в шапке генератора); `collage-history` — первый срез со сборкой в «Истории». Дальше — шлифовка без ИИ. Mini App: [0007](./decisions/0007-mini-app-initdata.md).
+Актуальный UI истории — `generator-history` (иконка в шапке генератора); `collage-history` — первый срез со сборкой в «Истории». Ближайшее без ИИ — склеить записи и резать фрагментом: [roadmap E](./roadmap.md). Mini App: [0007](./decisions/0007-mini-app-initdata.md).
