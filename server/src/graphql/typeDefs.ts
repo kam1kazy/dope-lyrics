@@ -38,6 +38,11 @@ export const typeDefinitions = /* GraphQL */ `
     READY
   }
 
+  enum TrackFormPreset {
+    HIT
+    CANVAS
+  }
+
   type User {
     id: Int!
     username: String!
@@ -212,10 +217,16 @@ export const typeDefinitions = /* GraphQL */ `
     readinessNone: Int!
   }
 
+  type AssembledTrackPart {
+    lyricId: Int!
+    startLine: Int!
+    endLine: Int!
+    lyric: Lyric
+  }
+
   type AssembledTrackSlot {
     songRole: LyricSongRole!
-    lyricId: Int
-    lyric: Lyric
+    parts: [AssembledTrackPart!]!
   }
 
   type AssembledTrack {
@@ -228,9 +239,15 @@ export const typeDefinitions = /* GraphQL */ `
     slots: [AssembledTrackSlot!]!
   }
 
+  input CollagePartInput {
+    lyricId: Int!
+    startLine: Int!
+    endLine: Int!
+  }
+
   input CollageSlotInput {
     songRole: LyricSongRole!
-    lyricId: Int
+    parts: [CollagePartInput!]!
   }
 
   type LyricIngestPreview {
@@ -278,7 +295,7 @@ export const typeDefinitions = /* GraphQL */ `
     ): [Lyric!]!
     lyricIngestPreview: LyricIngestPreview!
     catalogStats: CatalogStats!
-    assembleTrack: AssembledTrack!
+    assembleTrack(preset: TrackFormPreset, hideAdlibs: Boolean): AssembledTrack!
     lyricCollages: [LyricCollage!]!
   }
 

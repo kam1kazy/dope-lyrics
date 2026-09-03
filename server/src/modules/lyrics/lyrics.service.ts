@@ -16,9 +16,13 @@ import { createLyricData } from '~/modules/lyrics/persist/create-lyric-data';
 import { shuffleIds, toShuffleSeed } from '~/modules/lyrics/shuffle-ids';
 import {
   assembleSlotsFromPools,
+  isTrackFormPreset,
+  lyricIdsFromSlots,
   parseCollageSlotsInput,
   slotsFromJson,
+  splitGeneratorLines,
   TRACK_FRAME,
+  type TrackFormPreset,
 } from '~/modules/lyrics/track-assemble';
 import { usersService } from '~/modules/users/users.service';
 
@@ -125,9 +129,13 @@ export class LyricsService {
     return buildCatalogStats(rows);
   }
 
-  async assembleTrack() {
+  async assembleTrack(presetRaw?: string | null) {
+    const preset: TrackFormPreset =
+      typeof presetRaw === 'string' && isTrackFormPreset(presetRaw)
+        ? presetRaw
+        : 'HIT';
     const uniqueRoles = [...new Set(TRACK_FRAME)];
-    const pools: Record<string, number[]> = {};
+    const pools: Record<string, { id: number; lines: string[] }[]> = {};
 
     await Promise.all(
       uniqueRoles.map(async (role) => {
@@ -139,33 +147,21 @@ export class LyricsService {
               AND: [{ text: { not: null } }, { NOT: { text: '' } }],
             },
           },
-          select: { id: true },
+          select: {
+            id: true,
+            message: { select: { text: true } },
+          },
         });
-        pools[role] = rows.map((row) => row.id);
+        pools[role] = rows.map((row) => ({
+          id: row.id,
+          lines: splitGeneratorLines(row.message?.text ?? ''),
+        }));
       })
     );
 
-    const slots = assembleSlotsFromPools(pools);
-    const lyricIds = slots
-      .map((slot) => slot.lyricId)
-      .filter((id): id is number => id !== null);
+    const slots = assembleSlotsFromPools(pools, preset);
 
-    const lyrics =
-      lyricIds.length === 0
-        ? []
-        : await this.prisma.lyrics.findMany({
-            where: { id: { in: lyricIds } },
-            include: lyricInclude,
-          });
-    const byId = new Map(lyrics.map((row) => [row.id, row]));
-
-    return {
-      slots: slots.map((slot) => ({
-        songRole: slot.songRole,
-        lyricId: slot.lyricId,
-        lyric: slot.lyricId !== null ? (byId.get(slot.lyricId) ?? null) : null,
-      })),
-    };
+    return this.hydrateSlots(slots);
   }
 
   async likeCollage(slotsInput: unknown) {
@@ -193,9 +189,16 @@ export class LyricsService {
     slotsJson: unknown
   ) {
     const slots = slotsFromJson(slotsJson);
-    const lyricIds = slots
-      .map((slot) => slot.lyricId)
-      .filter((lyricId): lyricId is number => lyricId !== null);
+
+    return {
+      id,
+      createdAt: createdAt.toISOString(),
+      ...(await this.hydrateSlots(slots)),
+    };
+  }
+
+  private async hydrateSlots(slots: ReturnType<typeof slotsFromJson>) {
+    const lyricIds = lyricIdsFromSlots(slots);
 
     const lyrics =
       lyricIds.length === 0
@@ -207,12 +210,14 @@ export class LyricsService {
     const byId = new Map(lyrics.map((row) => [row.id, row]));
 
     return {
-      id,
-      createdAt: createdAt.toISOString(),
       slots: slots.map((slot) => ({
         songRole: slot.songRole,
-        lyricId: slot.lyricId,
-        lyric: slot.lyricId !== null ? (byId.get(slot.lyricId) ?? null) : null,
+        parts: slot.parts.map((part) => ({
+          lyricId: part.lyricId,
+          startLine: part.startLine,
+          endLine: part.endLine,
+          lyric: byId.get(part.lyricId) ?? null,
+        })),
       })),
     };
   }

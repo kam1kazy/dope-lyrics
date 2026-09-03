@@ -143,7 +143,7 @@ model Hashtags {
 model LyricCollage {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
-  /// [{ songRole, lyricId }] — lyricId null = пустой слот.
+  /// [{ songRole, parts: [{ lyricId, startLine, endLine }] }]. Старый shape { lyricId } ещё читается.
   slots     Json
 
   @@index([createdAt])

@@ -51,6 +51,11 @@ type UpdateLyricProfileArgs = {
   readiness?: string | null;
 };
 
+type AssembleTrackArgs = {
+  preset?: string | null;
+  hideAdlibs?: boolean | null;
+};
+
 type LikeCollageArgs = {
   slots: unknown;
 };
@@ -144,10 +149,10 @@ export const resolvers = {
     },
     assembleTrack: (
       _parent: unknown,
-      _args: unknown,
+      args: AssembleTrackArgs,
       _context: GraphQLContext
     ) => {
-      return lyricsService.assembleTrack();
+      return lyricsService.assembleTrack(args.preset);
     },
     lyricCollages: (
       _parent: unknown,

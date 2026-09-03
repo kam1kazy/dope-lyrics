@@ -83,14 +83,22 @@ export type ICatalogStats = {
   readinessNone: number;
 };
 
-export type IAssembledTrackSlot = {
-  songRole: LyricSongRole;
-  lyricId: number | null;
+export type TrackFormPreset = 'HIT' | 'CANVAS';
+
+export type IAssembledTrackPart = {
+  lyricId: number;
+  startLine: number;
+  endLine: number;
   lyric:
     | (Pick<ILyric, 'id'> & {
         message: Pick<IMessage, 'text'> | null;
       })
     | null;
+};
+
+export type IAssembledTrackSlot = {
+  songRole: LyricSongRole;
+  parts: IAssembledTrackPart[];
 };
 
 export type IAssembledTrack = {

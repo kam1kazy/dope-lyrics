@@ -30,6 +30,7 @@ export { updateLyricsCacheAfterFlagsChange } from './lib/update-lyrics-cache';
 export { usePaginatedLyrics } from './lib/use-paginated-lyrics';
 export type {
   IAssembledTrack,
+  IAssembledTrackPart,
   IAssembledTrackSlot,
   ICatalogStats,
   IChat,
@@ -43,6 +44,7 @@ export type {
   IReaction,
   IUserLyric,
   LyricSlide,
+  TrackFormPreset,
 } from './model/types';
 export { FacetChipGroup } from './ui/facet-chip-group';
 export { LyricItem } from './ui/lyric-item';

@@ -9,11 +9,17 @@ import {
   List,
   ListFilter,
   PanelLeft,
+  Shuffle,
   Sparkles,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
-import { CatalogAssemblePanel } from '@/features/catalog-assemble';
+import type { TrackFormPreset } from '@/entities/lyric';
+import {
+  CatalogAssembleHistory,
+  CatalogAssemblePanel,
+  CatalogGeneratorPane,
+} from '@/features/catalog-assemble';
 import { CatalogDemosPanel } from '@/features/catalog-demos';
 import { CatalogFavoritesPanel } from '@/features/catalog-favorites';
 import { CatalogFilterPane } from '@/features/catalog-filters';
@@ -31,9 +37,9 @@ import { cn } from '@/shared/lib/utils/cn';
 import { CatalogPanel } from '@/shared/ui/catalog-panel/catalog-panel';
 import { Button } from '@/shared/ui/shadcn/ui/button';
 
-type CatalogSection = 'list' | 'favorites' | 'demos' | 'stats' | 'history';
+type CatalogSection = 'list' | 'favorites' | 'demos' | 'stats' | 'generator';
 
-type FilterableSection = Exclude<CatalogSection, 'stats' | 'history'>;
+type FilterableSection = Exclude<CatalogSection, 'stats' | 'generator'>;
 
 type MenuItem = {
   id: CatalogSection | 'references' | 'ai-settings';
@@ -48,7 +54,7 @@ const MENU_ITEMS: MenuItem[] = [
   { id: 'demos', label: 'Тексты из демок', icon: AudioLines },
   { id: 'stats', label: 'Сводка', icon: ChartColumn },
   { id: 'references', label: 'Эталоны', icon: Sparkles, disabled: true },
-  { id: 'history', label: 'История', icon: History },
+  { id: 'generator', label: 'Генератор', icon: Shuffle },
   { id: 'ai-settings', label: 'Настройки ИИ', icon: Bot, disabled: true },
 ];
 
@@ -57,7 +63,7 @@ const SECTION_TITLES: Record<CatalogSection, string> = {
   favorites: 'Избранное',
   demos: 'Тексты из демок',
   stats: 'Сводка',
-  history: 'История',
+  generator: 'Генератор',
 };
 
 const EMPTY_SECTION_FILTERS: Record<FilterableSection, CatalogSectionFilters> =
@@ -73,6 +79,10 @@ export function CatalogMenu() {
     null
   );
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [generatorPreset, setGeneratorPreset] =
+    useState<TrackFormPreset>('HIT');
+  const [hideAdlibs, setHideAdlibs] = useState(false);
   const [filtersBySection, setFiltersBySection] = useState(
     EMPTY_SECTION_FILTERS
   );
@@ -107,16 +117,18 @@ export function CatalogMenu() {
 
     setActiveSection(null);
     setFiltersOpen(false);
+    setHistoryOpen(false);
     document.body.style.removeProperty('pointer-events');
   }, [beginOverlay, endOverlay, isOpen]);
 
   const openSection = (section: CatalogSection) => {
     setActiveSection(section);
     setFiltersOpen(false);
+    setHistoryOpen(false);
   };
 
   const filterableSection: FilterableSection | null =
-    activeSection && activeSection !== 'stats' && activeSection !== 'history'
+    activeSection && activeSection !== 'stats' && activeSection !== 'generator'
       ? activeSection
       : null;
   const sectionFilters = filterableSection
@@ -125,6 +137,8 @@ export function CatalogMenu() {
   const sectionHasFilters = filterableSection
     ? hasActiveCatalogSectionFilters(filtersBySection[filterableSection])
     : false;
+  const generatorHasSettings = generatorPreset !== 'HIT' || hideAdlibs;
+  const sidePaneOpen = filtersOpen || historyOpen;
 
   return (
     <>
@@ -170,7 +184,7 @@ export function CatalogMenu() {
       <CatalogPanel
         open={isOpen}
         className={
-          filtersOpen ? 'max-w-[min(100%,60rem)]' : 'max-w-[min(100%,640px)]'
+          sidePaneOpen ? 'max-w-[min(100%,60rem)]' : 'max-w-[min(100%,640px)]'
         }
         onOpenChange={(open) => {
           if (!open) {
@@ -247,6 +261,11 @@ export function CatalogMenu() {
                         return;
                       }
 
+                      if (historyOpen) {
+                        setHistoryOpen(false);
+                        return;
+                      }
+
                       setActiveSection(null);
                     }}
                   >
@@ -255,6 +274,44 @@ export function CatalogMenu() {
                   <h2 className="text-sm font-medium">
                     {SECTION_TITLES[activeSection]}
                   </h2>
+                  {activeSection === 'generator' ? (
+                    <div className="ml-auto flex items-center gap-1">
+                      <Button
+                        type="button"
+                        variant={historyOpen ? 'secondary' : 'ghost'}
+                        size="icon"
+                        className="size-8"
+                        aria-label="История"
+                        aria-pressed={historyOpen}
+                        onClick={() => {
+                          setHistoryOpen((open) => !open);
+                          setFiltersOpen(false);
+                        }}
+                      >
+                        <History className="size-4" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={filtersOpen ? 'secondary' : 'ghost'}
+                        size="icon"
+                        className="relative size-8"
+                        aria-label="Фильтры"
+                        aria-pressed={filtersOpen}
+                        onClick={() => {
+                          setFiltersOpen((open) => !open);
+                          setHistoryOpen(false);
+                        }}
+                      >
+                        <ListFilter className="size-4" />
+                        {generatorHasSettings ? (
+                          <span
+                            className="bg-primary absolute top-1.5 right-1.5 size-1.5 rounded-full"
+                            aria-hidden
+                          />
+                        ) : null}
+                      </Button>
+                    </div>
+                  ) : null}
                   {filterableSection ? (
                     <Button
                       type="button"
@@ -289,8 +346,11 @@ export function CatalogMenu() {
                       <CatalogFavoritesPanel filters={sectionFilters} />
                     ) : activeSection === 'demos' ? (
                       <CatalogDemosPanel filters={sectionFilters} />
-                    ) : activeSection === 'history' ? (
-                      <CatalogAssemblePanel />
+                    ) : activeSection === 'generator' ? (
+                      <CatalogAssemblePanel
+                        preset={generatorPreset}
+                        hideAdlibs={hideAdlibs}
+                      />
                     ) : (
                       <CatalogStatsPanel />
                     )}
@@ -302,26 +362,37 @@ export function CatalogMenu() {
                       'border-border bg-background min-h-0 overflow-hidden',
                       'max-sm:absolute max-sm:inset-0 max-sm:z-10 max-sm:transition-transform max-sm:duration-300 max-sm:ease-out',
                       'sm:shrink-0 sm:transition-[width] sm:duration-300 sm:ease-out',
-                      filtersOpen
+                      sidePaneOpen
                         ? 'max-sm:translate-x-0 sm:w-80 sm:border-l'
                         : 'pointer-events-none max-sm:translate-x-full sm:w-0 sm:border-l-transparent'
                     )}
                   >
                     <div className="h-full w-full sm:w-80">
-                      <CatalogFilterPane
-                        sectionId={filterableSection ?? 'list'}
-                        filters={sectionFilters}
-                        onChange={(next) => {
-                          if (!filterableSection) {
-                            return;
-                          }
+                      {activeSection === 'generator' && historyOpen ? (
+                        <CatalogAssembleHistory hideAdlibs={hideAdlibs} />
+                      ) : activeSection === 'generator' ? (
+                        <CatalogGeneratorPane
+                          preset={generatorPreset}
+                          hideAdlibs={hideAdlibs}
+                          onPresetChange={setGeneratorPreset}
+                          onHideAdlibsChange={setHideAdlibs}
+                        />
+                      ) : (
+                        <CatalogFilterPane
+                          sectionId={filterableSection ?? 'list'}
+                          filters={sectionFilters}
+                          onChange={(next) => {
+                            if (!filterableSection) {
+                              return;
+                            }
 
-                          setFiltersBySection((current) => ({
-                            ...current,
-                            [filterableSection]: next,
-                          }));
-                        }}
-                      />
+                            setFiltersBySection((current) => ({
+                              ...current,
+                              [filterableSection]: next,
+                            }));
+                          }}
+                        />
+                      )}
                     </div>
                   </div>
                 </div>

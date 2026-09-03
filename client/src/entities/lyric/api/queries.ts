@@ -258,18 +258,22 @@ export const UPDATE_LYRIC_FLAGS = gql`
 
 const COLLAGE_SLOT_FIELDS = `
   songRole
-  lyricId
-  lyric {
-    id
-    message {
-      text
+  parts {
+    lyricId
+    startLine
+    endLine
+    lyric {
+      id
+      message {
+        text
+      }
     }
   }
 `;
 
 export const ASSEMBLE_TRACK = gql`
-  query AssembleTrack {
-    assembleTrack {
+  query AssembleTrack($preset: TrackFormPreset, $hideAdlibs: Boolean) {
+    assembleTrack(preset: $preset, hideAdlibs: $hideAdlibs) {
       slots {
         ${COLLAGE_SLOT_FIELDS}
       }
