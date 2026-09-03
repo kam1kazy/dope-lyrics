@@ -116,8 +116,8 @@ export function ShelfFilterChips({
                 excluded
                   ? 'shelf-chip-excluded hover:brightness-110'
                   : selected
-                    ? 'bg-background text-foreground shadow-sm'
-                    : 'text-muted-foreground'
+                    ? 'bg-background text-foreground shadow-sm hover:bg-background hover:text-foreground'
+                    : 'text-muted-foreground hover:bg-background/60 hover:text-foreground'
               )}
               {...bindFlagClicks(flag)}
             >

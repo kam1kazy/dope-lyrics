@@ -32,6 +32,7 @@ export function FacetChipGroup<T extends string>({
   allowExclude = false,
   onChange,
   onExcludedChange,
+  onFilterChange,
   onSelect,
   size = 'filter',
 }: {
@@ -47,6 +48,7 @@ export function FacetChipGroup<T extends string>({
   allowExclude?: boolean;
   onChange: (next: T[]) => void;
   onExcludedChange?: (next: T[]) => void;
+  onFilterChange?: (next: { included: T[]; excluded: T[] }) => void;
   onSelect?: (option: T) => void;
   size?: 'filter' | 'desk';
 }) {
@@ -73,6 +75,11 @@ export function FacetChipGroup<T extends string>({
   };
 
   const applyFilter = (next: { included: T[]; excluded: T[] }) => {
+    if (onFilterChange) {
+      onFilterChange(next);
+      return;
+    }
+
     onChange(next.included);
     onExcludedChange?.(next.excluded);
   };

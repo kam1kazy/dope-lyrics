@@ -72,7 +72,7 @@ function ChipSkeletons({
       aria-live="polite"
       aria-busy="true"
       aria-label={label}
-      className="flex max-h-28 flex-wrap gap-1.5 overflow-hidden md:max-h-36 md:gap-2"
+      className="flex max-h-28 min-w-0 flex-wrap content-start gap-1.5 overflow-x-hidden overflow-y-auto md:max-h-36 md:gap-2"
     >
       {kind === 'tags'
         ? TAG_SKELETON_WIDTHS.map((width) => (
@@ -154,7 +154,7 @@ export function LyricFilterFields({
         ) : (
           <div
             data-swipe-ignore
-            className="flex max-h-28 flex-wrap gap-1.5 overflow-y-auto md:max-h-36 md:gap-2"
+            className="flex max-h-28 min-w-0 flex-wrap content-start gap-1.5 overflow-x-hidden overflow-y-auto md:max-h-36 md:gap-2"
           >
             {tags.map((tag) => {
               const selected = value.selectedTags.includes(tag);
@@ -168,11 +168,11 @@ export function LyricFilterFields({
                       selectedTags: toggleInList(value.selectedTags, tag),
                     })
                   }
-                  className="cursor-pointer"
+                  className="max-w-full cursor-pointer"
                 >
                   <Badge
                     variant={selected ? 'default' : 'secondary'}
-                    className="px-2 py-0.5 text-xs md:px-2.5 md:py-1 md:text-sm"
+                    className="max-w-full px-2 py-0.5 text-xs break-all whitespace-normal md:px-2.5 md:py-1 md:text-sm"
                   >
                     #{tag}
                   </Badge>
@@ -197,7 +197,7 @@ export function LyricFilterFields({
         ) : (
           <div
             data-swipe-ignore
-            className="flex max-h-28 flex-wrap gap-1.5 overflow-y-auto md:max-h-36 md:gap-2"
+            className="flex max-h-28 min-w-0 flex-wrap content-start gap-1.5 overflow-x-hidden overflow-y-auto md:max-h-36 md:gap-2"
           >
             {emojis.map((emoji) => {
               const selected = value.selectedEmojis.includes(emoji);
@@ -239,6 +239,9 @@ export function LyricFilterFields({
         allowExclude
         onChange={(mood) => onChange({ mood })}
         onExcludedChange={(excludeMood) => onChange({ excludeMood })}
+        onFilterChange={(next) =>
+          onChange({ mood: next.included, excludeMood: next.excluded })
+        }
       />
       <FacetChipGroup
         label="Подача"
@@ -251,6 +254,12 @@ export function LyricFilterFields({
         allowExclude
         onChange={(delivery) => onChange({ delivery })}
         onExcludedChange={(excludeDelivery) => onChange({ excludeDelivery })}
+        onFilterChange={(next) =>
+          onChange({
+            delivery: next.included,
+            excludeDelivery: next.excluded,
+          })
+        }
       />
       <FacetChipGroup
         label="Роль в песне"
@@ -263,6 +272,12 @@ export function LyricFilterFields({
         allowExclude
         onChange={(songRole) => onChange({ songRole })}
         onExcludedChange={(excludeSongRole) => onChange({ excludeSongRole })}
+        onFilterChange={(next) =>
+          onChange({
+            songRole: next.included,
+            excludeSongRole: next.excluded,
+          })
+        }
       />
       <FacetChipGroup
         label="Готовность"
@@ -275,6 +290,12 @@ export function LyricFilterFields({
         allowExclude
         onChange={(readiness) => onChange({ readiness })}
         onExcludedChange={(excludeReadiness) => onChange({ excludeReadiness })}
+        onFilterChange={(next) =>
+          onChange({
+            readiness: next.included,
+            excludeReadiness: next.excluded,
+          })
+        }
       />
 
       <div className="flex flex-col gap-2 md:gap-3">
