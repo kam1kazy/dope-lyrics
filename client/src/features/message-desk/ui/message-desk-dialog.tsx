@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation } from '@apollo/client/react';
-import { Ban, EyeOff, Sparkles, Star } from 'lucide-react';
+import { Ban, Check, EyeOff, Scissors, Sparkles, Star, X } from 'lucide-react';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import {
@@ -26,11 +26,22 @@ import {
   type LyricSongRole,
   type LyricsQueryVariables,
   patchRoleProfile,
+  SPLIT_LYRIC,
   UPDATE_LYRIC_FLAGS,
   UPDATE_LYRIC_PROFILE,
+  UPDATE_LYRIC_TEXT,
   updateLyricsCacheAfterFlagsChange,
+  updateLyricsCacheAfterSplit,
+  updateLyricsCacheAfterTextChange,
   upsertRoleProfile,
 } from '@/entities/lyric';
+import {
+  canSplitLyricText,
+  defaultAfterLine,
+  isValidAfterLine,
+  previewLyricHalf,
+} from '@/features/message-desk/lib/lyric-text-lines';
+import { SplitTextView } from '@/features/message-desk/ui/split-text-view';
 import { usePlayback } from '@/shared/lib/playback/playback-context';
 import { cn } from '@/shared/lib/utils/cn';
 import { Badge } from '@/shared/ui/shadcn/ui/badge';
@@ -50,9 +61,12 @@ interface MessageDeskDialogProps {
   queryVariables: LyricsQueryVariables;
   onOpenChange: (open: boolean) => void;
   onHidden?: () => void;
+  onLyricChange?: (lyric: ILyric) => void;
 }
 
 type DeskTab = 'text' | 'profile';
+type TextMode = 'view' | 'split' | 'edit';
+type DiscardPrompt = 'edit' | 'desk' | null;
 
 type ProfileFields = Pick<
   ILyric,
@@ -80,9 +94,20 @@ export function MessageDeskDialog({
   queryVariables,
   onOpenChange,
   onHidden,
+  onLyricChange,
 }: MessageDeskDialogProps) {
   const { suppressToggle } = usePlayback();
   const [tab, setTab] = useState<DeskTab>('text');
+  const [textMode, setTextMode] = useState<TextMode>('view');
+  const [afterLine, setAfterLine] = useState(0);
+  const [draftText, setDraftText] = useState('');
+  const [textError, setTextError] = useState<string | null>(null);
+  const [splitPick, setSplitPick] = useState<{
+    top: ILyric;
+    bottom: ILyric;
+  } | null>(null);
+  const [discardPrompt, setDiscardPrompt] = useState<DiscardPrompt>(null);
+  const lastTextTapRef = useRef(0);
   const [deskTitle, setDeskTitle] = useState('Сообщение');
   const [activeSongRole, setActiveSongRole] = useState<LyricSongRole | null>(
     null
@@ -103,6 +128,10 @@ export function MessageDeskDialog({
   useEffect(() => {
     if (!open) {
       setTab('text');
+      setTextMode('view');
+      setTextError(null);
+      setSplitPick(null);
+      setDiscardPrompt(null);
       setProfileError(null);
       setFlagsError(null);
       setProfileOverride(null);
@@ -126,7 +155,14 @@ export function MessageDeskDialog({
     setFlagsOverride(null);
     setProfileError(null);
     setFlagsError(null);
+    setTextError(null);
+    setTextMode('view');
+    setSplitPick(null);
+    setDiscardPrompt(null);
+    setDraftText(lyric?.message?.text ?? '');
     setActiveSongRole(lyric?.roleProfiles?.[0]?.songRole ?? null);
+    // Сброс только при смене фразы, не при правке текста в кэше.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- lyric.id нарочно единственная зависимость
   }, [lyric?.id]);
 
   const [updateFlags] = useMutation<
@@ -196,6 +232,41 @@ export function MessageDeskDialog({
     },
   });
 
+  const [updateText] = useMutation<
+    { updateLyricText: ILyric },
+    { id: number; text: string }
+  >(UPDATE_LYRIC_TEXT, {
+    update(cache, { data }) {
+      if (!data?.updateLyricText) {
+        return;
+      }
+
+      updateLyricsCacheAfterTextChange(
+        cache,
+        data.updateLyricText,
+        queryVariables
+      );
+    },
+  });
+
+  const [splitLyric] = useMutation<
+    { splitLyric: { top: ILyric; bottom: ILyric } },
+    { id: number; afterLine: number }
+  >(SPLIT_LYRIC, {
+    update(cache, { data }) {
+      if (!data?.splitLyric) {
+        return;
+      }
+
+      updateLyricsCacheAfterSplit(
+        cache,
+        data.splitLyric.top,
+        data.splitLyric.bottom,
+        queryVariables
+      );
+    },
+  });
+
   const tags = lyric?.message?.hashtags?.tags ?? [];
   const reactionEmojis = (lyric?.message?.reactions?.emojis ?? [])
     .map((entry) => entry.emoji)
@@ -222,6 +293,113 @@ export function MessageDeskDialog({
     isFavorite: flagsOverride?.isFavorite ?? lyric?.isFavorite ?? false,
     isReference: flagsOverride?.isReference ?? lyric?.isReference ?? false,
     isCensored: flagsOverride?.isCensored ?? lyric?.isCensored ?? false,
+  };
+
+  const sourceText = lyric?.message?.text ?? '';
+  const canSplit = canSplitLyricText(sourceText);
+  const isDraftDirty = textMode === 'edit' && draftText !== sourceText;
+
+  const errorMessage = (error: unknown, fallback: string) => {
+    return error instanceof Error ? error.message : fallback;
+  };
+
+  const enterSplitMode = () => {
+    setTextError(null);
+    setAfterLine(defaultAfterLine(sourceText));
+    setTextMode('split');
+  };
+
+  const exitSplitMode = () => {
+    setTextMode('view');
+    setTextError(null);
+  };
+
+  const enterEditMode = () => {
+    setDraftText(sourceText);
+    setTextError(null);
+    setTextMode('edit');
+  };
+
+  const discardEdit = () => {
+    setDraftText(sourceText);
+    setTextMode('view');
+    setTextError(null);
+    setDiscardPrompt(null);
+  };
+
+  const saveEdit = () => {
+    if (!lyric) {
+      return;
+    }
+
+    setTextError(null);
+
+    void updateText({
+      variables: { id: lyric.id, text: draftText },
+    })
+      .then((result) => {
+        const next = result.data?.updateLyricText;
+
+        if (next) {
+          onLyricChange?.(next);
+        }
+
+        const closeDesk = discardPrompt === 'desk';
+        setTextMode('view');
+        setDiscardPrompt(null);
+
+        if (closeDesk) {
+          suppressToggle();
+          flushPendingProfile();
+          onOpenChange(false);
+        }
+      })
+      .catch((error: unknown) => {
+        setTextError(errorMessage(error, 'Не удалось сохранить текст'));
+      });
+  };
+
+  const requestExitEdit = () => {
+    if (isDraftDirty) {
+      setDiscardPrompt('edit');
+      return;
+    }
+
+    discardEdit();
+  };
+
+  const confirmSplit = () => {
+    if (!lyric) {
+      return;
+    }
+
+    setTextError(null);
+
+    void splitLyric({
+      variables: { id: lyric.id, afterLine },
+    })
+      .then((result) => {
+        const payload = result.data?.splitLyric;
+
+        if (!payload) {
+          return;
+        }
+
+        setTextMode('view');
+        setSplitPick(payload);
+      })
+      .catch((error: unknown) => {
+        setTextError(errorMessage(error, 'Не удалось разрезать фразу'));
+      });
+  };
+
+  const chooseSplitPart = (part: 'top' | 'bottom') => {
+    if (!splitPick) {
+      return;
+    }
+
+    onLyricChange?.(part === 'top' ? splitPick.top : splitPick.bottom);
+    setSplitPick(null);
   };
 
   const persistProfile = (pending: {
@@ -352,16 +530,24 @@ export function MessageDeskDialog({
     <Dialog
       open={open}
       onOpenChange={(nextOpen) => {
+        if (!nextOpen && isDraftDirty) {
+          setDiscardPrompt('desk');
+          return;
+        }
+
         if (!nextOpen) {
           suppressToggle();
           flushPendingProfile();
+          setTextMode('view');
+          setSplitPick(null);
+          setDiscardPrompt(null);
         }
 
         onOpenChange(nextOpen);
       }}
     >
       <DialogContent
-        className="max-h-[min(85svh,640px)] gap-5 overflow-y-auto p-6 sm:max-w-xl sm:gap-7 sm:p-8 md:max-h-[min(88svh,800px)]"
+        className="relative max-h-[min(85svh,640px)] gap-5 overflow-y-auto p-6 sm:max-w-xl sm:gap-7 sm:p-8 md:max-h-[min(88svh,800px)]"
         onClick={(event) => {
           event.stopPropagation();
         }}
@@ -419,7 +605,19 @@ export function MessageDeskDialog({
                     ? 'bg-background text-foreground shadow-sm'
                     : 'text-muted-foreground'
                 )}
-                onClick={() => setTab(id)}
+                onClick={() => {
+                  if (id === tab) {
+                    return;
+                  }
+
+                  if (isDraftDirty) {
+                    setDiscardPrompt('edit');
+                    return;
+                  }
+
+                  setTextMode('view');
+                  setTab(id);
+                }}
               >
                 {label}
               </Button>
@@ -454,9 +652,64 @@ export function MessageDeskDialog({
               </div>
             ) : null}
 
-            <p className="text-sm leading-relaxed whitespace-pre-wrap sm:text-base sm:leading-7">
-              {lyric.message?.text}
-            </p>
+            {textMode === 'split' ? (
+              <SplitTextView
+                text={sourceText}
+                afterLine={afterLine}
+                onAfterLineChange={setAfterLine}
+              />
+            ) : textMode === 'edit' ? (
+              <div className="relative">
+                <textarea
+                  value={draftText}
+                  onChange={(event) => setDraftText(event.target.value)}
+                  className="border-input bg-background min-h-40 w-full resize-y rounded-md border px-3 py-2 pr-20 pb-12 text-sm leading-relaxed whitespace-pre-wrap sm:text-base sm:leading-7"
+                  aria-label="Текст фразы"
+                />
+                <div className="absolute right-2 bottom-2 flex gap-1">
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="secondary"
+                    className="size-8"
+                    onClick={saveEdit}
+                    aria-label="Сохранить"
+                  >
+                    <Check className="size-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="outline"
+                    className="size-8"
+                    onClick={requestExitEdit}
+                    aria-label="Выйти без сохранения"
+                  >
+                    <X className="size-4" />
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <p
+                className="text-sm leading-relaxed whitespace-pre-wrap sm:text-base sm:leading-7"
+                onPointerUp={() => {
+                  const now = Date.now();
+
+                  if (now - lastTextTapRef.current < 400) {
+                    lastTextTapRef.current = 0;
+                    enterEditMode();
+                    return;
+                  }
+
+                  lastTextTapRef.current = now;
+                }}
+              >
+                {lyric.message?.text}
+              </p>
+            )}
+            {textError ? (
+              <p className="text-destructive text-sm">{textError}</p>
+            ) : null}
           </div>
         ) : null}
 
@@ -572,6 +825,41 @@ export function MessageDeskDialog({
         ) : null}
 
         <DialogFooter className="grid grid-cols-2 gap-2 pt-1 sm:flex sm:flex-row sm:flex-wrap sm:justify-start sm:gap-3">
+          {tab === 'text' && textMode !== 'edit' ? (
+            <Button
+              type="button"
+              variant={textMode === 'split' ? 'secondary' : 'outline'}
+              disabled={
+                !lyric ||
+                (textMode !== 'split' && !canSplit) ||
+                (textMode === 'split' &&
+                  !isValidAfterLine(sourceText, afterLine))
+              }
+              className="gap-2 sm:h-10"
+              onClick={() => {
+                if (textMode === 'split') {
+                  confirmSplit();
+                  return;
+                }
+
+                enterSplitMode();
+              }}
+            >
+              <Scissors className="size-4" aria-hidden />
+              Разрезать
+            </Button>
+          ) : null}
+          {tab === 'text' && textMode === 'split' ? (
+            <Button
+              type="button"
+              variant="outline"
+              className="gap-2 sm:h-10"
+              onClick={exitSplitMode}
+            >
+              <X className="size-4" aria-hidden />
+              Отмена
+            </Button>
+          ) : null}
           <Button
             type="button"
             variant={flags.isFavorite ? 'secondary' : 'outline'}
@@ -656,6 +944,73 @@ export function MessageDeskDialog({
             )}
           </Button>
         </DialogFooter>
+
+        {splitPick ? (
+          <div className="bg-background/95 absolute inset-0 z-20 flex flex-col gap-4 overflow-y-auto p-6">
+            <p className="text-lg font-semibold">
+              Какую часть оставить открытой?
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              className="h-auto flex-col items-start gap-2 whitespace-pre-wrap py-3 text-left"
+              onClick={() => chooseSplitPart('top')}
+            >
+              <span className="font-medium">Верх</span>
+              <span className="text-muted-foreground text-sm">
+                {previewLyricHalf(splitPick.top.message?.text ?? '')}
+              </span>
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="h-auto flex-col items-start gap-2 whitespace-pre-wrap py-3 text-left"
+              onClick={() => chooseSplitPart('bottom')}
+            >
+              <span className="font-medium">Низ</span>
+              <span className="text-muted-foreground text-sm">
+                {previewLyricHalf(splitPick.bottom.message?.text ?? '')}
+              </span>
+            </Button>
+          </div>
+        ) : null}
+
+        {discardPrompt ? (
+          <div className="bg-background/95 absolute inset-0 z-20 flex flex-col justify-end gap-3 p-6">
+            <p className="text-lg font-semibold">Сохранить изменения?</p>
+            <p className="text-muted-foreground text-sm">
+              Текст менялся и ещё не записан в каталог.
+            </p>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Button type="button" onClick={saveEdit}>
+                Сохранить
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  const closeDesk = discardPrompt === 'desk';
+                  discardEdit();
+
+                  if (closeDesk) {
+                    suppressToggle();
+                    flushPendingProfile();
+                    onOpenChange(false);
+                  }
+                }}
+              >
+                Не сохранять
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => setDiscardPrompt(null)}
+              >
+                Отмена
+              </Button>
+            </div>
+          </div>
+        ) : null}
       </DialogContent>
     </Dialog>
   );

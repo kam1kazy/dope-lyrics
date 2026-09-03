@@ -82,6 +82,11 @@ export const typeDefinitions = /* GraphQL */ `
     delivery: [LyricDelivery!]!
   }
 
+  type SplitLyricPayload {
+    top: Lyric!
+    bottom: Lyric!
+  }
+
   input LyricRoleProfileInput {
     songRole: LyricSongRole!
     mood: [LyricMood!]!
@@ -336,6 +341,8 @@ export const typeDefinitions = /* GraphQL */ `
       roleProfiles: [LyricRoleProfileInput!]
       readiness: LyricReadiness
     ): Lyric!
+    updateLyricText(id: Int!, text: String!): Lyric!
+    splitLyric(id: Int!, afterLine: Int!): SplitLyricPayload!
     ingestPendingLyrics: LyricIngestResult!
     likeCollage(slots: [CollageSlotInput!]!): LyricCollage!
   }

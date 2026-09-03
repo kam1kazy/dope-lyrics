@@ -701,6 +701,10 @@ export function Viewport({
         lyric={deskLyric}
         open={deskOpen}
         queryVariables={queryVariables}
+        onLyricChange={(next) => {
+          setDeskLyricId(next.id);
+          setDeskLyricSnapshot(next);
+        }}
         onOpenChange={(open) => {
           setDeskOpen(open);
 

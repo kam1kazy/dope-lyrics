@@ -1,3 +1,5 @@
+import { GraphQLError } from 'graphql';
+
 import { lyricInclude } from '~/graphql/lyric-include';
 import { prisma } from '~/infrastructure/prisma';
 import { buildCatalogStats } from '~/modules/lyrics/catalog-stats';
@@ -7,6 +9,12 @@ import {
   parseLyricProfilePatch,
   roleProfilesToJson,
 } from '~/modules/lyrics/lyric-facets';
+import {
+  assertNonEmptyLyricText,
+  readinessAfterTextChange,
+  splitTextAtLine,
+  textCounts,
+} from '~/modules/lyrics/lyric-text';
 import type { IChatHistoryItem } from '~/modules/lyrics/lyrics.types';
 import {
   buildLyricsWhere,
@@ -348,6 +356,139 @@ export class LyricsService {
       where: { id },
       data,
       include: lyricInclude,
+    });
+  }
+
+  async updateLyricText(id: number, text: string) {
+    const nextText = assertNonEmptyLyricText(text);
+    const counts = textCounts(nextText);
+    const row = await this.prisma.lyrics.findUnique({
+      where: { id },
+      include: { message: true },
+    });
+
+    if (!row?.message) {
+      throw new GraphQLError('Фраза не найдена');
+    }
+
+    return this.prisma.lyrics.update({
+      where: { id },
+      data: {
+        editDate: new Date(),
+        readiness: readinessAfterTextChange(
+          row.readiness,
+          counts.paragraph_count
+        ),
+        message: {
+          update: {
+            text: nextText,
+            word_count: counts.word_count,
+            paragraph_count: counts.paragraph_count,
+          },
+        },
+      },
+      include: lyricInclude,
+    });
+  }
+
+  async splitLyric(id: number, afterLine: number) {
+    const row = await this.prisma.lyrics.findUnique({
+      where: { id },
+      include: lyricInclude,
+    });
+
+    const sourceMessage = row?.message;
+
+    if (!row || !sourceMessage?.text) {
+      throw new GraphQLError('Фраза не найдена');
+    }
+
+    const { top, bottom } = splitTextAtLine(sourceMessage.text, afterLine);
+    const topCounts = textCounts(top);
+    const bottomCounts = textCounts(bottom);
+    const editedAt = new Date();
+
+    return this.prisma.$transaction(async (tx) => {
+      const topRow = await tx.lyrics.update({
+        where: { id },
+        data: {
+          editDate: editedAt,
+          readiness: readinessAfterTextChange(
+            row.readiness,
+            topCounts.paragraph_count
+          ),
+          message: {
+            update: {
+              text: top,
+              word_count: topCounts.word_count,
+              paragraph_count: topCounts.paragraph_count,
+            },
+          },
+        },
+        include: lyricInclude,
+      });
+
+      const bottomRow = await tx.lyrics.create({
+        data: {
+          lyric_id: row.lyric_id,
+          date: row.date,
+          editDate: editedAt,
+          isPinned: row.isPinned,
+          isChannelPost: row.isChannelPost,
+          isReference: row.isReference,
+          isHidden: row.isHidden,
+          isFavorite: row.isFavorite,
+          isCensored: row.isCensored,
+          mood: row.mood,
+          delivery: row.delivery,
+          songRole: row.songRole,
+          roleProfiles: row.roleProfiles ?? {},
+          readiness: readinessAfterTextChange(
+            row.readiness,
+            bottomCounts.paragraph_count
+          ),
+          replyToMessage: row.replyToMessage,
+          userId: row.userId,
+          message: {
+            create: {
+              message_id: sourceMessage.message_id,
+              text: bottom,
+              word_count: bottomCounts.word_count,
+              paragraph_count: bottomCounts.paragraph_count,
+              hashtags: sourceMessage.hashtags
+                ? {
+                    create: {
+                      tags: sourceMessage.hashtags.tags,
+                      count: sourceMessage.hashtags.count,
+                    },
+                  }
+                : undefined,
+            },
+          },
+          user: row.user
+            ? {
+                create: {
+                  id: row.user.id,
+                  username: row.user.username,
+                  displayName: row.user.displayName,
+                  isAdmin: row.user.isAdmin,
+                },
+              }
+            : undefined,
+          chat: row.chat
+            ? {
+                create: {
+                  id: row.chat.id,
+                  title: row.chat.title,
+                  type: row.chat.type,
+                },
+              }
+            : undefined,
+        },
+        include: lyricInclude,
+      });
+
+      return { top: topRow, bottom: bottomRow };
     });
   }
 

@@ -12,7 +12,53 @@ export const LYRIC_EMOJIS = gql`
   }
 `;
 
+export const LYRIC_LIST_FIELDS = gql`
+  fragment LyricListFields on Lyric {
+    id
+    lyric_id
+    date
+    editDate
+    isPinned
+    isChannelPost
+    isReference
+    isHidden
+    isFavorite
+    isCensored
+    mood
+    delivery
+    songRole
+    roleProfiles {
+      songRole
+      mood
+      delivery
+    }
+    readiness
+    replyToMessage
+    message {
+      id
+      text
+      word_count
+      hashtags {
+        id
+        count
+        tags
+      }
+      reactions {
+        id
+        totalCount
+        emojis {
+          id
+          emoji
+          count
+          order
+        }
+      }
+    }
+  }
+`;
+
 export const ALL_LYRICS = gql`
+  ${LYRIC_LIST_FIELDS}
   query AllLyrics(
     $tags: [String!]
     $keyword: String
@@ -69,51 +115,7 @@ export const ALL_LYRICS = gql`
       readiness: $readiness
       excludeReadiness: $excludeReadiness
     ) {
-      id
-
-      lyric_id
-      date
-      editDate
-      isPinned
-      isChannelPost
-      isReference
-      isHidden
-      isFavorite
-      isCensored
-      mood
-      delivery
-      songRole
-      roleProfiles {
-        songRole
-        mood
-        delivery
-      }
-      readiness
-      replyToMessage
-
-      message {
-        id
-        text
-        word_count
-
-        hashtags {
-          id
-          count
-          tags
-        }
-
-        reactions {
-          id
-          totalCount
-
-          emojis {
-            id
-            emoji
-            count
-            order
-          }
-        }
-      }
+      ...LyricListFields
     }
   }
 `;
@@ -252,6 +254,29 @@ export const UPDATE_LYRIC_FLAGS = gql`
       isHidden
       isFavorite
       isCensored
+    }
+  }
+`;
+
+export const UPDATE_LYRIC_TEXT = gql`
+  ${LYRIC_LIST_FIELDS}
+  mutation UpdateLyricText($id: Int!, $text: String!) {
+    updateLyricText(id: $id, text: $text) {
+      ...LyricListFields
+    }
+  }
+`;
+
+export const SPLIT_LYRIC = gql`
+  ${LYRIC_LIST_FIELDS}
+  mutation SplitLyric($id: Int!, $afterLine: Int!) {
+    splitLyric(id: $id, afterLine: $afterLine) {
+      top {
+        ...LyricListFields
+      }
+      bottom {
+        ...LyricListFields
+      }
     }
   }
 `;

@@ -9,8 +9,10 @@ export {
   LYRIC_EMOJIS,
   LYRIC_INGEST_PREVIEW,
   LYRIC_TAGS,
+  SPLIT_LYRIC,
   UPDATE_LYRIC_FLAGS,
   UPDATE_LYRIC_PROFILE,
+  UPDATE_LYRIC_TEXT,
 } from './api/queries';
 export { createCarouselList } from './lib/create-carousel-list';
 export {
@@ -27,7 +29,11 @@ export {
   EMPTY_LYRIC_FACET_FILTERS,
   LYRICS_PAGE_SIZE,
 } from './lib/lyrics-query-variables';
-export { updateLyricsCacheAfterFlagsChange } from './lib/update-lyrics-cache';
+export {
+  updateLyricsCacheAfterFlagsChange,
+  updateLyricsCacheAfterSplit,
+  updateLyricsCacheAfterTextChange,
+} from './lib/update-lyrics-cache';
 export { usePaginatedLyrics } from './lib/use-paginated-lyrics';
 export type {
   IAssembledTrack,

@@ -94,6 +94,7 @@ export function CatalogLyricsList({
         open={deskOpen}
         queryVariables={listQueryVariables}
         onOpenChange={setDeskOpen}
+        onLyricChange={setSelectedLyric}
       />
     </>
   );

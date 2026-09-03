@@ -51,6 +51,16 @@ type UpdateLyricProfileArgs = {
   readiness?: string | null;
 };
 
+type UpdateLyricTextArgs = {
+  id: number;
+  text: string;
+};
+
+type SplitLyricArgs = {
+  id: number;
+  afterLine: number;
+};
+
 type AssembleTrackFilter = {
   tags?: string[] | null;
   keyword?: string | null;
@@ -205,6 +215,20 @@ export const resolvers = {
         roleProfiles: args.roleProfiles,
         readiness: args.readiness,
       });
+    },
+    updateLyricText: (
+      _parent: unknown,
+      args: UpdateLyricTextArgs,
+      _context: GraphQLContext
+    ) => {
+      return lyricsService.updateLyricText(args.id, args.text);
+    },
+    splitLyric: (
+      _parent: unknown,
+      args: SplitLyricArgs,
+      _context: GraphQLContext
+    ) => {
+      return lyricsService.splitLyric(args.id, args.afterLine);
     },
     ingestPendingLyrics: (
       _parent: unknown,

@@ -211,3 +211,92 @@ export function updateLyricsCacheAfterFlagsChange(
     data: { lyrics: nextLyrics },
   });
 }
+
+function mergeLyric(current: ILyric, patch: ILyric): ILyric {
+  return {
+    ...current,
+    ...patch,
+    message:
+      current.message && patch.message
+        ? { ...current.message, ...patch.message }
+        : (patch.message ?? current.message),
+  };
+}
+
+function lyricMatchesList(lyric: ILyric, queryVariables: LyricsQueryVariables) {
+  return (
+    lyricMatchesQueryShelves(lyric, queryVariables) &&
+    lyricMatchesFacets(lyric, queryVariables)
+  );
+}
+
+export function updateLyricsCacheAfterTextChange(
+  cache: ApolloCache,
+  updated: ILyric,
+  queryVariables: LyricsQueryVariables
+) {
+  const existing = cache.readQuery<{ lyrics: ILyric[] }>({
+    query: ALL_LYRICS,
+    variables: queryVariables,
+  });
+
+  if (!existing) {
+    return;
+  }
+
+  const nextLyrics = existing.lyrics
+    .map((lyric) =>
+      lyric.id === updated.id ? mergeLyric(lyric, updated) : lyric
+    )
+    .filter((lyric) => lyricMatchesList(lyric, queryVariables));
+
+  cache.writeQuery({
+    query: ALL_LYRICS,
+    variables: queryVariables,
+    data: { lyrics: nextLyrics },
+  });
+}
+
+export function updateLyricsCacheAfterSplit(
+  cache: ApolloCache,
+  top: ILyric,
+  bottom: ILyric,
+  queryVariables: LyricsQueryVariables
+) {
+  const existing = cache.readQuery<{ lyrics: ILyric[] }>({
+    query: ALL_LYRICS,
+    variables: queryVariables,
+  });
+
+  if (!existing) {
+    return;
+  }
+
+  const nextLyrics: ILyric[] = [];
+
+  for (const lyric of existing.lyrics) {
+    if (lyric.id === top.id) {
+      const mergedTop = mergeLyric(lyric, top);
+
+      if (lyricMatchesList(mergedTop, queryVariables)) {
+        nextLyrics.push(mergedTop);
+      }
+
+      if (lyricMatchesList(bottom, queryVariables)) {
+        nextLyrics.push(bottom);
+      }
+
+      continue;
+    }
+
+    if (lyric.id !== bottom.id) {
+      nextLyrics.push(lyric);
+    }
+  }
+
+  cache.writeQuery({
+    query: ALL_LYRICS,
+    variables: queryVariables,
+    data: { lyrics: nextLyrics },
+  });
+}
