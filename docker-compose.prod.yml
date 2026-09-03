@@ -1,0 +1,132 @@
+networks:
+  legoblokk:
+
+volumes:
+  postgres_data:
+  bot_data:
+
+services:
+  nginx:
+    image: nginx:stable-alpine
+    container_name: legoblokk-nginx
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      # - '443:443'  # включить, когда 443 освободится от Marzban
+    volumes:
+      - /opt/lucky:/usr/share/nginx/html:ro
+      - ./nginx.prod.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./.htpasswd:/etc/nginx/.htpasswd:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    networks:
+      - legoblokk
+    mem_limit: 64m
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -q -O /dev/null http://127.0.0.1/robots.txt || exit 1']
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  db:
+    profiles: ['app']
+    build:
+      context: ./db
+    image: postgres:16.4-alpine
+    container_name: dope-lyrics-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    command:
+      - 'postgres'
+      - '-c'
+      - 'max_connections=50'
+      - '-c'
+      - 'shared_buffers=128MB'
+      - '-c'
+      - 'effective_cache_size=512MB'
+      - '-c'
+      - 'work_mem=8MB'
+      - '-c'
+      - 'maintenance_work_mem=64MB'
+    expose:
+      - '5432'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER} -d ${DB_NAME}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - legoblokk
+    env_file:
+      - ./server/.env
+    mem_limit: 512m
+
+  frontend:
+    profiles: ['app']
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      target: release
+      args:
+        NEXT_PUBLIC_BASE_PATH: /essence
+        BASE_URL: http://backend:4000
+    image: dope-lyrics-frontend:local
+    container_name: dope-lyrics-frontend
+    restart: unless-stopped
+    hostname: frontend
+    environment:
+      HOSTNAME: 0.0.0.0
+      PORT: 3000
+      BASE_URL: http://backend:4000
+      NEXT_PUBLIC_BASE_PATH: /essence
+    expose:
+      - '3000'
+    networks:
+      - legoblokk
+    mem_limit: 768m
+    depends_on:
+      backend:
+        condition: service_started
+
+  backend:
+    profiles: ['app']
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+      target: release
+    image: dope-lyrics-backend:local
+    container_name: dope-lyrics-backend
+    restart: unless-stopped
+    hostname: backend
+    depends_on:
+      db:
+        condition: service_healthy
+    expose:
+      - '4000'
+    networks:
+      - legoblokk
+    env_file:
+      - ./server/.env
+    mem_limit: 512m
+
+  telegram-bot:
+    profiles: ['bot']
+    image: dope-lyrics-backend:local
+    container_name: dope-lyrics-bot
+    restart: unless-stopped
+    command: bun run bot:admin
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - legoblokk
+    env_file:
+      - ./server/.env
+    volumes:
+      - bot_data:/src/bot-data
+    mem_limit: 256m

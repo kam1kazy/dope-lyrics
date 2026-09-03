@@ -12,6 +12,16 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: 'DOPE LYRICS',
   description: 'App to Telegram lyrics bot',
+  robots: {
+    index: false,
+    follow: false,
+    nocache: true,
+    googleBot: {
+      index: false,
+      follow: false,
+      noimageindex: true,
+    },
+  },
 };
 
 export default function RootLayout({

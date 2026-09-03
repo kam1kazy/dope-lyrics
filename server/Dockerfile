@@ -10,13 +10,9 @@ RUN bun install --frozen-lockfile
 
 # Этап сборки
 FROM base AS build
-# Копирование и настройка wait-for-db.sh
-COPY wait-for-db.sh .
-RUN chmod +x wait-for-db.sh
-# Копирование зависимостей и кода
 COPY --from=install /src/node_modules ./node_modules
 COPY . .
-# Генерация Prisma
+RUN chmod +x wait-for-db.sh
 RUN bun run generate
 
 # Финальный образ для разработки
