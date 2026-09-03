@@ -466,3 +466,74 @@ export const lyricIdsFromSlots = (slots: CollageSlotStored[]): number[] => {
 
   return [...ids];
 };
+
+const isOpenEnded = (endLine: number): boolean => {
+  return endLine >= LEGACY_END_LINE;
+};
+
+const remapPartAfterSplit = (
+  part: CollagePartStored,
+  sourceId: number,
+  bottomId: number,
+  topLineCount: number
+): CollagePartStored[] => {
+  if (part.lyricId !== sourceId) {
+    return [part];
+  }
+
+  const { startLine, endLine } = part;
+  const openEnd = isOpenEnded(endLine);
+
+  if (startLine >= topLineCount) {
+    return [
+      {
+        lyricId: bottomId,
+        startLine: startLine - topLineCount,
+        endLine: openEnd ? LEGACY_END_LINE : endLine - topLineCount,
+      },
+    ];
+  }
+
+  if (!openEnd && endLine <= topLineCount) {
+    return [part];
+  }
+
+  const remapped: CollagePartStored[] = [];
+  const topEnd = openEnd ? LEGACY_END_LINE : topLineCount;
+
+  if (topEnd > startLine) {
+    remapped.push({
+      lyricId: sourceId,
+      startLine,
+      endLine: topEnd,
+    });
+  }
+
+  const bottomEnd = openEnd ? LEGACY_END_LINE : endLine - topLineCount;
+  if (bottomEnd > 0) {
+    remapped.push({
+      lyricId: bottomId,
+      startLine: 0,
+      endLine: bottomEnd,
+    });
+  }
+
+  return remapped;
+};
+
+/** После разреза индексы — по очищенным строкам верха (`splitGeneratorLines`). */
+export const remapCollageSlotsAfterSplit = (
+  slots: CollageSlotStored[],
+  sourceId: number,
+  bottomId: number,
+  topLineCount: number
+): CollageSlotStored[] => {
+  const safeTopCount = Math.max(0, topLineCount);
+
+  return slots.map((slot) => ({
+    songRole: slot.songRole,
+    parts: slot.parts.flatMap((part) =>
+      remapPartAfterSplit(part, sourceId, bottomId, safeTopCount)
+    ),
+  }));
+};

@@ -28,6 +28,7 @@ import {
   lyricIdsFromSlots,
   parseCollageSlotsInput,
   type PoolLyric,
+  remapCollageSlotsAfterSplit,
   slotsFromJson,
   splitGeneratorLines,
   type TrackFormPreset,
@@ -503,6 +504,32 @@ export class LyricsService {
         },
         include: lyricInclude,
       });
+
+      const topLineCount = splitGeneratorLines(top).length;
+      const collages = await tx.lyricCollage.findMany();
+
+      for (const collage of collages) {
+        const slots = slotsFromJson(collage.slots);
+        if (!lyricIdsFromSlots(slots).includes(id)) {
+          continue;
+        }
+
+        const nextSlots = remapCollageSlotsAfterSplit(
+          slots,
+          id,
+          bottomRow.id,
+          topLineCount
+        );
+
+        if (JSON.stringify(nextSlots) === JSON.stringify(slots)) {
+          continue;
+        }
+
+        await tx.lyricCollage.update({
+          where: { id: collage.id },
+          data: { slots: nextSlots },
+        });
+      }
 
       return { top: topRow, bottom: bottomRow };
     });

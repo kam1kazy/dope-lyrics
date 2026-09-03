@@ -7,6 +7,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   FacetChipGroup,
   type ILyric,
+  LYRIC_COLLAGES,
   LYRIC_DELIVERIES,
   LYRIC_DELIVERY_HINTS,
   LYRIC_DELIVERY_LABELS,
@@ -268,6 +269,7 @@ export function MessageDeskDialog({
     { splitLyric: { top: ILyric; bottom: ILyric } },
     { id: number; afterLine: number }
   >(SPLIT_LYRIC, {
+    refetchQueries: [{ query: LYRIC_COLLAGES }],
     update(cache, { data }) {
       if (!data?.splitLyric) {
         return;

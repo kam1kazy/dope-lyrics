@@ -1,6 +1,6 @@
 'use client';
 
-import { useLazyQuery, useMutation } from '@apollo/client/react';
+import { useLazyQuery, useMutation, useQuery } from '@apollo/client/react';
 import { Heart, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
@@ -110,14 +110,28 @@ export function CatalogAssemblePanel({
       },
     });
 
+  const { data: historyData } = useQuery<{ lyricCollages: ILyricCollage[] }>(
+    LYRIC_COLLAGES,
+    {
+      skip: selectedCollage === null,
+      fetchPolicy: 'cache-first',
+    }
+  );
+  const viewedCollage =
+    selectedCollage === null
+      ? null
+      : (historyData?.lyricCollages.find(
+          (row) => row.id === selectedCollage.id
+        ) ?? selectedCollage);
+
   const draftKeyValue = useMemo(
     () => (draft ? draftKey(draft) : null),
     [draft]
   );
   const alreadyLiked =
     draftKeyValue !== null && draftKeyValue === likedDraftKey;
-  const viewingHistory = selectedCollage !== null;
-  const slots = viewingHistory ? selectedCollage.slots : draft;
+  const viewingHistory = viewedCollage !== null;
+  const slots = viewedCollage?.slots ?? draft;
 
   const handleAssemble = async () => {
     const result = await assemble({
@@ -145,7 +159,7 @@ export function CatalogAssemblePanel({
     }
 
     if (selectedCollage?.id === id) {
-      setDraft(selectedCollage.slots);
+      setDraft(viewedCollage?.slots ?? selectedCollage.slots);
       setLikedDraftKey(null);
       setLikedCollageId(null);
       onCloseSelected();
@@ -197,10 +211,10 @@ export function CatalogAssemblePanel({
     <div className="flex flex-col gap-6 p-4">
       <section className="flex flex-col gap-3">
         <div className="flex items-center gap-2">
-          {viewingHistory ? (
+          {viewedCollage ? (
             <>
               <h3 className="min-w-0 flex-1 truncate text-sm font-medium">
-                {formatCollageDate(selectedCollage.createdAt)}
+                {formatCollageDate(viewedCollage.createdAt)}
               </h3>
               <Button
                 type="button"
@@ -210,7 +224,7 @@ export function CatalogAssemblePanel({
                 disabled={heartBusy}
                 aria-label="Убрать из истории"
                 onClick={() => {
-                  void handleUnlike(selectedCollage.id);
+                  void handleUnlike(viewedCollage.id);
                 }}
               >
                 {unlikeLoading ? (

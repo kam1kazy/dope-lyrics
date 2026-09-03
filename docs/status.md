@@ -10,7 +10,7 @@
 | Контур | GraphQL + Next, данные с TG, карусель |
 | UI | shadcn. Меню: список, избранное, демки, сводка, **генератор** (сборка + история в шапке). Карточка: профиль, полки, разрез и правка текста |
 | Фильтры | `lyrics(...)` по тегам, полкам, ролям/настроению/подаче; фильтр пула генератора |
-| Склейка | `assembleTrack` / `likeCollage` / `unlikeCollage` / `lyricCollages` |
+| Склейка | `assembleTrack` / `likeCollage` / `unlikeCollage` / `lyricCollages`. После разреза слоты с `startLine`/`endLine` перекладываются на верх/низ |
 | Сервер | Модули (`app`, `modules/lyrics`, `graphql`, `mtcute`) |
 | Lint | typecheck зелёный; перед push — `bun run fix` |
 | Auth | Production GraphQL: `initData` Mini App + `BOT_ADMIN_ID` |
