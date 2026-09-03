@@ -12,7 +12,7 @@ services:
     restart: unless-stopped
     ports:
       - '80:80'
-      # - '443:443'  # включить, когда 443 освободится от Marzban
+      - '443:443'
     volumes:
       - /opt/lucky:/usr/share/nginx/html:ro
       - ./nginx.prod.conf:/etc/nginx/conf.d/default.conf:ro
@@ -22,7 +22,7 @@ services:
       - legoblokk
     mem_limit: 64m
     healthcheck:
-      test: ['CMD-SHELL', 'wget -q -O /dev/null http://127.0.0.1/robots.txt || exit 1']
+      test: ['CMD', 'nginx', '-t']
       interval: 15s
       timeout: 5s
       retries: 3
