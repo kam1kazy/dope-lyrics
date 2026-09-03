@@ -7,6 +7,7 @@ import {
   createCarouselList,
   usePaginatedLyrics,
 } from '@/entities/lyric';
+import { useCarouselSession } from '@/shared/lib/carousel-session/carousel-session-context';
 import {
   hasActiveLyricFilters,
   useLyricView,
@@ -41,6 +42,7 @@ export const LyricList = () => {
     excludeReadiness,
     settingsReady,
   } = useLyricView();
+  const { mode, queue, prepend, sessionKey } = useCarouselSession();
   const queryTags = selectedTags.length > 0 ? selectedTags : null;
   const queryEmojis = selectedEmojis.length > 0 ? selectedEmojis : null;
 
@@ -94,6 +96,7 @@ export const LyricList = () => {
     [debouncedFilterQueryVariables, shuffleSeed, sortMode]
   );
 
+  const queueMode = mode === 'queue';
   const {
     loading,
     error,
@@ -102,16 +105,32 @@ export const LyricList = () => {
     loadMore,
     queryVariables: activeQueryVariables,
   } = usePaginatedLyrics(queryVariables, {
-    skip: !settingsReady,
+    skip: !settingsReady || queueMode,
   });
 
-  const carouselList = useMemo(() => {
+  const sessionLyrics = useMemo(() => {
+    if (queueMode) {
+      return queue;
+    }
+
     if (!lyrics) {
+      return prepend ? [prepend] : null;
+    }
+
+    if (!prepend) {
+      return lyrics;
+    }
+
+    return [prepend, ...lyrics];
+  }, [lyrics, prepend, queue, queueMode]);
+
+  const carouselList = useMemo(() => {
+    if (!sessionLyrics) {
       return [];
     }
 
-    return createCarouselList(lyrics);
-  }, [lyrics]);
+    return createCarouselList(sessionLyrics);
+  }, [sessionLyrics]);
 
   const hasRenderedCarousel = useRef(false);
 
@@ -137,7 +156,16 @@ export const LyricList = () => {
     excludeReadiness,
   });
 
-  if (!settingsReady || (loading && !lyrics)) {
+  if (queueMode && queue.length === 0) {
+    return (
+      <ErrorText
+        title="Карусель пуста"
+        description="Добавьте фразу или перемешайте каталог"
+      />
+    );
+  }
+
+  if (!settingsReady || (loading && !sessionLyrics)) {
     return (
       <div className="flex h-full w-full items-center justify-center">
         <Spinner className="size-8" />
@@ -145,11 +173,11 @@ export const LyricList = () => {
     );
   }
 
-  if (error && !lyrics) {
+  if (error && !sessionLyrics) {
     return <ErrorText title="Ошибка" />;
   }
 
-  if (!lyrics?.length && !hasRenderedCarousel.current) {
+  if (!sessionLyrics?.length && !hasRenderedCarousel.current) {
     return (
       <ErrorText
         title="Пусто"
@@ -175,12 +203,12 @@ export const LyricList = () => {
       className="flex h-full min-h-0 w-full flex-col items-center overflow-hidden break-keep px-4 pt-4 text-center"
     >
       <Viewport
-        key={`${activeQueryVariables.includeShelves?.join('|') ?? ''}-${activeQueryVariables.excludeShelves?.join('|') ?? ''}-${activeQueryVariables.oldestFirst}-${sortMode}-${activeQueryVariables.tags?.join('|') ?? ''}-${activeQueryVariables.emojis?.join('|') ?? ''}-${activeQueryVariables.keyword ?? ''}-${activeQueryVariables.dateFrom ?? ''}-${activeQueryVariables.dateTo ?? ''}-${activeQueryVariables.mood?.join('|') ?? ''}-${activeQueryVariables.excludeMood?.join('|') ?? ''}-${activeQueryVariables.delivery?.join('|') ?? ''}-${activeQueryVariables.excludeDelivery?.join('|') ?? ''}-${activeQueryVariables.songRole?.join('|') ?? ''}-${activeQueryVariables.excludeSongRole?.join('|') ?? ''}-${activeQueryVariables.readiness?.join('|') ?? ''}-${activeQueryVariables.excludeReadiness?.join('|') ?? ''}-${shuffleSeed}`}
+        key={`${sessionKey}-${activeQueryVariables.includeShelves?.join('|') ?? ''}-${activeQueryVariables.excludeShelves?.join('|') ?? ''}-${activeQueryVariables.oldestFirst}-${sortMode}-${activeQueryVariables.tags?.join('|') ?? ''}-${activeQueryVariables.emojis?.join('|') ?? ''}-${activeQueryVariables.keyword ?? ''}-${activeQueryVariables.dateFrom ?? ''}-${activeQueryVariables.dateTo ?? ''}-${activeQueryVariables.mood?.join('|') ?? ''}-${activeQueryVariables.excludeMood?.join('|') ?? ''}-${activeQueryVariables.delivery?.join('|') ?? ''}-${activeQueryVariables.excludeDelivery?.join('|') ?? ''}-${activeQueryVariables.songRole?.join('|') ?? ''}-${activeQueryVariables.excludeSongRole?.join('|') ?? ''}-${activeQueryVariables.readiness?.join('|') ?? ''}-${activeQueryVariables.excludeReadiness?.join('|') ?? ''}-${shuffleSeed}`}
         data={carouselList}
-        lyrics={lyrics ?? []}
-        queryVariables={activeQueryVariables}
-        hasMore={hasMore}
-        onNeedMore={loadMore}
+        lyrics={sessionLyrics ?? []}
+        queryVariables={queueMode ? queryVariables : activeQueryVariables}
+        hasMore={queueMode ? false : hasMore}
+        onNeedMore={queueMode ? () => undefined : loadMore}
       />
     </div>
   );

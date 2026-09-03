@@ -5,6 +5,7 @@ import { type ReactNode, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { apolloClient } from '@/shared/api';
+import { CarouselSessionProvider } from '@/shared/lib/carousel-session/carousel-session-context';
 import { LyricViewProvider } from '@/shared/lib/lyric-view/lyric-view-context';
 import { PlaybackProvider } from '@/shared/lib/playback/playback-context';
 import { ThemeProvider } from '@/shared/ui/shadcn/theme-provider';
@@ -37,8 +38,10 @@ export function Providers({ children }: { children: ReactNode }) {
         <TooltipProvider>
           <LyricViewProvider>
             <PlaybackProvider>
-              {children}
-              <BodyToaster />
+              <CarouselSessionProvider>
+                {children}
+                <BodyToaster />
+              </CarouselSessionProvider>
             </PlaybackProvider>
           </LyricViewProvider>
         </TooltipProvider>

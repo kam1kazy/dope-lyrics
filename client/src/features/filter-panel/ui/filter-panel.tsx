@@ -17,6 +17,7 @@ import { useTheme } from 'next-themes';
 import { type ReactNode, useEffect, useState } from 'react';
 
 import { CatalogIngest } from '@/features/catalog-ingest';
+import { useCarouselSession } from '@/shared/lib/carousel-session/carousel-session-context';
 import {
   hasActiveLyricFilters,
   hasCustomLyricSettings,
@@ -130,6 +131,7 @@ function SettingsTab({ checkIngest }: { checkIngest: boolean }) {
     setCarouselSpeed,
     resetSettings,
   } = useLyricView();
+  const { resetToCatalog } = useCarouselSession();
   const { theme, setTheme } = useTheme();
   const [themeReady, setThemeReady] = useState(false);
   const canReset = hasCustomLyricSettings({
@@ -180,6 +182,7 @@ function SettingsTab({ checkIngest }: { checkIngest: boolean }) {
                     : 'text-muted-foreground'
                 )}
                 onClick={() => {
+                  resetToCatalog();
                   setSortMode(mode);
                 }}
               >

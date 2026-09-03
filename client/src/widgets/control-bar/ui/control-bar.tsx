@@ -4,6 +4,7 @@ import { Settings, Shuffle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import { FilterPanel } from '@/features/filter-panel';
+import { useCarouselSession } from '@/shared/lib/carousel-session/carousel-session-context';
 import { useLyricView } from '@/shared/lib/lyric-view/lyric-view-context';
 import { usePlayback } from '@/shared/lib/playback/playback-context';
 import { useSwipeToDismiss } from '@/shared/lib/swipe/use-swipe-to-dismiss';
@@ -24,6 +25,7 @@ export const ControlBar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [litKey, setLitKey] = useState<'shuffle' | 'settings' | null>(null);
   const { setSortMode } = useLyricView();
+  const { resetToCatalog } = useCarouselSession();
   const { paused, canPlay, suppressToggle, beginOverlay, endOverlay } =
     usePlayback();
   const playing = !paused && canPlay;
@@ -80,6 +82,7 @@ export const ControlBar = () => {
             onClick={(event) => {
               event.stopPropagation();
               suppressToggle();
+              resetToCatalog();
               setSortMode('shuffle');
             }}
           >
