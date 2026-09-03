@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
-import type { TrackFormPreset } from '@/entities/lyric';
+import type { ILyricCollage, TrackFormPreset } from '@/entities/lyric';
 import {
   CatalogAssembleHistory,
   CatalogAssemblePanel,
@@ -83,6 +83,9 @@ export function CatalogMenu() {
   const [generatorPreset, setGeneratorPreset] =
     useState<TrackFormPreset>('HIT');
   const [hideAdlibs, setHideAdlibs] = useState(false);
+  const [selectedCollage, setSelectedCollage] = useState<ILyricCollage | null>(
+    null
+  );
   const [filtersBySection, setFiltersBySection] = useState(
     EMPTY_SECTION_FILTERS
   );
@@ -118,6 +121,7 @@ export function CatalogMenu() {
     setActiveSection(null);
     setFiltersOpen(false);
     setHistoryOpen(false);
+    setSelectedCollage(null);
     document.body.style.removeProperty('pointer-events');
   }, [beginOverlay, endOverlay, isOpen]);
 
@@ -350,6 +354,10 @@ export function CatalogMenu() {
                       <CatalogAssemblePanel
                         preset={generatorPreset}
                         hideAdlibs={hideAdlibs}
+                        selectedCollage={selectedCollage}
+                        onCloseSelected={() => {
+                          setSelectedCollage(null);
+                        }}
                       />
                     ) : (
                       <CatalogStatsPanel />
@@ -369,7 +377,19 @@ export function CatalogMenu() {
                   >
                     <div className="h-full w-full sm:w-80">
                       {activeSection === 'generator' && historyOpen ? (
-                        <CatalogAssembleHistory hideAdlibs={hideAdlibs} />
+                        <CatalogAssembleHistory
+                          hideAdlibs={hideAdlibs}
+                          selectedId={selectedCollage?.id ?? null}
+                          onSelect={(collage) => {
+                            setSelectedCollage(collage);
+                            if (
+                              typeof window !== 'undefined' &&
+                              window.matchMedia('(max-width: 639px)').matches
+                            ) {
+                              setHistoryOpen(false);
+                            }
+                          }}
+                        />
                       ) : activeSection === 'generator' ? (
                         <CatalogGeneratorPane
                           preset={generatorPreset}

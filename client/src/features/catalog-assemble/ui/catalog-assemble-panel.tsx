@@ -1,7 +1,7 @@
 'use client';
 
 import { useLazyQuery, useMutation } from '@apollo/client/react';
-import { Heart } from 'lucide-react';
+import { Heart, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 import {
@@ -16,6 +16,7 @@ import { ErrorText } from '@/shared/ui/error-text';
 import { Button } from '@/shared/ui/shadcn/ui/button';
 import { Spinner } from '@/shared/ui/shadcn/ui/spinner';
 
+import { formatCollageDate } from '../lib/generator-text';
 import { AssembleSlotCard } from './assemble-slot-card';
 
 function draftKey(slots: IAssembledTrackSlot[]): string {
@@ -34,9 +35,13 @@ function draftKey(slots: IAssembledTrackSlot[]): string {
 export function CatalogAssemblePanel({
   preset,
   hideAdlibs,
+  selectedCollage,
+  onCloseSelected,
 }: {
   preset: TrackFormPreset;
   hideAdlibs: boolean;
+  selectedCollage: ILyricCollage | null;
+  onCloseSelected: () => void;
 }) {
   const [draft, setDraft] = useState<IAssembledTrackSlot[] | null>(null);
   const [likedDraftKey, setLikedDraftKey] = useState<string | null>(null);
@@ -64,18 +69,21 @@ export function CatalogAssemblePanel({
   );
   const alreadyLiked =
     draftKeyValue !== null && draftKeyValue === likedDraftKey;
+  const viewingHistory = selectedCollage !== null;
+  const slots = viewingHistory ? selectedCollage.slots : draft;
 
   const handleAssemble = async () => {
     const result = await assemble({
       variables: { preset, hideAdlibs },
     });
-    const slots = result.data?.assembleTrack.slots;
-    if (!slots) {
+    const nextSlots = result.data?.assembleTrack.slots;
+    if (!nextSlots) {
       return;
     }
 
-    setDraft(slots);
+    setDraft(nextSlots);
     setLikedDraftKey(null);
+    onCloseSelected();
   };
 
   const handleLike = async () => {
@@ -107,51 +115,81 @@ export function CatalogAssemblePanel({
     <div className="flex flex-col gap-6 p-4">
       <section className="flex flex-col gap-3">
         <div className="flex items-center gap-2">
-          <h3 className="text-sm font-medium">Сборка</h3>
-          <Button
-            type="button"
-            size="sm"
-            className="ml-auto"
-            disabled={assembleLoading}
-            onClick={() => {
-              void handleAssemble();
-            }}
-          >
-            {assembleLoading ? <Spinner className="size-4" /> : 'Собрать'}
-          </Button>
-          <Button
-            type="button"
-            size="icon"
-            variant={alreadyLiked ? 'secondary' : 'outline'}
-            className="size-8"
-            disabled={!draft || likeLoading || alreadyLiked}
-            aria-label="Лайк — сохранить в историю"
-            onClick={() => {
-              void handleLike();
-            }}
-          >
-            {likeLoading ? (
-              <Spinner className="size-4" />
-            ) : (
-              <Heart
-                className="size-4"
-                fill={alreadyLiked ? 'currentColor' : 'none'}
-              />
-            )}
-          </Button>
+          {viewingHistory ? (
+            <>
+              <h3 className="min-w-0 flex-1 truncate text-sm font-medium">
+                {formatCollageDate(selectedCollage.createdAt)}
+              </h3>
+              <Button
+                type="button"
+                size="icon"
+                variant="secondary"
+                className="size-8"
+                disabled
+                aria-label="Сохранено в истории"
+              >
+                <Heart className="size-4" fill="currentColor" />
+              </Button>
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                className="size-8"
+                aria-label="Закрыть"
+                onClick={onCloseSelected}
+              >
+                <X className="size-4" />
+              </Button>
+            </>
+          ) : (
+            <>
+              <h3 className="text-sm font-medium">Сборка</h3>
+              <Button
+                type="button"
+                size="sm"
+                className="ml-auto"
+                disabled={assembleLoading}
+                onClick={() => {
+                  void handleAssemble();
+                }}
+              >
+                {assembleLoading ? <Spinner className="size-4" /> : 'Собрать'}
+              </Button>
+              <Button
+                type="button"
+                size="icon"
+                variant={alreadyLiked ? 'secondary' : 'outline'}
+                className="size-8"
+                disabled={!draft || likeLoading || alreadyLiked}
+                aria-label="Лайк — сохранить в историю"
+                onClick={() => {
+                  void handleLike();
+                }}
+              >
+                {likeLoading ? (
+                  <Spinner className="size-4" />
+                ) : (
+                  <Heart
+                    className="size-4"
+                    fill={alreadyLiked ? 'currentColor' : 'none'}
+                  />
+                )}
+              </Button>
+            </>
+          )}
         </div>
 
         {assembleError || likeError ? (
           <ErrorText title="Не удалось собрать или сохранить" />
         ) : null}
 
-        {!draft ? (
+        {!slots ? (
           <p className="text-muted-foreground text-sm">
             Нажмите «Собрать», чтобы склеить куски по выбранной форме.
           </p>
         ) : (
-          <div className="flex flex-col gap-2">
-            {draft.map((slot, index) => (
+          <div className="flex flex-col gap-4">
+            {slots.map((slot, index) => (
               <AssembleSlotCard
                 key={`${slot.songRole}-${index}-${draftKey([slot])}`}
                 slot={slot}

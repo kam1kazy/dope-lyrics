@@ -38,7 +38,7 @@ export const TRACK_QUOTAS: Record<
   },
   CANVAS: {
     INTRO: { min: 2, max: 4 },
-    VERSE: { min: 16, max: 32 },
+    VERSE: { min: 16, max: 16 },
     HOOK: { min: 4, max: 8 },
     BRIDGE: { min: 8, max: 16 },
   },

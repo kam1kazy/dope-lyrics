@@ -16,6 +16,9 @@ const EMPTY_SLOT_LABEL: Record<LyricSongRole, string> = {
   SKETCH: 'нет кусков',
 };
 
+const QUATRAIN_LINES = 4;
+const PREVIEW_LINES = 2;
+
 export const stripGeneratorMarks = (text: string): string => {
   return text.replace(/\s*#[^\s]+/g, ' ').replace(/\[[^\]]*\]/g, ' ');
 };
@@ -54,12 +57,16 @@ export const formatPartText = (
   return hideAdlibs ? hideAdlibsInText(sliced) : sliced;
 };
 
-export const slotDisplayText = (
+const slotSourceLines = (
   slot: IAssembledTrackSlot,
   hideAdlibs: boolean
-): { text: string; empty: boolean } => {
+): { lines: string[]; empty: boolean; placeholder: string } => {
   if (slot.parts.length === 0) {
-    return { text: emptySlotLabel(slot.songRole), empty: true };
+    return {
+      lines: [],
+      empty: true,
+      placeholder: emptySlotLabel(slot.songRole),
+    };
   }
 
   const chunks = slot.parts
@@ -74,8 +81,74 @@ export const slotDisplayText = (
     .filter((chunk) => chunk.length > 0);
 
   if (chunks.length === 0) {
-    return { text: 'фраза удалена', empty: true };
+    return { lines: [], empty: true, placeholder: 'фраза удалена' };
   }
 
-  return { text: chunks.join('\n\n'), empty: false };
+  return {
+    lines: chunks
+      .join('\n')
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0),
+    empty: false,
+    placeholder: '',
+  };
+};
+
+export const formatQuatrains = (lines: string[]): string => {
+  const stanzas: string[] = [];
+
+  for (let index = 0; index < lines.length; index += QUATRAIN_LINES) {
+    stanzas.push(lines.slice(index, index + QUATRAIN_LINES).join('\n'));
+  }
+
+  return stanzas.join('\n\n');
+};
+
+export const slotDisplayText = (
+  slot: IAssembledTrackSlot,
+  hideAdlibs: boolean
+): { text: string; empty: boolean } => {
+  const source = slotSourceLines(slot, hideAdlibs);
+  if (source.empty) {
+    return { text: source.placeholder, empty: true };
+  }
+
+  return { text: formatQuatrains(source.lines), empty: false };
+};
+
+export const collagePreviewText = (
+  slots: IAssembledTrackSlot[],
+  hideAdlibs: boolean
+): string => {
+  for (const slot of slots) {
+    const source = slotSourceLines(slot, hideAdlibs);
+    if (source.empty || source.lines.length === 0) {
+      continue;
+    }
+
+    const preview = source.lines.slice(0, PREVIEW_LINES).join('\n');
+    if (source.lines.length > PREVIEW_LINES) {
+      return `${preview}…`;
+    }
+
+    return preview;
+  }
+
+  return 'Пустая склейка';
+};
+
+export const formatCollageDate = (iso: string): string => {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) {
+    return iso;
+  }
+
+  return date.toLocaleString('ru-RU', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 };

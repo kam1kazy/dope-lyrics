@@ -58,7 +58,7 @@ export function CatalogGeneratorPane({
           })}
         </div>
         <p className="text-muted-foreground text-xs leading-relaxed">
-          Хит — короткие куплеты под стрим. Полотно — 4–8 абзацев на куплет.
+          Хит — короткие куплеты под стрим. Полотно — до 4 абзацев на куплет.
         </p>
       </div>
 
@@ -72,7 +72,7 @@ export function CatalogGeneratorPane({
           role="switch"
           aria-checked={hideAdlibs}
           className={cn(
-            'focus-visible:ring-ring relative h-6 w-10 shrink-0 rounded-full transition-colors',
+            'focus-visible:ring-ring relative inline-flex h-5 w-9 shrink-0 items-center rounded-full p-0.5 transition-colors',
             'focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none',
             hideAdlibs ? 'bg-primary' : 'bg-muted'
           )}
@@ -83,8 +83,8 @@ export function CatalogGeneratorPane({
           <span
             aria-hidden
             className={cn(
-              'bg-background absolute top-0.5 size-5 rounded-full shadow-sm transition-transform',
-              hideAdlibs ? 'translate-x-4' : 'translate-x-0.5'
+              'bg-background pointer-events-none block size-4 rounded-full shadow-sm transition-transform',
+              hideAdlibs ? 'translate-x-4' : 'translate-x-0'
             )}
           />
         </button>

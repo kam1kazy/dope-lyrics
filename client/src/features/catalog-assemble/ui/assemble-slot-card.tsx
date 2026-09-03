@@ -18,7 +18,7 @@ export function AssembleSlotCard({
   const { text, empty } = slotDisplayText(slot, hideAdlibs);
 
   return (
-    <div className="rounded-lg border px-3 py-2">
+    <div>
       <p className="text-muted-foreground text-xs">
         {index + 1}. {roleLabel}
       </p>
