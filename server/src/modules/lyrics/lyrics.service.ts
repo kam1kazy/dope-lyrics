@@ -19,9 +19,9 @@ import {
   isTrackFormPreset,
   lyricIdsFromSlots,
   parseCollageSlotsInput,
+  type PoolLyric,
   slotsFromJson,
   splitGeneratorLines,
-  TRACK_FRAME,
   type TrackFormPreset,
 } from '~/modules/lyrics/track-assemble';
 import { usersService } from '~/modules/users/users.service';
@@ -154,8 +154,6 @@ export class LyricsService {
       typeof presetRaw === 'string' && isTrackFormPreset(presetRaw)
         ? presetRaw
         : 'HIT';
-    const uniqueRoles = [...new Set(TRACK_FRAME)];
-    const pools: Record<string, { id: number; lines: string[] }[]> = {};
     const includeCensored = (filter?.includeShelves ?? []).includes('censored');
     const baseWhere = buildLyricsWhere({
       tags: filter?.tags,
@@ -175,29 +173,24 @@ export class LyricsService {
       excludeReadiness: filter?.excludeReadiness,
     });
 
-    await Promise.all(
-      uniqueRoles.map(async (role) => {
-        const rows = await this.prisma.lyrics.findMany({
-          where: {
-            AND: [
-              baseWhere,
-              { songRole: { has: role } },
-              includeCensored ? {} : { isCensored: false },
-            ],
-          },
-          select: {
-            id: true,
-            message: { select: { text: true } },
-          },
-        });
-        pools[role] = rows.map((row) => ({
-          id: row.id,
-          lines: splitGeneratorLines(row.message?.text ?? ''),
-        }));
-      })
-    );
+    const rows = await this.prisma.lyrics.findMany({
+      where: {
+        AND: [baseWhere, includeCensored ? {} : { isCensored: false }],
+      },
+      select: {
+        id: true,
+        songRole: true,
+        message: { select: { text: true } },
+      },
+    });
 
-    const slots = assembleSlotsFromPools(pools, preset);
+    const catalog: PoolLyric[] = rows.map((row) => ({
+      id: row.id,
+      lines: splitGeneratorLines(row.message?.text ?? ''),
+      songRoles: row.songRole,
+    }));
+
+    const slots = assembleSlotsFromPools(catalog, preset);
 
     return this.hydrateSlots(slots);
   }

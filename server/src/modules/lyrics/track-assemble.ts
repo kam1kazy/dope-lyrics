@@ -60,13 +60,17 @@ export type CollageSlotStored = {
 export type PoolLyric = {
   id: number;
   lines: string[];
+  songRoles: readonly string[];
 };
 
 const QUATRAIN_LINES = PARAGRAPH_LINES;
 const MAX_LINES_FROM_ONE = 8;
-const PREFERRED_LINES_FROM_ONE = 4;
 const TAKE_PREFERRED_CHANCE = 0.7;
 const LEGACY_END_LINE = 1_000_000;
+
+/** Сначала обязательные слоты, потом опциональные — чтобы интро не съело пул. */
+const FILL_FRAME_INDEXES = [2, 1, 3, 0, 4] as const;
+const SECOND_HOOK_INDEX = 5;
 
 export const stripGeneratorMarks = (text: string): string => {
   return text.replace(/\s*#[^\s]+/g, ' ').replace(/\[[^\]]*\]/g, ' ');
@@ -79,13 +83,20 @@ export const splitGeneratorLines = (text: string): string[] => {
     .filter((line) => line.length > 0);
 };
 
-const pickRandom = <T>(items: T[]): T | undefined => {
-  if (items.length === 0) {
-    return undefined;
+const shuffleInPlace = <T>(items: T[]): T[] => {
+  for (let index = items.length - 1; index > 0; index -= 1) {
+    const swap = Math.floor(Math.random() * (index + 1));
+    const current = items[index];
+    const other = items[swap];
+    if (current === undefined || other === undefined) {
+      continue;
+    }
+
+    items[index] = other;
+    items[swap] = current;
   }
 
-  const index = Math.floor(Math.random() * items.length);
-  return items[index];
+  return items;
 };
 
 const randomInt = (min: number, max: number): number => {
@@ -109,109 +120,77 @@ const pickSlotTarget = (quota: LineQuota, hasCandidates: boolean): number => {
   }
 
   if (quota.min === 0) {
-    return randomInt(1, maxParagraphs) * QUATRAIN_LINES;
+    return randomInt(0, maxParagraphs) * QUATRAIN_LINES;
   }
 
   return randomInt(minParagraphs, maxParagraphs) * QUATRAIN_LINES;
 };
 
-const rangesOverlap = (
-  start: number,
-  end: number,
-  taken: CollagePartStored[]
-): boolean => {
-  return taken.some((range) => start < range.endLine && range.startLine < end);
+const pickWindowSize = (): number => {
+  return Math.random() < TAKE_PREFERRED_CHANCE
+    ? QUATRAIN_LINES
+    : MAX_LINES_FROM_ONE;
 };
 
-const unusedRuns = (
-  lineCount: number,
-  taken: CollagePartStored[]
-): CollagePartStored[] => {
-  const runs: CollagePartStored[] = [];
-  let runStart: number | null = null;
-
-  for (let line = 0; line <= lineCount; line += 1) {
-    const takenHere =
-      line < lineCount &&
-      taken.some((range) => line >= range.startLine && line < range.endLine);
-
-    if (line < lineCount && !takenHere) {
-      if (runStart === null) {
-        runStart = line;
-      }
-    } else if (runStart !== null) {
-      runs.push({ lyricId: 0, startLine: runStart, endLine: line });
-      runStart = null;
-    }
+/** Для длинной фразы первый курсор — случайное смещение, кратное 4. */
+const initialCursor = (lineCount: number): number => {
+  if (lineCount <= MAX_LINES_FROM_ONE) {
+    return 0;
   }
 
-  return runs;
+  const maxStart = lineCount - QUATRAIN_LINES;
+  const steps = Math.floor(maxStart / QUATRAIN_LINES);
+  if (steps < 1) {
+    return 0;
+  }
+
+  return randomInt(0, steps) * QUATRAIN_LINES;
 };
 
-const pickLineWindow = (
+const takeChunk = (
   lineCount: number,
-  remaining: number,
-  taken: CollagePartStored[]
-): CollagePartStored | null => {
-  if (lineCount < 1 || remaining < 1) {
+  cursor: number,
+  remaining: number
+): { startLine: number; endLine: number } | null => {
+  const available = lineCount - cursor;
+  if (available < 1 || remaining < 1) {
     return null;
   }
 
-  const preferred: CollagePartStored[] = [];
-  const longer: CollagePartStored[] = [];
-  const leftover: CollagePartStored[] = [];
+  const size =
+    available <= MAX_LINES_FROM_ONE
+      ? Math.min(available, remaining)
+      : Math.min(pickWindowSize(), remaining);
 
-  for (const run of unusedRuns(lineCount, taken)) {
-    const runLength = run.endLine - run.startLine;
-    const cap = Math.min(runLength, remaining, MAX_LINES_FROM_ONE);
-    if (cap < 1) {
+  if (size < 1) {
+    return null;
+  }
+
+  return { startLine: cursor, endLine: cursor + size };
+};
+
+/** Сначала роль слота, потом фразы без ролей; чужие роли не берём. */
+const buildSlotPool = (
+  catalog: PoolLyric[],
+  role: TrackFrameRole,
+  used: Set<number>
+): PoolLyric[] => {
+  const tagged: PoolLyric[] = [];
+  const untagged: PoolLyric[] = [];
+
+  for (const item of catalog) {
+    if (used.has(item.id) || item.lines.length < 1) {
       continue;
     }
 
-    for (
-      let start = run.startLine;
-      start < run.endLine;
-      start += QUATRAIN_LINES
-    ) {
-      const four = start + PREFERRED_LINES_FROM_ONE;
-      if (
-        four <= run.endLine &&
-        PREFERRED_LINES_FROM_ONE <= remaining &&
-        !rangesOverlap(start, four, taken)
-      ) {
-        preferred.push({ lyricId: 0, startLine: start, endLine: four });
-      }
-
-      const eight = start + MAX_LINES_FROM_ONE;
-      if (
-        eight <= run.endLine &&
-        MAX_LINES_FROM_ONE <= remaining &&
-        !rangesOverlap(start, eight, taken)
-      ) {
-        longer.push({ lyricId: 0, startLine: start, endLine: eight });
-      }
+    if (item.songRoles.includes(role)) {
+      tagged.push(item);
+    } else if (item.songRoles.length === 0) {
+      untagged.push(item);
     }
-
-    leftover.push({
-      lyricId: 0,
-      startLine: run.startLine,
-      endLine: run.startLine + cap,
-    });
   }
 
-  if (preferred.length > 0 && Math.random() < TAKE_PREFERRED_CHANCE) {
-    return pickRandom(preferred) ?? null;
-  }
-
-  if (longer.length > 0) {
-    return pickRandom(longer) ?? null;
-  }
-
-  if (preferred.length > 0) {
-    return pickRandom(preferred) ?? null;
-  }
-
-  return pickRandom(leftover) ?? null;
+  return [...shuffleInPlace(tagged), ...shuffleInPlace(untagged)];
 };
 
 const fillSlot = (
@@ -220,54 +199,47 @@ const fillSlot = (
   used: Set<number>
 ): CollagePartStored[] => {
   const parts: CollagePartStored[] = [];
-  const candidates = pool.filter(
-    (item) => !used.has(item.id) && item.lines.length > 0
-  );
-  const target = pickSlotTarget(quota, candidates.length > 0);
+  const target = pickSlotTarget(quota, pool.length > 0);
   if (target < 1) {
     return parts;
   }
 
-  const takenByLyric = new Map<number, CollagePartStored[]>();
-  let count = 0;
-
-  while (count < target && candidates.length > 0) {
-    const remaining = target - count;
-    if (remaining <= 0) {
-      break;
-    }
-
-    const fresh = candidates.filter((item) => !takenByLyric.has(item.id));
-    const poolPick = fresh.length > 0 ? fresh : candidates;
-    const index = Math.floor(Math.random() * poolPick.length);
-    const item = poolPick[index];
-    if (!item) {
-      break;
-    }
-
-    const taken = takenByLyric.get(item.id) ?? [];
-    const window = pickLineWindow(item.lines.length, remaining, taken);
-    if (!window) {
-      const candidateIndex = candidates.findIndex(
-        (candidate) => candidate.id === item.id
-      );
-      if (candidateIndex >= 0) {
-        candidates.splice(candidateIndex, 1);
-      }
-      continue;
-    }
-
-    parts.push({
-      lyricId: item.id,
-      startLine: window.startLine,
-      endLine: window.endLine,
-    });
-    takenByLyric.set(item.id, [...taken, window]);
-    count += window.endLine - window.startLine;
+  const cursors = new Map<number, number>();
+  for (const item of pool) {
+    cursors.set(item.id, initialCursor(item.lines.length));
   }
 
-  for (const lyricId of takenByLyric.keys()) {
-    used.add(lyricId);
+  let count = 0;
+  let progress = true;
+
+  while (count < target && progress) {
+    progress = false;
+
+    for (const item of pool) {
+      if (count >= target) {
+        break;
+      }
+
+      const remaining = target - count;
+      const cursor = cursors.get(item.id) ?? 0;
+      const chunk = takeChunk(item.lines.length, cursor, remaining);
+      if (!chunk) {
+        continue;
+      }
+
+      parts.push({
+        lyricId: item.id,
+        startLine: chunk.startLine,
+        endLine: chunk.endLine,
+      });
+      cursors.set(item.id, chunk.endLine);
+      count += chunk.endLine - chunk.startLine;
+      progress = true;
+    }
+  }
+
+  for (const part of parts) {
+    used.add(part.lyricId);
   }
 
   return parts;
@@ -275,31 +247,33 @@ const fillSlot = (
 
 /** Слоты по каркасу: квота строк, без повтора lyricId, второй хук копирует первый. */
 export const assembleSlotsFromPools = (
-  pools: Record<string, PoolLyric[]>,
+  catalog: PoolLyric[],
   preset: TrackFormPreset
 ): CollageSlotStored[] => {
   const used = new Set<number>();
-  const slots: CollageSlotStored[] = [];
+  const slots: CollageSlotStored[] = TRACK_FRAME.map((songRole) => ({
+    songRole,
+    parts: [],
+  }));
   let hookParts: CollagePartStored[] | null = null;
 
-  for (const songRole of TRACK_FRAME) {
-    if (songRole === 'HOOK' && hookParts !== null) {
-      slots.push({
-        songRole,
-        parts: hookParts.map((part) => ({ ...part })),
-      });
-      continue;
-    }
-
+  for (const index of FILL_FRAME_INDEXES) {
+    const songRole = TRACK_FRAME[index];
     const quota = TRACK_QUOTAS[preset][songRole];
-    const parts = fillSlot(pools[songRole] ?? [], quota, used);
+    const pool = buildSlotPool(catalog, songRole, used);
+    const parts = fillSlot(pool, quota, used);
+
+    slots[index] = { songRole, parts };
 
     if (songRole === 'HOOK') {
       hookParts = parts;
     }
-
-    slots.push({ songRole, parts });
   }
+
+  slots[SECOND_HOOK_INDEX] = {
+    songRole: 'HOOK',
+    parts: (hookParts ?? []).map((part) => ({ ...part })),
+  };
 
   return slots;
 };
