@@ -33,6 +33,8 @@ model Lyrics {
   isFavorite     Boolean  @default(false)
   /// Полка «цензура»: ставит приложение, seed не трогает.
   isCensored     Boolean  @default(false)
+  /// Донор: сообщение разделили при склейке и спрятали; seed не трогает.
+  isDonor        Boolean  @default(false)
   /// Авторский профиль: словари в lyric-facets.ts, seed не трогает.
   /// mood/delivery без роли; у каждой роли — свой набор в roleProfiles.
   mood           String[] @default([])

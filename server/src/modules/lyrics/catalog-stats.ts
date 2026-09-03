@@ -39,6 +39,7 @@ export type CatalogStats = {
   favorites: CatalogShelfStat;
   hidden: CatalogShelfStat;
   censored: CatalogShelfStat;
+  donors: CatalogShelfStat;
   withRole: CatalogShelfStat;
   roles: CatalogRoleStats[];
   unscoped: CatalogUnscopedStats;
@@ -51,6 +52,7 @@ type CatalogStatsRow = {
   isFavorite: boolean;
   isHidden: boolean;
   isCensored: boolean;
+  isDonor: boolean;
   songRole: string[];
   mood: string[];
   delivery: string[];
@@ -125,6 +127,7 @@ export const buildCatalogStats = (rows: CatalogStatsRow[]): CatalogStats => {
   let favorites = 0;
   let hidden = 0;
   let censored = 0;
+  let donors = 0;
   let withRole = 0;
   let unscopedPhrases = 0;
   let readinessNone = 0;
@@ -170,6 +173,10 @@ export const buildCatalogStats = (rows: CatalogStatsRow[]): CatalogStats => {
       censored += 1;
     }
 
+    if (row.isDonor) {
+      donors += 1;
+    }
+
     const roles = [
       ...new Set(row.songRole.filter(isSongRole)),
     ] as LyricSongRole[];
@@ -206,6 +213,7 @@ export const buildCatalogStats = (rows: CatalogStatsRow[]): CatalogStats => {
     favorites: shelf(favorites, total),
     hidden: shelf(hidden, total),
     censored: shelf(censored, total),
+    donors: shelf(donors, total),
     withRole: shelf(withRole, total),
     roles: LYRIC_SONG_ROLES.map((songRole) => ({
       songRole,

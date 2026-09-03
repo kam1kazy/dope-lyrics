@@ -1,7 +1,17 @@
 'use client';
 
 import { useMutation } from '@apollo/client/react';
-import { Ban, Check, EyeOff, Scissors, Sparkles, Star, X } from 'lucide-react';
+import {
+  Ban,
+  Check,
+  EyeOff,
+  MoreHorizontal,
+  Scissors,
+  Sparkles,
+  Split,
+  Star,
+  X,
+} from 'lucide-react';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import {
@@ -78,7 +88,7 @@ type ProfileFields = Pick<
 
 type FlagFields = Pick<
   ILyric,
-  'isHidden' | 'isFavorite' | 'isReference' | 'isCensored'
+  'isHidden' | 'isFavorite' | 'isReference' | 'isCensored' | 'isDonor'
 >;
 
 const PROFILE_SAVE_DEBOUNCE_MS = 280;
@@ -122,6 +132,8 @@ export function MessageDeskDialog({
   );
   const [profileError, setProfileError] = useState<string | null>(null);
   const [flagsError, setFlagsError] = useState<string | null>(null);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const moreMenuRef = useRef<HTMLDivElement>(null);
   const [profileOverride, setProfileOverride] = useState<ProfileFields | null>(
     null
   );
@@ -145,6 +157,7 @@ export function MessageDeskDialog({
       setProfileOverride(null);
       setFlagsOverride(null);
       setActiveSongRole(null);
+      setMoreOpen(false);
     }
   }, [open]);
 
@@ -177,9 +190,42 @@ export function MessageDeskDialog({
     setDiscardPrompt(null);
     setDraftText(lyric?.message?.text ?? '');
     setActiveSongRole(lyric?.roleProfiles?.[0]?.songRole ?? null);
+    setMoreOpen(false);
     // Сброс только при смене фразы, не при правке текста в кэше.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- lyric.id нарочно единственная зависимость
   }, [lyric?.id]);
+
+  useEffect(() => {
+    if (!moreOpen) {
+      return;
+    }
+
+    const onPointerDown = (event: PointerEvent) => {
+      const target = event.target;
+
+      if (target instanceof Node && moreMenuRef.current?.contains(target)) {
+        return;
+      }
+
+      setMoreOpen(false);
+    };
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        event.stopPropagation();
+        setMoreOpen(false);
+      }
+    };
+
+    document.addEventListener('pointerdown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown, true);
+
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown, true);
+    };
+  }, [moreOpen]);
 
   const [updateFlags] = useMutation<
     {
@@ -191,6 +237,7 @@ export function MessageDeskDialog({
         | 'isFavorite'
         | 'isReference'
         | 'isCensored'
+        | 'isDonor'
       >;
     },
     {
@@ -199,6 +246,7 @@ export function MessageDeskDialog({
       isFavorite?: boolean;
       isReference?: boolean;
       isCensored?: boolean;
+      isDonor?: boolean;
     }
   >(UPDATE_LYRIC_FLAGS, {
     update(cache, { data }) {
@@ -310,6 +358,7 @@ export function MessageDeskDialog({
     isFavorite: flagsOverride?.isFavorite ?? lyric?.isFavorite ?? false,
     isReference: flagsOverride?.isReference ?? lyric?.isReference ?? false,
     isCensored: flagsOverride?.isCensored ?? lyric?.isCensored ?? false,
+    isDonor: flagsOverride?.isDonor ?? lyric?.isDonor ?? false,
   };
 
   const sourceText = lyric?.message?.text ?? '';
@@ -985,27 +1034,6 @@ export function MessageDeskDialog({
 
               <Button
                 type="button"
-                variant={flags.isCensored ? 'ghost' : 'ghost'}
-                disabled={!lyric}
-                className="gap-2 sm:h-10"
-                onClick={() => patchFlags({ isCensored: !flags.isCensored })}
-              >
-                <Ban
-                  className={cn('size-4', flags.isCensored && 'text-rose-400')}
-                  aria-hidden
-                />
-                {flags.isCensored ? (
-                  <>
-                    <span className="sm:hidden">Цензура</span>
-                    <span className="hidden sm:inline">Цензура</span>
-                  </>
-                ) : (
-                  'Цензура'
-                )}
-              </Button>
-
-              <Button
-                type="button"
                 variant={flags.isHidden ? 'ghost' : 'ghost'}
                 disabled={!lyric}
                 className="gap-2 sm:h-10"
@@ -1022,6 +1050,82 @@ export function MessageDeskDialog({
                   {flags.isHidden ? 'Скрыть' : 'Скрыть'}
                 </span>
               </Button>
+
+              <div ref={moreMenuRef} className="relative w-full sm:w-auto ml-auto">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  disabled={!lyric}
+                  aria-expanded={moreOpen}
+                  aria-haspopup="menu"
+                  className="relative w-full gap-2 sm:h-10 sm:w-auto"
+                  onClick={() => setMoreOpen((openMenu) => !openMenu)}
+                >
+                  <MoreHorizontal className="size-4" aria-hidden />
+                  {flags.isCensored || flags.isDonor ? (
+                    <>
+                      <span
+                        className="bg-primary absolute top-1.5 right-1.5 size-1.5 rounded-full"
+                        aria-hidden
+                      />
+                      <span className="sr-only">есть метки</span>
+                    </>
+                  ) : null}
+                </Button>
+                {moreOpen ? (
+                  <div
+                    role="menu"
+                    className="bg-popover text-popover-foreground absolute inset-x-0 bottom-full z-10 mb-1 rounded-md border p-1 shadow-md sm:inset-x-auto sm:right-0 sm:min-w-[12rem]"
+                  >
+                    <button
+                      type="button"
+                      role="menuitemcheckbox"
+                      aria-checked={flags.isCensored}
+                      className="hover:bg-accent flex w-full items-center gap-2 rounded-sm px-2 py-2 text-left text-sm"
+                      onClick={() =>
+                        patchFlags({ isCensored: !flags.isCensored })
+                      }
+                    >
+                      <Ban
+                        className={cn(
+                          'size-4',
+                          flags.isCensored && 'text-rose-400'
+                        )}
+                        aria-hidden
+                      />
+                      Цензура
+                      {flags.isCensored ? (
+                        <span
+                          className="bg-rose-400 ml-auto size-1.5 rounded-full"
+                          aria-hidden
+                        />
+                      ) : null}
+                    </button>
+                    <button
+                      type="button"
+                      role="menuitemcheckbox"
+                      aria-checked={flags.isDonor}
+                      className="hover:bg-accent flex w-full items-center gap-2 rounded-sm px-2 py-2 text-left text-sm"
+                      onClick={() => patchFlags({ isDonor: !flags.isDonor })}
+                    >
+                      <Split
+                        className={cn(
+                          'size-4',
+                          flags.isDonor && 'text-sky-400'
+                        )}
+                        aria-hidden
+                      />
+                      Донор
+                      {flags.isDonor ? (
+                        <span
+                          className="bg-sky-400 ml-auto size-1.5 rounded-full"
+                          aria-hidden
+                        />
+                      ) : null}
+                    </button>
+                  </div>
+                ) : null}
+              </div>
             </div>
           </DialogFooter>
         )}

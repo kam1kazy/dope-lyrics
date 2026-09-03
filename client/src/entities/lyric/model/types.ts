@@ -22,6 +22,7 @@ export interface ILyric {
   isHidden: boolean;
   isFavorite: boolean;
   isCensored: boolean;
+  isDonor: boolean;
   mood: LyricMood[];
   delivery: LyricDelivery[];
   songRole: LyricSongRole[];
@@ -76,6 +77,7 @@ export type ICatalogStats = {
   favorites: ICatalogShelfStat;
   hidden: ICatalogShelfStat;
   censored: ICatalogShelfStat;
+  donors: ICatalogShelfStat;
   withRole: ICatalogShelfStat;
   roles: ICatalogRoleStats[];
   unscoped: ICatalogUnscopedStats;

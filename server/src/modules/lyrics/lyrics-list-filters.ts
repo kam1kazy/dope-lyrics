@@ -224,7 +224,13 @@ const buildExcludeFacetWhere = (
   return { AND: parts };
 };
 
-const SHELF_FLAGS = ['favorites', 'references', 'censored', 'hidden'] as const;
+const SHELF_FLAGS = [
+  'favorites',
+  'references',
+  'censored',
+  'hidden',
+  'donors',
+] as const;
 
 type ShelfFlag = (typeof SHELF_FLAGS)[number];
 
@@ -289,6 +295,10 @@ const buildShelfClause = (
       or.push({ isHidden: true });
     }
 
+    if (include.includes('donors')) {
+      or.push({ isDonor: true });
+    }
+
     if (or.length > 0) {
       clauses.push({ OR: or });
     }
@@ -306,6 +316,10 @@ const buildShelfClause = (
 
   if (exclude.includes('references') && !include.includes('references')) {
     clauses.push({ isReference: false });
+  }
+
+  if (exclude.includes('donors') && !include.includes('donors')) {
+    clauses.push({ isDonor: false });
   }
 
   if (exclude.includes('hidden')) {

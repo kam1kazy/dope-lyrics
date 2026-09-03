@@ -41,6 +41,7 @@ type UpdateLyricFlagsArgs = {
   isFavorite?: boolean | null;
   isReference?: boolean | null;
   isCensored?: boolean | null;
+  isDonor?: boolean | null;
 };
 
 type UpdateLyricProfileArgs = {
@@ -91,6 +92,11 @@ type LikeCollageArgs = {
 
 type UnlikeCollageArgs = {
   id: number;
+};
+
+type GlueLyricsArgs = {
+  slots: unknown;
+  hideOriginals: boolean;
 };
 
 const clampLimit = (value: number | null | undefined): number => {
@@ -206,6 +212,7 @@ export const resolvers = {
         isFavorite: args.isFavorite ?? undefined,
         isReference: args.isReference ?? undefined,
         isCensored: args.isCensored ?? undefined,
+        isDonor: args.isDonor ?? undefined,
       });
     },
     updateLyricProfile: (
@@ -254,6 +261,13 @@ export const resolvers = {
       _context: GraphQLContext
     ) => {
       return lyricsService.unlikeCollage(args.id);
+    },
+    glueLyrics: (
+      _parent: unknown,
+      args: GlueLyricsArgs,
+      _context: GraphQLContext
+    ) => {
+      return lyricsService.glueLyrics(args.slots, Boolean(args.hideOriginals));
     },
   },
   Lyric: {

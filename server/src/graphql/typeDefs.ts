@@ -61,6 +61,7 @@ export const typeDefinitions = /* GraphQL */ `
     isHidden: Boolean!
     isFavorite: Boolean!
     isCensored: Boolean!
+    isDonor: Boolean!
     mood: [LyricMood!]!
     delivery: [LyricDelivery!]!
     songRole: [LyricSongRole!]!
@@ -215,6 +216,7 @@ export const typeDefinitions = /* GraphQL */ `
     favorites: CatalogShelfStat!
     hidden: CatalogShelfStat!
     censored: CatalogShelfStat!
+    donors: CatalogShelfStat!
     withRole: CatalogShelfStat!
     roles: [CatalogRoleStats!]!
     unscoped: CatalogUnscopedStats!
@@ -333,6 +335,7 @@ export const typeDefinitions = /* GraphQL */ `
       isFavorite: Boolean
       isReference: Boolean
       isCensored: Boolean
+      isDonor: Boolean
     ): Lyric!
     updateLyricProfile(
       id: Int!
@@ -346,5 +349,6 @@ export const typeDefinitions = /* GraphQL */ `
     ingestPendingLyrics: LyricIngestResult!
     likeCollage(slots: [CollageSlotInput!]!): LyricCollage!
     unlikeCollage(id: Int!): Int!
+    glueLyrics(slots: [CollageSlotInput!]!, hideOriginals: Boolean!): Lyric!
   }
 `;

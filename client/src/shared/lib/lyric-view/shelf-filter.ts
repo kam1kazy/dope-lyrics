@@ -3,6 +3,7 @@ export const SHELF_FLAGS = [
   'references',
   'censored',
   'hidden',
+  'donors',
 ] as const;
 
 export type ShelfFlag = (typeof SHELF_FLAGS)[number];
@@ -12,9 +13,11 @@ export type ShelfSelection = {
   excluded: ShelfFlag[];
 };
 
+export const DEFAULT_EXCLUDED_SHELVES: ShelfFlag[] = ['hidden', 'donors'];
+
 export const DEFAULT_SHELF_SELECTION: ShelfSelection = {
   included: [],
-  excluded: ['hidden'],
+  excluded: DEFAULT_EXCLUDED_SHELVES,
 };
 
 export function isAllShelvesSelected(selection: ShelfSelection): boolean {
@@ -22,10 +25,16 @@ export function isAllShelvesSelected(selection: ShelfSelection): boolean {
 }
 
 export function isDefaultShelfSelection(selection: ShelfSelection): boolean {
-  return (
-    selection.included.length === 0 &&
-    selection.excluded.length === 1 &&
-    selection.excluded[0] === 'hidden'
+  if (selection.included.length !== 0) {
+    return false;
+  }
+
+  if (selection.excluded.length !== DEFAULT_EXCLUDED_SHELVES.length) {
+    return false;
+  }
+
+  return DEFAULT_EXCLUDED_SHELVES.every((flag) =>
+    selection.excluded.includes(flag)
   );
 }
 
@@ -94,6 +103,7 @@ export function lyricMatchesShelves(
     isFavorite: boolean;
     isReference: boolean;
     isCensored: boolean;
+    isDonor: boolean;
   },
   selection: ShelfSelection
 ): boolean {
@@ -112,7 +122,8 @@ export function lyricMatchesShelves(
       (included.includes('censored') &&
         lyric.isCensored &&
         (!hideHidden || !lyric.isHidden)) ||
-      (included.includes('hidden') && lyric.isHidden);
+      (included.includes('hidden') && lyric.isHidden) ||
+      (included.includes('donors') && lyric.isDonor);
 
     if (!matchesInclude) {
       return false;
@@ -141,6 +152,14 @@ export function lyricMatchesShelves(
     excluded.includes('references') &&
     !included.includes('references') &&
     lyric.isReference
+  ) {
+    return false;
+  }
+
+  if (
+    excluded.includes('donors') &&
+    !included.includes('donors') &&
+    lyric.isDonor
   ) {
     return false;
   }

@@ -1,6 +1,6 @@
 'use client';
 
-import { Ban, Bookmark, EyeOff, Layers, Sparkles } from 'lucide-react';
+import { Ban, Bookmark, EyeOff, Layers, Sparkles,Split } from 'lucide-react';
 import { type MouseEvent, useEffect, useRef } from 'react';
 
 import {
@@ -27,6 +27,7 @@ const SHELF_OPTIONS: {
   { flag: 'references', label: 'Эталоны', icon: Sparkles },
   { flag: 'censored', label: 'Цензура', icon: Ban },
   { flag: 'hidden', label: 'Скрытые', icon: EyeOff },
+  { flag: 'donors', label: 'Доноры', icon: Split },
 ];
 
 const SHELF_ICON_OPTIONS: {
@@ -38,6 +39,7 @@ const SHELF_ICON_OPTIONS: {
   { flag: 'references', label: 'Эталон', icon: Sparkles },
   { flag: 'hidden', label: 'Скрыть', icon: EyeOff },
   { flag: 'censored', label: 'Цензура', icon: Ban },
+  { flag: 'donors', label: 'Донор', icon: Split },
 ];
 
 const SHELF_CLICK_DELAY_MS = 280;

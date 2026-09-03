@@ -35,13 +35,13 @@ export const TRACK_QUOTAS: Record<
   HIT: {
     INTRO: { min: 0, max: 4 * PARAGRAPH_LINES },
     VERSE: { min: 4 * PARAGRAPH_LINES, max: 6 * PARAGRAPH_LINES },
-    HOOK: { min: 2 * PARAGRAPH_LINES, max: 4 * PARAGRAPH_LINES },
+    HOOK: { min: 1 * PARAGRAPH_LINES, max: 2 * PARAGRAPH_LINES },
     BRIDGE: { min: 0, max: 4 * PARAGRAPH_LINES },
   },
   CANVAS: {
     INTRO: { min: 0, max: 4 * PARAGRAPH_LINES },
     VERSE: { min: 4 * PARAGRAPH_LINES, max: 8 * PARAGRAPH_LINES },
-    HOOK: { min: 2 * PARAGRAPH_LINES, max: 8 * PARAGRAPH_LINES },
+    HOOK: { min: 1 * PARAGRAPH_LINES, max: 4 * PARAGRAPH_LINES },
     BRIDGE: { min: 0, max: 4 * PARAGRAPH_LINES },
   },
 };
@@ -70,7 +70,8 @@ const LEGACY_END_LINE = 1_000_000;
 
 /** Сначала обязательные слоты, потом опциональные — чтобы интро не съело пул. */
 const FILL_FRAME_INDEXES = [2, 1, 3, 0, 4] as const;
-const SECOND_HOOK_INDEX = 5;
+/** Второй HOOK в каркасе — повтор первого; в склейку текста не дублируем. */
+export const SECOND_HOOK_INDEX = 5;
 
 export const stripGeneratorMarks = (text: string): string => {
   return text.replace(/\s*#[^\s]+/g, ' ').replace(/\[[^\]]*\]/g, ' ');

@@ -17,6 +17,7 @@ type UpdatedLyric = Pick<
   | 'isFavorite'
   | 'isReference'
   | 'isCensored'
+  | 'isDonor'
   | 'mood'
   | 'delivery'
   | 'songRole'
@@ -298,5 +299,34 @@ export function updateLyricsCacheAfterSplit(
     query: ALL_LYRICS,
     variables: queryVariables,
     data: { lyrics: nextLyrics },
+  });
+}
+
+export function prependLyricToLyricsCache(
+  cache: ApolloCache,
+  lyric: ILyric,
+  queryVariables: LyricsQueryVariables
+) {
+  const existing = cache.readQuery<{ lyrics: ILyric[] }>({
+    query: ALL_LYRICS,
+    variables: queryVariables,
+  });
+
+  if (!existing) {
+    return;
+  }
+
+  if (!lyricMatchesList(lyric, queryVariables)) {
+    return;
+  }
+
+  if (existing.lyrics.some((row) => row.id === lyric.id)) {
+    return;
+  }
+
+  cache.writeQuery({
+    query: ALL_LYRICS,
+    variables: queryVariables,
+    data: { lyrics: [lyric, ...existing.lyrics] },
   });
 }

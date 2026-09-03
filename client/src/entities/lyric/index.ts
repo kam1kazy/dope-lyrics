@@ -2,6 +2,7 @@ export {
   ALL_LYRICS,
   ASSEMBLE_TRACK,
   CATALOG_STATS,
+  GLUE_LYRICS,
   INGEST_PENDING_LYRICS,
   LIKE_COLLAGE,
   LYRIC_COLLAGES,
@@ -31,6 +32,7 @@ export {
   LYRICS_PAGE_SIZE,
 } from './lib/lyrics-query-variables';
 export {
+  prependLyricToLyricsCache,
   updateLyricsCacheAfterFlagsChange,
   updateLyricsCacheAfterSplit,
   updateLyricsCacheAfterTextChange,

@@ -24,6 +24,7 @@ export const LYRIC_LIST_FIELDS = gql`
     isHidden
     isFavorite
     isCensored
+    isDonor
     mood
     delivery
     songRole
@@ -197,6 +198,10 @@ export const CATALOG_STATS = gql`
         count
         share
       }
+      donors {
+        count
+        share
+      }
       withRole {
         count
         share
@@ -240,6 +245,7 @@ export const UPDATE_LYRIC_FLAGS = gql`
     $isFavorite: Boolean
     $isReference: Boolean
     $isCensored: Boolean
+    $isDonor: Boolean
   ) {
     updateLyricFlags(
       id: $id
@@ -247,6 +253,7 @@ export const UPDATE_LYRIC_FLAGS = gql`
       isFavorite: $isFavorite
       isReference: $isReference
       isCensored: $isCensored
+      isDonor: $isDonor
     ) {
       id
       lyric_id
@@ -254,6 +261,7 @@ export const UPDATE_LYRIC_FLAGS = gql`
       isHidden
       isFavorite
       isCensored
+      isDonor
     }
   }
 `;
@@ -337,5 +345,14 @@ export const LIKE_COLLAGE = gql`
 export const UNLIKE_COLLAGE = gql`
   mutation UnlikeCollage($id: Int!) {
     unlikeCollage(id: $id)
+  }
+`;
+
+export const GLUE_LYRICS = gql`
+  ${LYRIC_LIST_FIELDS}
+  mutation GlueLyrics($slots: [CollageSlotInput!]!, $hideOriginals: Boolean!) {
+    glueLyrics(slots: $slots, hideOriginals: $hideOriginals) {
+      ...LyricListFields
+    }
   }
 `;

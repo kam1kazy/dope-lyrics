@@ -117,6 +117,11 @@ export function CatalogStatsPanel() {
           count={stats.censored.count}
           share={stats.censored.share}
         />
+        <StatCard
+          label="Доноры"
+          count={stats.donors.count}
+          share={stats.donors.share}
+        />
       </div>
 
       <section className="flex flex-col gap-3">

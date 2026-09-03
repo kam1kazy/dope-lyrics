@@ -5,7 +5,10 @@ import type {
   LyricSongRole,
 } from '@/shared/lib/lyric-facets';
 import type { SortMode } from '@/shared/lib/lyric-view/lyric-view-context';
-import type { ShelfFlag } from '@/shared/lib/lyric-view/shelf-filter';
+import {
+  DEFAULT_EXCLUDED_SHELVES,
+  type ShelfFlag,
+} from '@/shared/lib/lyric-view/shelf-filter';
 
 export type CatalogSectionFilters = {
   sortMode: SortMode;
@@ -64,12 +67,12 @@ export const DEFAULT_CATALOG_SECTION_FILTERS: CatalogSectionFilters = {
 export const DEFAULT_LIST_SECTION_FILTERS: CatalogSectionFilters = {
   ...DEFAULT_CATALOG_SECTION_FILTERS,
   sortMode: 'forward',
-  excludeShelves: ['hidden'],
+  excludeShelves: [...DEFAULT_EXCLUDED_SHELVES],
 };
 
 export const DEFAULT_GENERATOR_SECTION_FILTERS: CatalogSectionFilters = {
   ...DEFAULT_CATALOG_SECTION_FILTERS,
-  excludeShelves: ['hidden'],
+  excludeShelves: [...DEFAULT_EXCLUDED_SHELVES],
 };
 
 export function hasActiveCatalogSectionFilters(

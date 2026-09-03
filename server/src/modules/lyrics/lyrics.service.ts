@@ -10,6 +10,13 @@ import {
   roleProfilesToJson,
 } from '~/modules/lyrics/lyric-facets';
 import {
+  buildGluedText,
+  cleanedIndexShiftMap,
+  collectTakenRangesByLyric,
+  remapCollageSlotsAfterRip,
+  ripCleanedRangesFromText,
+} from '~/modules/lyrics/lyric-glue';
+import {
   assertNonEmptyLyricText,
   readinessAfterTextChange,
   splitTextAtLine,
@@ -129,6 +136,7 @@ export class LyricsService {
         isFavorite: true,
         isHidden: true,
         isCensored: true,
+        isDonor: true,
         songRole: true,
         mood: true,
         delivery: true,
@@ -173,7 +181,7 @@ export class LyricsService {
       dateFrom: filter?.dateFrom,
       dateTo: filter?.dateTo,
       includeShelves: filter?.includeShelves,
-      excludeShelves: filter?.excludeShelves ?? ['hidden'],
+      excludeShelves: filter?.excludeShelves ?? ['hidden', 'donors'],
       mood: filter?.mood,
       excludeMood: filter?.excludeMood,
       delivery: filter?.delivery,
@@ -227,6 +235,149 @@ export class LyricsService {
 
     await this.prisma.lyricCollage.delete({ where: { id } });
     return id;
+  }
+
+  async glueLyrics(slotsInput: unknown, hideOriginals: boolean) {
+    const slots = parseCollageSlotsInput(slotsInput);
+    const lyricIds = lyricIdsFromSlots(slots);
+
+    if (lyricIds.length === 0) {
+      throw new GraphQLError('Нечего склеивать: в сборке нет строк');
+    }
+
+    const owner = await usersService.getOwner();
+    if (!owner) {
+      throw new GraphQLError('Владелец каталога не найден');
+    }
+
+    const donors = await this.prisma.lyrics.findMany({
+      where: { id: { in: lyricIds } },
+      include: { message: true },
+    });
+    const textsById = new Map(
+      donors.map((row) => [row.id, row.message?.text ?? ''])
+    );
+
+    for (const id of lyricIds) {
+      if (!textsById.has(id)) {
+        throw new GraphQLError('Фраза из сборки не найдена');
+      }
+    }
+
+    const built = buildGluedText(slots, textsById);
+    const counts = textCounts(built.text);
+    const now = new Date();
+    const takenByLyric = collectTakenRangesByLyric(built.placements);
+
+    return this.prisma.$transaction(async (tx) => {
+      const glued = await tx.lyrics.create({
+        data: {
+          lyric_id: 0,
+          date: now,
+          editDate: now,
+          isPinned: false,
+          isChannelPost: false,
+          isReference: false,
+          isHidden: false,
+          isFavorite: false,
+          isCensored: false,
+          isDonor: false,
+          mood: [],
+          delivery: [],
+          songRole: [],
+          roleProfiles: {},
+          readiness: readinessAfterTextChange(null, counts.paragraph_count),
+          replyToMessage: null,
+          userId: owner.id,
+          message: {
+            create: {
+              message_id: 0,
+              text: built.text,
+              word_count: counts.word_count,
+              paragraph_count: counts.paragraph_count,
+            },
+          },
+        },
+        include: lyricInclude,
+      });
+
+      if (!hideOriginals) {
+        return glued;
+      }
+
+      const collages = await tx.lyricCollage.findMany();
+
+      for (const donor of donors) {
+        const ranges = takenByLyric.get(donor.id) ?? [];
+        if (ranges.length === 0) {
+          continue;
+        }
+
+        const raw = donor.message?.text ?? '';
+        const lineCount = splitGeneratorLines(raw).length;
+        const rip = ripCleanedRangesFromText(raw, ranges);
+        const markDonor = rip.removed && !rip.emptied;
+        const nextText = markDonor ? rip.nextText : raw;
+        const nextCounts = textCounts(nextText);
+
+        await tx.lyrics.update({
+          where: { id: donor.id },
+          data: {
+            isHidden: true,
+            ...(markDonor
+              ? {
+                  isDonor: true,
+                  editDate: now,
+                  readiness: readinessAfterTextChange(
+                    donor.readiness,
+                    nextCounts.paragraph_count
+                  ),
+                  message: {
+                    update: {
+                      text: nextText,
+                      word_count: nextCounts.word_count,
+                      paragraph_count: nextCounts.paragraph_count,
+                    },
+                  },
+                }
+              : {}),
+          },
+        });
+
+        const shiftMap = cleanedIndexShiftMap(lineCount, ranges);
+
+        for (const collage of collages) {
+          const collageSlots = slotsFromJson(collage.slots);
+          if (!lyricIdsFromSlots(collageSlots).includes(donor.id)) {
+            continue;
+          }
+
+          const nextSlots = remapCollageSlotsAfterRip(
+            collageSlots,
+            donor.id,
+            glued.id,
+            shiftMap,
+            built.placements,
+            markDonor
+          );
+
+          if (JSON.stringify(nextSlots) === JSON.stringify(collageSlots)) {
+            continue;
+          }
+
+          await tx.lyricCollage.update({
+            where: { id: collage.id },
+            data: { slots: nextSlots },
+          });
+          collage.slots = nextSlots;
+        }
+      }
+
+      return tx.lyrics.findUniqueOrThrow({
+        where: { id: glued.id },
+        include: lyricInclude,
+      });
+    });
   }
 
   async listCollages() {
@@ -285,6 +436,7 @@ export class LyricsService {
       isFavorite?: boolean;
       isReference?: boolean;
       isCensored?: boolean;
+      isDonor?: boolean;
     }
   ) {
     const data: {
@@ -292,6 +444,7 @@ export class LyricsService {
       isFavorite?: boolean;
       isReference?: boolean;
       isCensored?: boolean;
+      isDonor?: boolean;
     } = {};
 
     if (flags.isHidden !== undefined) {
@@ -308,6 +461,10 @@ export class LyricsService {
 
     if (flags.isCensored !== undefined) {
       data.isCensored = flags.isCensored;
+    }
+
+    if (flags.isDonor !== undefined) {
+      data.isDonor = flags.isDonor;
     }
 
     if (Object.keys(data).length === 0) {

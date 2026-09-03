@@ -75,7 +75,7 @@ export function CatalogGeneratorPane({
               })}
             </div>
             <p className="text-muted-foreground text-xs leading-relaxed">
-              Хит — куплет 4–6 абзацев, хук 2–4. Полотно — куплет 4–8, хук 2–8.
+              Хит — куплет 4–6 абзацев, хук 1–2. Полотно — куплет 4–8, хук 1–4.
               Абзац = 4 строки.
             </p>
           </div>
@@ -108,8 +108,7 @@ export function CatalogGeneratorPane({
             </button>
           </div>
           <p className="text-muted-foreground text-xs leading-relaxed">
-            Прячет текст в круглых скобках. Хештеги и квадратные скобки
-            убираются всегда.
+            Прячет текст в круглых скобках.
           </p>
         </>
       }
