@@ -3,6 +3,13 @@ import { lyricInclude } from '~/graphql/lyric-include';
 import { prisma } from '~/infrastructure/prisma';
 import type { IUser } from '~/modules/users/users.types';
 
+const DEFAULT_OWNER = {
+  id: 1,
+  username: 'owner',
+  email: 'owner@localhost',
+  password: 'owner',
+} as const;
+
 export class UsersService {
   private readonly prisma = prisma;
 
@@ -27,8 +34,32 @@ export class UsersService {
     );
   }
 
+  async ensureOwner() {
+    const existing = await this.getOwner();
+    if (existing) {
+      console.log(`PRISMA: 🫄 UserID: ${existing.id} уже существует`);
+      return existing;
+    }
+
+    const created = await this.prisma.users.create({
+      data: {
+        id: DEFAULT_OWNER.id,
+        username: DEFAULT_OWNER.username,
+        email: DEFAULT_OWNER.email,
+        password: DEFAULT_OWNER.password,
+      },
+    });
+    console.log(`PRISMA: 📝 Создан владелец каталога UserID: ${created.id}`);
+    return created;
+  }
+
   async loadUsers(users: IUser[]) {
     try {
+      if (users.length === 0) {
+        await this.ensureOwner();
+        return;
+      }
+
       const userExists = await this.getOwner();
 
       if (!userExists) {

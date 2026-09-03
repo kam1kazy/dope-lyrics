@@ -26,12 +26,14 @@ const loadUsersFromFile = (filePath: string): IUser[] => {
 const seed = async () => {
   console.log(`\nPRISMA: 🌾 Выполняем посев данных...`);
 
-  if (!fs.existsSync(chatUserPath)) {
-    console.log('PRISMA: ⚠️ Файлы с данными пользователей не найдены');
-    return;
+  if (fs.existsSync(chatUserPath)) {
+    await usersService.loadUsers(loadUsersFromFile(chatUserPath));
+  } else {
+    console.log(
+      'PRISMA: ⚠️ Файл пользователей не найден, создаём владельца каталога'
+    );
+    await usersService.ensureOwner();
   }
-
-  await usersService.loadUsers(loadUsersFromFile(chatUserPath));
 
   if (!fs.existsSync(chatHistoryPath)) {
     console.log('PRISMA: ⚠️ Файлы с данными истории не найдены');
