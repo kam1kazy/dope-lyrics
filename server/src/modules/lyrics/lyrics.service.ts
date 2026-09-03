@@ -129,23 +129,61 @@ export class LyricsService {
     return buildCatalogStats(rows);
   }
 
-  async assembleTrack(presetRaw?: string | null) {
+  async assembleTrack(
+    presetRaw?: string | null,
+    filter?: Pick<
+      LyricsListOptions,
+      | 'tags'
+      | 'keyword'
+      | 'emojis'
+      | 'dateFrom'
+      | 'dateTo'
+      | 'includeShelves'
+      | 'excludeShelves'
+      | 'mood'
+      | 'excludeMood'
+      | 'delivery'
+      | 'excludeDelivery'
+      | 'songRole'
+      | 'excludeSongRole'
+      | 'readiness'
+      | 'excludeReadiness'
+    > | null
+  ) {
     const preset: TrackFormPreset =
       typeof presetRaw === 'string' && isTrackFormPreset(presetRaw)
         ? presetRaw
         : 'HIT';
     const uniqueRoles = [...new Set(TRACK_FRAME)];
     const pools: Record<string, { id: number; lines: string[] }[]> = {};
+    const includeCensored = (filter?.includeShelves ?? []).includes('censored');
+    const baseWhere = buildLyricsWhere({
+      tags: filter?.tags,
+      keyword: filter?.keyword,
+      emojis: filter?.emojis,
+      dateFrom: filter?.dateFrom,
+      dateTo: filter?.dateTo,
+      includeShelves: filter?.includeShelves,
+      excludeShelves: filter?.excludeShelves ?? ['hidden'],
+      mood: filter?.mood,
+      excludeMood: filter?.excludeMood,
+      delivery: filter?.delivery,
+      excludeDelivery: filter?.excludeDelivery,
+      songRole: filter?.songRole,
+      excludeSongRole: filter?.excludeSongRole,
+      readiness: filter?.readiness,
+      excludeReadiness: filter?.excludeReadiness,
+    });
 
     await Promise.all(
       uniqueRoles.map(async (role) => {
         const rows = await this.prisma.lyrics.findMany({
           where: {
-            isCensored: false,
-            songRole: { has: role },
-            message: {
-              AND: [{ text: { not: null } }, { NOT: { text: '' } }],
-            },
+            AND: [
+              baseWhere,
+              { songRole: { has: role } },
+              includeCensored ? {} : { isCensored: false },
+            ],
           },
           select: {
             id: true,

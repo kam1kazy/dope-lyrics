@@ -260,6 +260,24 @@ export const typeDefinitions = /* GraphQL */ `
     addedCount: Int!
   }
 
+  input LyricPoolFilter {
+    tags: [String!]
+    keyword: String
+    emojis: [String!]
+    dateFrom: String
+    dateTo: String
+    includeShelves: [String!]
+    excludeShelves: [String!]
+    mood: [LyricMood!]
+    excludeMood: [LyricMood!]
+    delivery: [LyricDelivery!]
+    excludeDelivery: [LyricDelivery!]
+    songRole: [LyricSongRole!]
+    excludeSongRole: [LyricSongRole!]
+    readiness: [LyricReadiness!]
+    excludeReadiness: [LyricReadiness!]
+  }
+
   type Query {
     users: [User!]!
     lyricTags: [String!]!
@@ -295,7 +313,11 @@ export const typeDefinitions = /* GraphQL */ `
     ): [Lyric!]!
     lyricIngestPreview: LyricIngestPreview!
     catalogStats: CatalogStats!
-    assembleTrack(preset: TrackFormPreset, hideAdlibs: Boolean): AssembledTrack!
+    assembleTrack(
+      preset: TrackFormPreset
+      hideAdlibs: Boolean
+      filter: LyricPoolFilter
+    ): AssembledTrack!
     lyricCollages: [LyricCollage!]!
   }
 

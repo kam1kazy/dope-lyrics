@@ -51,9 +51,28 @@ type UpdateLyricProfileArgs = {
   readiness?: string | null;
 };
 
+type AssembleTrackFilter = {
+  tags?: string[] | null;
+  keyword?: string | null;
+  emojis?: string[] | null;
+  dateFrom?: string | null;
+  dateTo?: string | null;
+  includeShelves?: string[] | null;
+  excludeShelves?: string[] | null;
+  mood?: string[] | null;
+  excludeMood?: string[] | null;
+  delivery?: string[] | null;
+  excludeDelivery?: string[] | null;
+  songRole?: string[] | null;
+  excludeSongRole?: string[] | null;
+  readiness?: string[] | null;
+  excludeReadiness?: string[] | null;
+};
+
 type AssembleTrackArgs = {
   preset?: string | null;
   hideAdlibs?: boolean | null;
+  filter?: AssembleTrackFilter | null;
 };
 
 type LikeCollageArgs = {
@@ -152,7 +171,7 @@ export const resolvers = {
       args: AssembleTrackArgs,
       _context: GraphQLContext
     ) => {
-      return lyricsService.assembleTrack(args.preset);
+      return lyricsService.assembleTrack(args.preset, args.filter);
     },
     lyricCollages: (
       _parent: unknown,

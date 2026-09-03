@@ -21,6 +21,7 @@ export {
 } from './lib/demo-tags';
 export type { LyricsQueryVariables } from './lib/lyrics-query-variables';
 export {
+  assembleTrackFilterFromSection,
   catalogLyricsVariables,
   catalogQueryVariablesForSection,
   EMPTY_LYRIC_FACET_FILTERS,

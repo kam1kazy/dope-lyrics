@@ -28,6 +28,7 @@ import { CatalogStatsPanel } from '@/features/catalog-stats';
 import {
   type CatalogSectionFilters,
   DEFAULT_CATALOG_SECTION_FILTERS,
+  DEFAULT_GENERATOR_SECTION_FILTERS,
   hasActiveCatalogSectionFilters,
 } from '@/shared/lib/catalog-section-filters';
 import { usePlayback } from '@/shared/lib/playback/playback-context';
@@ -83,6 +84,8 @@ export function CatalogMenu() {
   const [generatorPreset, setGeneratorPreset] =
     useState<TrackFormPreset>('HIT');
   const [hideAdlibs, setHideAdlibs] = useState(false);
+  const [generatorFilters, setGeneratorFilters] =
+    useState<CatalogSectionFilters>(DEFAULT_GENERATOR_SECTION_FILTERS);
   const [selectedCollage, setSelectedCollage] = useState<ILyricCollage | null>(
     null
   );
@@ -141,7 +144,13 @@ export function CatalogMenu() {
   const sectionHasFilters = filterableSection
     ? hasActiveCatalogSectionFilters(filtersBySection[filterableSection])
     : false;
-  const generatorHasSettings = generatorPreset !== 'HIT' || hideAdlibs;
+  const generatorHasSettings =
+    generatorPreset !== 'HIT' ||
+    hideAdlibs ||
+    hasActiveCatalogSectionFilters(
+      generatorFilters,
+      DEFAULT_GENERATOR_SECTION_FILTERS
+    );
   const sidePaneOpen = filtersOpen || historyOpen;
 
   return (
@@ -354,6 +363,7 @@ export function CatalogMenu() {
                       <CatalogAssemblePanel
                         preset={generatorPreset}
                         hideAdlibs={hideAdlibs}
+                        filters={generatorFilters}
                         selectedCollage={selectedCollage}
                         onCloseSelected={() => {
                           setSelectedCollage(null);
@@ -367,7 +377,7 @@ export function CatalogMenu() {
                   <div
                     data-swipe-ignore
                     className={cn(
-                      'border-border bg-background min-h-0 overflow-hidden',
+                      'border-border bg-background flex min-h-0 flex-col overflow-hidden',
                       'max-sm:absolute max-sm:inset-0 max-sm:z-10 max-sm:transition-transform max-sm:duration-300 max-sm:ease-out',
                       'sm:shrink-0 sm:transition-[width] sm:duration-300 sm:ease-out',
                       sidePaneOpen
@@ -375,7 +385,7 @@ export function CatalogMenu() {
                         : 'pointer-events-none max-sm:translate-x-full sm:w-0 sm:border-l-transparent'
                     )}
                   >
-                    <div className="h-full w-full sm:w-80">
+                    <div className="flex h-0 min-h-0 w-full flex-1 flex-col overflow-y-auto sm:w-80">
                       {activeSection === 'generator' && historyOpen ? (
                         <CatalogAssembleHistory
                           hideAdlibs={hideAdlibs}
@@ -394,8 +404,10 @@ export function CatalogMenu() {
                         <CatalogGeneratorPane
                           preset={generatorPreset}
                           hideAdlibs={hideAdlibs}
+                          filters={generatorFilters}
                           onPresetChange={setGeneratorPreset}
                           onHideAdlibsChange={setHideAdlibs}
+                          onFiltersChange={setGeneratorFilters}
                         />
                       ) : (
                         <CatalogFilterPane

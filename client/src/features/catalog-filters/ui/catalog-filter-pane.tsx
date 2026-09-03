@@ -1,8 +1,9 @@
 'use client';
 
 import { ArrowDownAZ, ArrowUpAZ, RotateCcw, Shuffle } from 'lucide-react';
+import type { ReactNode } from 'react';
 
-import { LyricFilterFields } from '@/features/filter-panel';
+import { LyricFilterFields, ShelfFilterChips } from '@/features/filter-panel';
 import {
   type CatalogSectionFilters,
   DEFAULT_CATALOG_SECTION_FILTERS,
@@ -30,73 +31,109 @@ interface CatalogFilterPaneProps {
   sectionId: string;
   filters: CatalogSectionFilters;
   onChange: (next: CatalogSectionFilters) => void;
+  header?: ReactNode;
+  hideSort?: boolean;
+  showShelves?: boolean;
+  defaults?: CatalogSectionFilters;
 }
 
 export function CatalogFilterPane({
   sectionId,
   filters,
   onChange,
+  header,
+  hideSort = false,
+  showShelves = false,
+  defaults = DEFAULT_CATALOG_SECTION_FILTERS,
 }: CatalogFilterPaneProps) {
-  const canReset = hasActiveCatalogSectionFilters(filters);
+  const canReset = hasActiveCatalogSectionFilters(filters, defaults);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4">
-      <div className="flex flex-col gap-2">
-        <Label className="text-muted-foreground text-xs font-normal">
-          Сортировка
-        </Label>
-        <div
-          role="radiogroup"
-          aria-label="Сортировка"
-          className="bg-muted grid grid-cols-3 rounded-lg p-1"
-        >
-          {SORT_OPTIONS.map(({ mode, label, icon: Icon }) => {
-            const selected = filters.sortMode === mode;
+      {header}
 
-            return (
-              <Button
-                key={mode}
-                type="button"
-                role="radio"
-                size="icon-sm"
-                variant="ghost"
-                aria-label={
-                  mode === 'shuffle'
-                    ? 'Вперемешку. Повторное нажатие перемешивает заново'
-                    : label
-                }
-                aria-checked={selected}
-                title={
-                  mode === 'shuffle'
-                    ? 'Вперемешку — ещё раз, чтобы перемешать заново'
-                    : label
-                }
-                className={cn(
-                  'h-8 w-full rounded-md',
-                  selected
-                    ? 'bg-background text-foreground shadow-sm'
-                    : 'text-muted-foreground'
-                )}
-                onClick={() => {
-                  let shuffleSeed = filters.shuffleSeed;
+      {hideSort ? null : (
+        <div className="flex flex-col gap-2">
+          <Label className="text-muted-foreground text-xs font-normal">
+            Сортировка
+          </Label>
+          <div
+            role="radiogroup"
+            aria-label="Сортировка"
+            className="bg-muted grid grid-cols-3 rounded-lg p-1"
+          >
+            {SORT_OPTIONS.map(({ mode, label, icon: Icon }) => {
+              const selected = filters.sortMode === mode;
 
-                  if (mode === 'shuffle') {
-                    shuffleSeed = nextShuffleSeed(filters.shuffleSeed);
+              return (
+                <Button
+                  key={mode}
+                  type="button"
+                  role="radio"
+                  size="icon-sm"
+                  variant="ghost"
+                  aria-label={
+                    mode === 'shuffle'
+                      ? 'Вперемешку. Повторное нажатие перемешивает заново'
+                      : label
                   }
+                  aria-checked={selected}
+                  title={
+                    mode === 'shuffle'
+                      ? 'Вперемешку — ещё раз, чтобы перемешать заново'
+                      : label
+                  }
+                  className={cn(
+                    'h-8 w-full rounded-md',
+                    selected
+                      ? 'bg-background text-foreground shadow-sm'
+                      : 'text-muted-foreground'
+                  )}
+                  onClick={() => {
+                    let shuffleSeed = filters.shuffleSeed;
 
-                  onChange({
-                    ...filters,
-                    sortMode: mode,
-                    shuffleSeed,
-                  });
-                }}
-              >
-                <Icon className="size-4" />
-              </Button>
-            );
-          })}
+                    if (mode === 'shuffle') {
+                      shuffleSeed = nextShuffleSeed(filters.shuffleSeed);
+                    }
+
+                    onChange({
+                      ...filters,
+                      sortMode: mode,
+                      shuffleSeed,
+                    });
+                  }}
+                >
+                  <Icon className="size-4" />
+                </Button>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
+
+      {showShelves ? (
+        <ShelfFilterChips
+          selection={{
+            included: filters.includeShelves,
+            excluded: filters.excludeShelves,
+          }}
+          onChange={(next) => {
+            const selection =
+              typeof next === 'function'
+                ? next({
+                    included: filters.includeShelves,
+                    excluded: filters.excludeShelves,
+                  })
+                : next;
+
+            onChange({
+              ...filters,
+              includeShelves: selection.included,
+              excludeShelves: selection.excluded,
+            });
+          }}
+        />
+      ) : null}
 
       <LyricFilterFields
         idPrefix={`catalog-filter-${sectionId}`}
@@ -112,7 +149,7 @@ export function CatalogFilterPane({
         className="w-full gap-2"
         disabled={!canReset}
         onClick={() => {
-          onChange({ ...DEFAULT_CATALOG_SECTION_FILTERS });
+          onChange({ ...defaults });
         }}
       >
         <RotateCcw className="size-4" />

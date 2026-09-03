@@ -6,12 +6,14 @@ import { useMemo, useState } from 'react';
 
 import {
   ASSEMBLE_TRACK,
+  assembleTrackFilterFromSection,
   type IAssembledTrack,
   type IAssembledTrackSlot,
   type ILyricCollage,
   LIKE_COLLAGE,
   type TrackFormPreset,
 } from '@/entities/lyric';
+import type { CatalogSectionFilters } from '@/shared/lib/catalog-section-filters';
 import { ErrorText } from '@/shared/ui/error-text';
 import { Button } from '@/shared/ui/shadcn/ui/button';
 import { Spinner } from '@/shared/ui/shadcn/ui/spinner';
@@ -35,11 +37,13 @@ function draftKey(slots: IAssembledTrackSlot[]): string {
 export function CatalogAssemblePanel({
   preset,
   hideAdlibs,
+  filters,
   selectedCollage,
   onCloseSelected,
 }: {
   preset: TrackFormPreset;
   hideAdlibs: boolean;
+  filters: CatalogSectionFilters;
   selectedCollage: ILyricCollage | null;
   onCloseSelected: () => void;
 }) {
@@ -74,7 +78,11 @@ export function CatalogAssemblePanel({
 
   const handleAssemble = async () => {
     const result = await assemble({
-      variables: { preset, hideAdlibs },
+      variables: {
+        preset,
+        hideAdlibs,
+        filter: assembleTrackFilterFromSection(filters),
+      },
     });
     const nextSlots = result.data?.assembleTrack.slots;
     if (!nextSlots) {

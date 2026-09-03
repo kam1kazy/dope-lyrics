@@ -75,6 +75,30 @@ export function catalogLyricsVariables(
   };
 }
 
+export function assembleTrackFilterFromSection(filters: CatalogSectionFilters) {
+  return {
+    tags: filters.selectedTags.length > 0 ? filters.selectedTags : null,
+    keyword: filters.keyword.trim() || null,
+    emojis: filters.selectedEmojis.length > 0 ? filters.selectedEmojis : null,
+    dateFrom: filters.dateFrom.trim() || null,
+    dateTo: filters.dateTo.trim() || null,
+    includeShelves:
+      filters.includeShelves.length > 0 ? filters.includeShelves : null,
+    excludeShelves: filters.excludeShelves,
+    mood: filters.mood.length > 0 ? filters.mood : null,
+    excludeMood: filters.excludeMood.length > 0 ? filters.excludeMood : null,
+    delivery: filters.delivery.length > 0 ? filters.delivery : null,
+    excludeDelivery:
+      filters.excludeDelivery.length > 0 ? filters.excludeDelivery : null,
+    songRole: filters.songRole.length > 0 ? filters.songRole : null,
+    excludeSongRole:
+      filters.excludeSongRole.length > 0 ? filters.excludeSongRole : null,
+    readiness: filters.readiness.length > 0 ? filters.readiness : null,
+    excludeReadiness:
+      filters.excludeReadiness.length > 0 ? filters.excludeReadiness : null,
+  };
+}
+
 export function catalogQueryVariablesForSection(
   section: 'list' | 'favorites' | 'demos',
   filters: CatalogSectionFilters,

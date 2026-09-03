@@ -5,6 +5,7 @@ import type {
   LyricSongRole,
 } from '@/shared/lib/lyric-facets';
 import type { SortMode } from '@/shared/lib/lyric-view/lyric-view-context';
+import type { ShelfFlag } from '@/shared/lib/lyric-view/shelf-filter';
 
 export type CatalogSectionFilters = {
   sortMode: SortMode;
@@ -14,6 +15,8 @@ export type CatalogSectionFilters = {
   keyword: string;
   dateFrom: string;
   dateTo: string;
+  includeShelves: ShelfFlag[];
+  excludeShelves: ShelfFlag[];
   mood: LyricMood[];
   excludeMood: LyricMood[];
   delivery: LyricDelivery[];
@@ -24,6 +27,20 @@ export type CatalogSectionFilters = {
   excludeReadiness: LyricReadiness[];
 };
 
+const sameList = (
+  left: readonly string[],
+  right: readonly string[]
+): boolean => {
+  if (left.length !== right.length) {
+    return false;
+  }
+
+  const a = [...left].sort();
+  const b = [...right].sort();
+
+  return a.every((value, index) => value === b[index]);
+};
+
 export const DEFAULT_CATALOG_SECTION_FILTERS: CatalogSectionFilters = {
   sortMode: 'forward',
   shuffleSeed: 1,
@@ -32,6 +49,8 @@ export const DEFAULT_CATALOG_SECTION_FILTERS: CatalogSectionFilters = {
   keyword: '',
   dateFrom: '',
   dateTo: '',
+  includeShelves: [],
+  excludeShelves: [],
   mood: [],
   excludeMood: [],
   delivery: [],
@@ -42,16 +61,24 @@ export const DEFAULT_CATALOG_SECTION_FILTERS: CatalogSectionFilters = {
   excludeReadiness: [],
 };
 
+export const DEFAULT_GENERATOR_SECTION_FILTERS: CatalogSectionFilters = {
+  ...DEFAULT_CATALOG_SECTION_FILTERS,
+  excludeShelves: ['hidden'],
+};
+
 export function hasActiveCatalogSectionFilters(
-  filters: CatalogSectionFilters
+  filters: CatalogSectionFilters,
+  defaults: CatalogSectionFilters = DEFAULT_CATALOG_SECTION_FILTERS
 ): boolean {
   return (
-    filters.sortMode !== DEFAULT_CATALOG_SECTION_FILTERS.sortMode ||
+    filters.sortMode !== defaults.sortMode ||
     filters.selectedTags.length > 0 ||
     filters.selectedEmojis.length > 0 ||
     filters.keyword.trim().length > 0 ||
     filters.dateFrom.trim().length > 0 ||
     filters.dateTo.trim().length > 0 ||
+    !sameList(filters.includeShelves, defaults.includeShelves) ||
+    !sameList(filters.excludeShelves, defaults.excludeShelves) ||
     filters.mood.length > 0 ||
     filters.excludeMood.length > 0 ||
     filters.delivery.length > 0 ||

@@ -4,22 +4,17 @@ import {
   AlignVerticalSpaceAround,
   ArrowDownAZ,
   ArrowUpAZ,
-  Ban,
-  Bookmark,
   CircleGauge,
-  EyeOff,
-  Layers,
   Monitor,
   Moon,
   RotateCcw,
   Shuffle,
-  Sparkles,
   Sun,
   Type,
   UnfoldVertical,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
-import { type ReactNode, useEffect, useRef, useState } from 'react';
+import { type ReactNode, useEffect, useState } from 'react';
 
 import { CatalogIngest } from '@/features/catalog-ingest';
 import {
@@ -28,21 +23,12 @@ import {
   type SortMode,
   useLyricView,
 } from '@/shared/lib/lyric-view/lyric-view-context';
-import {
-  clickShelfFlag,
-  isAllShelvesSelected,
-  isShelfFlagExcluded,
-  isShelfFlagOn,
-  selectAllShelves,
-  type ShelfFlag,
-  toggleExcludeShelfFlag,
-} from '@/shared/lib/lyric-view/shelf-filter';
 import { cn } from '@/shared/lib/utils/cn';
-import { Badge } from '@/shared/ui/shadcn/ui/badge';
 import { Button } from '@/shared/ui/shadcn/ui/button';
 import { Label } from '@/shared/ui/shadcn/ui/label';
 
 import { LyricFilterFields } from './lyric-filter-fields';
+import { ShelfFilterChips } from './shelf-filter-chips';
 
 type PanelTab = 'settings' | 'filters';
 
@@ -70,19 +56,6 @@ const SORT_OPTIONS: {
   { mode: 'forward', label: 'По порядку', icon: ArrowDownAZ },
   { mode: 'reverse', label: 'В обратном порядке', icon: ArrowUpAZ },
 ];
-
-const SHELF_OPTIONS: {
-  flag: ShelfFlag;
-  label: string;
-  icon: typeof Bookmark;
-}[] = [
-  { flag: 'favorites', label: 'Избранное', icon: Bookmark },
-  { flag: 'references', label: 'Эталоны', icon: Sparkles },
-  { flag: 'censored', label: 'Цензура', icon: Ban },
-  { flag: 'hidden', label: 'Скрытые', icon: EyeOff },
-];
-
-const SHELF_CLICK_DELAY_MS = 280;
 
 function SliderRow({
   id,
@@ -349,23 +322,6 @@ function FiltersTab() {
     included: includedShelves,
     excluded: excludedShelves,
   };
-  const allShelves = isAllShelvesSelected(shelfSelection);
-  const clickTimerRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (clickTimerRef.current != null) {
-        window.clearTimeout(clickTimerRef.current);
-      }
-    };
-  }, []);
-
-  const clearShelfClickTimer = () => {
-    if (clickTimerRef.current != null) {
-      window.clearTimeout(clickTimerRef.current);
-      clickTimerRef.current = null;
-    }
-  };
   const canReset = hasActiveLyricFilters({
     includedShelves,
     excludedShelves,
@@ -386,81 +342,10 @@ function FiltersTab() {
 
   return (
     <div className="flex flex-col gap-4 pb-1 md:gap-6">
-      <div className="flex flex-col gap-2 md:gap-3">
-        <Label className="text-muted-foreground text-xs font-normal md:text-sm">
-          Полка
-        </Label>
-        <div
-          data-swipe-ignore
-          className="flex flex-wrap gap-1.5 md:gap-2"
-          role="group"
-          aria-label="Полка каталога"
-        >
-          <button
-            type="button"
-            aria-pressed={allShelves}
-            aria-label="Все"
-            onClick={() => {
-              clearShelfClickTimer();
-              setShelfSelection(selectAllShelves());
-            }}
-            className="cursor-pointer"
-          >
-            <Badge
-              variant={allShelves ? 'default' : 'secondary'}
-              className="inline-flex items-center gap-1 px-2 py-0.5 text-xs md:gap-1.5 md:px-2.5 md:py-1 md:text-sm"
-            >
-              <Layers className="size-3 md:size-3.5" aria-hidden />
-              Все
-            </Badge>
-          </button>
-          {SHELF_OPTIONS.map(({ flag, label, icon: Icon }) => {
-            const selected = isShelfFlagOn(shelfSelection, flag);
-            const excluded = isShelfFlagExcluded(shelfSelection, flag);
-
-            return (
-              <button
-                key={flag}
-                type="button"
-                aria-pressed={selected}
-                aria-label={excluded ? `${label}, исключена из поиска` : label}
-                onMouseDown={(event) => {
-                  if (event.detail > 1) {
-                    event.preventDefault();
-                  }
-                }}
-                onClick={() => {
-                  clearShelfClickTimer();
-                  clickTimerRef.current = window.setTimeout(() => {
-                    clickTimerRef.current = null;
-                    setShelfSelection((current) =>
-                      clickShelfFlag(current, flag)
-                    );
-                  }, SHELF_CLICK_DELAY_MS);
-                }}
-                onDoubleClick={() => {
-                  clearShelfClickTimer();
-                  setShelfSelection((current) =>
-                    toggleExcludeShelfFlag(current, flag)
-                  );
-                }}
-                className="cursor-pointer"
-              >
-                <Badge
-                  variant={selected || excluded ? 'default' : 'secondary'}
-                  className={cn(
-                    'inline-flex items-center gap-1 px-2 py-0.5 text-xs md:gap-1.5 md:px-2.5 md:py-1 md:text-sm',
-                    excluded && 'shelf-chip-excluded hover:brightness-110'
-                  )}
-                >
-                  <Icon className="size-3 md:size-3.5" aria-hidden />
-                  {label}
-                </Badge>
-              </button>
-            );
-          })}
-        </div>
-      </div>
+      <ShelfFilterChips
+        selection={shelfSelection}
+        onChange={setShelfSelection}
+      />
 
       <LyricFilterFields
         idPrefix="carousel-filter"

@@ -26,21 +26,23 @@ type LineQuota = {
   max: number;
 };
 
+const PARAGRAPH_LINES = 4;
+
 export const TRACK_QUOTAS: Record<
   TrackFormPreset,
   Record<TrackFrameRole, LineQuota>
 > = {
   HIT: {
-    INTRO: { min: 2, max: 4 },
-    VERSE: { min: 8, max: 16 },
-    HOOK: { min: 4, max: 8 },
-    BRIDGE: { min: 4, max: 8 },
+    INTRO: { min: 0, max: 4 * PARAGRAPH_LINES },
+    VERSE: { min: 4 * PARAGRAPH_LINES, max: 6 * PARAGRAPH_LINES },
+    HOOK: { min: 2 * PARAGRAPH_LINES, max: 4 * PARAGRAPH_LINES },
+    BRIDGE: { min: 0, max: 4 * PARAGRAPH_LINES },
   },
   CANVAS: {
-    INTRO: { min: 2, max: 4 },
-    VERSE: { min: 16, max: 16 },
-    HOOK: { min: 4, max: 8 },
-    BRIDGE: { min: 8, max: 16 },
+    INTRO: { min: 0, max: 4 * PARAGRAPH_LINES },
+    VERSE: { min: 4 * PARAGRAPH_LINES, max: 8 * PARAGRAPH_LINES },
+    HOOK: { min: 2 * PARAGRAPH_LINES, max: 8 * PARAGRAPH_LINES },
+    BRIDGE: { min: 0, max: 4 * PARAGRAPH_LINES },
   },
 };
 
@@ -60,7 +62,10 @@ export type PoolLyric = {
   lines: string[];
 };
 
-const QUATRAIN_LINES = 4;
+const QUATRAIN_LINES = PARAGRAPH_LINES;
+const MAX_LINES_FROM_ONE = 8;
+const PREFERRED_LINES_FROM_ONE = 4;
+const TAKE_PREFERRED_CHANCE = 0.7;
 const LEGACY_END_LINE = 1_000_000;
 
 export const stripGeneratorMarks = (text: string): string => {
@@ -83,30 +88,130 @@ const pickRandom = <T>(items: T[]): T | undefined => {
   return items[index];
 };
 
+const randomInt = (min: number, max: number): number => {
+  if (max <= min) {
+    return min;
+  }
+
+  return min + Math.floor(Math.random() * (max - min + 1));
+};
+
+const pickSlotTarget = (quota: LineQuota, hasCandidates: boolean): number => {
+  if (!hasCandidates) {
+    return 0;
+  }
+
+  const minParagraphs = Math.floor(quota.min / QUATRAIN_LINES);
+  const maxParagraphs = Math.floor(quota.max / QUATRAIN_LINES);
+
+  if (maxParagraphs < 1) {
+    return quota.max;
+  }
+
+  if (quota.min === 0) {
+    return randomInt(1, maxParagraphs) * QUATRAIN_LINES;
+  }
+
+  return randomInt(minParagraphs, maxParagraphs) * QUATRAIN_LINES;
+};
+
+const rangesOverlap = (
+  start: number,
+  end: number,
+  taken: CollagePartStored[]
+): boolean => {
+  return taken.some((range) => start < range.endLine && range.startLine < end);
+};
+
+const unusedRuns = (
+  lineCount: number,
+  taken: CollagePartStored[]
+): CollagePartStored[] => {
+  const runs: CollagePartStored[] = [];
+  let runStart: number | null = null;
+
+  for (let line = 0; line <= lineCount; line += 1) {
+    const takenHere =
+      line < lineCount &&
+      taken.some((range) => line >= range.startLine && line < range.endLine);
+
+    if (line < lineCount && !takenHere) {
+      if (runStart === null) {
+        runStart = line;
+      }
+    } else if (runStart !== null) {
+      runs.push({ lyricId: 0, startLine: runStart, endLine: line });
+      runStart = null;
+    }
+  }
+
+  return runs;
+};
+
 const pickLineWindow = (
   lineCount: number,
-  remaining: number
+  remaining: number,
+  taken: CollagePartStored[]
 ): CollagePartStored | null => {
   if (lineCount < 1 || remaining < 1) {
     return null;
   }
 
-  const take = Math.min(lineCount, remaining);
+  const preferred: CollagePartStored[] = [];
+  const longer: CollagePartStored[] = [];
+  const leftover: CollagePartStored[] = [];
 
-  if (lineCount <= remaining) {
-    return { lyricId: 0, startLine: 0, endLine: lineCount };
+  for (const run of unusedRuns(lineCount, taken)) {
+    const runLength = run.endLine - run.startLine;
+    const cap = Math.min(runLength, remaining, MAX_LINES_FROM_ONE);
+    if (cap < 1) {
+      continue;
+    }
+
+    for (
+      let start = run.startLine;
+      start < run.endLine;
+      start += QUATRAIN_LINES
+    ) {
+      const four = start + PREFERRED_LINES_FROM_ONE;
+      if (
+        four <= run.endLine &&
+        PREFERRED_LINES_FROM_ONE <= remaining &&
+        !rangesOverlap(start, four, taken)
+      ) {
+        preferred.push({ lyricId: 0, startLine: start, endLine: four });
+      }
+
+      const eight = start + MAX_LINES_FROM_ONE;
+      if (
+        eight <= run.endLine &&
+        MAX_LINES_FROM_ONE <= remaining &&
+        !rangesOverlap(start, eight, taken)
+      ) {
+        longer.push({ lyricId: 0, startLine: start, endLine: eight });
+      }
+    }
+
+    leftover.push({
+      lyricId: 0,
+      startLine: run.startLine,
+      endLine: run.startLine + cap,
+    });
   }
 
-  const maxStart = lineCount - take;
-  const aligned: number[] = [];
-
-  for (let start = 0; start <= maxStart; start += QUATRAIN_LINES) {
-    aligned.push(start);
+  if (preferred.length > 0 && Math.random() < TAKE_PREFERRED_CHANCE) {
+    return pickRandom(preferred) ?? null;
   }
 
-  const startLine = pickRandom(aligned) ?? 0;
+  if (longer.length > 0) {
+    return pickRandom(longer) ?? null;
+  }
 
-  return { lyricId: 0, startLine, endLine: startLine + take };
+  if (preferred.length > 0) {
+    return pickRandom(preferred) ?? null;
+  }
+
+  return pickRandom(leftover) ?? null;
 };
 
 const fillSlot = (
@@ -115,25 +220,40 @@ const fillSlot = (
   used: Set<number>
 ): CollagePartStored[] => {
   const parts: CollagePartStored[] = [];
-  let count = 0;
   const candidates = pool.filter(
     (item) => !used.has(item.id) && item.lines.length > 0
   );
+  const target = pickSlotTarget(quota, candidates.length > 0);
+  if (target < 1) {
+    return parts;
+  }
 
-  while (count < quota.min && candidates.length > 0) {
-    const remaining = quota.max - count;
+  const takenByLyric = new Map<number, CollagePartStored[]>();
+  let count = 0;
+
+  while (count < target && candidates.length > 0) {
+    const remaining = target - count;
     if (remaining <= 0) {
       break;
     }
 
-    const index = Math.floor(Math.random() * candidates.length);
-    const item = candidates.splice(index, 1)[0];
+    const fresh = candidates.filter((item) => !takenByLyric.has(item.id));
+    const poolPick = fresh.length > 0 ? fresh : candidates;
+    const index = Math.floor(Math.random() * poolPick.length);
+    const item = poolPick[index];
     if (!item) {
       break;
     }
 
-    const window = pickLineWindow(item.lines.length, remaining);
+    const taken = takenByLyric.get(item.id) ?? [];
+    const window = pickLineWindow(item.lines.length, remaining, taken);
     if (!window) {
+      const candidateIndex = candidates.findIndex(
+        (candidate) => candidate.id === item.id
+      );
+      if (candidateIndex >= 0) {
+        candidates.splice(candidateIndex, 1);
+      }
       continue;
     }
 
@@ -142,8 +262,12 @@ const fillSlot = (
       startLine: window.startLine,
       endLine: window.endLine,
     });
-    used.add(item.id);
+    takenByLyric.set(item.id, [...taken, window]);
     count += window.endLine - window.startLine;
+  }
+
+  for (const lyricId of takenByLyric.keys()) {
+    used.add(lyricId);
   }
 
   return parts;

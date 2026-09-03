@@ -272,8 +272,12 @@ const COLLAGE_SLOT_FIELDS = `
 `;
 
 export const ASSEMBLE_TRACK = gql`
-  query AssembleTrack($preset: TrackFormPreset, $hideAdlibs: Boolean) {
-    assembleTrack(preset: $preset, hideAdlibs: $hideAdlibs) {
+  query AssembleTrack(
+    $preset: TrackFormPreset
+    $hideAdlibs: Boolean
+    $filter: LyricPoolFilter
+  ) {
+    assembleTrack(preset: $preset, hideAdlibs: $hideAdlibs, filter: $filter) {
       slots {
         ${COLLAGE_SLOT_FIELDS}
       }
