@@ -129,7 +129,7 @@ export const ControlBar = () => {
           {...swipe.contentProps}
           overlayClassName={cn(!isOpen && 'pointer-events-none opacity-0')}
           className={cn(
-            'min-h-0 overflow-hidden md:max-h-[min(85svh,760px)] md:max-w-2xl md:p-6',
+            'min-h-0 min-w-0 max-w-full overflow-hidden md:max-h-[min(85svh,760px)] md:max-w-2xl md:p-6',
             swipe.dragging && 'duration-0'
           )}
           onClick={(event) => {

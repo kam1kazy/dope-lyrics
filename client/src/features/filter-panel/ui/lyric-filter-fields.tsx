@@ -116,19 +116,19 @@ export function LyricFilterFields({
 
   return (
     <>
-      <div className="flex flex-col gap-2 md:gap-3">
+      <div className="flex min-w-0 flex-col gap-2 md:gap-3">
         <Label className="text-muted-foreground flex items-center gap-1.5 text-xs font-normal md:text-sm">
           <CalendarRange className="size-3.5" aria-hidden />
           Период
         </Label>
-        <div className="grid grid-cols-2 gap-2 md:gap-3">
+        <div className="grid min-w-0 grid-cols-1 gap-2 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:gap-3">
           <Input
             id={`${idPrefix}-date-from`}
             type="date"
             value={value.dateFrom}
             aria-label="Дата с"
             onChange={(event) => onChange({ dateFrom: event.target.value })}
-            className="h-9 md:h-10 md:text-sm"
+            className="h-9 w-full min-w-0 max-w-full md:h-10 md:text-sm"
           />
           <Input
             id={`${idPrefix}-date-to`}
@@ -136,7 +136,7 @@ export function LyricFilterFields({
             value={value.dateTo}
             aria-label="Дата по"
             onChange={(event) => onChange({ dateTo: event.target.value })}
-            className="h-9 md:h-10 md:text-sm"
+            className="h-9 w-full min-w-0 max-w-full md:h-10 md:text-sm"
           />
         </div>
       </div>

@@ -27,6 +27,7 @@ export function createApp() {
           'X-Requested-With',
           'Apollo-Require-Preflight',
           'X-Request-Id',
+          'X-Telegram-Init-Data',
         ],
         methods: ['GET', 'POST', 'OPTIONS'],
         maxAge: 86400,

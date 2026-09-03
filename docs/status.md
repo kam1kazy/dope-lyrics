@@ -12,7 +12,7 @@
 | Фильтры | `lyrics(...)` по тегам, полкам, ролям/настроению/подаче; `catalogStats` |
 | Сервер | Модули (`app`, `modules/lyrics`, `graphql`, `mtcute`) |
 | Lint | После профила/сводки — typecheck зелёный; перед push — `bun run fix` |
-| Auth | Нет входа. JWT/cookie/tenant не переносили |
+| Auth | Production GraphQL: `initData` Mini App + `BOT_ADMIN_ID`. Регистрации youways нет |
 | OpenSpec | Активного change нет. В `openspec/specs/`: `lyric-facets`, `catalog-analytics` |
 
-Дальше — конструктор трека из кусков (начало E без ИИ), не генерация и не хост (F).
+Дальше — конструктор трека из кусков (начало E без ИИ), не генерация. Mini App: [0007](./decisions/0007-mini-app-initdata.md).

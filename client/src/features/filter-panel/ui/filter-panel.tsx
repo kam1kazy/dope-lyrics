@@ -341,7 +341,7 @@ function FiltersTab() {
   });
 
   return (
-    <div className="flex flex-col gap-4 pb-1 md:gap-6">
+    <div className="flex min-w-0 flex-col gap-4 pb-1 md:gap-6">
       <ShelfFilterChips
         selection={shelfSelection}
         onChange={setShelfSelection}
@@ -457,7 +457,7 @@ export function FilterPanel({
   const [tab, setTab] = useState<PanelTab>('settings');
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-3 md:gap-4">
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 md:gap-4">
       <div
         role="tablist"
         aria-label="Разделы панели"
@@ -494,7 +494,7 @@ export function FilterPanel({
         id={`panel-tabpanel-${tab}`}
         role="tabpanel"
         aria-labelledby={`panel-tab-${tab}`}
-        className="min-h-0 flex-1 overflow-y-auto"
+        className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto"
       >
         <div hidden={tab !== 'settings'}>
           <SettingsTab checkIngest={checkIngest} />

@@ -1,7 +1,8 @@
 import { Elysia } from 'elysia';
 
 import { isOriginAllowed } from './cors';
-import { env, isProduction } from './env';
+import { env, isProduction, telegramAdminId } from './env';
+import { verifyTelegramWebAppUserId } from './telegram-webapp';
 
 type RateBucket = {
   count: number;
@@ -54,6 +55,23 @@ export const securityPlugin = new Elysia({ name: 'security' })
 
     if (method === 'OPTIONS' || path === '/health') {
       return;
+    }
+
+    const host = request.headers.get('host') ?? '';
+    const isLocalHost = /^(localhost|127\.0\.0\.1)(:\d+)?$/i.test(host);
+
+    if (!isLocalHost && path.startsWith('/graphql')) {
+      const initData = request.headers.get('x-telegram-init-data') ?? '';
+      const userId = verifyTelegramWebAppUserId({
+        initData,
+        botToken: env.BOT_TOKEN,
+        maxAgeSec: env.TELEGRAM_INIT_DATA_MAX_AGE_SEC,
+      });
+
+      if (userId === null || userId !== telegramAdminId) {
+        set.status = 401;
+        return { error: 'Нет доступа' };
+      }
     }
 
     const contentLength = Number(request.headers.get('content-length') ?? 0);

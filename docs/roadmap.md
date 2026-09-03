@@ -39,7 +39,9 @@ Chakra снят. Экран на **shadcn**, как в youways. Иконки Luc
 
 **Процесс API** (класс защиты youways, без tenant) — сделано в `server/`: Zod env, headers, CORS, Origin/Content-Type на `/graphql`, rate limit, лимит тела, 500 без stack, GraphQL без password/email, глубина и `take`, GraphiQL/Swagger не в production, `/health`, graceful shutdown, один PrismaClient.
 
-**Регистрация и cookie-сессии** — когда появится вход, модель youways, не `origin/develop`.
+**Mini App** — в production GraphQL принимает только подписанный `initData` и `BOT_ADMIN_ID`. Формы входа нет. htpasswd на `/essence` снят: WebView Telegram его не проходит.
+
+**Регистрация и cookie-сессии** — когда появится вход с браузера, модель youways, не `origin/develop`.
 
 **Linux-хост** — когда нужен Mini App или бот без компа: TLS, закрытый SSH, fail2ban, не светить Postgres.
 

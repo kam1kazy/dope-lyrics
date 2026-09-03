@@ -34,6 +34,13 @@ const httpEnvSchema = z.object({
   GRAPHQL_MAX_DEPTH: z.coerce.number().int().positive().default(8),
   GRAPHQL_MAX_LIMIT: z.coerce.number().int().positive().default(10_000),
   BODY_LIMIT_BYTES: z.coerce.number().int().positive().default(512_000),
+  BOT_TOKEN: z.string().optional().default(''),
+  BOT_ADMIN_ID: z.string().optional().default(''),
+  TELEGRAM_INIT_DATA_MAX_AGE_SEC: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(86_400),
 });
 
 const parsedHttp = httpEnvSchema.safeParse(process.env);
@@ -48,6 +55,17 @@ if (!parsedHttp.success) {
 export const env = parsedHttp.data;
 
 export const isProduction = env.NODE_ENV === 'production';
+
+export const telegramAdminId = Number.parseInt(env.BOT_ADMIN_ID, 10);
+
+if (isProduction) {
+  const hasAdminId = Number.isFinite(telegramAdminId) && telegramAdminId > 0;
+  if (!env.BOT_TOKEN || !hasAdminId) {
+    throw new Error(
+      'Некорректные переменные окружения: BOT_TOKEN и BOT_ADMIN_ID обязательны в production'
+    );
+  }
+}
 
 const requiredId = z
   .string()

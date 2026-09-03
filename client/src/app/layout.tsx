@@ -2,6 +2,7 @@ import '@/shared/styles/globals.css';
 
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
+import Script from 'next/script';
 import type { ReactNode } from 'react';
 
 const inter = Inter({
@@ -31,7 +32,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ru" suppressHydrationWarning>
-      <body className={`${inter.variable} antialiased`}>{children}</body>
+      <body className={`${inter.variable} antialiased`}>
+        <Script
+          src="https://telegram.org/js/telegram-web-app.js"
+          strategy="beforeInteractive"
+        />
+        {children}
+      </body>
     </html>
   );
 }

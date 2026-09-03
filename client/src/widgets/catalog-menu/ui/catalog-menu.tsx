@@ -197,7 +197,11 @@ export function CatalogMenu() {
       <CatalogPanel
         open={isOpen}
         className={
-          sidePaneOpen ? 'max-w-[min(100%,60rem)]' : 'max-w-[min(100%,640px)]'
+          sidePaneOpen
+            ? 'max-w-[min(100%,60rem)]'
+            : activeSection
+              ? 'max-w-[min(100%,640px)]'
+              : 'max-sm:max-w-44 sm:max-w-[min(100%,640px)]'
         }
         onOpenChange={(open) => {
           if (!open) {
@@ -215,7 +219,7 @@ export function CatalogMenu() {
           <nav
             data-swipe-ignore
             className={cn(
-              'border-border flex w-44 shrink-0 flex-col gap-1 border-r p-3',
+              'border-border flex h-full w-44 shrink-0 flex-col gap-1 border-r p-3',
               activeSection && 'hidden sm:flex'
             )}
             aria-label="Разделы каталога"
@@ -252,6 +256,14 @@ export function CatalogMenu() {
                 </Button>
               );
             })}
+            <Button
+              type="button"
+              variant="ghost"
+              className="mt-auto h-auto justify-start px-2 py-2 text-left text-sm font-normal sm:hidden"
+              onClick={closeMenu}
+            >
+              Закрыть
+            </Button>
           </nav>
 
           <div
