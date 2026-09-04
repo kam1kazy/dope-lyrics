@@ -5,6 +5,7 @@ import {
   Bookmark,
   Bot,
   ChartColumn,
+  Heart,
   History,
   List,
   ListFilter,
@@ -15,6 +16,7 @@ import {
 import { useEffect, useRef, useState } from 'react';
 
 import type { ILyricCollage, TrackFormQuotas } from '@/entities/lyric';
+import { CarouselHistoryPanel } from '@/features/carousel-history';
 import {
   CatalogAssembleHistory,
   CatalogAssemblePanel,
@@ -30,6 +32,10 @@ import { CatalogFilterPane } from '@/features/catalog-filters';
 import { CatalogListPanel } from '@/features/catalog-list';
 import { CatalogStatsPanel } from '@/features/catalog-stats';
 import {
+  type CatalogMenuSection,
+  useCatalogMenu,
+} from '@/shared/lib/catalog-menu/catalog-menu-context';
+import {
   type CatalogSectionFilters,
   DEFAULT_CATALOG_SECTION_FILTERS,
   DEFAULT_GENERATOR_SECTION_FILTERS,
@@ -43,9 +49,12 @@ import { cn } from '@/shared/lib/utils/cn';
 import { CatalogPanel } from '@/shared/ui/catalog-panel/catalog-panel';
 import { Button } from '@/shared/ui/shadcn/ui/button';
 
-type CatalogSection = 'list' | 'favorites' | 'demos' | 'stats' | 'generator';
+type CatalogSection = CatalogMenuSection;
 
-type FilterableSection = Exclude<CatalogSection, 'stats' | 'generator'>;
+type FilterableSection = Exclude<
+  CatalogSection,
+  'stats' | 'generator' | 'history'
+>;
 
 type MenuItem = {
   id: CatalogSection | 'references' | 'ai-settings';
@@ -58,6 +67,7 @@ const MENU_ITEMS: MenuItem[] = [
   { id: 'list', label: 'Список', icon: List },
   { id: 'favorites', label: 'Избранное', icon: Bookmark },
   { id: 'demos', label: 'Тексты из демок', icon: AudioLines },
+  { id: 'history', label: 'История', icon: History },
   { id: 'stats', label: 'Сводка', icon: ChartColumn },
   { id: 'references', label: 'Эталоны', icon: Sparkles, disabled: true },
   { id: 'generator', label: 'Генератор', icon: Shuffle },
@@ -68,6 +78,7 @@ const SECTION_TITLES: Record<CatalogSection, string> = {
   list: 'Список',
   favorites: 'Избранное',
   demos: 'Тексты из демок',
+  history: 'История',
   stats: 'Сводка',
   generator: 'Генератор',
 };
@@ -94,6 +105,7 @@ export function CatalogMenu() {
   const sectionToggleGuardUntilRef = useRef(0);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [likedOnly, setLikedOnly] = useState(false);
   const [generatorForm, setGeneratorForm] = useState<TrackFormQuotas>(
     DEFAULT_TRACK_FORM_QUOTAS
   );
@@ -108,6 +120,7 @@ export function CatalogMenu() {
   );
   const { paused, canPlay, suppressToggle, beginOverlay, endOverlay } =
     usePlayback();
+  const { openRequest, closeSignal, consumeOpenRequest } = useCatalogMenu();
   const [catalogLit, setCatalogLit] = useState(false);
   const playing = !paused && canPlay;
 
@@ -143,6 +156,7 @@ export function CatalogMenu() {
     setActiveSection(null);
     setFiltersOpen(false);
     setHistoryOpen(false);
+    setLikedOnly(false);
     setSelectedCollage(null);
     document.body.style.removeProperty('pointer-events');
   }, [beginOverlay, endOverlay, isOpen]);
@@ -196,10 +210,33 @@ export function CatalogMenu() {
     setHistoryOpen(false);
   };
 
+  useEffect(() => {
+    if (!openRequest) {
+      return;
+    }
+
+    openMenu();
+    activeSectionRef.current = openRequest;
+    setActiveSection(openRequest);
+    setRenderedSection(openRequest);
+    setFiltersOpen(false);
+    setHistoryOpen(false);
+    consumeOpenRequest();
+  }, [consumeOpenRequest, openRequest]);
+
+  useEffect(() => {
+    if (closeSignal === 0) {
+      return;
+    }
+
+    closeMenu();
+  }, [closeSignal]);
+
   const filterableSection: FilterableSection | null =
     renderedSection &&
     renderedSection !== 'stats' &&
-    renderedSection !== 'generator'
+    renderedSection !== 'generator' &&
+    renderedSection !== 'history'
       ? renderedSection
       : null;
   const sectionDefaults =
@@ -365,6 +402,26 @@ export function CatalogMenu() {
                   <h2 className="text-sm font-medium">
                     {SECTION_TITLES[renderedSection]}
                   </h2>
+                  {renderedSection === 'history' ? (
+                    <Button
+                      type="button"
+                      variant={likedOnly ? 'secondary' : 'ghost'}
+                      size="icon"
+                      className="ml-auto size-8"
+                      aria-label="Сохранённые"
+                      aria-pressed={likedOnly}
+                      onClick={() => {
+                        setLikedOnly((open) => !open);
+                      }}
+                    >
+                      <Heart
+                        className={cn(
+                          'size-4',
+                          likedOnly && 'fill-rose-400 text-rose-400'
+                        )}
+                      />
+                    </Button>
+                  ) : null}
                   {renderedSection === 'generator' ? (
                     <div className="ml-auto flex items-center gap-1">
                       <Button
@@ -437,6 +494,11 @@ export function CatalogMenu() {
                       <CatalogFavoritesPanel filters={sectionFilters} />
                     ) : renderedSection === 'demos' ? (
                       <CatalogDemosPanel filters={sectionFilters} />
+                    ) : renderedSection === 'history' ? (
+                      <CarouselHistoryPanel
+                        likedOnly={likedOnly}
+                        onPlay={closeMenu}
+                      />
                     ) : renderedSection === 'generator' ? (
                       <CatalogAssemblePanel
                         form={generatorForm}

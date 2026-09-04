@@ -135,6 +135,17 @@ export type ILyricCollage = {
   slots: IAssembledTrackSlot[];
 };
 
+export type CarouselHistorySource = 'SHUFFLE' | 'QUEUE' | 'GENERATOR' | 'AI';
+
+export type ICarouselHistory = {
+  id: number;
+  createdAt: string;
+  source: CarouselHistorySource;
+  lyricIds: number[];
+  previewText: string;
+  isLiked: boolean;
+};
+
 export interface IMessage {
   message_id: number;
   text: string;

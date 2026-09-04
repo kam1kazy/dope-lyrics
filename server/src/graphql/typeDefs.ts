@@ -269,6 +269,22 @@ export const typeDefinitions = /* GraphQL */ `
     slots: [AssembledTrackSlot!]!
   }
 
+  enum CarouselHistorySource {
+    SHUFFLE
+    QUEUE
+    GENERATOR
+    AI
+  }
+
+  type CarouselHistory {
+    id: Int!
+    createdAt: String!
+    source: CarouselHistorySource!
+    lyricIds: [Int!]!
+    previewText: String!
+    isLiked: Boolean!
+  }
+
   input CollagePartInput {
     lyricId: Int!
     startLine: Int!
@@ -357,6 +373,34 @@ export const typeDefinitions = /* GraphQL */ `
       filter: LyricPoolFilter
     ): AssembledTrack!
     lyricCollages: [LyricCollage!]!
+    lyricIds(
+      tags: [String!]
+      keyword: String
+      emojis: [String!]
+      dateFrom: String
+      dateTo: String
+      referencesOnly: Boolean
+      favoritesOnly: Boolean
+      hiddenOnly: Boolean
+      censoredOnly: Boolean
+      includeCensored: Boolean
+      includeShelves: [String!]
+      excludeShelves: [String!]
+      demoName: String
+      demosOnly: Boolean
+      oldestFirst: Boolean
+      shuffleSeed: Int
+      mood: [LyricMood!]
+      excludeMood: [LyricMood!]
+      delivery: [LyricDelivery!]
+      excludeDelivery: [LyricDelivery!]
+      songRole: [LyricSongRole!]
+      excludeSongRole: [LyricSongRole!]
+      readiness: [LyricReadiness!]
+      excludeReadiness: [LyricReadiness!]
+    ): [Int!]!
+    lyricsByIds(ids: [Int!]!): [Lyric!]!
+    carouselHistories: [CarouselHistory!]!
   }
 
   type Mutation {
@@ -386,5 +430,12 @@ export const typeDefinitions = /* GraphQL */ `
     likeCollage(slots: [CollageSlotInput!]!): LyricCollage!
     unlikeCollage(id: Int!): Int!
     glueLyrics(slots: [CollageSlotInput!]!, hideOriginals: Boolean!): Lyric!
+    saveCarouselHistory(
+      lyricIds: [Int!]!
+      source: CarouselHistorySource!
+    ): CarouselHistory!
+    likeCarouselHistory(id: Int!): CarouselHistory!
+    unlikeCarouselHistory(id: Int!): Int!
+    deleteCarouselHistory(id: Int!): Int!
   }
 `;

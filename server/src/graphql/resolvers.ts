@@ -105,6 +105,54 @@ type GlueLyricsArgs = {
   hideOriginals: boolean;
 };
 
+type SaveCarouselHistoryArgs = {
+  lyricIds: number[];
+  source: string;
+};
+
+type CarouselHistoryIdArgs = {
+  id: number;
+};
+
+type LyricsByIdsArgs = {
+  ids: number[];
+};
+
+function lyricsListOptionsFromArgs(
+  args: LyricsArgs,
+  limit: number,
+  offset: number
+) {
+  return {
+    limit,
+    offset,
+    tags: args.tags,
+    keyword: args.keyword,
+    emojis: args.emojis,
+    dateFrom: args.dateFrom,
+    dateTo: args.dateTo,
+    referencesOnly: args.referencesOnly,
+    favoritesOnly: args.favoritesOnly,
+    hiddenOnly: args.hiddenOnly,
+    censoredOnly: args.censoredOnly,
+    includeCensored: args.includeCensored,
+    includeShelves: args.includeShelves,
+    excludeShelves: args.excludeShelves,
+    demoName: args.demoName,
+    demosOnly: args.demosOnly,
+    oldestFirst: args.oldestFirst,
+    shuffleSeed: args.shuffleSeed,
+    mood: args.mood,
+    excludeMood: args.excludeMood,
+    delivery: args.delivery,
+    excludeDelivery: args.excludeDelivery,
+    songRole: args.songRole,
+    excludeSongRole: args.excludeSongRole,
+    readiness: args.readiness,
+    excludeReadiness: args.excludeReadiness,
+  };
+}
+
 const clampLimit = (value: number | null | undefined): number => {
   const fallback = env.GRAPHQL_MAX_LIMIT;
   const requested = value ?? fallback;
@@ -149,34 +197,13 @@ export const resolvers = {
       return lyricsService.listDemos();
     },
     lyrics: (_parent: unknown, args: LyricsArgs, _context: GraphQLContext) => {
-      return lyricsService.list({
-        limit: clampLimit(args.limit),
-        offset: clampOffset(args.offset),
-        tags: args.tags,
-        keyword: args.keyword,
-        emojis: args.emojis,
-        dateFrom: args.dateFrom,
-        dateTo: args.dateTo,
-        referencesOnly: args.referencesOnly,
-        favoritesOnly: args.favoritesOnly,
-        hiddenOnly: args.hiddenOnly,
-        censoredOnly: args.censoredOnly,
-        includeCensored: args.includeCensored,
-        includeShelves: args.includeShelves,
-        excludeShelves: args.excludeShelves,
-        demoName: args.demoName,
-        demosOnly: args.demosOnly,
-        oldestFirst: args.oldestFirst,
-        shuffleSeed: args.shuffleSeed,
-        mood: args.mood,
-        excludeMood: args.excludeMood,
-        delivery: args.delivery,
-        excludeDelivery: args.excludeDelivery,
-        songRole: args.songRole,
-        excludeSongRole: args.excludeSongRole,
-        readiness: args.readiness,
-        excludeReadiness: args.excludeReadiness,
-      });
+      return lyricsService.list(
+        lyricsListOptionsFromArgs(
+          args,
+          clampLimit(args.limit),
+          clampOffset(args.offset)
+        )
+      );
     },
     lyricIngestPreview: (
       _parent: unknown,
@@ -212,6 +239,29 @@ export const resolvers = {
       _context: GraphQLContext
     ) => {
       return lyricsService.listCollages();
+    },
+    lyricIds: (
+      _parent: unknown,
+      args: LyricsArgs,
+      _context: GraphQLContext
+    ) => {
+      return lyricsService.listOrderedIds(
+        lyricsListOptionsFromArgs(args, 0, 0)
+      );
+    },
+    lyricsByIds: (
+      _parent: unknown,
+      args: LyricsByIdsArgs,
+      _context: GraphQLContext
+    ) => {
+      return lyricsService.listByIds(args.ids);
+    },
+    carouselHistories: (
+      _parent: unknown,
+      _args: unknown,
+      _context: GraphQLContext
+    ) => {
+      return lyricsService.listCarouselHistories();
     },
   },
   Mutation: {
@@ -292,6 +342,34 @@ export const resolvers = {
       _context: GraphQLContext
     ) => {
       return lyricsService.glueLyrics(args.slots, Boolean(args.hideOriginals));
+    },
+    saveCarouselHistory: (
+      _parent: unknown,
+      args: SaveCarouselHistoryArgs,
+      _context: GraphQLContext
+    ) => {
+      return lyricsService.saveCarouselHistory(args.lyricIds, args.source);
+    },
+    likeCarouselHistory: (
+      _parent: unknown,
+      args: CarouselHistoryIdArgs,
+      _context: GraphQLContext
+    ) => {
+      return lyricsService.likeCarouselHistory(args.id);
+    },
+    unlikeCarouselHistory: (
+      _parent: unknown,
+      args: CarouselHistoryIdArgs,
+      _context: GraphQLContext
+    ) => {
+      return lyricsService.unlikeCarouselHistory(args.id);
+    },
+    deleteCarouselHistory: (
+      _parent: unknown,
+      args: CarouselHistoryIdArgs,
+      _context: GraphQLContext
+    ) => {
+      return lyricsService.deleteCarouselHistory(args.id);
     },
   },
   Lyric: {

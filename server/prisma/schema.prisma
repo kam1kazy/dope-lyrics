@@ -150,3 +150,23 @@ model LyricCollage {
 
   @@index([createdAt])
 }
+
+enum CarouselHistorySource {
+  SHUFFLE
+  QUEUE
+  GENERATOR
+  AI
+}
+
+/// Снимок порядка карусели; seed не трогает.
+model CarouselHistory {
+  id          Int                    @id @default(autoincrement())
+  createdAt   DateTime               @default(now())
+  source      CarouselHistorySource
+  lyricIds    Int[]
+  previewText String                 @default("")
+  isLiked     Boolean                @default(false)
+
+  @@index([createdAt])
+  @@index([isLiked])
+}

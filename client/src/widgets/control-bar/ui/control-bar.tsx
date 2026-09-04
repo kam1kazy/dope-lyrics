@@ -1,10 +1,12 @@
 'use client';
 
-import { Settings, Shuffle } from 'lucide-react';
+import { History, Settings, Shuffle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
+import { useSaveCarouselSnapshot } from '@/features/carousel-history';
 import { FilterPanel } from '@/features/filter-panel';
 import { useCarouselSession } from '@/shared/lib/carousel-session/carousel-session-context';
+import { useCatalogMenu } from '@/shared/lib/catalog-menu/catalog-menu-context';
 import { useLyricView } from '@/shared/lib/lyric-view/lyric-view-context';
 import { usePlayback } from '@/shared/lib/playback/playback-context';
 import { useSwipeToDismiss } from '@/shared/lib/swipe/use-swipe-to-dismiss';
@@ -23,9 +25,13 @@ import { LyricTuneHotkeys } from './lyric-tune-hotkeys';
 
 export const ControlBar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [litKey, setLitKey] = useState<'shuffle' | 'settings' | null>(null);
+  const [litKey, setLitKey] = useState<
+    'shuffle' | 'history' | 'settings' | null
+  >(null);
   const { setSortMode } = useLyricView();
   const { resetToCatalog } = useCarouselSession();
+  const { saveSnapshot } = useSaveCarouselSnapshot();
+  const { openSection } = useCatalogMenu();
   const { paused, canPlay, suppressToggle, beginOverlay, endOverlay } =
     usePlayback();
   const playing = !paused && canPlay;
@@ -82,11 +88,45 @@ export const ControlBar = () => {
             onClick={(event) => {
               event.stopPropagation();
               suppressToggle();
-              resetToCatalog();
-              setSortMode('shuffle');
+              void (async () => {
+                const saved = await saveSnapshot();
+                if (!saved) {
+                  return;
+                }
+
+                resetToCatalog();
+                setSortMode('shuffle');
+              })();
             }}
           >
             <Shuffle className="size-5" />
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className={chromeKeyClass({
+              playing,
+              lit: litKey === 'history',
+            })}
+            aria-label="История"
+            title="История"
+            onPointerDown={() => {
+              setLitKey('history');
+            }}
+            onPointerUp={() => {
+              setLitKey(null);
+            }}
+            onPointerCancel={() => {
+              setLitKey(null);
+            }}
+            onClick={(event) => {
+              event.stopPropagation();
+              suppressToggle();
+              openSection('history');
+            }}
+          >
+            <History className="size-5" />
           </Button>
           <Button
             type="button"

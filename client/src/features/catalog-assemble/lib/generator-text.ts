@@ -1,4 +1,5 @@
 import type { IAssembledTrackSlot, TrackFormPreset } from '@/entities/lyric';
+import { formatRuDateTime } from '@/shared/lib/format-datetime';
 import type { LyricSongRole } from '@/shared/lib/lyric-facets';
 
 export const TRACK_FORM_PRESET_LABELS: Record<TrackFormPreset, string> = {
@@ -139,16 +140,5 @@ export const collagePreviewText = (
 };
 
 export const formatCollageDate = (iso: string): string => {
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) {
-    return iso;
-  }
-
-  return date.toLocaleString('ru-RU', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  return formatRuDateTime(iso);
 };

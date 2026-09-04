@@ -6,6 +6,7 @@ import { createPortal } from 'react-dom';
 
 import { apolloClient } from '@/shared/api';
 import { CarouselSessionProvider } from '@/shared/lib/carousel-session/carousel-session-context';
+import { CatalogMenuProvider } from '@/shared/lib/catalog-menu/catalog-menu-context';
 import { LyricViewProvider } from '@/shared/lib/lyric-view/lyric-view-context';
 import { PlaybackProvider } from '@/shared/lib/playback/playback-context';
 import { ThemeProvider } from '@/shared/ui/shadcn/theme-provider';
@@ -39,8 +40,10 @@ export function Providers({ children }: { children: ReactNode }) {
           <LyricViewProvider>
             <PlaybackProvider>
               <CarouselSessionProvider>
-                {children}
-                <BodyToaster />
+                <CatalogMenuProvider>
+                  {children}
+                  <BodyToaster />
+                </CatalogMenuProvider>
               </CarouselSessionProvider>
             </PlaybackProvider>
           </LyricViewProvider>

@@ -58,6 +58,7 @@ import {
   updateLyricsCacheAfterTextChange,
   upsertRoleProfile,
 } from '@/entities/lyric';
+import { useSaveCarouselSnapshot } from '@/features/carousel-history';
 import {
   canSplitLyricText,
   defaultAfterLine,
@@ -171,6 +172,7 @@ export function MessageDeskDialog({
   const { suppressToggle, setPaused } = usePlayback();
   const { addToQueue, removeFromQueue, playNow, clearQueue, queue } =
     useCarouselSession();
+  const { saveSnapshot } = useSaveCarouselSnapshot();
   const inQueue = lyric ? queue.some((item) => item.id === lyric.id) : false;
   const [tab, setTab] = useState<DeskTab>('text');
   const [textMode, setTextMode] = useState<TextMode>('view');
@@ -1395,8 +1397,15 @@ export function MessageDeskDialog({
                       hint="Убрать все фразы с экрана"
                       disabled={!lyric}
                       onClick={() => {
-                        clearQueue();
-                        toast('Карусель очищена');
+                        void (async () => {
+                          const saved = await saveSnapshot();
+                          if (!saved) {
+                            return;
+                          }
+
+                          clearQueue();
+                          toast('Карусель очищена');
+                        })();
                       }}
                     >
                       <ListX className="size-4 text-rose-400" aria-hidden />

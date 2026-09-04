@@ -3,6 +3,12 @@ import { GraphQLError } from 'graphql';
 import { lyricInclude } from '~/graphql/lyric-include';
 import { prisma } from '~/infrastructure/prisma';
 import {
+  buildCarouselPreviewText,
+  type CarouselHistorySource,
+  isCarouselHistorySource,
+  pickIdsToEvict,
+} from '~/modules/lyrics/carousel-history';
+import {
   activityRangeStart,
   buildCatalogActivity,
   buildCatalogStats,
@@ -91,6 +97,52 @@ export class LyricsService {
       skip: options.offset,
       orderBy: [{ date: dateOrder }, { lyric_id: dateOrder }],
       include: lyricInclude,
+    });
+  }
+
+  async listOrderedIds(options: LyricsListOptions): Promise<number[]> {
+    const where = buildLyricsWhere(options);
+
+    if (options.shuffleSeed != null && Number.isFinite(options.shuffleSeed)) {
+      const rows = await this.prisma.lyrics.findMany({
+        where,
+        select: { id: true },
+        orderBy: { id: 'asc' },
+      });
+
+      return shuffleIds(
+        rows.map((row) => row.id),
+        toShuffleSeed(options.shuffleSeed)
+      );
+    }
+
+    const dateOrder = options.oldestFirst ? 'asc' : 'desc';
+    const rows = await this.prisma.lyrics.findMany({
+      where,
+      select: { id: true },
+      orderBy: [{ date: dateOrder }, { lyric_id: dateOrder }],
+    });
+
+    return rows.map((row) => row.id);
+  }
+
+  async listByIds(ids: number[]) {
+    const orderedIds = ids.filter((id) => Number.isInteger(id) && id > 0);
+
+    if (orderedIds.length === 0) {
+      return [];
+    }
+
+    const uniqueIds = [...new Set(orderedIds)];
+    const page = await this.prisma.lyrics.findMany({
+      where: { id: { in: uniqueIds } },
+      include: lyricInclude,
+    });
+    const byId = new Map(page.map((row) => [row.id, row]));
+
+    return orderedIds.flatMap((id) => {
+      const row = byId.get(id);
+      return row ? [row] : [];
     });
   }
 
@@ -424,6 +476,141 @@ export class LyricsService {
     return Promise.all(
       rows.map((row) => this.hydrateCollage(row.id, row.createdAt, row.slots))
     );
+  }
+
+  async listCarouselHistories() {
+    const rows = await this.prisma.carouselHistory.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return rows.map((row) => this.hydrateCarouselHistory(row));
+  }
+
+  async saveCarouselHistory(lyricIdsRaw: unknown, sourceRaw: unknown) {
+    if (!isCarouselHistorySource(sourceRaw)) {
+      throw new GraphQLError('Неизвестный источник снимка');
+    }
+
+    const lyricIds = this.parseCarouselLyricIds(lyricIdsRaw);
+
+    if (lyricIds.length === 0) {
+      throw new GraphQLError('Нечего сохранять в историю');
+    }
+
+    const previewText = await this.buildCarouselHistoryPreview(lyricIds);
+    const row = await this.prisma.carouselHistory.create({
+      data: {
+        lyricIds,
+        source: sourceRaw,
+        previewText,
+      },
+    });
+
+    await this.evictCarouselHistories();
+
+    const saved = await this.prisma.carouselHistory.findUnique({
+      where: { id: row.id },
+    });
+
+    if (!saved) {
+      throw new GraphQLError('Снимок не найден');
+    }
+
+    return this.hydrateCarouselHistory(saved);
+  }
+
+  async likeCarouselHistory(id: number) {
+    const row = await this.prisma.carouselHistory.findUnique({
+      where: { id },
+    });
+
+    if (!row) {
+      throw new GraphQLError('Снимок не найден');
+    }
+
+    if (row.isLiked) {
+      return this.hydrateCarouselHistory(row);
+    }
+
+    const liked = await this.prisma.carouselHistory.update({
+      where: { id },
+      data: { isLiked: true },
+    });
+
+    return this.hydrateCarouselHistory(liked);
+  }
+
+  async unlikeCarouselHistory(id: number) {
+    return this.deleteCarouselHistory(id);
+  }
+
+  async deleteCarouselHistory(id: number) {
+    const row = await this.prisma.carouselHistory.findUnique({
+      where: { id },
+      select: { id: true },
+    });
+
+    if (!row) {
+      throw new GraphQLError('Снимок не найден');
+    }
+
+    await this.prisma.carouselHistory.delete({ where: { id } });
+    return id;
+  }
+
+  private parseCarouselLyricIds(value: unknown): number[] {
+    if (!Array.isArray(value)) {
+      return [];
+    }
+
+    return value.filter(
+      (id): id is number =>
+        typeof id === 'number' && Number.isInteger(id) && id > 0
+    );
+  }
+
+  private async buildCarouselHistoryPreview(lyricIds: number[]) {
+    const previewIds = lyricIds.slice(0, 12);
+    const rows = await this.prisma.lyrics.findMany({
+      where: { id: { in: previewIds } },
+      select: { id: true, message: { select: { text: true } } },
+    });
+    const byId = new Map(rows.map((row) => [row.id, row.message?.text ?? '']));
+
+    return buildCarouselPreviewText(previewIds.map((id) => byId.get(id) ?? ''));
+  }
+
+  private async evictCarouselHistories() {
+    const rows = await this.prisma.carouselHistory.findMany({
+      select: { id: true, createdAt: true, isLiked: true },
+    });
+    const evictIds = pickIdsToEvict(rows);
+
+    if (evictIds.length === 0) {
+      return;
+    }
+
+    await this.prisma.carouselHistory.deleteMany({
+      where: { id: { in: evictIds } },
+    });
+  }
+
+  private hydrateCarouselHistory(row: {
+    id: number;
+    createdAt: Date;
+    source: CarouselHistorySource;
+    lyricIds: number[];
+    previewText: string;
+    isLiked: boolean;
+  }) {
+    return {
+      id: row.id,
+      createdAt: row.createdAt.toISOString(),
+      source: row.source,
+      lyricIds: row.lyricIds,
+      previewText: row.previewText,
+      isLiked: row.isLiked,
+    };
   }
 
   private async hydrateCollage(

@@ -389,3 +389,121 @@ export const GLUE_LYRICS = gql`
     }
   }
 `;
+
+export const CAROUSEL_HISTORY_FIELDS = gql`
+  fragment CarouselHistoryFields on CarouselHistory {
+    id
+    createdAt
+    source
+    lyricIds
+    previewText
+    isLiked
+  }
+`;
+
+export const LYRIC_IDS = gql`
+  query LyricIds(
+    $tags: [String!]
+    $keyword: String
+    $emojis: [String!]
+    $dateFrom: String
+    $dateTo: String
+    $referencesOnly: Boolean
+    $favoritesOnly: Boolean
+    $hiddenOnly: Boolean
+    $censoredOnly: Boolean
+    $includeCensored: Boolean
+    $includeShelves: [String!]
+    $excludeShelves: [String!]
+    $demoName: String
+    $demosOnly: Boolean
+    $oldestFirst: Boolean
+    $shuffleSeed: Int
+    $mood: [LyricMood!]
+    $excludeMood: [LyricMood!]
+    $delivery: [LyricDelivery!]
+    $excludeDelivery: [LyricDelivery!]
+    $songRole: [LyricSongRole!]
+    $excludeSongRole: [LyricSongRole!]
+    $readiness: [LyricReadiness!]
+    $excludeReadiness: [LyricReadiness!]
+  ) {
+    lyricIds(
+      tags: $tags
+      keyword: $keyword
+      emojis: $emojis
+      dateFrom: $dateFrom
+      dateTo: $dateTo
+      referencesOnly: $referencesOnly
+      favoritesOnly: $favoritesOnly
+      hiddenOnly: $hiddenOnly
+      censoredOnly: $censoredOnly
+      includeCensored: $includeCensored
+      includeShelves: $includeShelves
+      excludeShelves: $excludeShelves
+      demoName: $demoName
+      demosOnly: $demosOnly
+      oldestFirst: $oldestFirst
+      shuffleSeed: $shuffleSeed
+      mood: $mood
+      excludeMood: $excludeMood
+      delivery: $delivery
+      excludeDelivery: $excludeDelivery
+      songRole: $songRole
+      excludeSongRole: $excludeSongRole
+      readiness: $readiness
+      excludeReadiness: $excludeReadiness
+    )
+  }
+`;
+
+export const LYRICS_BY_IDS = gql`
+  ${LYRIC_LIST_FIELDS}
+  query LyricsByIds($ids: [Int!]!) {
+    lyricsByIds(ids: $ids) {
+      ...LyricListFields
+    }
+  }
+`;
+
+export const CAROUSEL_HISTORIES = gql`
+  ${CAROUSEL_HISTORY_FIELDS}
+  query CarouselHistories {
+    carouselHistories {
+      ...CarouselHistoryFields
+    }
+  }
+`;
+
+export const SAVE_CAROUSEL_HISTORY = gql`
+  ${CAROUSEL_HISTORY_FIELDS}
+  mutation SaveCarouselHistory(
+    $lyricIds: [Int!]!
+    $source: CarouselHistorySource!
+  ) {
+    saveCarouselHistory(lyricIds: $lyricIds, source: $source) {
+      ...CarouselHistoryFields
+    }
+  }
+`;
+
+export const LIKE_CAROUSEL_HISTORY = gql`
+  ${CAROUSEL_HISTORY_FIELDS}
+  mutation LikeCarouselHistory($id: Int!) {
+    likeCarouselHistory(id: $id) {
+      ...CarouselHistoryFields
+    }
+  }
+`;
+
+export const UNLIKE_CAROUSEL_HISTORY = gql`
+  mutation UnlikeCarouselHistory($id: Int!) {
+    unlikeCarouselHistory(id: $id)
+  }
+`;
+
+export const DELETE_CAROUSEL_HISTORY = gql`
+  mutation DeleteCarouselHistory($id: Int!) {
+    deleteCarouselHistory(id: $id)
+  }
+`;
