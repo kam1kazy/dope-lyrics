@@ -37,10 +37,19 @@ export const LYRIC_READINESS = [
   'READY',
 ] as const;
 
+export const LYRIC_ENERGIES = [
+  'WHISPER',
+  'QUIET',
+  'EVEN',
+  'LOUD',
+  'SCREAM',
+] as const;
+
 export type LyricMood = (typeof LYRIC_MOODS)[number];
 export type LyricDelivery = (typeof LYRIC_DELIVERIES)[number];
 export type LyricSongRole = (typeof LYRIC_SONG_ROLES)[number];
 export type LyricReadiness = (typeof LYRIC_READINESS)[number];
+export type LyricEnergy = (typeof LYRIC_ENERGIES)[number];
 
 export const LYRIC_MOOD_LABELS: Record<LyricMood, string> = {
   AGGRESSION: 'агрессия',
@@ -81,6 +90,14 @@ export const LYRIC_READINESS_LABELS: Record<LyricReadiness, string> = {
   READY: 'готово',
 };
 
+export const LYRIC_ENERGY_LABELS: Record<LyricEnergy, string> = {
+  WHISPER: 'шёпот',
+  QUIET: 'тихо',
+  EVEN: 'ровно',
+  LOUD: 'громко',
+  SCREAM: 'крик',
+};
+
 export const LYRIC_MOOD_HINTS: Record<LyricMood, string> = {
   AGGRESSION: 'Злость, давление, угроза — текст прёт вперёд.',
   LONGING: 'Тоска и нехватка: кого-то или чего-то уже нет.',
@@ -118,6 +135,14 @@ export const LYRIC_READINESS_HINTS: Record<LyricReadiness, string> = {
   BLOCK: 'Собранный кусок, ближе к куплету.',
   TEXT: 'Почти целый текст, можно собирать трек.',
   READY: 'Готово: можно в трек или убрать с карусели.',
+};
+
+export const LYRIC_ENERGY_HINTS: Record<LyricEnergy, string> = {
+  WHISPER: 'Шёпот: почти без накала, вплотную к уху.',
+  QUIET: 'Тихо: сдержанный голос, без давления.',
+  EVEN: 'Ровно: обычный уровень, без крайностей.',
+  LOUD: 'Громко: напор и объём, уже не шепчет.',
+  SCREAM: 'Крик: максимум накала, строка орёт.',
 };
 
 export type LyricRoleProfile = {

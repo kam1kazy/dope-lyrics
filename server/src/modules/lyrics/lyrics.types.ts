@@ -14,6 +14,7 @@ export interface ILyric {
   delivery?: string[];
   songRole?: string[];
   readiness?: string | null;
+  energy?: string | null;
   owner?: IUser | null;
   replyToMessage: number | null;
   media: IMedia | null;

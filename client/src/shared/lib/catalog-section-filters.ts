@@ -1,5 +1,6 @@
 import type {
   LyricDelivery,
+  LyricEnergy,
   LyricMood,
   LyricReadiness,
   LyricSongRole,
@@ -28,6 +29,8 @@ export type CatalogSectionFilters = {
   excludeSongRole: LyricSongRole[];
   readiness: LyricReadiness[];
   excludeReadiness: LyricReadiness[];
+  energy: LyricEnergy[];
+  excludeEnergy: LyricEnergy[];
 };
 
 const sameList = (
@@ -62,6 +65,8 @@ export const DEFAULT_CATALOG_SECTION_FILTERS: CatalogSectionFilters = {
   excludeSongRole: [],
   readiness: [],
   excludeReadiness: [],
+  energy: [],
+  excludeEnergy: [],
 };
 
 export const DEFAULT_LIST_SECTION_FILTERS: CatalogSectionFilters = {
@@ -95,6 +100,8 @@ export function hasActiveCatalogSectionFilters(
     filters.songRole.length > 0 ||
     filters.excludeSongRole.length > 0 ||
     filters.readiness.length > 0 ||
-    filters.excludeReadiness.length > 0
+    filters.excludeReadiness.length > 0 ||
+    filters.energy.length > 0 ||
+    filters.excludeEnergy.length > 0
   );
 }

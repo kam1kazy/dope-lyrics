@@ -29,6 +29,8 @@ export interface LyricsListOptions {
   excludeSongRole?: string[] | null;
   readiness?: string[] | null;
   excludeReadiness?: string[] | null;
+  energy?: string[] | null;
+  excludeEnergy?: string[] | null;
 }
 
 export const normalizeTags = (tags: string[] | null | undefined): string[] => {
@@ -362,6 +364,8 @@ export const buildLyricsWhere = (
     | 'excludeSongRole'
     | 'readiness'
     | 'excludeReadiness'
+    | 'energy'
+    | 'excludeEnergy'
   >
 ): Prisma.LyricsWhereInput => {
   const tags = normalizeTags(options.tags);
@@ -486,6 +490,8 @@ export const buildLyricsWhere = (
   const excludeSongRoles = normalizeTags(options.excludeSongRole);
   const readiness = normalizeTags(options.readiness);
   const excludeReadiness = normalizeTags(options.excludeReadiness);
+  const energy = normalizeTags(options.energy);
+  const excludeEnergy = normalizeTags(options.excludeEnergy);
 
   const facetWhere = buildFacetWhere(moods, deliveries, songRoles);
 
@@ -510,6 +516,16 @@ export const buildLyricsWhere = (
   if (excludeReadiness.length > 0) {
     andParts.push({
       OR: [{ readiness: null }, { readiness: { notIn: excludeReadiness } }],
+    });
+  }
+
+  if (energy.length > 0) {
+    andParts.push({ energy: { in: energy } });
+  }
+
+  if (excludeEnergy.length > 0) {
+    andParts.push({
+      OR: [{ energy: null }, { energy: { notIn: excludeEnergy } }],
     });
   }
 

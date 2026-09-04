@@ -12,6 +12,7 @@ import {
 
 import type {
   LyricDelivery,
+  LyricEnergy,
   LyricMood,
   LyricReadiness,
   LyricSongRole,
@@ -46,6 +47,8 @@ export const LYRIC_VIEW_DEFAULTS = {
   excludeSongRole: [] as LyricSongRole[],
   readiness: [] as LyricReadiness[],
   excludeReadiness: [] as LyricReadiness[],
+  energy: [] as LyricEnergy[],
+  excludeEnergy: [] as LyricEnergy[],
 };
 
 const SETTINGS_STORAGE_KEY = 'dope-lyrics.lyric-settings';
@@ -165,6 +168,8 @@ interface LyricViewContextValue {
   excludeSongRole: LyricSongRole[];
   readiness: LyricReadiness[];
   excludeReadiness: LyricReadiness[];
+  energy: LyricEnergy[];
+  excludeEnergy: LyricEnergy[];
   settingsReady: boolean;
   setSortMode: (mode: SortMode) => void;
   setShelfSelection: (
@@ -187,6 +192,8 @@ interface LyricViewContextValue {
   setExcludeSongRole: (value: LyricSongRole[]) => void;
   setReadiness: (value: LyricReadiness[]) => void;
   setExcludeReadiness: (value: LyricReadiness[]) => void;
+  setEnergy: (value: LyricEnergy[]) => void;
+  setExcludeEnergy: (value: LyricEnergy[]) => void;
   resetSettings: () => void;
   resetFilters: () => void;
 }
@@ -236,6 +243,12 @@ export function LyricViewProvider({ children }: { children: ReactNode }) {
   );
   const [excludeReadiness, setExcludeReadiness] = useState<LyricReadiness[]>(
     LYRIC_VIEW_DEFAULTS.excludeReadiness
+  );
+  const [energy, setEnergy] = useState<LyricEnergy[]>(
+    LYRIC_VIEW_DEFAULTS.energy
+  );
+  const [excludeEnergy, setExcludeEnergy] = useState<LyricEnergy[]>(
+    LYRIC_VIEW_DEFAULTS.excludeEnergy
   );
   const [settingsReady, setSettingsReady] = useState(false);
 
@@ -329,6 +342,8 @@ export function LyricViewProvider({ children }: { children: ReactNode }) {
     setExcludeSongRole(LYRIC_VIEW_DEFAULTS.excludeSongRole);
     setReadiness(LYRIC_VIEW_DEFAULTS.readiness);
     setExcludeReadiness(LYRIC_VIEW_DEFAULTS.excludeReadiness);
+    setEnergy(LYRIC_VIEW_DEFAULTS.energy);
+    setExcludeEnergy(LYRIC_VIEW_DEFAULTS.excludeEnergy);
   }, []);
 
   const value = useMemo(
@@ -354,6 +369,8 @@ export function LyricViewProvider({ children }: { children: ReactNode }) {
       excludeSongRole,
       readiness,
       excludeReadiness,
+      energy,
+      excludeEnergy,
       settingsReady,
       setSortMode,
       setShelfSelection,
@@ -374,6 +391,8 @@ export function LyricViewProvider({ children }: { children: ReactNode }) {
       setExcludeSongRole,
       setReadiness,
       setExcludeReadiness,
+      setEnergy,
+      setExcludeEnergy,
       resetSettings,
       resetFilters,
     }),
@@ -399,6 +418,8 @@ export function LyricViewProvider({ children }: { children: ReactNode }) {
       excludeSongRole,
       readiness,
       excludeReadiness,
+      energy,
+      excludeEnergy,
       settingsReady,
       setSortMode,
       setShelfSelection,
@@ -473,6 +494,8 @@ export function hasActiveLyricFilters(options: {
   excludeSongRole: LyricSongRole[];
   readiness: LyricReadiness[];
   excludeReadiness: LyricReadiness[];
+  energy: LyricEnergy[];
+  excludeEnergy: LyricEnergy[];
 }): boolean {
   return (
     !isDefaultShelfSelection({
@@ -491,6 +514,8 @@ export function hasActiveLyricFilters(options: {
     options.songRole.length > 0 ||
     options.excludeSongRole.length > 0 ||
     options.readiness.length > 0 ||
-    options.excludeReadiness.length > 0
+    options.excludeReadiness.length > 0 ||
+    options.energy.length > 0 ||
+    options.excludeEnergy.length > 0
   );
 }

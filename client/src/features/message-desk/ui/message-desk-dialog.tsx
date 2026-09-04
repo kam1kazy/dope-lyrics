@@ -31,6 +31,9 @@ import {
   LYRIC_DELIVERIES,
   LYRIC_DELIVERY_HINTS,
   LYRIC_DELIVERY_LABELS,
+  LYRIC_ENERGIES,
+  LYRIC_ENERGY_HINTS,
+  LYRIC_ENERGY_LABELS,
   LYRIC_MOOD_HINTS,
   LYRIC_MOOD_LABELS,
   LYRIC_MOODS,
@@ -41,6 +44,7 @@ import {
   LYRIC_SONG_ROLE_LABELS,
   LYRIC_SONG_ROLES,
   type LyricDelivery,
+  type LyricEnergy,
   type LyricMood,
   type LyricReadiness,
   type LyricRoleProfile,
@@ -113,7 +117,7 @@ function usesChunksTab(readiness: LyricReadiness | null) {
 
 type ProfileFields = Pick<
   ILyric,
-  'mood' | 'delivery' | 'roleProfiles' | 'readiness'
+  'mood' | 'delivery' | 'roleProfiles' | 'readiness' | 'energy'
 >;
 
 type FlagFields = Pick<
@@ -348,6 +352,7 @@ export function MessageDeskDialog({
         | 'songRole'
         | 'roleProfiles'
         | 'readiness'
+        | 'energy'
       >;
     },
     {
@@ -356,6 +361,7 @@ export function MessageDeskDialog({
       delivery: LyricDelivery[];
       roleProfiles: LyricRoleProfile[];
       readiness: LyricReadiness | null;
+      energy: LyricEnergy | null;
     }
   >(UPDATE_LYRIC_PROFILE, {
     update(cache, { data }) {
@@ -440,6 +446,7 @@ export function MessageDeskDialog({
     delivery: profileOverride?.delivery ?? lyric?.delivery ?? [],
     roleProfiles: profileOverride?.roleProfiles ?? lyric?.roleProfiles ?? [],
     readiness: profileOverride?.readiness ?? lyric?.readiness ?? null,
+    energy: profileOverride?.energy ?? lyric?.energy ?? null,
   };
 
   const activeProfile = activeSongRole
@@ -907,7 +914,7 @@ export function MessageDeskDialog({
               ? 'Полный текст из каталога.'
               : tab === 'chunks'
                 ? 'Нарезанные куски.'
-                : 'Настроение, подача, роль и готовность.'}
+                : 'Настроение, подача, роль, энергия и готовность.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -1204,6 +1211,19 @@ export function MessageDeskDialog({
                     }
 
                     patchProfile({ ...profile, delivery });
+                  }}
+                />
+                <FacetChipGroup
+                  label="Энергия"
+                  options={LYRIC_ENERGIES}
+                  labels={LYRIC_ENERGY_LABELS}
+                  hints={LYRIC_ENERGY_HINTS}
+                  value={profile.energy ? [profile.energy] : []}
+                  multiple={false}
+                  size="desk"
+                  onChange={(next) => {
+                    const energy = next[0] ?? null;
+                    patchProfile({ ...profile, energy });
                   }}
                 />
                 <FacetChipGroup

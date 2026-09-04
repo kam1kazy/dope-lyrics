@@ -39,10 +39,19 @@ export const LYRIC_READINESS = [
   'READY',
 ] as const;
 
+export const LYRIC_ENERGIES = [
+  'WHISPER',
+  'QUIET',
+  'EVEN',
+  'LOUD',
+  'SCREAM',
+] as const;
+
 export type LyricMood = (typeof LYRIC_MOODS)[number];
 export type LyricDelivery = (typeof LYRIC_DELIVERIES)[number];
 export type LyricSongRole = (typeof LYRIC_SONG_ROLES)[number];
 export type LyricReadiness = (typeof LYRIC_READINESS)[number];
+export type LyricEnergy = (typeof LYRIC_ENERGIES)[number];
 
 const isIn = <T extends string>(
   list: readonly T[],
@@ -62,6 +71,9 @@ export const isLyricSongRole = (value: string): value is LyricSongRole =>
 
 export const isLyricReadiness = (value: string): value is LyricReadiness =>
   isIn(LYRIC_READINESS, value);
+
+export const isLyricEnergy = (value: string): value is LyricEnergy =>
+  isIn(LYRIC_ENERGIES, value);
 
 /** Абзац = 4 непустые строки; READY только вручную. */
 export const readinessFromLineCount = (
@@ -96,6 +108,7 @@ export type LyricProfilePatch = {
   songRole?: LyricSongRole[];
   roleProfiles?: LyricRoleProfile[];
   readiness?: LyricReadiness | null;
+  energy?: LyricEnergy | null;
 };
 
 export type RoleProfilesMap = Partial<
@@ -273,6 +286,7 @@ export const parseLyricProfilePatch = (input: {
   songRole?: string[] | null;
   roleProfiles?: unknown;
   readiness?: string | null;
+  energy?: string | null;
 }): LyricProfilePatch => {
   const roleProfiles = parseRoleProfilesInput(input.roleProfiles);
   const songRole =
@@ -286,5 +300,6 @@ export const parseLyricProfilePatch = (input: {
     songRole,
     roleProfiles,
     readiness: parseFacet(input.readiness, isLyricReadiness, 'готовность'),
+    energy: parseFacet(input.energy, isLyricEnergy, 'энергия'),
   };
 };

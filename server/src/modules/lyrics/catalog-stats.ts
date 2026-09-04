@@ -1,9 +1,11 @@
 import {
   LYRIC_DELIVERIES,
+  LYRIC_ENERGIES,
   LYRIC_MOODS,
   LYRIC_READINESS,
   LYRIC_SONG_ROLES,
   type LyricDelivery,
+  type LyricEnergy,
   type LyricMood,
   type LyricReadiness,
   type LyricSongRole,
@@ -59,6 +61,8 @@ export type CatalogStats = {
   unscoped: CatalogUnscopedStats;
   readiness: CatalogValueCount<LyricReadiness>[];
   readinessNone: number;
+  energy: CatalogValueCount<LyricEnergy>[];
+  energyNone: number;
   themes: CatalogThemeCount[];
 };
 
@@ -73,6 +77,7 @@ type CatalogStatsRow = {
   delivery: string[];
   roleProfiles: unknown;
   readiness: string | null;
+  energy: string | null;
 };
 
 export const CATALOG_ACTIVITY_DAYS = [7, 30, 90] as const;
@@ -136,6 +141,9 @@ const isDelivery = (value: string): value is LyricDelivery =>
 
 const isReadiness = (value: string): value is LyricReadiness =>
   (LYRIC_READINESS as readonly string[]).includes(value);
+
+const isEnergy = (value: string): value is LyricEnergy =>
+  (LYRIC_ENERGIES as readonly string[]).includes(value);
 
 const isSongRole = (value: string): value is LyricSongRole =>
   (LYRIC_SONG_ROLES as readonly string[]).includes(value);
@@ -237,8 +245,10 @@ export const buildCatalogStats = (
   let withRole = 0;
   let unscopedPhrases = 0;
   let readinessNone = 0;
+  let energyNone = 0;
 
   const readinessCounts = zeroCounts(LYRIC_READINESS);
+  const energyCounts = zeroCounts(LYRIC_ENERGIES);
   const unscopedMood = zeroCounts(LYRIC_MOODS);
   const unscopedDelivery = zeroCounts(LYRIC_DELIVERIES);
   const themeMood = zeroCounts(LYRIC_MOODS);
@@ -321,6 +331,12 @@ export const buildCatalogStats = (
     } else {
       readinessNone += 1;
     }
+
+    if (row.energy && isEnergy(row.energy)) {
+      energyCounts[row.energy] += 1;
+    } else {
+      energyNone += 1;
+    }
   }
 
   const themes: CatalogThemeCount[] = [
@@ -358,6 +374,8 @@ export const buildCatalogStats = (
     },
     readiness: toValueCounts(LYRIC_READINESS, readinessCounts),
     readinessNone,
+    energy: toValueCounts(LYRIC_ENERGIES, energyCounts),
+    energyNone,
     themes,
   };
 };

@@ -23,6 +23,7 @@ type UpdatedLyric = Pick<
   | 'songRole'
   | 'roleProfiles'
   | 'readiness'
+  | 'energy'
 >;
 
 function toShelfFlags(values: string[] | null): ShelfFlag[] {
@@ -111,6 +112,8 @@ function lyricMatchesFacets(
 ): boolean {
   const includeReadiness = queryVariables.readiness ?? [];
   const excludeReadiness = queryVariables.excludeReadiness ?? [];
+  const includeEnergy = queryVariables.energy ?? [];
+  const excludeEnergy = queryVariables.excludeEnergy ?? [];
 
   if (
     includeReadiness.length > 0 &&
@@ -120,6 +123,17 @@ function lyricMatchesFacets(
   }
 
   if (lyric.readiness != null && excludeReadiness.includes(lyric.readiness)) {
+    return false;
+  }
+
+  if (
+    includeEnergy.length > 0 &&
+    (lyric.energy == null || !includeEnergy.includes(lyric.energy))
+  ) {
+    return false;
+  }
+
+  if (lyric.energy != null && excludeEnergy.includes(lyric.energy)) {
     return false;
   }
 

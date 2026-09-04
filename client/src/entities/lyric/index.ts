@@ -77,6 +77,7 @@ export { LyricItem } from './ui/lyric-item';
 export { LyricsLoadMore } from './ui/lyrics-load-more';
 export type {
   LyricDelivery,
+  LyricEnergy,
   LyricMood,
   LyricReadiness,
   LyricRoleProfile,
@@ -86,6 +87,9 @@ export {
   LYRIC_DELIVERIES,
   LYRIC_DELIVERY_HINTS,
   LYRIC_DELIVERY_LABELS,
+  LYRIC_ENERGIES,
+  LYRIC_ENERGY_HINTS,
+  LYRIC_ENERGY_LABELS,
   LYRIC_MOOD_HINTS,
   LYRIC_MOOD_LABELS,
   LYRIC_MOODS,

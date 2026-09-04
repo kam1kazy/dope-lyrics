@@ -34,6 +34,7 @@ export const LYRIC_LIST_FIELDS = gql`
       delivery
     }
     readiness
+    energy
     replyToMessage
     message {
       id
@@ -87,6 +88,8 @@ export const ALL_LYRICS = gql`
     $excludeSongRole: [LyricSongRole!]
     $readiness: [LyricReadiness!]
     $excludeReadiness: [LyricReadiness!]
+    $energy: [LyricEnergy!]
+    $excludeEnergy: [LyricEnergy!]
   ) {
     lyrics(
       tags: $tags
@@ -115,6 +118,8 @@ export const ALL_LYRICS = gql`
       excludeSongRole: $excludeSongRole
       readiness: $readiness
       excludeReadiness: $excludeReadiness
+      energy: $energy
+      excludeEnergy: $excludeEnergy
     ) {
       ...LyricListFields
     }
@@ -137,6 +142,7 @@ export const UPDATE_LYRIC_PROFILE = gql`
     $delivery: [LyricDelivery!]
     $roleProfiles: [LyricRoleProfileInput!]
     $readiness: LyricReadiness
+    $energy: LyricEnergy
   ) {
     updateLyricProfile(
       id: $id
@@ -144,6 +150,7 @@ export const UPDATE_LYRIC_PROFILE = gql`
       delivery: $delivery
       roleProfiles: $roleProfiles
       readiness: $readiness
+      energy: $energy
     ) {
       id
       lyric_id
@@ -156,6 +163,7 @@ export const UPDATE_LYRIC_PROFILE = gql`
         delivery
       }
       readiness
+      energy
     }
   }
 `;
@@ -235,6 +243,11 @@ export const CATALOG_STATS = gql`
         count
       }
       readinessNone
+      energy {
+        value
+        count
+      }
+      energyNone
       themes {
         kind
         value
@@ -427,6 +440,8 @@ export const LYRIC_IDS = gql`
     $excludeSongRole: [LyricSongRole!]
     $readiness: [LyricReadiness!]
     $excludeReadiness: [LyricReadiness!]
+    $energy: [LyricEnergy!]
+    $excludeEnergy: [LyricEnergy!]
   ) {
     lyricIds(
       tags: $tags
@@ -453,6 +468,8 @@ export const LYRIC_IDS = gql`
       excludeSongRole: $excludeSongRole
       readiness: $readiness
       excludeReadiness: $excludeReadiness
+      energy: $energy
+      excludeEnergy: $excludeEnergy
     )
   }
 `;

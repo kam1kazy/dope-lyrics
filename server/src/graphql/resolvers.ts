@@ -33,6 +33,8 @@ type LyricsArgs = {
   excludeSongRole?: string[] | null;
   readiness?: string[] | null;
   excludeReadiness?: string[] | null;
+  energy?: string[] | null;
+  excludeEnergy?: string[] | null;
 };
 
 type UpdateLyricFlagsArgs = {
@@ -50,6 +52,7 @@ type UpdateLyricProfileArgs = {
   delivery?: string[] | null;
   roleProfiles?: unknown;
   readiness?: string | null;
+  energy?: string | null;
 };
 
 type UpdateLyricTextArgs = {
@@ -84,6 +87,8 @@ type AssembleTrackFilter = {
   excludeSongRole?: string[] | null;
   readiness?: string[] | null;
   excludeReadiness?: string[] | null;
+  energy?: string[] | null;
+  excludeEnergy?: string[] | null;
 };
 
 type AssembleTrackArgs = {
@@ -150,6 +155,8 @@ function lyricsListOptionsFromArgs(
     excludeSongRole: args.excludeSongRole,
     readiness: args.readiness,
     excludeReadiness: args.excludeReadiness,
+    energy: args.energy,
+    excludeEnergy: args.excludeEnergy,
   };
 }
 
@@ -288,6 +295,7 @@ export const resolvers = {
         delivery: args.delivery,
         roleProfiles: args.roleProfiles,
         readiness: args.readiness,
+        energy: args.energy,
       });
     },
     updateLyricText: (

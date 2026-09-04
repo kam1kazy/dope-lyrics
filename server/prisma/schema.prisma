@@ -42,6 +42,8 @@ model Lyrics {
   songRole       String[] @default([])
   roleProfiles   Json     @default("{}")
   readiness      String?
+  /// Накал строки (шёпот…крик); seed не трогает.
+  energy         String?
   replyToMessage Int?
 
   message Message?

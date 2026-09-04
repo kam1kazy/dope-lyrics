@@ -307,6 +307,8 @@ function FiltersTab() {
     excludeSongRole,
     readiness,
     excludeReadiness,
+    energy,
+    excludeEnergy,
     setMood,
     setExcludeMood,
     setDelivery,
@@ -315,6 +317,8 @@ function FiltersTab() {
     setExcludeSongRole,
     setReadiness,
     setExcludeReadiness,
+    setEnergy,
+    setExcludeEnergy,
     setKeyword,
     setDateFrom,
     setDateTo,
@@ -341,6 +345,8 @@ function FiltersTab() {
     excludeSongRole,
     readiness,
     excludeReadiness,
+    energy,
+    excludeEnergy,
   });
 
   return (
@@ -366,6 +372,8 @@ function FiltersTab() {
           excludeSongRole,
           readiness,
           excludeReadiness,
+          energy,
+          excludeEnergy,
         }}
         onChange={(patch) => {
           if (patch.selectedTags) {
@@ -434,6 +442,14 @@ function FiltersTab() {
 
           if (patch.excludeReadiness !== undefined) {
             setExcludeReadiness(patch.excludeReadiness);
+          }
+
+          if (patch.energy !== undefined) {
+            setEnergy(patch.energy);
+          }
+
+          if (patch.excludeEnergy !== undefined) {
+            setExcludeEnergy(patch.excludeEnergy);
           }
         }}
       />

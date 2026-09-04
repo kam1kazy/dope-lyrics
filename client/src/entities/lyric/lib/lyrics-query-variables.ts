@@ -1,6 +1,7 @@
 import type { CatalogSectionFilters } from '@/shared/lib/catalog-section-filters';
 import type {
   LyricDelivery,
+  LyricEnergy,
   LyricMood,
   LyricReadiness,
   LyricSongRole,
@@ -33,6 +34,8 @@ export type LyricsQueryVariables = {
   excludeSongRole: LyricSongRole[] | null;
   readiness: LyricReadiness[] | null;
   excludeReadiness: LyricReadiness[] | null;
+  energy: LyricEnergy[] | null;
+  excludeEnergy: LyricEnergy[] | null;
 };
 
 export const EMPTY_LYRIC_FACET_FILTERS = {
@@ -44,6 +47,8 @@ export const EMPTY_LYRIC_FACET_FILTERS = {
   excludeSongRole: null,
   readiness: null,
   excludeReadiness: null,
+  energy: null,
+  excludeEnergy: null,
 } as const;
 
 export const LYRICS_PAGE_SIZE = 40;
@@ -96,6 +101,9 @@ export function assembleTrackFilterFromSection(filters: CatalogSectionFilters) {
     readiness: filters.readiness.length > 0 ? filters.readiness : null,
     excludeReadiness:
       filters.excludeReadiness.length > 0 ? filters.excludeReadiness : null,
+    energy: filters.energy.length > 0 ? filters.energy : null,
+    excludeEnergy:
+      filters.excludeEnergy.length > 0 ? filters.excludeEnergy : null,
   };
 }
 
@@ -130,6 +138,9 @@ export function catalogQueryVariablesForSection(
     readiness: filters.readiness.length > 0 ? filters.readiness : null,
     excludeReadiness:
       filters.excludeReadiness.length > 0 ? filters.excludeReadiness : null,
+    energy: filters.energy.length > 0 ? filters.energy : null,
+    excludeEnergy:
+      filters.excludeEnergy.length > 0 ? filters.excludeEnergy : null,
     includeShelves:
       section === 'list' && filters.includeShelves.length > 0
         ? filters.includeShelves

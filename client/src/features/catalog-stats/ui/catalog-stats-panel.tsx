@@ -8,10 +8,12 @@ import {
   type ICatalogStats,
   type ICatalogThemeCount,
   LYRIC_DELIVERY_LABELS,
+  LYRIC_ENERGY_LABELS,
   LYRIC_MOOD_LABELS,
   LYRIC_READINESS_LABELS,
   LYRIC_SONG_ROLE_LABELS,
   type LyricDelivery,
+  type LyricEnergy,
   type LyricMood,
   type LyricReadiness,
 } from '@/entities/lyric';
@@ -174,6 +176,14 @@ export function CatalogStatsPanel() {
     return Math.max(0, ...stats.readiness.map((item) => item.count));
   }, [stats]);
 
+  const energyMax = useMemo(() => {
+    if (!stats) {
+      return 0;
+    }
+
+    return Math.max(0, ...stats.energy.map((item) => item.count));
+  }, [stats]);
+
   const readyCount =
     stats?.readiness.find((item) => item.value === 'READY')?.count ?? 0;
 
@@ -290,6 +300,28 @@ export function CatalogStatsPanel() {
           )}
         </section>
       </div>
+
+      <section className="rounded-lg border px-3 py-3">
+        <h3 className="mb-3 text-sm font-medium">Энергия</h3>
+        <ul className="flex flex-col gap-2.5">
+          {stats.energy.map((item) => (
+            <li key={item.value}>
+              <BarRow
+                label={
+                  LYRIC_ENERGY_LABELS[item.value as LyricEnergy] ?? item.value
+                }
+                count={item.count}
+                max={energyMax}
+              />
+            </li>
+          ))}
+        </ul>
+        {stats.energyNone > 0 ? (
+          <p className="text-muted-foreground mt-3 text-xs">
+            без значения · {formatCount(stats.energyNone)}
+          </p>
+        ) : null}
+      </section>
 
       <section className="rounded-lg border px-3 py-3">
         <h3 className="mb-3 text-sm font-medium">Состояние материалов</h3>

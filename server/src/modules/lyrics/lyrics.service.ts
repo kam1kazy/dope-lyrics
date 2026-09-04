@@ -204,6 +204,7 @@ export class LyricsService {
           delivery: true,
           roleProfiles: true,
           readiness: true,
+          energy: true,
         },
       }),
       this.prisma.lyrics.count({
@@ -258,6 +259,8 @@ export class LyricsService {
       | 'excludeSongRole'
       | 'readiness'
       | 'excludeReadiness'
+      | 'energy'
+      | 'excludeEnergy'
     > | null
   ) {
     const quotas = parseTrackFormQuotas(formRaw);
@@ -278,6 +281,8 @@ export class LyricsService {
       excludeSongRole: filter?.excludeSongRole,
       readiness: filter?.readiness,
       excludeReadiness: filter?.excludeReadiness,
+      energy: filter?.energy,
+      excludeEnergy: filter?.excludeEnergy,
     });
 
     const rows = await this.prisma.lyrics.findMany({
@@ -712,6 +717,7 @@ export class LyricsService {
       songRole?: string[] | null;
       roleProfiles?: unknown;
       readiness?: string | null;
+      energy?: string | null;
     }
   ) {
     const parsed = parseLyricProfilePatch(input);
@@ -721,6 +727,7 @@ export class LyricsService {
       songRole?: LyricProfilePatch['songRole'];
       roleProfiles?: ReturnType<typeof roleProfilesToJson>;
       readiness?: LyricProfilePatch['readiness'];
+      energy?: LyricProfilePatch['energy'];
     } = {};
 
     if (parsed.mood !== undefined) {
@@ -740,6 +747,10 @@ export class LyricsService {
 
     if (parsed.readiness !== undefined) {
       data.readiness = parsed.readiness;
+    }
+
+    if (parsed.energy !== undefined) {
+      data.energy = parsed.energy;
     }
 
     if (Object.keys(data).length === 0) {
@@ -840,6 +851,7 @@ export class LyricsService {
           delivery: row.delivery,
           songRole: row.songRole,
           roleProfiles: row.roleProfiles ?? {},
+          energy: row.energy,
           readiness: readinessAfterTextChange(
             row.readiness,
             bottomCounts.paragraph_count
@@ -954,6 +966,7 @@ export class LyricsService {
           delivery: row.delivery,
           songRole: row.songRole,
           roleProfiles: row.roleProfiles ?? {},
+          energy: row.energy,
           readiness: readinessAfterTextChange(
             row.readiness,
             createdCounts.paragraph_count

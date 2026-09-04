@@ -1,6 +1,7 @@
 import type { IUser } from '@/entities/user';
 import type {
   LyricDelivery,
+  LyricEnergy,
   LyricMood,
   LyricReadiness,
   LyricRoleProfile,
@@ -28,6 +29,7 @@ export interface ILyric {
   songRole: LyricSongRole[];
   roleProfiles: LyricRoleProfile[];
   readiness: LyricReadiness | null;
+  energy: LyricEnergy | null;
   owner?: IUser | null;
   replyToMessage: number | null;
   media: IMedia | null;
@@ -55,6 +57,11 @@ export type ICatalogDeliveryCount = {
 
 export type ICatalogReadinessCount = {
   value: LyricReadiness;
+  count: number;
+};
+
+export type ICatalogEnergyCount = {
+  value: LyricEnergy;
   count: number;
 };
 
@@ -97,6 +104,8 @@ export type ICatalogStats = {
   unscoped: ICatalogUnscopedStats;
   readiness: ICatalogReadinessCount[];
   readinessNone: number;
+  energy: ICatalogEnergyCount[];
+  energyNone: number;
   themes: ICatalogThemeCount[];
 };
 

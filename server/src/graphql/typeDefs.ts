@@ -38,6 +38,14 @@ export const typeDefinitions = /* GraphQL */ `
     READY
   }
 
+  enum LyricEnergy {
+    WHISPER
+    QUIET
+    EVEN
+    LOUD
+    SCREAM
+  }
+
   type User {
     id: Int!
     username: String!
@@ -62,6 +70,7 @@ export const typeDefinitions = /* GraphQL */ `
     songRole: [LyricSongRole!]!
     roleProfiles: [LyricRoleProfile!]!
     readiness: LyricReadiness
+    energy: LyricEnergy
     replyToMessage: Int
 
     message: Message
@@ -202,6 +211,11 @@ export const typeDefinitions = /* GraphQL */ `
     count: Int!
   }
 
+  type CatalogEnergyCount {
+    value: LyricEnergy!
+    count: Int!
+  }
+
   type CatalogRoleStats {
     songRole: LyricSongRole!
     phraseCount: Int!
@@ -244,6 +258,8 @@ export const typeDefinitions = /* GraphQL */ `
     unscoped: CatalogUnscopedStats!
     readiness: [CatalogReadinessCount!]!
     readinessNone: Int!
+    energy: [CatalogEnergyCount!]!
+    energyNone: Int!
     themes: [CatalogThemeCount!]!
   }
 
@@ -322,6 +338,8 @@ export const typeDefinitions = /* GraphQL */ `
     excludeSongRole: [LyricSongRole!]
     readiness: [LyricReadiness!]
     excludeReadiness: [LyricReadiness!]
+    energy: [LyricEnergy!]
+    excludeEnergy: [LyricEnergy!]
   }
 
   input TrackFormQuotas {
@@ -363,6 +381,8 @@ export const typeDefinitions = /* GraphQL */ `
       excludeSongRole: [LyricSongRole!]
       readiness: [LyricReadiness!]
       excludeReadiness: [LyricReadiness!]
+      energy: [LyricEnergy!]
+      excludeEnergy: [LyricEnergy!]
     ): [Lyric!]!
     lyricIngestPreview: LyricIngestPreview!
     catalogStats: CatalogStats!
@@ -398,6 +418,8 @@ export const typeDefinitions = /* GraphQL */ `
       excludeSongRole: [LyricSongRole!]
       readiness: [LyricReadiness!]
       excludeReadiness: [LyricReadiness!]
+      energy: [LyricEnergy!]
+      excludeEnergy: [LyricEnergy!]
     ): [Int!]!
     lyricsByIds(ids: [Int!]!): [Lyric!]!
     carouselHistories: [CarouselHistory!]!
@@ -418,6 +440,7 @@ export const typeDefinitions = /* GraphQL */ `
       delivery: [LyricDelivery!]
       roleProfiles: [LyricRoleProfileInput!]
       readiness: LyricReadiness
+      energy: LyricEnergy
     ): Lyric!
     updateLyricText(id: Int!, text: String!): Lyric!
     splitLyric(id: Int!, afterLine: Int!): SplitLyricPayload!

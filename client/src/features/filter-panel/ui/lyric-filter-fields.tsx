@@ -9,6 +9,9 @@ import {
   LYRIC_DELIVERY_HINTS,
   LYRIC_DELIVERY_LABELS,
   LYRIC_EMOJIS,
+  LYRIC_ENERGIES,
+  LYRIC_ENERGY_HINTS,
+  LYRIC_ENERGY_LABELS,
   LYRIC_MOOD_HINTS,
   LYRIC_MOOD_LABELS,
   LYRIC_MOODS,
@@ -22,6 +25,7 @@ import {
 } from '@/entities/lyric';
 import type {
   LyricDelivery,
+  LyricEnergy,
   LyricMood,
   LyricReadiness,
   LyricSongRole,
@@ -45,6 +49,8 @@ export type LyricFilterFieldsValue = {
   excludeSongRole: LyricSongRole[];
   readiness: LyricReadiness[];
   excludeReadiness: LyricReadiness[];
+  energy: LyricEnergy[];
+  excludeEnergy: LyricEnergy[];
 };
 
 const TAG_SKELETON_WIDTHS = [
@@ -276,6 +282,24 @@ export function LyricFilterFields({
           onChange({
             songRole: next.included,
             excludeSongRole: next.excluded,
+          })
+        }
+      />
+      <FacetChipGroup
+        label="Энергия"
+        options={LYRIC_ENERGIES}
+        labels={LYRIC_ENERGY_LABELS}
+        hints={LYRIC_ENERGY_HINTS}
+        value={value.energy}
+        excluded={value.excludeEnergy}
+        multiple
+        allowExclude
+        onChange={(energy) => onChange({ energy })}
+        onExcludedChange={(excludeEnergy) => onChange({ excludeEnergy })}
+        onFilterChange={(next) =>
+          onChange({
+            energy: next.included,
+            excludeEnergy: next.excluded,
           })
         }
       />

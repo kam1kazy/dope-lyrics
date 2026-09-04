@@ -36,6 +36,7 @@ export function collageToCarouselLyric(
     songRole: [],
     roleProfiles: [],
     readiness: null,
+    energy: null,
     replyToMessage: null,
     media: null,
   };
