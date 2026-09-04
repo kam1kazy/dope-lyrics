@@ -1,4 +1,4 @@
-FROM postgres:16.4-alpine
+FROM postgres:18.6-alpine
 
 # Установка локалей
 RUN apk add --no-cache \
