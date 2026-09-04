@@ -9,12 +9,14 @@ import {
 import {
   type PointerEvent as ReactPointerEvent,
   useCallback,
+  useEffect,
   useRef,
   useState,
 } from 'react';
 
 import { useLyricView } from '@/shared/lib/lyric-view/lyric-view-context';
 import { usePlayback } from '@/shared/lib/playback/playback-context';
+import { setTelegramVerticalSwipes } from '@/shared/lib/telegram-webapp';
 import { chromeKeyClass } from '@/shared/lib/utils/chrome-key-class';
 import { cn } from '@/shared/lib/utils/cn';
 import { Button } from '@/shared/ui/shadcn/ui/button';
@@ -95,6 +97,12 @@ export function LyricTuneHotkeys() {
     startRatio: number;
   } | null>(null);
 
+  useEffect(() => {
+    return () => {
+      setTelegramVerticalSwipes(true);
+    };
+  }, []);
+
   const values: Record<TuneId, number> = {
     fontSize,
     lineHeight,
@@ -167,6 +175,7 @@ export function LyricTuneHotkeys() {
     };
     setDragRatio(ratioOf(values[id], tune.min, tune.max));
     setActiveId(id);
+    setTelegramVerticalSwipes(false);
   };
 
   const onPointerMove = (event: ReactPointerEvent<HTMLButtonElement>) => {
@@ -194,6 +203,7 @@ export function LyricTuneHotkeys() {
 
     dragRef.current = null;
     setActiveId(null);
+    setTelegramVerticalSwipes(true);
   };
 
   return (

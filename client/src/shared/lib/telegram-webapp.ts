@@ -2,6 +2,9 @@ type TelegramWebApp = {
   initData: string;
   ready: () => void;
   expand: () => void;
+  isVersionAtLeast?: (version: string) => boolean;
+  enableVerticalSwipes?: () => void;
+  disableVerticalSwipes?: () => void;
 };
 
 type TelegramNamespace = {
@@ -34,6 +37,21 @@ export const prepareTelegramWebApp = (): void => {
   webApp.ready();
   webApp.expand();
 };
+
+export function setTelegramVerticalSwipes(enabled: boolean): void {
+  const webApp = getTelegramWebApp();
+
+  if (!webApp?.isVersionAtLeast?.('7.7')) {
+    return;
+  }
+
+  if (enabled) {
+    webApp.enableVerticalSwipes?.();
+    return;
+  }
+
+  webApp.disableVerticalSwipes?.();
+}
 
 const TELEGRAM_WAIT_MS = 2500;
 const TELEGRAM_POLL_MS = 50;
