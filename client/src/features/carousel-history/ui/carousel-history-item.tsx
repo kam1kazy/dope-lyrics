@@ -106,15 +106,17 @@ export function CarouselHistoryItem({
           <span className="block">{time}</span>
           {date ? <span className="block">{date}</span> : null}
         </time>
-        <p
-          aria-expanded={expanded}
-          className={cn(
-            'min-w-0 flex-1 text-sm leading-snug whitespace-pre-wrap',
-            expanded ? 'line-clamp-[12]' : 'line-clamp-2'
-          )}
-        >
-          {previewLines(item.previewText, lineMax) || 'Пустой снимок'}
-        </p>
+        <div className="min-w-0 flex-1">
+          <p
+            aria-expanded={expanded}
+            className={cn(
+              'overflow-hidden text-sm leading-5 break-words whitespace-pre-line',
+              expanded ? 'line-clamp-[12] max-h-60' : 'line-clamp-2 max-h-10'
+            )}
+          >
+            {previewLines(item.previewText, lineMax) || 'Пустой снимок'}
+          </p>
+        </div>
         <div className="flex shrink-0 items-center">
           <Button
             type="button"

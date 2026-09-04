@@ -32,6 +32,9 @@ export function CatalogAssembleHistory({
 }) {
   const { loadQueue } = useCarouselSession();
   const { setPaused, suppressToggle } = usePlayback();
+  const [expandedIds, setExpandedIds] = useState<ReadonlySet<number>>(
+    () => new Set()
+  );
   const [revealedId, setRevealedId] = useState<number | null>(null);
 
   useEffect(() => {
@@ -138,9 +141,22 @@ export function CatalogAssembleHistory({
           collage={collage}
           hideAdlibs={hideAdlibs}
           selected={collage.id === selectedId}
+          expanded={expandedIds.has(collage.id)}
           revealed={collage.id === revealedId}
           onSelect={() => {
             onSelect(collage);
+          }}
+          onToggleExpand={() => {
+            setExpandedIds((current) => {
+              const next = new Set(current);
+              if (next.has(collage.id)) {
+                next.delete(collage.id);
+              } else {
+                next.add(collage.id);
+              }
+
+              return next;
+            });
           }}
           onRevealChange={(open) => {
             setRevealedId(open ? collage.id : null);
@@ -152,6 +168,15 @@ export function CatalogAssembleHistory({
             setRevealedId((current) =>
               current === collage.id ? null : current
             );
+            setExpandedIds((current) => {
+              if (!current.has(collage.id)) {
+                return current;
+              }
+
+              const next = new Set(current);
+              next.delete(collage.id);
+              return next;
+            });
             onDeleted(collage.id);
             void unlikeCollage({ variables: { id: collage.id } });
           }}

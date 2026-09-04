@@ -23,11 +23,13 @@ export function useHistoryRowGestures({
   onRevealChange,
   onLongPress,
   onTap,
+  onPress,
 }: {
   revealed: boolean;
   onRevealChange: (open: boolean) => void;
   onLongPress: () => void;
   onTap: () => void;
+  onPress?: () => void;
 }) {
   const startXRef = useRef(0);
   const startYRef = useRef(0);
@@ -41,6 +43,7 @@ export function useHistoryRowGestures({
   const onRevealChangeRef = useRef(onRevealChange);
   const onLongPressRef = useRef(onLongPress);
   const onTapRef = useRef(onTap);
+  const onPressRef = useRef(onPress);
   const dragOffsetRef = useRef<number | null>(null);
   const [dragOffset, setDragOffset] = useState<number | null>(null);
 
@@ -48,6 +51,7 @@ export function useHistoryRowGestures({
   onRevealChangeRef.current = onRevealChange;
   onLongPressRef.current = onLongPress;
   onTapRef.current = onTap;
+  onPressRef.current = onPress;
 
   const setDrag = (next: number | null) => {
     dragOffsetRef.current = next;
@@ -94,6 +98,7 @@ export function useHistoryRowGestures({
     startOffsetRef.current = revealedRef.current ? -HISTORY_SWIPE_REVEAL_PX : 0;
     pointerIdRef.current = event.pointerId;
     setDrag(null);
+    onPressRef.current?.();
 
     longPressTimerRef.current = window.setTimeout(() => {
       longPressTimerRef.current = null;

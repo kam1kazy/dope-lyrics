@@ -4,20 +4,31 @@ import { ArrowRight, Trash2 } from 'lucide-react';
 
 import type { ILyricCollage } from '@/entities/lyric';
 import {
+  HISTORY_PREVIEW_EXPANDED,
   HISTORY_SWIPE_REVEAL_PX,
   useHistoryRowGestures,
 } from '@/features/carousel-history';
 import { cn } from '@/shared/lib/utils/cn';
 import { Button } from '@/shared/ui/shadcn/ui/button';
 
-import { collagePreviewText } from '../lib/generator-text';
+import { collageCarouselText } from '../lib/generator-text';
+
+function previewLines(text: string, max: number) {
+  return text
+    .split('\n')
+    .filter((line) => line.trim() !== '')
+    .slice(0, max)
+    .join('\n');
+}
 
 export function CatalogAssembleHistoryItem({
   collage,
   hideAdlibs,
   selected,
+  expanded,
   revealed,
   onSelect,
+  onToggleExpand,
   onRevealChange,
   onPlay,
   onDelete,
@@ -25,8 +36,10 @@ export function CatalogAssembleHistoryItem({
   collage: ILyricCollage;
   hideAdlibs: boolean;
   selected: boolean;
+  expanded: boolean;
   revealed: boolean;
   onSelect: () => void;
+  onToggleExpand: () => void;
   onRevealChange: (open: boolean) => void;
   onPlay: () => void;
   onDelete: () => void;
@@ -34,10 +47,14 @@ export function CatalogAssembleHistoryItem({
   const { offset, dragging, rowProps } = useHistoryRowGestures({
     revealed,
     onRevealChange,
-    onLongPress: () => undefined,
+    onLongPress: onToggleExpand,
     onTap: onSelect,
+    onPress: onSelect,
   });
-  const preview = collagePreviewText(collage.slots, hideAdlibs);
+  const lineMax = expanded ? HISTORY_PREVIEW_EXPANDED : 1;
+  const preview =
+    previewLines(collageCarouselText(collage.slots, hideAdlibs), lineMax) ||
+    'Пустая склейка';
   const deleteRevealed = revealed || dragging;
 
   return (
@@ -55,8 +72,8 @@ export function CatalogAssembleHistoryItem({
         <Button
           type="button"
           variant="ghost"
-          size="icon"
-          className="size-8 shrink-0"
+          size="icon-sm"
+          className="shrink-0"
           tabIndex={revealed ? 0 : -1}
           aria-hidden={!revealed}
           aria-label="Удалить"
@@ -71,8 +88,9 @@ export function CatalogAssembleHistoryItem({
       <div
         {...rowProps}
         className={cn(
-          'hover:bg-muted relative z-10 flex w-full items-center gap-1 rounded-md bg-background px-3 py-2.5 select-none',
-          selected && 'bg-muted',
+          'relative z-10 flex w-full items-center rounded-md bg-background px-3 py-2.5 select-none',
+          '[@media(hover:hover)]:hover:bg-muted',
+          selected && 'bg-muted pr-11',
           !dragging && 'transition-transform duration-200 ease-out'
         )}
         style={{
@@ -83,15 +101,23 @@ export function CatalogAssembleHistoryItem({
           onPlay();
         }}
       >
-        <p className="min-w-0 flex-1 text-sm leading-snug whitespace-pre-wrap line-clamp-2">
+        <p
+          aria-expanded={expanded}
+          className={cn(
+            'min-w-0 flex-1 overflow-hidden text-sm leading-5',
+            expanded
+              ? 'line-clamp-[12] max-h-60 break-words whitespace-pre-line'
+              : 'h-5 truncate'
+          )}
+        >
           {preview}
         </p>
         {selected ? (
           <Button
             type="button"
             variant="ghost"
-            size="icon"
-            className="size-8 shrink-0"
+            size="icon-sm"
+            className="absolute top-1/2 right-1.5 -translate-y-1/2 leading-none"
             aria-label="Запустить в карусели"
             onClick={(event) => {
               event.stopPropagation();
