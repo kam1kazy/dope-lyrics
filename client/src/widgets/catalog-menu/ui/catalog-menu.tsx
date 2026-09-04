@@ -530,15 +530,13 @@ export function CatalogMenu() {
                         <CatalogAssembleHistory
                           hideAdlibs={hideAdlibs}
                           selectedId={selectedCollage?.id ?? null}
-                          onSelect={(collage) => {
-                            setSelectedCollage(collage);
-                            if (
-                              typeof window !== 'undefined' &&
-                              window.matchMedia('(max-width: 639px)').matches
-                            ) {
-                              setHistoryOpen(false);
-                            }
+                          onSelect={setSelectedCollage}
+                          onDeleted={(id) => {
+                            setSelectedCollage((current) =>
+                              current?.id === id ? null : current
+                            );
                           }}
+                          onPlay={closeMenu}
                         />
                       ) : renderedSection === 'generator' ? (
                         <CatalogGeneratorPane

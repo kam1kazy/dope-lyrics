@@ -139,6 +139,17 @@ export const collagePreviewText = (
   return 'Пустая склейка';
 };
 
+export const collageCarouselText = (
+  slots: IAssembledTrackSlot[],
+  hideAdlibs: boolean
+): string => {
+  return slots
+    .map((slot) => slotDisplayText(slot, hideAdlibs))
+    .filter((item) => !item.empty)
+    .map((item) => item.text)
+    .join('\n\n');
+};
+
 export const formatCollageDate = (iso: string): string => {
   return formatRuDateTime(iso);
 };

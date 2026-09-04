@@ -25,6 +25,10 @@ export function useSaveCarouselSnapshot() {
       return true;
     }
 
+    if (queue.some((item) => item.id < 1)) {
+      return true;
+    }
+
     try {
       const saved = await saveHistory({
         variables: {
