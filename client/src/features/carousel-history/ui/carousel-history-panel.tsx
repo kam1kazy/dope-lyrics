@@ -1,7 +1,6 @@
 'use client';
 
 import { useLazyQuery, useMutation, useQuery } from '@apollo/client/react';
-import { ArrowRight, Heart, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -15,20 +14,11 @@ import {
   UNLIKE_CAROUSEL_HISTORY,
 } from '@/entities/lyric';
 import { useCarouselSession } from '@/shared/lib/carousel-session/carousel-session-context';
-import { formatRuDateTimeParts } from '@/shared/lib/format-datetime';
 import { usePlayback } from '@/shared/lib/playback/playback-context';
-import { cn } from '@/shared/lib/utils/cn';
 import { ErrorText } from '@/shared/ui/error-text';
-import { Button } from '@/shared/ui/shadcn/ui/button';
 import { Spinner } from '@/shared/ui/shadcn/ui/spinner';
 
-function previewLines(text: string, max: number) {
-  return text
-    .split('\n')
-    .filter((line) => line.trim() !== '')
-    .slice(0, max)
-    .join('\n');
-}
+import { CarouselHistoryItem } from './carousel-history-item';
 
 export function CarouselHistoryPanel({
   likedOnly,
@@ -40,9 +30,13 @@ export function CarouselHistoryPanel({
   const { loadQueue } = useCarouselSession();
   const { setPaused, suppressToggle } = usePlayback();
   const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [expandedIds, setExpandedIds] = useState<ReadonlySet<number>>(
+    () => new Set()
+  );
+  const [revealedId, setRevealedId] = useState<number | null>(null);
 
   useEffect(() => {
-    if (selectedId == null) {
+    if (selectedId == null && revealedId == null) {
       return;
     }
 
@@ -50,6 +44,7 @@ export function CarouselHistoryPanel({
       const node = event.target;
       if (!(node instanceof Node)) {
         setSelectedId(null);
+        setRevealedId(null);
         return;
       }
 
@@ -59,13 +54,14 @@ export function CarouselHistoryPanel({
       }
 
       setSelectedId(null);
+      setRevealedId(null);
     };
 
     document.addEventListener('pointerdown', onPointerDown);
     return () => {
       document.removeEventListener('pointerdown', onPointerDown);
     };
-  }, [selectedId]);
+  }, [revealedId, selectedId]);
 
   const { loading, error, data } = useQuery<{
     carouselHistories: ICarouselHistory[];
@@ -170,6 +166,20 @@ export function CarouselHistoryPanel({
     }
   };
 
+  const removeItem = (id: number) => {
+    setSelectedId((current) => (current === id ? null : current));
+    setRevealedId((current) => (current === id ? null : current));
+    setExpandedIds((current) => {
+      if (!current.has(id)) {
+        return current;
+      }
+
+      const next = new Set(current);
+      next.delete(id);
+      return next;
+    });
+  };
+
   if (loading && data === undefined) {
     return (
       <div className="flex h-full items-center justify-center p-6">
@@ -199,97 +209,49 @@ export function CarouselHistoryPanel({
   return (
     <div
       data-swipe-ignore
-      className="flex min-h-0 flex-1 flex-col overflow-y-auto p-2"
+      className="flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto p-2"
     >
-      {history.map((item) => {
-        const selected = item.id === selectedId;
-        const { time, date } = formatRuDateTimeParts(item.createdAt);
+      {history.map((item) => (
+        <CarouselHistoryItem
+          key={item.id}
+          item={item}
+          selected={item.id === selectedId}
+          expanded={expandedIds.has(item.id)}
+          revealed={item.id === revealedId}
+          onSelect={() => {
+            setSelectedId(item.id);
+          }}
+          onToggleExpand={() => {
+            setExpandedIds((current) => {
+              const next = new Set(current);
+              if (next.has(item.id)) {
+                next.delete(item.id);
+              } else {
+                next.add(item.id);
+              }
 
-        return (
-          <div
-            key={item.id}
-            data-history-item
-            className={cn(
-              'hover:bg-muted/50 flex w-full items-center gap-1 rounded-md px-2 py-2 transition-colors',
-              selected && 'bg-muted'
-            )}
-            onClick={() => {
-              setSelectedId(item.id);
-            }}
-            onDoubleClick={() => {
-              void playItem(item);
-            }}
-          >
-            <time
-              dateTime={item.createdAt}
-              className="text-muted-foreground mr-2 shrink-0 text-[11px] leading-tight whitespace-nowrap tabular-nums"
-            >
-              <span className="block">{time}</span>
-              {date ? <span className="block">{date}</span> : null}
-            </time>
-            <p className="line-clamp-2 min-w-0 flex-1 text-sm leading-snug whitespace-pre-wrap">
-              {previewLines(item.previewText, 2) || 'Пустой снимок'}
-            </p>
-            <div className="flex shrink-0 items-center">
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="size-8 shrink-0"
-                aria-label={
-                  item.isLiked ? 'Убрать из сохранённых' : 'Сохранить'
-                }
-                onClick={(event) => {
-                  event.stopPropagation();
-                  if (item.isLiked) {
-                    void unlikeHistory({ variables: { id: item.id } });
-                    return;
-                  }
-
-                  void likeHistory({ variables: { id: item.id } });
-                }}
-              >
-                <Heart
-                  className={cn(
-                    'size-4',
-                    item.isLiked && 'fill-rose-400 text-rose-400'
-                  )}
-                />
-              </Button>
-              {selected ? (
-                <>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="size-8 shrink-0"
-                    aria-label="Удалить"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      void deleteHistory({ variables: { id: item.id } });
-                    }}
-                  >
-                    <Trash2 className="size-4 text-rose-400" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="size-8 shrink-0"
-                    aria-label="Запустить в карусели"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      void playItem(item);
-                    }}
-                  >
-                    <ArrowRight className="size-4 text-emerald-400" />
-                  </Button>
-                </>
-              ) : null}
-            </div>
-          </div>
-        );
-      })}
+              return next;
+            });
+          }}
+          onRevealChange={(open) => {
+            setRevealedId(open ? item.id : null);
+          }}
+          onPlay={() => {
+            void playItem(item);
+          }}
+          onLike={() => {
+            void likeHistory({ variables: { id: item.id } });
+          }}
+          onUnlike={() => {
+            removeItem(item.id);
+            void unlikeHistory({ variables: { id: item.id } });
+          }}
+          onDelete={() => {
+            removeItem(item.id);
+            void deleteHistory({ variables: { id: item.id } });
+          }}
+        />
+      ))}
     </div>
   );
 }
