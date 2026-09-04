@@ -16,7 +16,6 @@ import {
 import { useTheme } from 'next-themes';
 import { type ReactNode, useEffect, useState } from 'react';
 
-import { useSaveCarouselSnapshot } from '@/features/carousel-history';
 import { CatalogIngest } from '@/features/catalog-ingest';
 import { useCarouselSession } from '@/shared/lib/carousel-session/carousel-session-context';
 import {
@@ -133,7 +132,6 @@ function SettingsTab({ checkIngest }: { checkIngest: boolean }) {
     resetSettings,
   } = useLyricView();
   const { resetToCatalog } = useCarouselSession();
-  const { saveSnapshot } = useSaveCarouselSnapshot();
   const { theme, setTheme } = useTheme();
   const [themeReady, setThemeReady] = useState(false);
   const canReset = hasCustomLyricSettings({
@@ -184,17 +182,8 @@ function SettingsTab({ checkIngest }: { checkIngest: boolean }) {
                     : 'text-muted-foreground'
                 )}
                 onClick={() => {
-                  void (async () => {
-                    if (mode === 'shuffle' && sortMode === 'shuffle') {
-                      const saved = await saveSnapshot();
-                      if (!saved) {
-                        return;
-                      }
-                    }
-
-                    resetToCatalog();
-                    setSortMode(mode);
-                  })();
+                  resetToCatalog();
+                  setSortMode(mode);
                 }}
               >
                 <Icon className="size-4 md:size-5" />

@@ -3,7 +3,6 @@
 import { History, Settings, Shuffle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
-import { useSaveCarouselSnapshot } from '@/features/carousel-history';
 import { FilterPanel } from '@/features/filter-panel';
 import { useCarouselSession } from '@/shared/lib/carousel-session/carousel-session-context';
 import { useCatalogMenu } from '@/shared/lib/catalog-menu/catalog-menu-context';
@@ -30,7 +29,6 @@ export const ControlBar = () => {
   >(null);
   const { setSortMode } = useLyricView();
   const { resetToCatalog } = useCarouselSession();
-  const { saveSnapshot } = useSaveCarouselSnapshot();
   const { openSection } = useCatalogMenu();
   const { paused, canPlay, suppressToggle, beginOverlay, endOverlay } =
     usePlayback();
@@ -88,15 +86,8 @@ export const ControlBar = () => {
             onClick={(event) => {
               event.stopPropagation();
               suppressToggle();
-              void (async () => {
-                const saved = await saveSnapshot();
-                if (!saved) {
-                  return;
-                }
-
-                resetToCatalog();
-                setSortMode('shuffle');
-              })();
+              resetToCatalog();
+              setSortMode('shuffle');
             }}
           >
             <Shuffle className="size-5" />

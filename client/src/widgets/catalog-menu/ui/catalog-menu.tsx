@@ -78,7 +78,7 @@ const SECTION_TITLES: Record<CatalogSection, string> = {
   list: 'Список',
   favorites: 'Избранное',
   demos: 'Тексты из демок',
-  history: 'История',
+  history: 'История карусели',
   stats: 'Сводка',
   generator: 'Генератор',
 };
