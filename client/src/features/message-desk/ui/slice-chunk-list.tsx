@@ -11,31 +11,27 @@ interface SliceChunkListProps {
   chunks: SliceChunk[];
   onReorder: (chunks: SliceChunk[]) => void;
   onRemove: (id: string) => void;
+  showTitle?: boolean;
 }
 
 export function SliceChunkList({
   chunks,
   onReorder,
   onRemove,
+  showTitle = true,
 }: SliceChunkListProps) {
-  if (chunks.length === 0) {
-    return (
-      <p className="text-muted-foreground text-sm">
-        Выделите зону двумя чертами и нажмите ножницы — кусок попадёт сюда.
-      </p>
-    );
-  }
-
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-muted-foreground text-xs">Куски</p>
+      {showTitle ? (
+        <p className="text-muted-foreground text-xs">Куски</p>
+      ) : null}
       <Reorder.Group
         axis="y"
         values={chunks}
         onReorder={onReorder}
         className="flex flex-col gap-2"
       >
-        {chunks.map((chunk, index) => (
+        {chunks.map((chunk) => (
           <Reorder.Item
             key={chunk.id}
             value={chunk}
@@ -46,7 +42,6 @@ export function SliceChunkList({
               aria-hidden
             />
             <div className="min-w-0 flex-1">
-              <p className="text-muted-foreground text-xs">{index + 1}</p>
               <p className="text-sm whitespace-pre-wrap">
                 {previewLyricHalf(chunk.text, 3)}
               </p>

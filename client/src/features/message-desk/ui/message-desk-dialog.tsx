@@ -103,9 +103,13 @@ interface MessageDeskDialogProps {
   showQueueActions?: boolean;
 }
 
-type DeskTab = 'text' | 'profile';
+type DeskTab = 'text' | 'profile' | 'chunks';
 type TextMode = 'view' | 'split' | 'edit';
 type DiscardPrompt = 'edit' | 'desk' | null;
+
+function usesChunksTab(readiness: LyricReadiness | null) {
+  return readiness === 'BLOCK' || readiness === 'TEXT' || readiness === 'READY';
+}
 
 type ProfileFields = Pick<
   ILyric,
@@ -458,6 +462,14 @@ export function MessageDeskDialog({
   const sourceText = lyric?.message?.text ?? '';
   const canSplit = canSplitLyricText(sourceText);
   const isDraftDirty = textMode === 'edit' && draftText !== sourceText;
+  const showChunksTab =
+    textMode === 'split' && usesChunksTab(profile.readiness);
+
+  useEffect(() => {
+    if (tab === 'chunks' && !showChunksTab) {
+      setTab('text');
+    }
+  }, [tab, showChunksTab]);
 
   const errorMessage = (error: unknown, fallback: string) => {
     return error instanceof Error ? error.message : fallback;
@@ -480,6 +492,10 @@ export function MessageDeskDialog({
     setSlicePrompt(false);
     setUntilLine(null);
     setSliceChunks([]);
+
+    if (tab === 'chunks') {
+      setTab('text');
+    }
   };
 
   const toggleSecondCut = () => {
@@ -889,21 +905,27 @@ export function MessageDeskDialog({
           <DialogDescription className="sm:text-base">
             {tab === 'text'
               ? 'Полный текст из каталога.'
-              : 'Настроение, подача, роль и готовность.'}
+              : tab === 'chunks'
+                ? 'Нарезанные куски.'
+                : 'Настроение, подача, роль и готовность.'}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex min-h-0 w-full flex-1 flex-col gap-3 overflow-y-auto sm:gap-4">
+        <div className="flex min-h-0 w-full flex-1 flex-col gap-3 sm:gap-4">
           <div
             role="tablist"
             aria-label="Разделы карточки"
             className="bg-muted grid w-full shrink-0 grid-cols-2 items-center rounded-lg p-1"
           >
-            {(
-              [
-                { id: 'text', label: 'Текст' },
-                { id: 'profile', label: 'Профиль' },
-              ] as const
+            {(showChunksTab
+              ? ([
+                  { id: 'text', label: 'Текст' },
+                  { id: 'chunks', label: 'Куски' },
+                ] as const)
+              : ([
+                  { id: 'text', label: 'Текст' },
+                  { id: 'profile', label: 'Профиль' },
+                ] as const)
             ).map(({ id, label }) => {
               const selected = tab === id;
 
@@ -931,252 +953,285 @@ export function MessageDeskDialog({
                       return;
                     }
 
-                    setTextMode('view');
+                    if (id !== 'chunks' && tab !== 'chunks') {
+                      setTextMode('view');
+                    }
+
                     setTab(id);
                   }}
                 >
+                  {id === 'chunks' ? (
+                    <Scissors className="size-3.5" aria-hidden />
+                  ) : null}
                   {label}
                 </Button>
               );
             })}
           </div>
 
-          {lyric && tab === 'text' ? (
-            <div className="flex flex-col gap-3 sm:gap-4">
-              {tags.length > 0 ? (
-                <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                  {tags.map((tag) => (
-                    <Badge
-                      key={tag}
-                      variant="secondary"
-                      className="text-xs sm:px-2.5 sm:py-1 sm:text-sm"
-                    >
-                      #{tag}
-                    </Badge>
-                  ))}
-                </div>
-              ) : null}
-
-              {reactionEmojis.length > 0 ? (
-                <div
-                  className="text-muted-foreground flex flex-wrap gap-1.5 text-lg sm:gap-2 sm:text-xl"
-                  aria-label="Реакции"
-                >
-                  {reactionEmojis.map((emoji) => (
-                    <span key={emoji}>{emoji}</span>
-                  ))}
-                </div>
-              ) : null}
-
-              {textMode === 'split' ? (
-                <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:gap-4">
-                  <div className="min-w-0 flex-1">
-                    <SplitTextView
-                      text={sourceText}
-                      afterLine={afterLine}
-                      untilLine={untilLine}
-                      takenLineIndexes={takenLineIndexes}
-                      onAfterLineChange={handleAfterLineChange}
-                      onUntilLineChange={setUntilLine}
-                      onToggleSecondCut={toggleSecondCut}
-                      onHold={exitSplitMode}
-                    />
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            {lyric && tab === 'text' ? (
+              <div className="flex flex-col gap-3 sm:gap-4">
+                {tags.length > 0 ? (
+                  <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                    {tags.map((tag) => (
+                      <Badge
+                        key={tag}
+                        variant="secondary"
+                        className="text-xs sm:px-2.5 sm:py-1 sm:text-sm"
+                      >
+                        #{tag}
+                      </Badge>
+                    ))}
                   </div>
-                  {untilLine !== null || sliceChunks.length > 0 ? (
-                    <div className="w-full shrink-0 lg:w-56">
-                      <SliceChunkList
-                        chunks={sliceChunks}
-                        onReorder={setSliceChunks}
-                        onRemove={(id) => {
-                          setSliceChunks((prev) =>
-                            prev.filter((chunk) => chunk.id !== id)
-                          );
-                        }}
+                ) : null}
+
+                {reactionEmojis.length > 0 ? (
+                  <div
+                    className="text-muted-foreground flex flex-wrap gap-1.5 text-lg sm:gap-2 sm:text-xl"
+                    aria-label="Реакции"
+                  >
+                    {reactionEmojis.map((emoji) => (
+                      <span key={emoji}>{emoji}</span>
+                    ))}
+                  </div>
+                ) : null}
+
+                {textMode === 'split' ? (
+                  <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:gap-4">
+                    <div className="min-w-0 flex-1">
+                      <SplitTextView
+                        text={sourceText}
+                        afterLine={afterLine}
+                        untilLine={untilLine}
+                        takenLineIndexes={takenLineIndexes}
+                        onAfterLineChange={handleAfterLineChange}
+                        onUntilLineChange={setUntilLine}
+                        onToggleSecondCut={toggleSecondCut}
+                        onHold={exitSplitMode}
                       />
                     </div>
-                  ) : null}
-                </div>
-              ) : textMode === 'edit' ? (
-                <div className="relative">
-                  <textarea
-                    value={draftText}
-                    rows={Math.max(splitLyricLines(draftText).length, 2)}
-                    onChange={(event) => setDraftText(event.target.value)}
-                    className="border-input bg-background w-full resize-none rounded-md border px-3 py-2 pr-20 text-sm leading-relaxed whitespace-pre-wrap sm:text-base sm:leading-7"
-                    aria-label="Текст фразы"
-                  />
-                  <div className="absolute top-2 right-2 flex gap-1">
-                    <Button
-                      type="button"
-                      size="icon"
-                      variant="ghost"
-                      className="size-8"
-                      onClick={saveEdit}
-                      aria-label="Сохранить"
-                    >
-                      <Check className="size-4" />
-                    </Button>
-                    <Button
-                      type="button"
-                      size="icon"
-                      variant="ghost"
-                      className="size-8"
-                      onClick={requestExitEdit}
-                      aria-label="Выйти без сохранения"
-                    >
-                      <X className="size-4" />
-                    </Button>
+                    {!showChunksTab &&
+                    (untilLine !== null || sliceChunks.length > 0) ? (
+                      <div className="w-full shrink-0 lg:w-56">
+                        <SliceChunkList
+                          chunks={sliceChunks}
+                          onReorder={setSliceChunks}
+                          onRemove={(id) => {
+                            setSliceChunks((prev) =>
+                              prev.filter((chunk) => chunk.id !== id)
+                            );
+                          }}
+                        />
+                      </div>
+                    ) : null}
                   </div>
-                </div>
-              ) : (
-                <p
-                  className="text-sm leading-relaxed whitespace-pre-wrap sm:text-base sm:leading-7"
-                  onContextMenu={(event) => {
-                    if (canSplit) {
-                      event.preventDefault();
-                    }
-                  }}
-                  onPointerDown={(event) => {
-                    startTextHold(event.clientX, event.clientY);
-                  }}
-                  onPointerMove={(event) => {
-                    moveTextHold(event.clientX, event.clientY);
-                  }}
-                  onPointerUp={() => {
-                    clearTextHold();
+                ) : textMode === 'edit' ? (
+                  <div className="relative">
+                    <textarea
+                      value={draftText}
+                      rows={Math.max(splitLyricLines(draftText).length, 2)}
+                      onChange={(event) => setDraftText(event.target.value)}
+                      className="border-input bg-background w-full resize-none rounded-md border px-3 py-2 pr-20 text-sm leading-relaxed whitespace-pre-wrap sm:text-base sm:leading-7"
+                      aria-label="Текст фразы"
+                    />
+                    <div className="absolute top-2 right-2 flex gap-1">
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="ghost"
+                        className="size-8"
+                        onClick={saveEdit}
+                        aria-label="Сохранить"
+                      >
+                        <Check className="size-4" />
+                      </Button>
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="ghost"
+                        className="size-8"
+                        onClick={requestExitEdit}
+                        aria-label="Выйти без сохранения"
+                      >
+                        <X className="size-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <p
+                    className="text-sm leading-relaxed whitespace-pre-wrap sm:text-base sm:leading-7"
+                    onContextMenu={(event) => {
+                      if (canSplit) {
+                        event.preventDefault();
+                      }
+                    }}
+                    onPointerDown={(event) => {
+                      startTextHold(event.clientX, event.clientY);
+                    }}
+                    onPointerMove={(event) => {
+                      moveTextHold(event.clientX, event.clientY);
+                    }}
+                    onPointerUp={() => {
+                      clearTextHold();
 
-                    if (holdConsumedRef.current) {
-                      holdConsumedRef.current = false;
-                      return;
-                    }
+                      if (holdConsumedRef.current) {
+                        holdConsumedRef.current = false;
+                        return;
+                      }
 
-                    const now = Date.now();
+                      const now = Date.now();
 
-                    if (now - lastTextTapRef.current < 400) {
-                      lastTextTapRef.current = 0;
-                      enterEditMode();
-                      return;
-                    }
+                      if (now - lastTextTapRef.current < 400) {
+                        lastTextTapRef.current = 0;
+                        enterEditMode();
+                        return;
+                      }
 
-                    lastTextTapRef.current = now;
-                  }}
-                  onPointerCancel={clearTextHold}
-                >
-                  {lyric.message?.text}
-                </p>
-              )}
-              {textError ? (
-                <p className="text-destructive text-sm">{textError}</p>
-              ) : null}
-            </div>
-          ) : null}
+                      lastTextTapRef.current = now;
+                    }}
+                    onPointerCancel={clearTextHold}
+                  >
+                    {lyric.message?.text}
+                  </p>
+                )}
+                {textError ? (
+                  <p className="text-destructive text-sm">{textError}</p>
+                ) : null}
+              </div>
+            ) : null}
 
-          {lyric && tab === 'profile' ? (
-            <div className="flex flex-col gap-5 sm:gap-7">
-              <FacetChipGroup
-                label="Роль в песне"
-                options={LYRIC_SONG_ROLES}
-                labels={LYRIC_SONG_ROLE_LABELS}
-                hints={LYRIC_SONG_ROLE_HINTS}
-                value={profile.roleProfiles.map((item) => item.songRole)}
-                multiple
-                accent={activeSongRole}
-                size="desk"
-                onSelect={(role) => setActiveSongRole(role)}
-                onChange={(roles) => {
-                  let roleProfiles = profile.roleProfiles.filter((item) =>
-                    roles.includes(item.songRole)
-                  );
+            {lyric && tab === 'chunks' && showChunksTab ? (
+              <div className="flex flex-col gap-3">
+                {sliceChunks.length > 0 ? (
+                  <SliceChunkList
+                    showTitle={false}
+                    chunks={sliceChunks}
+                    onReorder={setSliceChunks}
+                    onRemove={(id) => {
+                      setSliceChunks((prev) =>
+                        prev.filter((chunk) => chunk.id !== id)
+                      );
+                    }}
+                  />
+                ) : (
+                  <p className="text-muted-foreground text-sm">
+                    Пока нет кусков.
+                  </p>
+                )}
+                {textError ? (
+                  <p className="text-destructive text-sm">{textError}</p>
+                ) : null}
+              </div>
+            ) : null}
 
-                  for (const role of roles) {
-                    roleProfiles = upsertRoleProfile(roleProfiles, role, {
-                      mood: [],
-                      delivery: [],
-                    });
-                  }
-
-                  if (activeSongRole && !roles.includes(activeSongRole)) {
-                    setActiveSongRole(roles[0] ?? null);
-                  }
-
-                  patchProfile({ ...profile, roleProfiles });
-                }}
-              />
-              <FacetChipGroup
-                label="Настроение"
-                options={LYRIC_MOODS}
-                labels={LYRIC_MOOD_LABELS}
-                hints={LYRIC_MOOD_HINTS}
-                value={editingMood}
-                multiple
-                toggleOnClick
-                size="desk"
-                onChange={(mood) => {
-                  if (activeSongRole) {
-                    patchProfile({
-                      ...profile,
-                      roleProfiles: patchRoleProfile(
-                        profile.roleProfiles,
-                        activeSongRole,
-                        { mood }
-                      ),
-                    });
-                    return;
-                  }
-
-                  patchProfile({ ...profile, mood });
-                }}
-              />
-              <FacetChipGroup
-                label="Подача"
-                options={LYRIC_DELIVERIES}
-                labels={LYRIC_DELIVERY_LABELS}
-                hints={LYRIC_DELIVERY_HINTS}
-                value={editingDelivery}
-                multiple
-                toggleOnClick
-                size="desk"
-                onChange={(delivery) => {
-                  if (activeSongRole) {
-                    patchProfile({
-                      ...profile,
-                      roleProfiles: patchRoleProfile(
-                        profile.roleProfiles,
-                        activeSongRole,
-                        { delivery }
-                      ),
-                    });
-                    return;
-                  }
-
-                  patchProfile({ ...profile, delivery });
-                }}
-              />
-              <FacetChipGroup
-                label="Готовность"
-                options={LYRIC_READINESS}
-                labels={LYRIC_READINESS_LABELS}
-                hints={LYRIC_READINESS_HINTS}
-                value={profile.readiness ? [profile.readiness] : []}
-                multiple={false}
-                size="desk"
-                onChange={(next) => {
-                  const readiness = next[0] ?? null;
-                  patchProfile({ ...profile, readiness });
-
-                  if (readiness === 'READY' && !flags.isHidden) {
-                    patchFlags(
-                      { isHidden: true },
-                      { closeOnSuccess: true, onHidden: true }
+            {lyric && tab === 'profile' ? (
+              <div className="flex flex-col gap-5 sm:gap-7">
+                <FacetChipGroup
+                  label="Роль в песне"
+                  options={LYRIC_SONG_ROLES}
+                  labels={LYRIC_SONG_ROLE_LABELS}
+                  hints={LYRIC_SONG_ROLE_HINTS}
+                  value={profile.roleProfiles.map((item) => item.songRole)}
+                  multiple
+                  accent={activeSongRole}
+                  size="desk"
+                  onSelect={(role) => setActiveSongRole(role)}
+                  onChange={(roles) => {
+                    let roleProfiles = profile.roleProfiles.filter((item) =>
+                      roles.includes(item.songRole)
                     );
-                  }
-                }}
-              />
-              {profileError ? (
-                <p className="text-destructive text-sm">{profileError}</p>
-              ) : null}
-            </div>
-          ) : null}
+
+                    for (const role of roles) {
+                      roleProfiles = upsertRoleProfile(roleProfiles, role, {
+                        mood: [],
+                        delivery: [],
+                      });
+                    }
+
+                    if (activeSongRole && !roles.includes(activeSongRole)) {
+                      setActiveSongRole(roles[0] ?? null);
+                    }
+
+                    patchProfile({ ...profile, roleProfiles });
+                  }}
+                />
+                <FacetChipGroup
+                  label="Настроение"
+                  options={LYRIC_MOODS}
+                  labels={LYRIC_MOOD_LABELS}
+                  hints={LYRIC_MOOD_HINTS}
+                  value={editingMood}
+                  multiple
+                  toggleOnClick
+                  size="desk"
+                  onChange={(mood) => {
+                    if (activeSongRole) {
+                      patchProfile({
+                        ...profile,
+                        roleProfiles: patchRoleProfile(
+                          profile.roleProfiles,
+                          activeSongRole,
+                          { mood }
+                        ),
+                      });
+                      return;
+                    }
+
+                    patchProfile({ ...profile, mood });
+                  }}
+                />
+                <FacetChipGroup
+                  label="Подача"
+                  options={LYRIC_DELIVERIES}
+                  labels={LYRIC_DELIVERY_LABELS}
+                  hints={LYRIC_DELIVERY_HINTS}
+                  value={editingDelivery}
+                  multiple
+                  toggleOnClick
+                  size="desk"
+                  onChange={(delivery) => {
+                    if (activeSongRole) {
+                      patchProfile({
+                        ...profile,
+                        roleProfiles: patchRoleProfile(
+                          profile.roleProfiles,
+                          activeSongRole,
+                          { delivery }
+                        ),
+                      });
+                      return;
+                    }
+
+                    patchProfile({ ...profile, delivery });
+                  }}
+                />
+                <FacetChipGroup
+                  label="Готовность"
+                  options={LYRIC_READINESS}
+                  labels={LYRIC_READINESS_LABELS}
+                  hints={LYRIC_READINESS_HINTS}
+                  value={profile.readiness ? [profile.readiness] : []}
+                  multiple={false}
+                  size="desk"
+                  onChange={(next) => {
+                    const readiness = next[0] ?? null;
+                    patchProfile({ ...profile, readiness });
+
+                    if (readiness === 'READY' && !flags.isHidden) {
+                      patchFlags(
+                        { isHidden: true },
+                        { closeOnSuccess: true, onHidden: true }
+                      );
+                    }
+                  }}
+                />
+                {profileError ? (
+                  <p className="text-destructive text-sm">{profileError}</p>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
         </div>
 
         {flagsError ? (
@@ -1185,9 +1240,9 @@ export function MessageDeskDialog({
 
         {textMode === 'edit' ? null : (
           <DialogFooter className="flex shrink-0 flex-col gap-2 pt-1 sm:gap-3">
-            {tab === 'text' && textMode === 'split' ? (
-              <div className="flex w-full flex-wrap items-center justify-between gap-1">
-                <div className="flex flex-wrap gap-1">
+            {textMode === 'split' ? (
+              <div className="flex w-full flex-wrap items-center justify-between gap-1 max-[414px]:flex-nowrap">
+                <div className="flex flex-wrap gap-1 max-[414px]:flex-nowrap">
                   {untilLine === null ? (
                     <Button
                       type="button"
@@ -1205,6 +1260,7 @@ export function MessageDeskDialog({
                         type="button"
                         variant="ghost"
                         className="gap-2"
+                        aria-label="В список"
                         disabled={
                           !isValidLineRange(sourceText, afterLine, untilLine) ||
                           untakenRangesInZone(
@@ -1216,12 +1272,13 @@ export function MessageDeskDialog({
                         onClick={addSliceChunk}
                       >
                         <Scissors className="size-4 text-sky-400" aria-hidden />
-                        В список
+                        <span className="max-[414px]:hidden">В список</span>
                       </Button>
                       <Button
                         type="button"
                         variant="ghost"
                         className="gap-2"
+                        aria-label="Сохранить"
                         disabled={sliceChunks.length === 0}
                         onClick={() => {
                           setTextError(null);
@@ -1232,7 +1289,7 @@ export function MessageDeskDialog({
                           className="size-4 text-emerald-400"
                           aria-hidden
                         />
-                        Сохранить
+                        <span className="max-[414px]:hidden">Сохранить</span>
                       </Button>
                     </>
                   )}
