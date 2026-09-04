@@ -4,6 +4,6 @@
 2. Прочитать vision / pillars, если задача про продукт
 3. Прочитать architecture или ADR, если задача про устройство
 4. Если фича нетривиальная — предложить `/opsx-propose`, не писать код в том же ходе
-5. После apply и archive — обновить `docs/status.md` и current_task
+5. После apply и archive — обновить `docs/status.md` и current_task. Ощутимый кусок — сразу апнуть MINOR (`docs/versions.md`), не спрашивать.
 
 Мелкий фикс (1–2 файла, очевидное поведение) — без OpenSpec, если пользователь не попросил спеку.

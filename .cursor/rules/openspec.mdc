@@ -24,6 +24,6 @@ Jira нет. Слаг change — kebab-case (`telegram-ingest`), не `CSP-XXXX`
 1. `/opsx-explore` — разобраться, код не писать
 2. `/opsx-propose` — proposal / specs / design / tasks
 3. `/opsx-apply` — после ок плана
-4. `/opsx-archive` — дельта в `openspec/specs/`, напомнить после фичи
+4. `/opsx-archive` — дельта в `openspec/specs/`, напомнить после фичи. Если экран стал другим — сразу апнуть MINOR (`docs/versions.md`), не спрашивать.
 
 Контекст стека — `openspec/config.yaml`. Не копировать его в артефакты.

@@ -11,4 +11,4 @@ alwaysApply: true
 - `openspec/` — спеки фич. Слаг kebab-case, не ключ тикета.
 - `guide/` — косметика GitHub. **Не редактировать** без явной просьбы.
 
-Не создавать `guide/PLAN.md`. После archive обновить `docs/status.md` и `docs/tasks/current_task.md`.
+Не создавать `guide/PLAN.md`. После archive обновить `docs/status.md` и `docs/tasks/current_task.md`. Ощутимый кусок — сразу апнуть MINOR (`docs/versions.md`, правило `version.mdc`), не спрашивать.

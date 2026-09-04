@@ -54,3 +54,4 @@ operations:
     guidance:
       - "Кратко: что влилось в openspec/specs и какой change ушёл в archive"
       - "Обновить docs/status.md, если изменилось состояние проекта"
+      - "Если экран стал другим — сразу апнуть MINOR (docs/versions.md), не спрашивать"
