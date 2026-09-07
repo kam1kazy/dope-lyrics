@@ -13,6 +13,10 @@ import {
   commandStartBd,
   seedToDb,
 } from '~/mtcute/commands';
+import {
+  commandAppleNotes,
+  handleAppleNotesZipDocument,
+} from '~/mtcute/commands/apple-notes';
 import { assertAdmin } from '~/mtcute/guards/assert-admin';
 import { startIngestHttp } from '~/mtcute/ingest-http';
 import { sendToBotChat } from '~/mtcute/send';
@@ -120,6 +124,14 @@ dp.onNewMessage(filters.command('app'), async (msg) =>
 dp.onNewMessage(filters.command('bd'), async (msg) =>
   commandStartBd({ tg, msg, keyboard: markup })
 );
+
+dp.onNewMessage(filters.command('notes'), async (msg) =>
+  commandAppleNotes({ tg, msg })
+);
+
+dp.onNewMessage(filters.document, async (msg) => {
+  await handleAppleNotesZipDocument({ tg, msg });
+});
 
 dp.onCallbackQuery(async (query) => {
   if (!query.data) {
