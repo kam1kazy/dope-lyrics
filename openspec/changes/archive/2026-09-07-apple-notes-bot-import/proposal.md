@@ -4,7 +4,8 @@
 
 ## What Changes
 
-- Команда `/notes` (только админ): выдаёт AppleScript под папку Notes, ждёт zip.
+- Команда `/notes` в Bot Commands (только админ): меню FAQ / Настройки / Скрипт / Загрузить.
+- AppleScript под путь Notes; ожидание zip; кнопка Отмена и `/notes cancel`.
 - Распаковка zip (`fflate`), импорт через общий модуль с датами из YAML.
 - CLI `import:apple-notes` остаётся обёрткой над тем же модулем.
 
@@ -20,13 +21,13 @@
 
 ## Impact
 
-- `server/src/mtcute` — команда и listener документа.
+- `server/src/mtcute` — команда, callbacks, listener документа, `setMyCommands`.
 - `server/src/modules/lyrics/import` — общая логика.
 - Зависимость `fflate`.
-- Telegram, Mini App UI — без изменений (кроме текста бота).
+- Mini App UI — без изменений.
 
 ## Non-goals
 
 - Загрузка zip из Mini App.
-- Агент на Mac / автозапуск osascript.
+- Агент на Mac / автозапуск osascript / zip внутри AppleScript.
 - Импорт для не-админов.

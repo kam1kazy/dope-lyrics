@@ -4,12 +4,13 @@
 
 ## Decisions
 
-1. `/notes [путь]` — путь Notes через `/`, дефолт `Музыка/Рэпчик`. `/notes cancel` сбрасывает ожидание.
+1. `/notes` — меню с кнопками (как `/bd`); путь Notes через Настройки или `/notes путь`, дефолт `Музыка/Рэпчик`.
 2. Выход скрипта всегда `Desktop/Dope Notes Export/`.
-3. In-memory pending на 30 минут по admin user id.
-4. Zip → preview-счётчики в ответе после apply (один проход).
-5. Общий модуль `importAppleNotesFromFiles` для CLI и бота.
-6. `fflate` для unzip без системного `unzip`.
+3. In-memory: путь админа, ожидание пути, ожидание zip (~30 мин).
+4. Отмена: кнопка и `/notes cancel`.
+5. Zip → счётчики в ответе после apply (один проход).
+6. Общий модуль `importAppleNotesFromFiles` для CLI и бота; `fflate` для unzip.
+7. `setMyCommands` при старте бота включает `notes`.
 
 ## Risks
 
