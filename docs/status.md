@@ -15,6 +15,8 @@
 | Сервер | `bun run import:apple-notes`; бот `/notes` (меню → скрипт → zip) |
 | Lint | typecheck зелёный; перед push — `bun run fix` |
 | Auth | Production GraphQL: `initData` Mini App + `BOT_ADMIN_ID` |
-| OpenSpec | Активные: `lyric-energy`, `catalog-stats-dashboard`. Specs: + `apple-notes-bot-import`. Архив: `2026-09-07-apple-notes-bot-import`, `2026-09-07-lyric-source`, … |
+| Тулчейн | Postgres **18.6** (`dope-lyrics-db` на 5433). Корень/`client`/`server` — version **0.7.0**. TS 7 — не сейчас |
+| Шлифовка 7.09 | Сортировка списка `CREATED`/`ADDED`; сброс кэша Mini App по штампу деплоя; понятные GraphQL-ошибки (1 коммит на local main, не на origin) |
+| OpenSpec | Активных changes нет. Архив: `2026-09-07-lyric-energy`, `2026-09-07-catalog-stats-dashboard`, `2026-09-07-apple-notes-bot-import`, … |
 
 Ближайшее без ИИ — шлифовка. ИИ и шов — не сейчас. Mini App: [0007](./decisions/0007-mini-app-initdata.md).

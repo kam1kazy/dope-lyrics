@@ -40,10 +40,12 @@ Chakra снят. Экран на **shadcn**, как в youways. Иконки Luc
 - Склейка сборки в одну запись каталога (`glueLyrics`, «Оригиналы скрыть?», полка `isDonor`).
 - Разрез диапазоном и нарезка списком (`sliceLyric`).
 - Своя очередь карусели и история снимков (`CarouselHistory`, кольцо 12) — `carousel-history`.
-- **Энергия 1–5** в профиле (шёпот…крик): над готовностью; фильтр и сводка.
+- **Энергия 1–5** в профиле (шёпот…крик): над готовностью; фильтр и сводка — `lyric-energy`.
 - Сбор лайков с карусели (свайп, Стоп, `SHUFFLE`, `isUsed`) — `carousel-session-likes`.
+- **Источник** `TELEGRAM` / `APPLE_NOTES`: фильтр «Откуда» в списке, пометка на табе «Профиль». CLI `import:apple-notes` и бот `/notes` (скрипт → zip → каталог).
+- **Сводка** — дашборд: прирост за месяц, график 7/30/90, топ граней, воронка готовности — `catalog-stats-dashboard`.
 
-Архив OpenSpec: `2026-09-04-carousel-history`, `2026-09-04-lyric-card-slice`, `2026-09-04-generator-quota-settings`, `2026-09-04-lyric-glue`, `2026-09-03-*`.
+Архив OpenSpec: `2026-09-07-catalog-stats-dashboard`, `2026-09-07-lyric-energy`, `2026-09-07-apple-notes-bot-import`, `2026-09-07-lyric-source`, `2026-09-07-carousel-session-likes`, `2026-09-04-*`, `2026-09-03-*`.
 
 **Ближайшее без ИИ — шлифовка по использованию.** Генератор и карточка: правки по тому, как реально режешь и собираешь. Не кодировать крупное, пока не сказали.
 
@@ -88,7 +90,7 @@ Chakra снят. Экран на **shadcn**, как в youways. Иконки Luc
 
 После `git clone`: из `server/` снова `bun prisma generate` (уже в корневом `setup`). Клиент генерируется в `server/src/generated/prisma`, URL — в `server/prisma.config.ts`.
 
-**Осталось в G:** Postgres-образ в `db/Dockerfile` всё ещё `16.4` (локально youways на 18); TS 7 — когда eslint это позволит.
+Postgres в `db/Dockerfile`, `docker-compose.yml` и прод — `18.6-alpine`. Локальный контейнер `dope-lyrics-db` на **5433**; `postgres` на 5432 — youways, не трогать. TS 7 — когда eslint это позволит.
 
 Перед push — `bun run fix` в затронутых пакетах (без ошибок и предупреждений; на клиенте и сервере уже проходит).
 

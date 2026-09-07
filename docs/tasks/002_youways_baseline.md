@@ -1,13 +1,13 @@
 # 002 — База с youways: тулчейн, образы, потом auth и хост
 
-Статус: open (пакеты закрыты, образы Postgres и TS 7 — нет)
+Статус: open (пакеты и Postgres 18.6 закрыты; TS 7 — нет)
 Не стартовать вместо дорожки C. Подробности: [`../youways-baseline.md`](../youways-baseline.md)
 
 ## Сделать
 
 1. **Тулчейн** — eslint 10, prettier 3, `fix` **сделано**. TS 7 — блокер: `typescript-eslint` peer `<6.1.0`.
 2. **Зависимости** — **сделано** (2 сентября 2026). Рабочий набор: Next 16, React 19, Apollo 4, Prisma 7 + adapter-pg, GraphQL 17, Yoga 5, Elysia 1.4, mtcute 0.32. Не брать Prisma 8 RC и TS 7, пока реестр/peer не пустят.
-3. **Dockerfile / compose** — Bun уже `1.4.0`. Осталось: Postgres `16.4` → свежий тег. Прод-контейнер больше не сидит на каждый старт.
+3. **Dockerfile / compose** — **сделано**. Bun `1.4.0`, Postgres `18.6-alpine` (`db/Dockerfile`, compose, прод). Локальный контейнер `dope-lyrics-db` на 5433. Прод-контейнер больше не сидит на каждый старт.
 4. **Auth** — регистрация и сессии **из youways**, не с `origin/develop`. Пока входа нет — не писать JWT с нуля и не тащить tenant.
 5. **Хост** — Linux как в youways, когда появится свой сервер.
 

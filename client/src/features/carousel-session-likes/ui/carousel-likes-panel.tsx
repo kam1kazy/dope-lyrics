@@ -275,42 +275,47 @@ export function CarouselLikesPanel({
             </ul>
           )}
 
-          <DialogFooter className="gap-2 sm:justify-end">
-            <Tooltip delayDuration={400}>
-              <TooltipTrigger asChild>
-                <Button
-                  type="button"
-                  className="gap-2"
-                  disabled={busy || likedLyricIds.length === 0}
-                  onClick={() => {
-                    void saveToHistory();
-                  }}
-                >
-                  <History className="size-4" aria-hidden />В историю
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="top" className="max-w-56 text-pretty">
-                Сохранить сообщения этих строк снимком в историю карусели и
-                очистить список лайков
-              </TooltipContent>
-            </Tooltip>
-            <Tooltip delayDuration={400}>
-              <TooltipTrigger asChild>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  disabled={busy || likedLines.length === 0}
-                  onClick={() => {
-                    clearLikes();
-                  }}
-                >
-                  Очистить
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="top" className="max-w-56 text-pretty">
-                Снять все лайки сессии, не сохраняя в историю
-              </TooltipContent>
-            </Tooltip>
+          <DialogFooter className="flex-row gap-2 sm:justify-stretch">
+            <div className="min-w-0 flex-1">
+              <Tooltip delayDuration={400}>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    className="w-full gap-2"
+                    disabled={busy || likedLyricIds.length === 0}
+                    onClick={() => {
+                      void saveToHistory();
+                    }}
+                  >
+                    <History className="size-4" aria-hidden />В историю
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-56 text-pretty">
+                  Сохранить сообщения этих строк снимком в историю карусели и
+                  очистить список лайков
+                </TooltipContent>
+              </Tooltip>
+            </div>
+            <div className="min-w-0 flex-1">
+              <Tooltip delayDuration={400}>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    className="w-full"
+                    disabled={busy || likedLines.length === 0}
+                    onClick={() => {
+                      clearLikes();
+                    }}
+                  >
+                    Очистить
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-56 text-pretty">
+                  Снять все лайки сессии, не сохраняя в историю
+                </TooltipContent>
+              </Tooltip>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>

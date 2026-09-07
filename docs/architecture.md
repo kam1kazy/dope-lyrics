@@ -7,14 +7,20 @@ Telegram-чат
   → user-сеанс mtcute читает историю
   → filterHistory (слова, абзацы, хештеги, реакции)
   → chatHistory.json
-  → Prisma seed
+  → Prisma seed (source = TELEGRAM)
   → Postgres
   → GraphQL `lyrics`
   → карусель на Next
+
+Apple Notes
+  → AppleScript (папка Notes → Desktop/Dope Notes Export)
+  → zip или папка .txt
+  → importAppleNotesFromFiles (CLI или бот /notes)
+  → source = APPLE_NOTES
 ```
 
-Команды бота: `/chatid`, `/app`, `/bd` (статистика, парсинг, посев, очистка).
-Кнопки `/bd` и callback (`stats` / `history` / `seed` / `clear`) проверяют `BOT_ADMIN_ID`.
+Команды бота: `/chatid`, `/app`, `/bd` (статистика, парсинг, посев, очистка), `/notes` (скрипт и zip Apple Notes).
+Кнопки `/bd` и `/notes` проверяют `BOT_ADMIN_ID`.
 
 Клиент: Next 16, React 19, Apollo Client 4 (`HttpLink`, хуки из `@apollo/client/react`), FSD, shadcn (Chakra снят). Фразы режутся по `\n`; скорость карусели — слайдер в drawer.
 Пауза — клик по экрану. На паузе у текущей фразы кнопка «Открыть» → диалог (полный текст, скрыть, избранное, эталон). Порядок на клиенте; теги, реакции, период, полки и ключевые слова — в GraphQL. Эталон — `isReference` в базе, не тег. Drawer закрывается свайпом вниз.
@@ -47,7 +53,7 @@ GraphQL resolvers только вызывают `lyricsService` / `usersService`
 | Задача | Нужен домен |
 | --- | --- |
 | Прочитать историю чата | Нет. Нужен user-сеанс и процесс на компе |
-| Команды `/bd`, `/chatid` | Нет. mtcute по MTProto, не webhook |
+| Команды `/bd`, `/notes`, `/chatid` | Нет. mtcute по MTProto, не webhook |
 | Mini App `/app` внутри Telegram | Да, HTTPS в BotFather |
 | Бот, когда комп выключен | Да |
 
@@ -75,7 +81,7 @@ User-сеанс в клоне мёртв. `API_ID` / `API_HASH` — [my.telegram
 ## Схема
 
 `Users` → `Lyrics` → `Message` + `Hashtags` / `Reactions` / `Chat` / `Media`.
-`lyric_id` без unique в схеме; повторный seed пропускает уже существующие id. Индексы по `lyric_id` и `date`.
+`lyric_id` без unique в схеме; дедуп Telegram — пара `(source, lyric_id)`. Повторный seed пропускает уже существующие id. Индексы по `lyric_id`, `date` и `(source, lyric_id)`. Поле `source`: `TELEGRAM` | `APPLE_NOTES`.
 Seed ищет `Users.id = 1`.
 Хештеги — `String[]` на сообщение. GraphQL `lyrics(limit, offset, tags, keyword)` и `lyricTags`; без `password` / `email`, глубина запроса ограничена.
 

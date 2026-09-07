@@ -4,8 +4,8 @@ context: |
   Dope Lyrics — личный каталог фраз из Telegram: парсинг чата → Postgres → экран
   (рандом / карусель / караоке). Потом фильтры и ИИ на своём корпусе.
 
-  Стек: Bun, Elysia + GraphQL Yoga, Prisma + PostgreSQL, Next.js 14, Apollo,
-  mtcute. Новый UI — shadcn; весь Chakra уходит в дорожке C, не в A. Корень — client/ и server/.
+  Стек: Bun, Elysia + GraphQL Yoga, Prisma + PostgreSQL 18.6, Next.js 16, Apollo 4,
+  mtcute. UI — shadcn (Chakra снят). Корень — client/ и server/. Version 0.7.0.
 
   Документация — это бэклог (Jira нет). Новый чат читает `docs/00_vision.md`.
   - `docs/tasks/` — текущие задачи
@@ -17,15 +17,15 @@ context: |
   Не коммитить и не пушить без явной просьбы. «Закоммить» ≠ push.
   Без Co-authored-by: Cursor. Без force-push в main.
 
-  Локаль: контейнер `postgres` на 5432 — youways, не сносить.
-  База проекта — отдельная БД или контейнер на другом порту.
+  Локаль: контейнер youways `postgres` на 5432 — не сносить.
+  База проекта — `dope-lyrics-db` на 5433.
   Прод-compose (nginx, SSL, Docker Hub) локально не поднимать.
 
   Telegram: историю читает user-сеанс (телефон + 2FA), не бот.
   Домен нужен только для Mini App и бота без включённого компа.
   Секреты (.env, BOT_TOKEN, API_HASH, сессии bot-data) не читать и не печатать.
 
-  Auth/сессии и защита хоста — с youways, не с origin/develop. Тулчейн: eslint, prettier, fix, TS 7.
+  Auth/сессии и защита хоста — с youways, не с origin/develop. Тулчейн: eslint, prettier, fix. TS 7 — когда eslint пустит.
   UI сейчас прототип. Не полировать как финальный дизайн.
   Новый код без `any`. Ошибки в UI по-русски.
 

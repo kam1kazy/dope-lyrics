@@ -6,7 +6,7 @@ Version: 0.1
 
 # Как живёт автор
 
-Пишет строку в Telegram
+Пишет строку в Telegram или в Apple Notes
 → иногда ставит хештег или реакцию
 → забывает, потому что чат уезжает вверх
 → открывает Dope Lyrics
@@ -23,13 +23,19 @@ Version: 0.1
 чат / канал с заметками
   → user-сеанс mtcute (не бот) читает историю
   → фильтр: текст, слова, абзацы, хештеги, реакции
-  → JSON → Prisma → Postgres
-  → GraphQL `lyrics`
-  → экран
+  → JSON → Prisma → Postgres (source = TELEGRAM)
+
+папка Apple Notes
+  → AppleScript → .txt с YAML дат
+  → zip или папка → import (CLI или /notes)
+  → Postgres (source = APPLE_NOTES)
+
+→ GraphQL `lyrics`
+→ экран
 ```
 
-Бот нужен для кнопок (`/bd`, `/chatid`, `/app`).
-Сами заметки читает аккаунт.
+Бот нужен для кнопок (`/bd`, `/notes`, `/chatid`, `/app`).
+Заметки из чата читает аккаунт; Notes бот сам не видит — только скрипт и zip.
 
 Домен нужен только чтобы открыть Mini App внутри Telegram
 или держать бота, когда комп выключен.

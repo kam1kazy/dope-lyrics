@@ -83,14 +83,14 @@ TypeScript 7 — цель, когда eslint-peer пустит. Мост youways
 
 ## 4. Docker-образы — последние
 
-Образы приложения: `oven/bun:1.4.0-alpine` (`client/` и `server/`). Postgres в `db/Dockerfile` всё ещё `16.4-alpine` (локально youways крутит 18 на 5432). Прод-контейнер API больше не сидит на каждый старт.
+Образы приложения: `oven/bun:1.4.0-alpine` (`client/` и `server/`). Postgres в `db/Dockerfile`, compose и прод — `18.6-alpine`. Локальный контейнер `dope-lyrics-db` на 5433. Прод-контейнер API больше не сидит на каждый старт.
 
 При следующем обновлении образов:
 
 | Слой | Сейчас | Куда |
 | --- | --- | --- |
 | API / клиент | bun 1.4.0 | свежий `oven/bun` (или Node, если решим как youways) |
-| Postgres | 16.4 | свежий `postgres:*-alpine` |
+| Postgres | 18.6-alpine | свежий `postgres:*-alpine` |
 | nginx | stable-alpine | актуальный stable |
 
 Пиннить digest или minor по факту сборки. `latest` без записи в доке — только если так сознательно, как server Dockerfile в youways.

@@ -8,8 +8,8 @@ services:
   db:
     build:
       context: ./db
-    image: postgres:16.4-alpine
-    container_name: postgres
+    image: postgres:18.6-alpine
+    container_name: dope-lyrics-db
     environment:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
@@ -47,7 +47,8 @@ services:
       retries: 5
       start_period: 10s
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      # PG 18+: mount parent dir (data lives in PG_MAJOR/docker)
+      - postgres_data:/var/lib/postgresql
     networks:
       - development
     env_file:

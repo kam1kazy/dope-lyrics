@@ -1,3 +1,9 @@
+# apple-notes-bot-import Specification
+
+## Purpose
+
+Админ забирает заметки из Apple Notes в каталог через Telegram: бот выдаёт скрипт под папку Notes, принимает zip и пишет записи `APPLE_NOTES` тем же модулем, что CLI.
+
 ## Requirements
 
 ### Requirement: Импорт Apple Notes через бота

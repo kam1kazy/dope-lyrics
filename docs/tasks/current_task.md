@@ -12,7 +12,9 @@ A–C закрыты. Профиль и сводка — `lyric-facets`. Сбо�
 - Общий модуль `importAppleNotesFromFiles`; CLI — обёртка.
 - Команда в Bot Commands (`setMyCommands`).
 
-Архив OpenSpec: `2026-09-07-apple-notes-bot-import`, `2026-09-07-lyric-source`, `2026-09-07-carousel-session-likes`, `2026-09-04-*`, `2026-09-03-*`.
+Архив OpenSpec: `2026-09-07-lyric-energy`, `2026-09-07-catalog-stats-dashboard`, `2026-09-07-apple-notes-bot-import`, `2026-09-07-lyric-source`, `2026-09-07-carousel-session-likes`, `2026-09-04-*`, `2026-09-03-*`.
+
+**После 0.7.0, без новой версии:** сортировка списка по дате создания / добавления; штамп деплоя для сброса кэша Mini App; текст GraphQL-ошибки вместо «Ошибка загрузки данных». Postgres 18.6 локально. Спеки энергии и дашборда влиты в `openspec/specs`.
 
 ---
 
