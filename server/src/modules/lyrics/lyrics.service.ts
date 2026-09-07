@@ -366,6 +366,7 @@ export class LyricsService {
       const glued = await tx.lyrics.create({
         data: {
           lyric_id: 0,
+          source: 'TELEGRAM',
           date: now,
           editDate: now,
           isPinned: false,
@@ -845,6 +846,7 @@ export class LyricsService {
       const bottomRow = await tx.lyrics.create({
         data: {
           lyric_id: row.lyric_id,
+          source: row.source,
           date: row.date,
           editDate: editedAt,
           isPinned: row.isPinned,
@@ -960,6 +962,7 @@ export class LyricsService {
       const created = await tx.lyrics.create({
         data: {
           lyric_id: row.lyric_id,
+          source: row.source,
           date: row.date,
           editDate: editedAt,
           isPinned: row.isPinned,
@@ -1119,6 +1122,7 @@ export class LyricsService {
       console.log(`PRISMA: 📝 Начало загрузки ${records.length} записей`);
 
       const existing = await this.prisma.lyrics.findMany({
+        where: { source: 'TELEGRAM' },
         select: { lyric_id: true },
       });
       const existingIds = new Set(existing.map((row) => row.lyric_id));
@@ -1130,7 +1134,9 @@ export class LyricsService {
 
       const skipped = records.length - fresh.length;
       if (skipped > 0) {
-        console.log(`PRISMA: ⏭️ Пропущено дублей lyric_id: ${skipped}`);
+        console.log(
+          `PRISMA: ⏭️ Пропущено дублей lyric_id (TELEGRAM): ${skipped}`
+        );
       }
 
       let loaded = 0;

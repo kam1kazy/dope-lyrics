@@ -6,12 +6,14 @@ import type {
   LyricReadiness,
   LyricRoleProfile,
   LyricSongRole,
+  LyricSource,
 } from '@/shared/lib/lyric-facets';
 
 export interface ILyric {
   id: number;
   userId: number;
   lyric_id?: number;
+  source: LyricSource;
   message: IMessage | null;
   user: IUserLyric | null;
   chat: IChat | null;

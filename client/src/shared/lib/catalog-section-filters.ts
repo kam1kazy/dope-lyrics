@@ -4,6 +4,7 @@ import type {
   LyricMood,
   LyricReadiness,
   LyricSongRole,
+  LyricSource,
 } from '@/shared/lib/lyric-facets';
 import type { SortMode } from '@/shared/lib/lyric-view/lyric-view-context';
 import {
@@ -21,6 +22,7 @@ export type CatalogSectionFilters = {
   dateTo: string;
   includeShelves: ShelfFlag[];
   excludeShelves: ShelfFlag[];
+  selectedSources: LyricSource[];
   mood: LyricMood[];
   excludeMood: LyricMood[];
   delivery: LyricDelivery[];
@@ -57,6 +59,7 @@ export const DEFAULT_CATALOG_SECTION_FILTERS: CatalogSectionFilters = {
   dateTo: '',
   includeShelves: [],
   excludeShelves: [],
+  selectedSources: [],
   mood: [],
   excludeMood: [],
   delivery: [],
@@ -93,6 +96,7 @@ export function hasActiveCatalogSectionFilters(
     filters.dateTo.trim().length > 0 ||
     !sameList(filters.includeShelves, defaults.includeShelves) ||
     !sameList(filters.excludeShelves, defaults.excludeShelves) ||
+    !sameList(filters.selectedSources, defaults.selectedSources) ||
     filters.mood.length > 0 ||
     filters.excludeMood.length > 0 ||
     filters.delivery.length > 0 ||

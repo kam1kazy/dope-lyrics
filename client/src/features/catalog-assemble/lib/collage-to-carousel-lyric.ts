@@ -32,6 +32,7 @@ export function collageToCarouselLyric(
     isCensored: false,
     isDonor: false,
     isUsed: false,
+    source: 'TELEGRAM',
     mood: [],
     delivery: [],
     songRole: [],

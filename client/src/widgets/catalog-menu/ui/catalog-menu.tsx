@@ -556,6 +556,7 @@ export function CatalogMenu() {
                           filters={sectionFilters}
                           hideSort={filterableSection === 'list'}
                           showShelves={filterableSection === 'list'}
+                          showSources={filterableSection === 'list'}
                           shelfVariant="icons"
                           shelvesFirst
                           defaults={sectionDefaults}

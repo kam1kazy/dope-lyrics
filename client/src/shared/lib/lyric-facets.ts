@@ -45,11 +45,14 @@ export const LYRIC_ENERGIES = [
   'SCREAM',
 ] as const;
 
+export const LYRIC_SOURCES = ['TELEGRAM', 'APPLE_NOTES'] as const;
+
 export type LyricMood = (typeof LYRIC_MOODS)[number];
 export type LyricDelivery = (typeof LYRIC_DELIVERIES)[number];
 export type LyricSongRole = (typeof LYRIC_SONG_ROLES)[number];
 export type LyricReadiness = (typeof LYRIC_READINESS)[number];
 export type LyricEnergy = (typeof LYRIC_ENERGIES)[number];
+export type LyricSource = (typeof LYRIC_SOURCES)[number];
 
 export const LYRIC_MOOD_LABELS: Record<LyricMood, string> = {
   AGGRESSION: 'агрессия',
@@ -96,6 +99,11 @@ export const LYRIC_ENERGY_LABELS: Record<LyricEnergy, string> = {
   EVEN: 'ровно',
   LOUD: 'громко',
   SCREAM: 'крик',
+};
+
+export const LYRIC_SOURCE_LABELS: Record<LyricSource, string> = {
+  TELEGRAM: 'Telegram',
+  APPLE_NOTES: 'Apple Notes',
 };
 
 export const LYRIC_MOOD_HINTS: Record<LyricMood, string> = {

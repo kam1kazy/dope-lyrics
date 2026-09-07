@@ -5,6 +5,7 @@ import type {
   LyricMood,
   LyricReadiness,
   LyricSongRole,
+  LyricSource,
 } from '@/shared/lib/lyric-facets';
 
 export type LyricsQueryVariables = {
@@ -36,6 +37,7 @@ export type LyricsQueryVariables = {
   excludeReadiness: LyricReadiness[] | null;
   energy: LyricEnergy[] | null;
   excludeEnergy: LyricEnergy[] | null;
+  sources: LyricSource[] | null;
 };
 
 export const EMPTY_LYRIC_FACET_FILTERS = {
@@ -76,6 +78,7 @@ export function catalogLyricsVariables(
     oldestFirst: false,
     shuffleSeed: null,
     ...EMPTY_LYRIC_FACET_FILTERS,
+    sources: null,
     ...overrides,
   };
 }
@@ -147,5 +150,9 @@ export function catalogQueryVariablesForSection(
         : null,
     excludeShelves: section === 'list' ? filters.excludeShelves : null,
     includeCensored: section === 'list' ? null : includeCensored ? true : null,
+    sources:
+      section === 'list' && filters.selectedSources.length > 0
+        ? filters.selectedSources
+        : null,
   });
 }

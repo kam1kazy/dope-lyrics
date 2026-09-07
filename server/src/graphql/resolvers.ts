@@ -35,6 +35,7 @@ type LyricsArgs = {
   excludeReadiness?: string[] | null;
   energy?: string[] | null;
   excludeEnergy?: string[] | null;
+  sources?: string[] | null;
 };
 
 type UpdateLyricFlagsArgs = {
@@ -158,6 +159,7 @@ function lyricsListOptionsFromArgs(
     excludeReadiness: args.excludeReadiness,
     energy: args.energy,
     excludeEnergy: args.excludeEnergy,
+    sources: args.sources,
   };
 }
 

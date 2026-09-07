@@ -16,6 +16,7 @@ export const LYRIC_LIST_FIELDS = gql`
   fragment LyricListFields on Lyric {
     id
     lyric_id
+    source
     date
     editDate
     isPinned
@@ -91,6 +92,7 @@ export const ALL_LYRICS = gql`
     $excludeReadiness: [LyricReadiness!]
     $energy: [LyricEnergy!]
     $excludeEnergy: [LyricEnergy!]
+    $sources: [LyricSource!]
   ) {
     lyrics(
       tags: $tags
@@ -121,6 +123,7 @@ export const ALL_LYRICS = gql`
       excludeReadiness: $excludeReadiness
       energy: $energy
       excludeEnergy: $excludeEnergy
+      sources: $sources
     ) {
       ...LyricListFields
     }
@@ -446,6 +449,7 @@ export const LYRIC_IDS = gql`
     $excludeReadiness: [LyricReadiness!]
     $energy: [LyricEnergy!]
     $excludeEnergy: [LyricEnergy!]
+    $sources: [LyricSource!]
   ) {
     lyricIds(
       tags: $tags
@@ -474,6 +478,7 @@ export const LYRIC_IDS = gql`
       excludeReadiness: $excludeReadiness
       energy: $energy
       excludeEnergy: $excludeEnergy
+      sources: $sources
     )
   }
 `;

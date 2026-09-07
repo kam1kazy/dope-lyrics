@@ -17,6 +17,8 @@ import { cn } from '@/shared/lib/utils/cn';
 import { Button } from '@/shared/ui/shadcn/ui/button';
 import { Label } from '@/shared/ui/shadcn/ui/label';
 
+import { SourceFilterChips } from './source-filter-chips';
+
 const SORT_OPTIONS: {
   mode: SortMode;
   label: string;
@@ -34,6 +36,7 @@ interface CatalogFilterPaneProps {
   header?: ReactNode;
   hideSort?: boolean;
   showShelves?: boolean;
+  showSources?: boolean;
   shelfVariant?: 'labeled' | 'icons';
   shelvesFirst?: boolean;
   defaults?: CatalogSectionFilters;
@@ -46,11 +49,21 @@ export function CatalogFilterPane({
   header,
   hideSort = false,
   showShelves = false,
+  showSources = false,
   shelfVariant = 'labeled',
   shelvesFirst = false,
   defaults = DEFAULT_CATALOG_SECTION_FILTERS,
 }: CatalogFilterPaneProps) {
   const canReset = hasActiveCatalogSectionFilters(filters, defaults);
+
+  const sourceFilters = showSources ? (
+    <SourceFilterChips
+      selected={filters.selectedSources}
+      onChange={(selectedSources) => {
+        onChange({ ...filters, selectedSources });
+      }}
+    />
+  ) : null;
 
   const shelfFilters = showShelves ? (
     <ShelfFilterChips
@@ -141,6 +154,7 @@ export function CatalogFilterPane({
       {header}
 
       {shelvesFirst ? shelfFilters : null}
+      {sourceFilters}
       {sortFilters}
       {shelvesFirst ? null : shelfFilters}
 

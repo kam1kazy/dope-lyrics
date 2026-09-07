@@ -17,10 +17,17 @@ model Users {
   lyrics Lyrics[]
 }
 
+enum LyricSource {
+  TELEGRAM
+  APPLE_NOTES
+}
+
 model Lyrics {
   id Int @id @default(autoincrement())
 
   lyric_id       Int
+  /// Откуда запись: Telegram-чат или импорт Apple Notes. Не хештег.
+  source         LyricSource @default(TELEGRAM)
   date           DateTime
   editDate       DateTime?
   isPinned       Boolean
@@ -57,6 +64,7 @@ model Lyrics {
   owner  Users @relation(fields: [userId], references: [id])
 
   @@index([lyric_id])
+  @@index([source, lyric_id])
   @@index([date])
 }
 

@@ -44,6 +44,7 @@ import {
   LYRIC_SONG_ROLE_HINTS,
   LYRIC_SONG_ROLE_LABELS,
   LYRIC_SONG_ROLES,
+  LYRIC_SOURCE_LABELS,
   type LyricDelivery,
   type LyricEnergy,
   type LyricMood,
@@ -1143,6 +1144,16 @@ export function MessageDeskDialog({
 
             {lyric && tab === 'profile' ? (
               <div className="flex flex-col gap-5 sm:gap-7">
+                {lyric.source ? (
+                  <div className="flex flex-col gap-1.5">
+                    <span className="text-muted-foreground text-xs font-normal">
+                      Откуда
+                    </span>
+                    <span className="text-muted-foreground text-[10px] font-medium tracking-wide uppercase">
+                      {LYRIC_SOURCE_LABELS[lyric.source]}
+                    </span>
+                  </div>
+                ) : null}
                 <FacetChipGroup
                   label="Роль в песне"
                   options={LYRIC_SONG_ROLES}

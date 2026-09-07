@@ -82,6 +82,7 @@ export type {
   LyricReadiness,
   LyricRoleProfile,
   LyricSongRole,
+  LyricSource,
 } from '@/shared/lib/lyric-facets';
 export {
   LYRIC_DELIVERIES,
@@ -99,6 +100,8 @@ export {
   LYRIC_SONG_ROLE_HINTS,
   LYRIC_SONG_ROLE_LABELS,
   LYRIC_SONG_ROLES,
+  LYRIC_SOURCE_LABELS,
+  LYRIC_SOURCES,
   patchRoleProfile,
   upsertRoleProfile,
 } from '@/shared/lib/lyric-facets';

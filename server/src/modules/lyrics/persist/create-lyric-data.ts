@@ -9,6 +9,7 @@ export const createLyricData = (
   return {
     userId,
     lyric_id: record.message?.message_id ?? null,
+    source: 'TELEGRAM' as const,
     date: record.date,
     editDate: record.editDate,
     isPinned: record.isPinned,

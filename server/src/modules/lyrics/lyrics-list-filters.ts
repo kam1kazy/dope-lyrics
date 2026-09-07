@@ -31,6 +31,7 @@ export interface LyricsListOptions {
   excludeReadiness?: string[] | null;
   energy?: string[] | null;
   excludeEnergy?: string[] | null;
+  sources?: string[] | null;
 }
 
 export const normalizeTags = (tags: string[] | null | undefined): string[] => {
@@ -366,6 +367,7 @@ export const buildLyricsWhere = (
     | 'excludeReadiness'
     | 'energy'
     | 'excludeEnergy'
+    | 'sources'
   >
 ): Prisma.LyricsWhereInput => {
   const tags = normalizeTags(options.tags);
@@ -492,6 +494,7 @@ export const buildLyricsWhere = (
   const excludeReadiness = normalizeTags(options.excludeReadiness);
   const energy = normalizeTags(options.energy);
   const excludeEnergy = normalizeTags(options.excludeEnergy);
+  const sources = normalizeTags(options.sources);
 
   const facetWhere = buildFacetWhere(moods, deliveries, songRoles);
 
@@ -526,6 +529,14 @@ export const buildLyricsWhere = (
   if (excludeEnergy.length > 0) {
     andParts.push({
       OR: [{ energy: null }, { energy: { notIn: excludeEnergy } }],
+    });
+  }
+
+  if (sources.length > 0) {
+    andParts.push({
+      source: {
+        in: sources as Array<'TELEGRAM' | 'APPLE_NOTES'>,
+      },
     });
   }
 

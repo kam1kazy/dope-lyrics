@@ -185,3 +185,6 @@ guide.txt
 .snapshots
 .env
 .htpasswd
+
+# Apple Notes export (личные тексты)
+scripts/apple note export/

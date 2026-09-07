@@ -46,6 +46,11 @@ export const typeDefinitions = /* GraphQL */ `
     SCREAM
   }
 
+  enum LyricSource {
+    TELEGRAM
+    APPLE_NOTES
+  }
+
   type User {
     id: Int!
     username: String!
@@ -56,6 +61,7 @@ export const typeDefinitions = /* GraphQL */ `
     id: Int!
 
     lyric_id: Int!
+    source: LyricSource!
     date: String!
     editDate: String
     isPinned: Boolean!
@@ -384,6 +390,7 @@ export const typeDefinitions = /* GraphQL */ `
       excludeReadiness: [LyricReadiness!]
       energy: [LyricEnergy!]
       excludeEnergy: [LyricEnergy!]
+      sources: [LyricSource!]
     ): [Lyric!]!
     lyricIngestPreview: LyricIngestPreview!
     catalogStats: CatalogStats!
@@ -421,6 +428,7 @@ export const typeDefinitions = /* GraphQL */ `
       excludeReadiness: [LyricReadiness!]
       energy: [LyricEnergy!]
       excludeEnergy: [LyricEnergy!]
+      sources: [LyricSource!]
     ): [Int!]!
     lyricsByIds(ids: [Int!]!): [Lyric!]!
     carouselHistories: [CarouselHistory!]!
