@@ -20,6 +20,7 @@ export const createCarouselList = (data: ILyric[]): LyricSlide[] => {
         const newItem: LyricSlide = {
           id: data[i].id,
           lyric_id: data[i].lyric_id,
+          isUsed: data[i].isUsed,
           message: {
             message_id: n,
             text: lines[n],

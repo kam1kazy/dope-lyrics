@@ -665,6 +665,7 @@ export class LyricsService {
       isReference?: boolean;
       isCensored?: boolean;
       isDonor?: boolean;
+      isUsed?: boolean;
     }
   ) {
     const data: {
@@ -673,6 +674,7 @@ export class LyricsService {
       isReference?: boolean;
       isCensored?: boolean;
       isDonor?: boolean;
+      isUsed?: boolean;
     } = {};
 
     if (flags.isHidden !== undefined) {
@@ -693,6 +695,10 @@ export class LyricsService {
 
     if (flags.isDonor !== undefined) {
       data.isDonor = flags.isDonor;
+    }
+
+    if (flags.isUsed !== undefined) {
+      data.isUsed = flags.isUsed;
     }
 
     if (Object.keys(data).length === 0) {
@@ -847,6 +853,7 @@ export class LyricsService {
           isHidden: row.isHidden,
           isFavorite: row.isFavorite,
           isCensored: row.isCensored,
+          isUsed: row.isUsed,
           mood: row.mood,
           delivery: row.delivery,
           songRole: row.songRole,
@@ -962,6 +969,7 @@ export class LyricsService {
           isFavorite: row.isFavorite,
           isCensored: row.isCensored,
           isDonor: false,
+          isUsed: row.isUsed,
           mood: row.mood,
           delivery: row.delivery,
           songRole: row.songRole,

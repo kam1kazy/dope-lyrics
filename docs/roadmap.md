@@ -41,6 +41,7 @@ Chakra снят. Экран на **shadcn**, как в youways. Иконки Luc
 - Разрез диапазоном и нарезка списком (`sliceLyric`).
 - Своя очередь карусели и история снимков (`CarouselHistory`, кольцо 12) — `carousel-history`.
 - **Энергия 1–5** в профиле (шёпот…крик): над готовностью; фильтр и сводка.
+- Сбор лайков с карусели (свайп, Стоп, `SHUFFLE`, `isUsed`) — `carousel-session-likes`.
 
 Архив OpenSpec: `2026-09-04-carousel-history`, `2026-09-04-lyric-card-slice`, `2026-09-04-generator-quota-settings`, `2026-09-04-lyric-glue`, `2026-09-03-*`.
 

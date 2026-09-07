@@ -18,6 +18,10 @@ import {
 } from '@/entities/lyric';
 import { MessageDeskDialog } from '@/features/message-desk';
 import {
+  likedLineKey,
+  useCarouselSession,
+} from '@/shared/lib/carousel-session/carousel-session-context';
+import {
   slideTiming,
   useLyricView,
 } from '@/shared/lib/lyric-view/lyric-view-context';
@@ -42,6 +46,9 @@ const SCRUB_HOLD_MS = 200;
 const SCRUB_CLICK_SLIP_PX = 64;
 const DOUBLE_TAP_MS = 400;
 const DOUBLE_TAP_PX = 48;
+const AXIS_MOVE_PX = 10;
+const LIKE_SWIPE_PX = 56;
+const LIKE_FLASH_MS = 450;
 
 function eventElement(event: ReactPointerEvent<HTMLDivElement>) {
   const target = event.target;
@@ -57,8 +64,8 @@ function eventElement(event: ReactPointerEvent<HTMLDivElement>) {
   return null;
 }
 
-function catalogIdAtPoint(root: HTMLElement, x: number, y: number) {
-  const hits: { id: number; dist: number }[] = [];
+function slideHitAtPoint(root: HTMLElement, x: number, y: number) {
+  const hits: { id: number; lineIndex: number; dist: number }[] = [];
 
   for (const node of root.querySelectorAll<HTMLElement>('[data-catalog-id]')) {
     if (node.style.visibility === 'hidden') {
@@ -73,23 +80,32 @@ function catalogIdAtPoint(root: HTMLElement, x: number, y: number) {
     }
 
     const id = Number(node.getAttribute('data-catalog-id'));
+    const lineIndex = Number(node.getAttribute('data-line-index'));
 
-    if (!Number.isFinite(id)) {
+    if (!Number.isFinite(id) || !Number.isFinite(lineIndex)) {
       continue;
     }
 
     const dx = x - (rect.left + rect.width / 2);
     const dy = y - (rect.top + rect.height / 2);
-    hits.push({ id, dist: dx * dx + dy * dy });
+    hits.push({ id, lineIndex, dist: dx * dx + dy * dy });
   }
 
   hits.sort((a, b) => a.dist - b.dist);
 
-  return hits[0]?.id ?? null;
+  return hits[0] ?? null;
+}
+
+function catalogIdAtPoint(root: HTMLElement, x: number, y: number) {
+  return slideHitAtPoint(root, x, y)?.id ?? null;
 }
 
 function catalogIdFromEvent(event: ReactPointerEvent<HTMLDivElement>) {
   return catalogIdAtPoint(event.currentTarget, event.clientX, event.clientY);
+}
+
+function slideHitFromEvent(event: ReactPointerEvent<HTMLDivElement>) {
+  return slideHitAtPoint(event.currentTarget, event.clientX, event.clientY);
 }
 
 function isNearLastTap(
@@ -225,11 +241,18 @@ export function Viewport({
     endOverlay,
   } = usePlayback();
   const { carouselSpeed, lineGap, fontSize } = useLyricView();
+  const { likedLines, toggleLike } = useCarouselSession();
+  const likedKeySet = useMemo(
+    () => new Set(likedLines.map((line) => line.key)),
+    [likedLines]
+  );
   const [deskOpen, setDeskOpen] = useState(false);
   const [deskLyricId, setDeskLyricId] = useState<number | null>(null);
   const [deskLyricSnapshot, setDeskLyricSnapshot] = useState<ILyric | null>(
     null
   );
+  const [flashLikeKey, setFlashLikeKey] = useState<string | null>(null);
+  const flashTimerRef = useRef<number | null>(null);
   const { slideIntervalMs, animationMs } = slideTiming(
     carouselSpeed,
     lineGap,
@@ -245,6 +268,14 @@ export function Viewport({
   const wasPlayingRef = useRef(false);
   const pointerYRef = useRef(0);
   const pointerStartYRef = useRef(0);
+  const pointerStartXRef = useRef(0);
+  const axisRef = useRef<'pending' | 'x' | 'y'>('pending');
+  const likeSwipedRef = useRef(false);
+  const likeTargetRef = useRef<{
+    lyricId: number;
+    lineIndex: number;
+    text: string;
+  } | null>(null);
   const lastTapRef = useRef({ t: 0, x: 0, y: 0 });
   const pointerDownAtRef = useRef(0);
   const tapToggleTimerRef = useRef<number | null>(null);
@@ -257,6 +288,18 @@ export function Viewport({
   const [finished, setFinished] = useState(false);
   const dataLength = data.length;
   timingRef.current = { slideIntervalMs, animationMs, dataLength };
+
+  const showLikeFlash = useCallback((key: string) => {
+    if (flashTimerRef.current != null) {
+      window.clearTimeout(flashTimerRef.current);
+    }
+
+    setFlashLikeKey(key);
+    flashTimerRef.current = window.setTimeout(() => {
+      flashTimerRef.current = null;
+      setFlashLikeKey(null);
+    }, LIKE_FLASH_MS);
+  }, []);
 
   const currentElapsed = () =>
     elapsedSinceStart(
@@ -464,6 +507,9 @@ export function Viewport({
   useEffect(() => {
     return () => {
       clearTapToggle();
+      if (flashTimerRef.current != null) {
+        window.clearTimeout(flashTimerRef.current);
+      }
     };
   }, []);
 
@@ -523,6 +569,20 @@ export function Viewport({
     return true;
   };
 
+  const applyLikeSwipe = (target: {
+    lyricId: number;
+    lineIndex: number;
+    text: string;
+  }) => {
+    toggleLike(target);
+    showLikeFlash(likedLineKey(target.lyricId, target.lineIndex));
+
+    likeSwipedRef.current = true;
+    lastTapRef.current = { t: 0, x: 0, y: 0 };
+    clearTapToggle();
+    suppressToggle();
+  };
+
   const onPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (event.button !== 0 || deskOpen) {
       return;
@@ -536,13 +596,32 @@ export function Viewport({
       return;
     }
 
-    if (catalogIdFromEvent(event) !== null) {
+    const hit = slideHitFromEvent(event);
+    const slide = hit
+      ? data.find(
+          (item) =>
+            item.id === hit.id && item.message?.message_id === hit.lineIndex
+        )
+      : null;
+    likeTargetRef.current =
+      hit && slide
+        ? {
+            lyricId: hit.id,
+            lineIndex: hit.lineIndex,
+            text: slide.message?.text ?? '',
+          }
+        : null;
+
+    if (hit !== null) {
       suppressToggle();
     }
 
     pointerDownAtRef.current = Date.now();
     pointerYRef.current = event.clientY;
     pointerStartYRef.current = event.clientY;
+    pointerStartXRef.current = event.clientX;
+    axisRef.current = 'pending';
+    likeSwipedRef.current = false;
     wasPlayingRef.current = !paused;
     scrubbingRef.current = false;
     trackingRef.current = true;
@@ -557,6 +636,30 @@ export function Viewport({
       !trackingRef.current &&
       !event.currentTarget.hasPointerCapture(event.pointerId)
     ) {
+      return;
+    }
+
+    const dx = event.clientX - pointerStartXRef.current;
+    const dy = event.clientY - pointerStartYRef.current;
+
+    if (axisRef.current === 'pending' && trackingRef.current) {
+      if (Math.abs(dx) < AXIS_MOVE_PX && Math.abs(dy) < AXIS_MOVE_PX) {
+        return;
+      }
+
+      if (Math.abs(dx) > Math.abs(dy)) {
+        axisRef.current = 'x';
+        clearTapToggle();
+        lastTapRef.current = { t: 0, x: 0, y: 0 };
+        suppressToggle();
+        event.currentTarget.setPointerCapture(event.pointerId);
+        return;
+      }
+
+      axisRef.current = 'y';
+    }
+
+    if (axisRef.current === 'x') {
       return;
     }
 
@@ -597,15 +700,35 @@ export function Viewport({
     if (deskOpen) {
       trackingRef.current = false;
       scrubbingRef.current = false;
+      axisRef.current = 'pending';
       return;
     }
 
     const wasTracking = trackingRef.current;
+    const wasLikeAxis = axisRef.current === 'x';
+    const dx = event.clientX - pointerStartXRef.current;
     trackingRef.current = false;
+    axisRef.current = 'pending';
 
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
+
+    if (wasLikeAxis) {
+      const target = likeTargetRef.current;
+      likeTargetRef.current = null;
+
+      if (dx <= -LIKE_SWIPE_PX && target !== null) {
+        applyLikeSwipe(target);
+      }
+
+      scrubbingRef.current = false;
+      clearTapToggle();
+      suppressToggle();
+      return;
+    }
+
+    likeTargetRef.current = null;
 
     if (scrubbingRef.current) {
       scrubbingRef.current = false;
@@ -619,7 +742,11 @@ export function Viewport({
       return;
     }
 
-    if (!wasTracking || event.type === 'pointercancel') {
+    if (
+      !wasTracking ||
+      event.type === 'pointercancel' ||
+      likeSwipedRef.current
+    ) {
       return;
     }
 
@@ -688,6 +815,7 @@ export function Viewport({
             key={`${item.lyric_id}_${item.message?.message_id}_${index}`}
             className="lyric"
             data-catalog-id={item.id}
+            data-line-index={item.message?.message_id ?? 0}
             ref={(node) => {
               if (node) {
                 nodesRef.current.set(index, node);
@@ -708,7 +836,16 @@ export function Viewport({
               }
             }}
           >
-            <LyricItem item={item} />
+            <LyricItem
+              item={item}
+              liked={likedKeySet.has(
+                likedLineKey(item.id, item.message?.message_id ?? 0)
+              )}
+              flashLike={
+                flashLikeKey ===
+                likedLineKey(item.id, item.message?.message_id ?? 0)
+              }
+            />
           </div>
         );
       })}

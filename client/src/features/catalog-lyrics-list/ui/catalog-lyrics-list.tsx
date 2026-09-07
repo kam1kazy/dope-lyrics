@@ -226,14 +226,27 @@ function LyricRow({
   return (
     <button
       type="button"
-      className="hover:bg-muted flex w-full items-center gap-2 rounded-md px-3 py-2 text-left transition-colors"
+      className={cn(
+        'hover:bg-muted flex w-full items-center gap-2 rounded-md px-3 py-2 text-left transition-colors',
+        lyric.isUsed && 'bg-amber-500/10 ring-1 ring-amber-400/30'
+      )}
       onClick={() => {
         onOpen(lyric);
       }}
     >
-      <span className="min-w-0 flex-1 truncate text-sm">
+      <span
+        className={cn(
+          'min-w-0 flex-1 truncate text-sm',
+          lyric.isUsed && 'text-amber-100'
+        )}
+      >
         {lyricMenuTitle(lyric.message?.text)}
       </span>
+      {lyric.isUsed ? (
+        <span className="text-[10px] font-medium tracking-wide text-amber-400 uppercase">
+          исп.
+        </span>
+      ) : null}
       {showQueueMark && inQueue ? (
         <ListPlus
           className="size-3.5 shrink-0 text-sky-400"

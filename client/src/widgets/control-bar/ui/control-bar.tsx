@@ -1,8 +1,9 @@
 'use client';
 
-import { History, Settings, Shuffle } from 'lucide-react';
+import { Heart, History, Settings, Shuffle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
+import { CarouselLikesPanel } from '@/features/carousel-session-likes';
 import { FilterPanel } from '@/features/filter-panel';
 import { useCarouselSession } from '@/shared/lib/carousel-session/carousel-session-context';
 import { useCatalogMenu } from '@/shared/lib/catalog-menu/catalog-menu-context';
@@ -24,15 +25,17 @@ import { LyricTuneHotkeys } from './lyric-tune-hotkeys';
 
 export const ControlBar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [likesOpen, setLikesOpen] = useState(false);
   const [litKey, setLitKey] = useState<
-    'shuffle' | 'history' | 'settings' | null
+    'shuffle' | 'likes' | 'history' | 'settings' | null
   >(null);
   const { setSortMode } = useLyricView();
-  const { resetToCatalog } = useCarouselSession();
+  const { resetToCatalog, likedLines } = useCarouselSession();
   const { openSection } = useCatalogMenu();
   const { paused, canPlay, suppressToggle, beginOverlay, endOverlay } =
     usePlayback();
   const playing = !paused && canPlay;
+  const likeCount = likedLines.length;
 
   const closeDrawer = () => {
     suppressToggle();
@@ -96,6 +99,46 @@ export const ControlBar = () => {
             type="button"
             variant="ghost"
             size="icon"
+            className={cn(
+              chromeKeyClass({
+                playing,
+                lit: litKey === 'likes',
+              }),
+              'relative'
+            )}
+            aria-label="Лайкнутые"
+            title="Лайкнутые"
+            onPointerDown={() => {
+              setLitKey('likes');
+            }}
+            onPointerUp={() => {
+              setLitKey(null);
+            }}
+            onPointerCancel={() => {
+              setLitKey(null);
+            }}
+            onClick={(event) => {
+              event.stopPropagation();
+              suppressToggle();
+              setLikesOpen(true);
+            }}
+          >
+            <Heart
+              className={cn(
+                'size-5',
+                likeCount > 0 && 'fill-rose-400 text-rose-400'
+              )}
+            />
+            {likeCount > 0 ? (
+              <span className="bg-rose-500 text-white absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] leading-none font-semibold">
+                {likeCount > 99 ? '99+' : likeCount}
+              </span>
+            ) : null}
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
             className={chromeKeyClass({
               playing,
               lit: litKey === 'history',
@@ -147,6 +190,8 @@ export const ControlBar = () => {
           </Button>
         </div>
       </div>
+
+      <CarouselLikesPanel open={likesOpen} onOpenChange={setLikesOpen} />
 
       <Drawer
         open={isOpen}

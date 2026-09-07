@@ -65,6 +65,7 @@ export const typeDefinitions = /* GraphQL */ `
     isFavorite: Boolean!
     isCensored: Boolean!
     isDonor: Boolean!
+    isUsed: Boolean!
     mood: [LyricMood!]!
     delivery: [LyricDelivery!]!
     songRole: [LyricSongRole!]!
@@ -433,6 +434,7 @@ export const typeDefinitions = /* GraphQL */ `
       isReference: Boolean
       isCensored: Boolean
       isDonor: Boolean
+      isUsed: Boolean
     ): Lyric!
     updateLyricProfile(
       id: Int!

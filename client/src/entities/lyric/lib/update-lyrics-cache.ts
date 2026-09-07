@@ -18,6 +18,7 @@ type UpdatedLyric = Pick<
   | 'isReference'
   | 'isCensored'
   | 'isDonor'
+  | 'isUsed'
   | 'mood'
   | 'delivery'
   | 'songRole'

@@ -31,6 +31,7 @@ export function collageToCarouselLyric(
     isFavorite: false,
     isCensored: false,
     isDonor: false,
+    isUsed: false,
     mood: [],
     delivery: [],
     songRole: [],

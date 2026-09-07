@@ -25,6 +25,7 @@ export const LYRIC_LIST_FIELDS = gql`
     isFavorite
     isCensored
     isDonor
+    isUsed
     mood
     delivery
     songRole
@@ -274,6 +275,7 @@ export const UPDATE_LYRIC_FLAGS = gql`
     $isReference: Boolean
     $isCensored: Boolean
     $isDonor: Boolean
+    $isUsed: Boolean
   ) {
     updateLyricFlags(
       id: $id
@@ -282,6 +284,7 @@ export const UPDATE_LYRIC_FLAGS = gql`
       isReference: $isReference
       isCensored: $isCensored
       isDonor: $isDonor
+      isUsed: $isUsed
     ) {
       id
       lyric_id
@@ -290,6 +293,7 @@ export const UPDATE_LYRIC_FLAGS = gql`
       isFavorite
       isCensored
       isDonor
+      isUsed
     }
   }
 `;

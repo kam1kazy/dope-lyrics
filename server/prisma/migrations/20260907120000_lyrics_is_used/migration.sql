@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Lyrics" ADD COLUMN "isUsed" BOOLEAN NOT NULL DEFAULT false;

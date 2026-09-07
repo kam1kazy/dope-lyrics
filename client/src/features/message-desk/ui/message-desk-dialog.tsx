@@ -4,6 +4,7 @@ import { useMutation } from '@apollo/client/react';
 import {
   Ban,
   Check,
+  CheckCheck,
   EyeOff,
   ListPlus,
   ListX,
@@ -122,7 +123,12 @@ type ProfileFields = Pick<
 
 type FlagFields = Pick<
   ILyric,
-  'isHidden' | 'isFavorite' | 'isReference' | 'isCensored' | 'isDonor'
+  | 'isHidden'
+  | 'isFavorite'
+  | 'isReference'
+  | 'isCensored'
+  | 'isDonor'
+  | 'isUsed'
 >;
 
 const PROFILE_SAVE_DEBOUNCE_MS = 280;
@@ -317,6 +323,7 @@ export function MessageDeskDialog({
         | 'isReference'
         | 'isCensored'
         | 'isDonor'
+        | 'isUsed'
       >;
     },
     {
@@ -326,6 +333,7 @@ export function MessageDeskDialog({
       isReference?: boolean;
       isCensored?: boolean;
       isDonor?: boolean;
+      isUsed?: boolean;
     }
   >(UPDATE_LYRIC_FLAGS, {
     update(cache, { data }) {
@@ -464,6 +472,7 @@ export function MessageDeskDialog({
     isReference: flagsOverride?.isReference ?? lyric?.isReference ?? false,
     isCensored: flagsOverride?.isCensored ?? lyric?.isCensored ?? false,
     isDonor: flagsOverride?.isDonor ?? lyric?.isDonor ?? false,
+    isUsed: flagsOverride?.isUsed ?? lyric?.isUsed ?? false,
   };
 
   const sourceText = lyric?.message?.text ?? '';
@@ -1365,6 +1374,22 @@ export function MessageDeskDialog({
                         'size-4',
                         flags.isReference && 'fill-violet-400 text-violet-400'
                       )}
+                      aria-hidden
+                    />
+                  </Button>
+
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    disabled={!lyric}
+                    aria-label="Использовал"
+                    aria-pressed={flags.isUsed}
+                    className="size-10"
+                    onClick={() => patchFlags({ isUsed: !flags.isUsed })}
+                  >
+                    <CheckCheck
+                      className={cn('size-4', flags.isUsed && 'text-amber-400')}
                       aria-hidden
                     />
                   </Button>

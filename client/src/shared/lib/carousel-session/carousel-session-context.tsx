@@ -14,28 +14,73 @@ import type { ILyric } from '@/entities/lyric';
 
 export type CarouselSessionMode = 'catalog' | 'queue';
 
+export type LikedLine = {
+  key: string;
+  lyricId: number;
+  lineIndex: number;
+  text: string;
+};
+
+export function likedLineKey(lyricId: number, lineIndex: number) {
+  return `${lyricId}:${lineIndex}`;
+}
+
 interface CarouselSessionValue {
   mode: CarouselSessionMode;
   queue: ILyric[];
   prepend: ILyric | null;
   sessionKey: number;
+  likedLines: LikedLine[];
+  likedLyricIds: number[];
   addToQueue: (lyric: ILyric) => void;
   removeFromQueue: (lyricId: number) => void;
   playNow: (lyric: ILyric) => void;
   loadQueue: (lyrics: ILyric[]) => void;
   clearQueue: () => void;
   resetToCatalog: () => void;
+  toggleLike: (input: {
+    lyricId: number;
+    lineIndex: number;
+    text?: string;
+  }) => boolean;
+  removeLike: (key: string) => void;
+  clearLikes: () => void;
+  isLineLiked: (lyricId: number, lineIndex: number) => boolean;
 }
 
 const CarouselSessionContext = createContext<CarouselSessionValue | null>(null);
+
+function lineText(text: string | null | undefined) {
+  const trimmed = (text ?? '').trim();
+  return trimmed || 'Без текста';
+}
+
+function uniqueLyricIds(lines: LikedLine[]) {
+  const seen = new Set<number>();
+  const ids: number[] = [];
+
+  for (const line of lines) {
+    if (seen.has(line.lyricId)) {
+      continue;
+    }
+
+    seen.add(line.lyricId);
+    ids.push(line.lyricId);
+  }
+
+  return ids;
+}
 
 export function CarouselSessionProvider({ children }: { children: ReactNode }) {
   const [mode, setMode] = useState<CarouselSessionMode>('catalog');
   const [queue, setQueue] = useState<ILyric[]>([]);
   const [prepend, setPrepend] = useState<ILyric | null>(null);
   const [sessionKey, setSessionKey] = useState(0);
+  const [likedLines, setLikedLines] = useState<LikedLine[]>([]);
   const modeRef = useRef(mode);
   modeRef.current = mode;
+  const likedLinesRef = useRef(likedLines);
+  likedLinesRef.current = likedLines;
 
   const bumpSession = useCallback(() => {
     setSessionKey((current) => current + 1);
@@ -100,30 +145,85 @@ export function CarouselSessionProvider({ children }: { children: ReactNode }) {
     bumpSession();
   }, [bumpSession]);
 
+  const toggleLike = useCallback(
+    (input: { lyricId: number; lineIndex: number; text?: string }) => {
+      if (input.lyricId < 1 || input.lineIndex < 0) {
+        return false;
+      }
+
+      const key = likedLineKey(input.lyricId, input.lineIndex);
+      const already = likedLinesRef.current.some((line) => line.key === key);
+
+      if (already) {
+        setLikedLines((current) => current.filter((line) => line.key !== key));
+        return false;
+      }
+
+      setLikedLines((current) => [
+        ...current,
+        {
+          key,
+          lyricId: input.lyricId,
+          lineIndex: input.lineIndex,
+          text: lineText(input.text),
+        },
+      ]);
+      return true;
+    },
+    []
+  );
+
+  const removeLike = useCallback((key: string) => {
+    setLikedLines((current) => current.filter((line) => line.key !== key));
+  }, []);
+
+  const clearLikes = useCallback(() => {
+    setLikedLines([]);
+  }, []);
+
+  const isLineLiked = useCallback((lyricId: number, lineIndex: number) => {
+    const key = likedLineKey(lyricId, lineIndex);
+    return likedLinesRef.current.some((line) => line.key === key);
+  }, []);
+
+  const likedLyricIds = useMemo(() => uniqueLyricIds(likedLines), [likedLines]);
+
   const value = useMemo(
     () => ({
       mode,
       queue,
       prepend,
       sessionKey,
+      likedLines,
+      likedLyricIds,
       addToQueue,
       removeFromQueue,
       playNow,
       loadQueue,
       clearQueue,
       resetToCatalog,
+      toggleLike,
+      removeLike,
+      clearLikes,
+      isLineLiked,
     }),
     [
       addToQueue,
+      clearLikes,
       clearQueue,
+      isLineLiked,
+      likedLines,
+      likedLyricIds,
+      loadQueue,
       mode,
       playNow,
-      loadQueue,
       prepend,
       queue,
       removeFromQueue,
+      removeLike,
       resetToCatalog,
       sessionKey,
+      toggleLike,
     ]
   );
 

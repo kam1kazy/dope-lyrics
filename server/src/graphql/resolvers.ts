@@ -44,6 +44,7 @@ type UpdateLyricFlagsArgs = {
   isReference?: boolean | null;
   isCensored?: boolean | null;
   isDonor?: boolean | null;
+  isUsed?: boolean | null;
 };
 
 type UpdateLyricProfileArgs = {
@@ -283,6 +284,7 @@ export const resolvers = {
         isReference: args.isReference ?? undefined,
         isCensored: args.isCensored ?? undefined,
         isDonor: args.isDonor ?? undefined,
+        isUsed: args.isUsed ?? undefined,
       });
     },
     updateLyricProfile: (

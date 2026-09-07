@@ -24,6 +24,7 @@ export interface ILyric {
   isFavorite: boolean;
   isCensored: boolean;
   isDonor: boolean;
+  isUsed: boolean;
   mood: LyricMood[];
   delivery: LyricDelivery[];
   songRole: LyricSongRole[];
@@ -203,4 +204,4 @@ export interface IMedia {
   convert: boolean;
 }
 
-export type LyricSlide = Pick<ILyric, 'id' | 'message' | 'lyric_id'>;
+export type LyricSlide = Pick<ILyric, 'id' | 'message' | 'lyric_id' | 'isUsed'>;
