@@ -36,12 +36,13 @@ export const prepareTelegramWebApp = (): void => {
 
   webApp.ready();
   webApp.expand();
+  setTelegramVerticalSwipes(false);
 };
 
 export function setTelegramVerticalSwipes(enabled: boolean): void {
   const webApp = getTelegramWebApp();
 
-  if (!webApp?.isVersionAtLeast?.('7.7')) {
+  if (!webApp) {
     return;
   }
 

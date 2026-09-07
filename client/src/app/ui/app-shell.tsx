@@ -3,6 +3,7 @@
 import { type ReactNode, useEffect } from 'react';
 
 import { usePlayback } from '@/shared/lib/playback/playback-context';
+import { setTelegramVerticalSwipes } from '@/shared/lib/telegram-webapp';
 import { PauseAtmosphere } from '@/shared/ui/pause-atmosphere';
 
 function isSpaceReservedTarget(target: EventTarget | null) {
@@ -24,6 +25,23 @@ function isSpaceReservedTarget(target: EventTarget | null) {
 export function AppShell({ children }: { children: ReactNode }) {
   const { paused, canPlay, overlayOpen, togglePause } = usePlayback();
   const atmosphereActive = paused || !canPlay || overlayOpen;
+
+  useEffect(() => {
+    const lockSwipes = () => {
+      setTelegramVerticalSwipes(false);
+    };
+
+    lockSwipes();
+    window.addEventListener('focus', lockSwipes);
+    window.addEventListener('touchstart', lockSwipes, { passive: true });
+    document.addEventListener('visibilitychange', lockSwipes);
+
+    return () => {
+      window.removeEventListener('focus', lockSwipes);
+      window.removeEventListener('touchstart', lockSwipes);
+      document.removeEventListener('visibilitychange', lockSwipes);
+    };
+  }, []);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {

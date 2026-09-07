@@ -468,6 +468,22 @@ export function Viewport({
   }, []);
 
   useEffect(() => {
+    const onTouchMove = (event: TouchEvent) => {
+      if (!trackingRef.current && !scrubbingRef.current) {
+        return;
+      }
+
+      event.preventDefault();
+    };
+
+    document.addEventListener('touchmove', onTouchMove, { passive: false });
+
+    return () => {
+      document.removeEventListener('touchmove', onTouchMove);
+    };
+  }, []);
+
+  useEffect(() => {
     if (!deskOpen) {
       return;
     }

@@ -16,7 +16,6 @@ import {
 
 import { useLyricView } from '@/shared/lib/lyric-view/lyric-view-context';
 import { usePlayback } from '@/shared/lib/playback/playback-context';
-import { setTelegramVerticalSwipes } from '@/shared/lib/telegram-webapp';
 import { chromeKeyClass } from '@/shared/lib/utils/chrome-key-class';
 import { cn } from '@/shared/lib/utils/cn';
 import { Button } from '@/shared/ui/shadcn/ui/button';
@@ -98,8 +97,18 @@ export function LyricTuneHotkeys() {
   } | null>(null);
 
   useEffect(() => {
+    const onTouchMove = (event: TouchEvent) => {
+      if (!dragRef.current) {
+        return;
+      }
+
+      event.preventDefault();
+    };
+
+    document.addEventListener('touchmove', onTouchMove, { passive: false });
+
     return () => {
-      setTelegramVerticalSwipes(true);
+      document.removeEventListener('touchmove', onTouchMove);
     };
   }, []);
 
@@ -175,7 +184,6 @@ export function LyricTuneHotkeys() {
     };
     setDragRatio(ratioOf(values[id], tune.min, tune.max));
     setActiveId(id);
-    setTelegramVerticalSwipes(false);
   };
 
   const onPointerMove = (event: ReactPointerEvent<HTMLButtonElement>) => {
@@ -203,7 +211,6 @@ export function LyricTuneHotkeys() {
 
     dragRef.current = null;
     setActiveId(null);
-    setTelegramVerticalSwipes(true);
   };
 
   return (
