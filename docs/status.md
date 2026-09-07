@@ -17,4 +17,4 @@
 | Auth | Production GraphQL: `initData` Mini App + `BOT_ADMIN_ID` |
 | OpenSpec | Активные: `lyric-energy`, `catalog-stats-dashboard`. В specs обновлён `lyric-facets`. Архив: `2026-09-07-lyric-source`, `2026-09-07-carousel-session-likes`, `2026-09-04-*`, `2026-09-03-*` |
 
-История склеек — `generator-history`. История карусели — пункт меню и кнопка; лайки с карусели пишутся как `SHUFFLE`. Ближайшее без ИИ — шлифовка и выгрузка Apple Notes на сервер. ИИ, события карусели, запись в Telegram — не сейчас: [roadmap E](./roadmap.md). Mini App: [0007](./decisions/0007-mini-app-initdata.md).
+История склеек — `generator-history`. История карусели — пункт меню и кнопка; лайки с карусели пишутся как `SHUFFLE`. Apple Notes: в экспорт уходит дата заметки, импорт пишет её в `Lyrics.date`. Ближайшее без ИИ — шлифовка и выгрузка Apple Notes на сервер. ИИ, события карусели, запись в Telegram — не сейчас: [roadmap E](./roadmap.md). Mini App: [0007](./decisions/0007-mini-app-initdata.md).
