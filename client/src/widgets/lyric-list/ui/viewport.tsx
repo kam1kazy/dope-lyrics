@@ -28,6 +28,20 @@ import {
 import { usePlayback } from '@/shared/lib/playback/playback-context';
 import { Button } from '@/shared/ui/shadcn/ui/button';
 
+import {
+  approachVelocity,
+  BRAKE_TAU_MS,
+  COAST_TAU_MS,
+  deltaYToElapsedMs,
+  END_Y_VH,
+  type FlickSample,
+  HOLD_TAP_MS,
+  pushFlickSample,
+  resolveFlickVelocity,
+  START_Y_VH,
+  VELOCITY_EPS,
+} from '../lib/carousel-motion';
+
 interface ViewportProps {
   data: LyricSlide[];
   lyrics: ILyric[];
@@ -36,14 +50,10 @@ interface ViewportProps {
   onNeedMore: () => void;
 }
 
-const START_Y_VH = 52;
-const END_Y_VH = -58;
 const FADE_IN = 0.08;
 const FADE_OUT = 0.12;
 const READABLE_PROGRESS = 0.42;
 const SCRUB_PX = 20;
-const SCRUB_HOLD_MS = 200;
-const SCRUB_CLICK_SLIP_PX = 64;
 const DOUBLE_TAP_MS = 400;
 const DOUBLE_TAP_PX = 48;
 const AXIS_MOVE_PX = 8;
@@ -132,16 +142,6 @@ function slideOpacity(progress: number) {
   }
 
   return 1;
-}
-
-function elapsedSinceStart(
-  originMs: number,
-  pausedAccumMs: number,
-  pauseStartedAt: number | null
-) {
-  const extraPause = pauseStartedAt === null ? 0 : Date.now() - pauseStartedAt;
-
-  return Math.max(0, Date.now() - originMs - pausedAccumMs - extraPause);
 }
 
 function runEndedAt(
@@ -258,14 +258,16 @@ export function Viewport({
     lineGap,
     fontSize
   );
-  const originRef = useRef(Date.now());
-  const pausedAccumRef = useRef(0);
-  const pauseStartedRef = useRef<number | null>(null);
+  const elapsedRef = useRef(0);
+  const velocityRef = useRef(1);
+  const targetVelocityRef = useRef(1);
+  const tauRef = useRef(BRAKE_TAU_MS);
+  const lastTickRef = useRef<number | null>(null);
+  const holdingRef = useRef(false);
   const intervalRef = useRef(slideIntervalMs);
   const nodesRef = useRef(new Map<number, HTMLDivElement>());
   const scrubbingRef = useRef(false);
   const trackingRef = useRef(false);
-  const wasPlayingRef = useRef(false);
   const pointerYRef = useRef(0);
   const pointerStartYRef = useRef(0);
   const pointerStartXRef = useRef(0);
@@ -278,14 +280,23 @@ export function Viewport({
   } | null>(null);
   const lastTapRef = useRef({ t: 0, x: 0, y: 0 });
   const pointerDownAtRef = useRef(0);
+  const flickSamplesRef = useRef<FlickSample[]>([]);
   const tapToggleTimerRef = useRef<number | null>(null);
+  const readableSnapDoneRef = useRef(false);
   const pausedRef = useRef(paused);
   const canPlayRef = useRef(canPlay);
   const timingRef = useRef({ slideIntervalMs, animationMs, dataLength: 0 });
+  const hasMoreRef = useRef(hasMore);
+  const onNeedMoreRef = useRef(onNeedMore);
+  const ensureLoopRef = useRef<() => void>(() => {});
   pausedRef.current = paused;
   canPlayRef.current = canPlay;
+  hasMoreRef.current = hasMore;
+  onNeedMoreRef.current = onNeedMore;
   const [lastIndex, setLastIndex] = useState(0);
   const [finished, setFinished] = useState(false);
+  const finishedRef = useRef(finished);
+  finishedRef.current = finished;
   const dataLength = data.length;
   timingRef.current = { slideIntervalMs, animationMs, dataLength };
 
@@ -301,65 +312,89 @@ export function Viewport({
     }, LIKE_FLASH_MS);
   }, []);
 
-  const currentElapsed = () =>
-    elapsedSinceStart(
-      originRef.current,
-      pausedAccumRef.current,
-      pauseStartedRef.current
-    );
-
   const writeElapsed = useCallback((nextMs: number) => {
-    const extraPause =
-      pauseStartedRef.current === null
-        ? 0
-        : Date.now() - pauseStartedRef.current;
-
-    originRef.current =
-      Date.now() - pausedAccumRef.current - extraPause - nextMs;
+    elapsedRef.current = Math.max(0, nextMs);
   }, []);
 
   const currentPositions = useCallback(() => {
     return applyPositions(
       nodesRef.current,
-      currentElapsed(),
+      elapsedRef.current,
       dataLength,
       slideIntervalMs,
       animationMs
     );
   }, [animationMs, dataLength, slideIntervalMs]);
 
+  const cruiseTarget = useCallback(() => {
+    if (holdingRef.current || scrubbingRef.current) {
+      return 0;
+    }
+
+    if (pausedRef.current || finishedRef.current) {
+      return 0;
+    }
+
+    return 1;
+  }, []);
+
+  const setMotionTarget = useCallback((target: number, tauMs: number) => {
+    targetVelocityRef.current = target;
+    tauRef.current = tauMs;
+    ensureLoopRef.current();
+  }, []);
+
+  const releaseSoftHold = useCallback(
+    (opts?: { pendingTap?: boolean }) => {
+      holdingRef.current = false;
+      scrubbingRef.current = false;
+
+      // Короткий тап: держим тормоз, пока toggle/click выставит hard-pause
+      if (opts?.pendingTap) {
+        setMotionTarget(0, BRAKE_TAU_MS);
+        return;
+      }
+
+      setMotionTarget(cruiseTarget(), BRAKE_TAU_MS);
+    },
+    [cruiseTarget, setMotionTarget]
+  );
+
   const restart = useCallback(() => {
-    originRef.current = Date.now();
-    pausedAccumRef.current = 0;
-    pauseStartedRef.current = null;
+    elapsedRef.current = 0;
+    velocityRef.current = 1;
+    targetVelocityRef.current = 1;
+    tauRef.current = BRAKE_TAU_MS;
+    lastTickRef.current = null;
+    holdingRef.current = false;
     scrubbingRef.current = false;
+    readableSnapDoneRef.current = false;
     setFinished(false);
     setLastIndex(0);
     setPaused(false);
+    ensureLoopRef.current();
   }, [setPaused]);
 
   const seekByDeltaY = useCallback(
     (deltaY: number) => {
       const { animationMs: timingAnimation, slideIntervalMs: timingInterval } =
         timingRef.current;
-      const spanVh = END_Y_VH - START_Y_VH;
-      const deltaMs =
-        ((deltaY / window.innerHeight) * 100 * timingAnimation) / spanVh;
+      const deltaMs = deltaYToElapsedMs(deltaY, timingAnimation);
       const endedAt = runEndedAt(dataLength, timingInterval, timingAnimation);
-      const next = Math.min(endedAt, Math.max(0, currentElapsed() + deltaMs));
+      const next = Math.min(endedAt, Math.max(0, elapsedRef.current + deltaMs));
 
       writeElapsed(next);
       setLastIndex(currentPositions());
-      setFinished(next >= endedAt && dataLength > 0 && !hasMore);
+      setFinished(next >= endedAt && dataLength > 0 && !hasMoreRef.current);
     },
-    [currentPositions, dataLength, hasMore, writeElapsed]
+    [currentPositions, dataLength, writeElapsed]
   );
 
   useLayoutEffect(() => {
     const previousInterval = intervalRef.current;
 
     if (previousInterval !== slideIntervalMs && previousInterval > 0) {
-      const elapsed = currentElapsed();
+      const elapsed = elapsedRef.current;
       const maxIndex = Math.max(dataLength - 1, 0);
       const activeIndex = Math.min(
         Math.floor(elapsed / previousInterval),
@@ -376,30 +411,12 @@ export function Viewport({
     }
 
     intervalRef.current = slideIntervalMs;
-
-    if (finished && !scrubbingRef.current) {
-      return;
-    }
-
-    const elapsed = currentElapsed();
-
-    if (
-      paused &&
-      !scrubbingRef.current &&
-      !hasReadableSlide(elapsed, dataLength, slideIntervalMs, animationMs)
-    ) {
-      const endedAt = runEndedAt(dataLength, slideIntervalMs, animationMs);
-      writeElapsed(Math.min(endedAt, READABLE_PROGRESS * animationMs));
-    }
-
     setLastIndex(currentPositions());
   }, [
     animationMs,
     currentPositions,
     data,
     dataLength,
-    finished,
-    paused,
     slideIntervalMs,
     writeElapsed,
   ]);
@@ -412,78 +429,157 @@ export function Viewport({
     };
   }, [finished, setCanPlay]);
 
+  // Hard-pause / resume: только цель скорости, без мгновенного freeze
   useEffect(() => {
-    if (finished || scrubbingRef.current) {
+    if (holdingRef.current || scrubbingRef.current) {
       return;
     }
+
+    readableSnapDoneRef.current = false;
 
     if (paused) {
-      if (pauseStartedRef.current === null) {
-        pauseStartedRef.current = Date.now();
-      }
-
-      setLastIndex(currentPositions());
-      return;
+      setMotionTarget(0, BRAKE_TAU_MS);
+    } else if (!finished) {
+      setMotionTarget(1, BRAKE_TAU_MS);
     }
+  }, [finished, paused, setMotionTarget]);
 
-    if (pauseStartedRef.current !== null) {
-      pausedAccumRef.current += Date.now() - pauseStartedRef.current;
-      pauseStartedRef.current = null;
+  useEffect(() => {
+    if (finished) {
+      velocityRef.current = 0;
+      targetVelocityRef.current = 0;
+      ensureLoopRef.current = () => {};
+      return;
     }
 
     let frame = 0;
+    let stopped = false;
+    let running = false;
 
-    const tick = () => {
-      if (scrubbingRef.current) {
+    const tick = (now: number) => {
+      if (stopped) {
+        running = false;
         return;
       }
 
-      const elapsed = currentElapsed();
+      const last = lastTickRef.current;
+      lastTickRef.current = now;
+      const dt = last === null ? 0 : Math.min(48, Math.max(0, now - last));
+      const { animationMs: timingAnimation, slideIntervalMs: timingInterval } =
+        timingRef.current;
+      const endedAt = runEndedAt(
+        timingRef.current.dataLength,
+        timingInterval,
+        timingAnimation
+      );
 
-      if (elapsed >= runEndedAt(dataLength, slideIntervalMs, animationMs)) {
+      if (!scrubbingRef.current) {
+        velocityRef.current = approachVelocity(
+          velocityRef.current,
+          targetVelocityRef.current,
+          dt,
+          tauRef.current
+        );
+
+        if (dt > 0 && Math.abs(velocityRef.current) > VELOCITY_EPS) {
+          const next = Math.min(
+            endedAt,
+            Math.max(0, elapsedRef.current + dt * velocityRef.current)
+          );
+          elapsedRef.current = next;
+        }
+      }
+
+      const elapsed = elapsedRef.current;
+
+      // Снап к читаемой строке только после hard-pause, когда лента почти стоит
+      if (
+        pausedRef.current &&
+        !holdingRef.current &&
+        !scrubbingRef.current &&
+        Math.abs(velocityRef.current) <= VELOCITY_EPS &&
+        !readableSnapDoneRef.current &&
+        !hasReadableSlide(
+          elapsed,
+          timingRef.current.dataLength,
+          timingInterval,
+          timingAnimation
+        )
+      ) {
+        readableSnapDoneRef.current = true;
+        elapsedRef.current = Math.min(
+          endedAt,
+          READABLE_PROGRESS * timingAnimation
+        );
+        currentPositions();
+      }
+
+      if (elapsedRef.current >= endedAt) {
         currentPositions();
 
-        if (hasMore) {
-          onNeedMore();
+        if (hasMoreRef.current) {
+          onNeedMoreRef.current();
           frame = requestAnimationFrame(tick);
           return;
         }
 
+        velocityRef.current = 0;
+        targetVelocityRef.current = 0;
+        running = false;
+        lastTickRef.current = null;
         setFinished(true);
         return;
       }
 
       const nextIndex = currentPositions();
-
       setLastIndex((current) => (current === nextIndex ? current : nextIndex));
+
+      const idle =
+        !scrubbingRef.current &&
+        Math.abs(velocityRef.current) <= VELOCITY_EPS &&
+        Math.abs(targetVelocityRef.current) <= VELOCITY_EPS;
+
+      // Покой на hard-pause или после тормоза зажатием — кадры не крутим
+      if (idle && (pausedRef.current || holdingRef.current)) {
+        running = false;
+        lastTickRef.current = null;
+        return;
+      }
+
       frame = requestAnimationFrame(tick);
     };
 
-    const sync = () => {
-      setLastIndex(currentPositions());
+    const ensureLoop = () => {
+      if (stopped || running || finishedRef.current) {
+        return;
+      }
+
+      running = true;
+      lastTickRef.current = null;
+      frame = requestAnimationFrame(tick);
     };
 
-    frame = requestAnimationFrame(tick);
+    ensureLoopRef.current = ensureLoop;
+    ensureLoop();
+
+    const sync = () => {
+      setLastIndex(currentPositions());
+      ensureLoop();
+    };
+
     document.addEventListener('visibilitychange', sync);
     window.addEventListener('focus', sync);
     window.addEventListener('pageshow', sync);
 
     return () => {
+      stopped = true;
+      running = false;
       cancelAnimationFrame(frame);
       document.removeEventListener('visibilitychange', sync);
       window.removeEventListener('focus', sync);
       window.removeEventListener('pageshow', sync);
     };
-  }, [
-    animationMs,
-    currentPositions,
-    dataLength,
-    finished,
-    hasMore,
-    onNeedMore,
-    paused,
-    slideIntervalMs,
-  ]);
+  }, [currentPositions, finished]);
 
   useEffect(() => {
     if (finished || !hasMore || dataLength === 0) {
@@ -515,7 +611,11 @@ export function Viewport({
 
   useEffect(() => {
     const onTouchMove = (event: TouchEvent) => {
-      if (!trackingRef.current && !scrubbingRef.current) {
+      if (
+        !trackingRef.current &&
+        !scrubbingRef.current &&
+        !holdingRef.current
+      ) {
         return;
       }
 
@@ -543,6 +643,9 @@ export function Viewport({
   const openMessageDesk = (catalogId: number) => {
     clearTapToggle();
     suppressToggle();
+    holdingRef.current = false;
+    scrubbingRef.current = false;
+    setMotionTarget(0, BRAKE_TAU_MS);
     setPaused(true);
     setDeskLyricSnapshot(lyrics.find((item) => item.id === catalogId) ?? null);
     setDeskLyricId(catalogId);
@@ -563,6 +666,7 @@ export function Viewport({
     lastTapRef.current = { t: 0, x: 0, y: 0 };
     trackingRef.current = false;
     scrubbingRef.current = false;
+    holdingRef.current = false;
     event.preventDefault();
     event.stopPropagation();
     openMessageDesk(catalogId);
@@ -581,6 +685,13 @@ export function Viewport({
     lastTapRef.current = { t: 0, x: 0, y: 0 };
     clearTapToggle();
     suppressToggle();
+  };
+
+  const beginSoftHold = () => {
+    holdingRef.current = true;
+    scrubbingRef.current = false;
+    flickSamplesRef.current = [];
+    setMotionTarget(0, BRAKE_TAU_MS);
   };
 
   const onPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
@@ -622,9 +733,9 @@ export function Viewport({
     pointerStartXRef.current = event.clientX;
     axisRef.current = 'pending';
     likeSwipedRef.current = false;
-    wasPlayingRef.current = !paused;
-    scrubbingRef.current = false;
     trackingRef.current = true;
+    beginSoftHold();
+    pushFlickSample(flickSamplesRef.current, event.clientY);
   };
 
   const onPointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
@@ -634,6 +745,7 @@ export function Viewport({
 
     if (
       !trackingRef.current &&
+      !holdingRef.current &&
       !event.currentTarget.hasPointerCapture(event.pointerId)
     ) {
       return;
@@ -676,29 +788,23 @@ export function Viewport({
 
     const deltaY = event.clientY - pointerYRef.current;
     pointerYRef.current = event.clientY;
+    pushFlickSample(flickSamplesRef.current, event.clientY);
 
     if (!scrubbingRef.current) {
       const travel = Math.abs(event.clientY - pointerStartYRef.current);
-      const heldMs = Date.now() - pointerDownAtRef.current;
 
       if (travel < SCRUB_PX) {
-        return;
-      }
-
-      if (heldMs < SCRUB_HOLD_MS && travel < SCRUB_CLICK_SLIP_PX) {
         return;
       }
 
       clearTapToggle();
       scrubbingRef.current = true;
       trackingRef.current = false;
+      velocityRef.current = 0;
+      setMotionTarget(0, BRAKE_TAU_MS);
       lastTapRef.current = { t: 0, x: 0, y: 0 };
       event.currentTarget.setPointerCapture(event.pointerId);
       suppressToggle();
-
-      if (wasPlayingRef.current) {
-        setPaused(true);
-      }
 
       seekByDeltaY(event.clientY - pointerStartYRef.current);
       return;
@@ -711,12 +817,16 @@ export function Viewport({
     if (deskOpen) {
       trackingRef.current = false;
       scrubbingRef.current = false;
+      holdingRef.current = false;
       axisRef.current = 'pending';
       return;
     }
 
     const wasTracking = trackingRef.current;
+    const wasScrubbing = scrubbingRef.current;
+    const wasHolding = holdingRef.current;
     const wasLikeAxis = axisRef.current === 'x';
+    const heldMs = Date.now() - pointerDownAtRef.current;
     const dx = event.clientX - pointerStartXRef.current;
     trackingRef.current = false;
     axisRef.current = 'pending';
@@ -737,18 +847,28 @@ export function Viewport({
       scrubbingRef.current = false;
       clearTapToggle();
       suppressToggle();
+      releaseSoftHold();
       return;
     }
 
     likeTargetRef.current = null;
 
-    if (scrubbingRef.current) {
+    if (wasScrubbing) {
+      const flick = resolveFlickVelocity(
+        flickSamplesRef.current,
+        timingRef.current.animationMs
+      );
+      flickSamplesRef.current = [];
       scrubbingRef.current = false;
+      holdingRef.current = false;
       clearTapToggle();
       suppressToggle();
 
-      if (wasPlayingRef.current) {
-        setPaused(false);
+      if (flick !== 0) {
+        velocityRef.current = flick;
+        setMotionTarget(cruiseTarget(), COAST_TAU_MS);
+      } else {
+        setMotionTarget(cruiseTarget(), BRAKE_TAU_MS);
       }
 
       return;
@@ -759,6 +879,20 @@ export function Viewport({
       event.type === 'pointercancel' ||
       likeSwipedRef.current
     ) {
+      if (wasHolding) {
+        flickSamplesRef.current = [];
+        releaseSoftHold();
+      }
+
+      return;
+    }
+
+    // Долгое зажатие — не клик-пауза, просто отпустить тормоз
+    if (heldMs >= HOLD_TAP_MS) {
+      flickSamplesRef.current = [];
+      clearTapToggle();
+      suppressToggle();
+      releaseSoftHold();
       return;
     }
 
@@ -772,7 +906,13 @@ export function Viewport({
       y: event.clientY,
     };
 
-    if (catalogIdFromEvent(event) === null) {
+    const hitId = catalogIdFromEvent(event);
+    flickSamplesRef.current = [];
+
+    // Короткий тап: тормоз держим, пока сработает toggle (строка или пустое → app-shell)
+    releaseSoftHold({ pendingTap: true });
+
+    if (hitId === null) {
       return;
     }
 
@@ -834,11 +974,7 @@ export function Viewport({
                 const timing = timingRef.current;
                 applyPositions(
                   nodesRef.current,
-                  elapsedSinceStart(
-                    originRef.current,
-                    pausedAccumRef.current,
-                    pauseStartedRef.current
-                  ),
+                  elapsedRef.current,
                   timing.dataLength,
                   timing.slideIntervalMs,
                   timing.animationMs
