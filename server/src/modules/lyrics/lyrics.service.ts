@@ -37,7 +37,9 @@ import {
 } from '~/modules/lyrics/lyric-text';
 import type { IChatHistoryItem } from '~/modules/lyrics/lyrics.types';
 import {
+  buildLyricScopeWhere,
   buildLyricsWhere,
+  type LyricScopeFilter,
   type LyricsListOptions,
 } from '~/modules/lyrics/lyrics-list-filters';
 import { createLyricData } from '~/modules/lyrics/persist/create-lyric-data';
@@ -187,12 +189,14 @@ export class LyricsService {
     return listLyricDemos();
   }
 
-  async catalogStats() {
+  async catalogStats(filter?: LyricScopeFilter | null) {
     const monthAgo = new Date();
     monthAgo.setUTCDate(monthAgo.getUTCDate() - 30);
+    const where = buildLyricScopeWhere(filter ?? {});
 
     const [rows, addedLastMonth] = await Promise.all([
       this.prisma.lyrics.findMany({
+        where,
         select: {
           isReference: true,
           isFavorite: true,
@@ -209,7 +213,7 @@ export class LyricsService {
       }),
       this.prisma.lyrics.count({
         where: {
-          date: { gte: monthAgo },
+          AND: [where, { date: { gte: monthAgo } }],
         },
       }),
     ]);
@@ -217,7 +221,7 @@ export class LyricsService {
     return buildCatalogStats(rows, addedLastMonth);
   }
 
-  async catalogActivity(daysRaw: number) {
+  async catalogActivity(daysRaw: number, filter?: LyricScopeFilter | null) {
     if (!isCatalogActivityDays(daysRaw)) {
       throw new GraphQLError('Период активности: только 7, 30 или 90 дней', {
         extensions: { code: 'BAD_USER_INPUT' },
@@ -225,9 +229,10 @@ export class LyricsService {
     }
 
     const start = activityRangeStart(daysRaw);
+    const where = buildLyricScopeWhere(filter ?? {});
     const rows = await this.prisma.lyrics.findMany({
       where: {
-        date: { gte: start },
+        AND: [where, { date: { gte: start } }],
       },
       select: {
         date: true,

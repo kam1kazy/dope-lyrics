@@ -51,10 +51,7 @@ import { Button } from '@/shared/ui/shadcn/ui/button';
 
 type CatalogSection = CatalogMenuSection;
 
-type FilterableSection = Exclude<
-  CatalogSection,
-  'stats' | 'generator' | 'history'
->;
+type FilterableSection = Exclude<CatalogSection, 'generator' | 'history'>;
 
 type MenuItem = {
   id: CatalogSection | 'references' | 'ai-settings';
@@ -88,6 +85,7 @@ const EMPTY_SECTION_FILTERS: Record<FilterableSection, CatalogSectionFilters> =
     list: { ...DEFAULT_LIST_SECTION_FILTERS },
     favorites: { ...DEFAULT_CATALOG_SECTION_FILTERS },
     demos: { ...DEFAULT_CATALOG_SECTION_FILTERS },
+    stats: { ...DEFAULT_CATALOG_SECTION_FILTERS },
   };
 
 const SECTION_ANIMATION_MS = 200;
@@ -234,7 +232,6 @@ export function CatalogMenu() {
 
   const filterableSection: FilterableSection | null =
     renderedSection &&
-    renderedSection !== 'stats' &&
     renderedSection !== 'generator' &&
     renderedSection !== 'history'
       ? renderedSection
@@ -509,9 +506,9 @@ export function CatalogMenu() {
                           setSelectedCollage(null);
                         }}
                       />
-                    ) : (
-                      <CatalogStatsPanel />
-                    )}
+                    ) : renderedSection === 'stats' ? (
+                      <CatalogStatsPanel filters={sectionFilters} />
+                    ) : null}
                   </div>
 
                   <div
@@ -554,9 +551,20 @@ export function CatalogMenu() {
                         <CatalogFilterPane
                           sectionId={filterableSection ?? 'list'}
                           filters={sectionFilters}
-                          hideSort={filterableSection === 'list'}
-                          showShelves={filterableSection === 'list'}
-                          showSources={filterableSection === 'list'}
+                          hideSort={
+                            filterableSection === 'list' ||
+                            filterableSection === 'stats'
+                          }
+                          showShelves={
+                            filterableSection === 'list' ||
+                            filterableSection === 'stats'
+                          }
+                          showSources={
+                            filterableSection === 'list' ||
+                            filterableSection === 'stats'
+                          }
+                          showPeriodPresets={filterableSection === 'stats'}
+                          hideLyricFields={filterableSection === 'stats'}
                           shelfVariant="icons"
                           shelvesFirst
                           defaults={sectionDefaults}

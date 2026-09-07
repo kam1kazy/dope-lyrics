@@ -97,6 +97,11 @@ const buildDateWhere = (
   return Object.keys(dateFilter).length > 0 ? dateFilter : undefined;
 };
 
+export type LyricScopeFilter = Pick<
+  LyricsListOptions,
+  'dateFrom' | 'dateTo' | 'includeShelves' | 'excludeShelves' | 'sources'
+>;
+
 const jsonFacetContains = (
   role: string,
   field: 'mood' | 'delivery',
@@ -338,6 +343,43 @@ const buildShelfClause = (
   }
 
   return { AND: clauses };
+};
+
+export const buildLyricScopeWhere = (
+  options: LyricScopeFilter
+): Prisma.LyricsWhereInput => {
+  const where: Prisma.LyricsWhereInput = {};
+  const andParts: Prisma.LyricsWhereInput[] = [];
+  const shelfClause = buildShelfClause(
+    options.includeShelves,
+    options.excludeShelves
+  );
+
+  if (shelfClause && Object.keys(shelfClause).length > 0) {
+    andParts.push(shelfClause);
+  }
+
+  const dateWhere = buildDateWhere(options.dateFrom, options.dateTo);
+
+  if (dateWhere) {
+    where.date = dateWhere;
+  }
+
+  const sources = normalizeTags(options.sources);
+
+  if (sources.length > 0) {
+    andParts.push({
+      source: {
+        in: sources as Array<'TELEGRAM' | 'APPLE_NOTES'>,
+      },
+    });
+  }
+
+  if (andParts.length > 0) {
+    where.AND = andParts;
+  }
+
+  return where;
 };
 
 export const buildLyricsWhere = (

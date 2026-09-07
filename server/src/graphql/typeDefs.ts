@@ -393,8 +393,21 @@ export const typeDefinitions = /* GraphQL */ `
       sources: [LyricSource!]
     ): [Lyric!]!
     lyricIngestPreview: LyricIngestPreview!
-    catalogStats: CatalogStats!
-    catalogActivity(days: Int!): [CatalogActivityPoint!]!
+    catalogStats(
+      dateFrom: String
+      dateTo: String
+      includeShelves: [String!]
+      excludeShelves: [String!]
+      sources: [LyricSource!]
+    ): CatalogStats!
+    catalogActivity(
+      days: Int!
+      dateFrom: String
+      dateTo: String
+      includeShelves: [String!]
+      excludeShelves: [String!]
+      sources: [LyricSource!]
+    ): [CatalogActivityPoint!]!
     assembleTrack(
       form: TrackFormQuotas!
       hideAdlibs: Boolean

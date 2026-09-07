@@ -83,6 +83,19 @@ export function catalogLyricsVariables(
   };
 }
 
+export function catalogStatsVariables(filters: CatalogSectionFilters) {
+  return {
+    dateFrom: filters.dateFrom.trim() || null,
+    dateTo: filters.dateTo.trim() || null,
+    includeShelves:
+      filters.includeShelves.length > 0 ? filters.includeShelves : null,
+    excludeShelves:
+      filters.excludeShelves.length > 0 ? filters.excludeShelves : null,
+    sources:
+      filters.selectedSources.length > 0 ? filters.selectedSources : null,
+  };
+}
+
 export function assembleTrackFilterFromSection(filters: CatalogSectionFilters) {
   return {
     tags: filters.selectedTags.length > 0 ? filters.selectedTags : null,

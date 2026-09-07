@@ -5,6 +5,7 @@ import { useMemo } from 'react';
 
 import {
   CATALOG_STATS,
+  catalogStatsVariables,
   type ICatalogStats,
   type ICatalogThemeCount,
   LYRIC_DELIVERY_LABELS,
@@ -17,6 +18,7 @@ import {
   type LyricMood,
   type LyricReadiness,
 } from '@/entities/lyric';
+import type { CatalogSectionFilters } from '@/shared/lib/catalog-section-filters';
 import { ErrorText } from '@/shared/ui/error-text';
 import { Spinner } from '@/shared/ui/shadcn/ui/spinner';
 
@@ -143,9 +145,15 @@ function BarRow({
   );
 }
 
-export function CatalogStatsPanel() {
+export function CatalogStatsPanel({
+  filters,
+}: {
+  filters: CatalogSectionFilters;
+}) {
+  const variables = catalogStatsVariables(filters);
   const { loading, error, data } = useQuery<{ catalogStats: ICatalogStats }>(
-    CATALOG_STATS
+    CATALOG_STATS,
+    { variables }
   );
 
   const stats = data?.catalogStats;
@@ -187,7 +195,7 @@ export function CatalogStatsPanel() {
   const readyCount =
     stats?.readiness.find((item) => item.value === 'READY')?.count ?? 0;
 
-  if (loading) {
+  if (loading && !stats) {
     return (
       <div className="flex h-full items-center justify-center p-6">
         <Spinner className="size-6" />
@@ -257,7 +265,7 @@ export function CatalogStatsPanel() {
         />
       </div>
 
-      <CatalogActivityChart />
+      <CatalogActivityChart filters={filters} />
 
       <div className="grid gap-4 sm:grid-cols-2">
         <section className="rounded-lg border px-3 py-3">

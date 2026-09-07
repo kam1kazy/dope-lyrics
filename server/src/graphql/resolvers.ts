@@ -73,6 +73,14 @@ type SliceLyricArgs = {
   ripDonor: boolean;
 };
 
+type CatalogScopeArgs = {
+  dateFrom?: string | null;
+  dateTo?: string | null;
+  includeShelves?: string[] | null;
+  excludeShelves?: string[] | null;
+  sources?: string[] | null;
+};
+
 type AssembleTrackFilter = {
   tags?: string[] | null;
   keyword?: string | null;
@@ -224,17 +232,17 @@ export const resolvers = {
     },
     catalogStats: (
       _parent: unknown,
-      _args: unknown,
+      args: CatalogScopeArgs,
       _context: GraphQLContext
     ) => {
-      return lyricsService.catalogStats();
+      return lyricsService.catalogStats(args);
     },
     catalogActivity: (
       _parent: unknown,
-      args: { days: number },
+      args: CatalogScopeArgs & { days: number },
       _context: GraphQLContext
     ) => {
-      return lyricsService.catalogActivity(args.days);
+      return lyricsService.catalogActivity(args.days, args);
     },
     assembleTrack: (
       _parent: unknown,

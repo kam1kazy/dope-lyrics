@@ -37,6 +37,7 @@ export {
   assembleTrackFilterFromSection,
   catalogLyricsVariables,
   catalogQueryVariablesForSection,
+  catalogStatsVariables,
   EMPTY_LYRIC_FACET_FILTERS,
   LYRICS_PAGE_SIZE,
 } from './lib/lyrics-query-variables';

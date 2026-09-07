@@ -4,7 +4,12 @@ import { useQuery } from '@apollo/client/react';
 import { useMemo, useState } from 'react';
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 
-import { CATALOG_ACTIVITY, type ICatalogActivityPoint } from '@/entities/lyric';
+import {
+  CATALOG_ACTIVITY,
+  catalogStatsVariables,
+  type ICatalogActivityPoint,
+} from '@/entities/lyric';
+import type { CatalogSectionFilters } from '@/shared/lib/catalog-section-filters';
 import { cn } from '@/shared/lib/utils/cn';
 import { Button } from '@/shared/ui/shadcn/ui/button';
 import {
@@ -54,12 +59,16 @@ function daysLabel(days: ActivityDays): string {
   return `${days} дней`;
 }
 
-export function CatalogActivityChart() {
+export function CatalogActivityChart({
+  filters,
+}: {
+  filters: CatalogSectionFilters;
+}) {
   const [days, setDays] = useState<ActivityDays>(30);
   const { loading, error, data } = useQuery<{
     catalogActivity: ICatalogActivityPoint[];
   }>(CATALOG_ACTIVITY, {
-    variables: { days },
+    variables: { days, ...catalogStatsVariables(filters) },
   });
 
   const points = useMemo(() => {

@@ -17,6 +17,7 @@ import { cn } from '@/shared/lib/utils/cn';
 import { Button } from '@/shared/ui/shadcn/ui/button';
 import { Label } from '@/shared/ui/shadcn/ui/label';
 
+import { PeriodFilterFields } from './period-filter-fields';
 import { SourceFilterChips } from './source-filter-chips';
 
 const SORT_OPTIONS: {
@@ -37,6 +38,8 @@ interface CatalogFilterPaneProps {
   hideSort?: boolean;
   showShelves?: boolean;
   showSources?: boolean;
+  showPeriodPresets?: boolean;
+  hideLyricFields?: boolean;
   shelfVariant?: 'labeled' | 'icons';
   shelvesFirst?: boolean;
   defaults?: CatalogSectionFilters;
@@ -50,6 +53,8 @@ export function CatalogFilterPane({
   hideSort = false,
   showShelves = false,
   showSources = false,
+  showPeriodPresets = false,
+  hideLyricFields = false,
   shelfVariant = 'labeled',
   shelvesFirst = false,
   defaults = DEFAULT_CATALOG_SECTION_FILTERS,
@@ -86,6 +91,17 @@ export function CatalogFilterPane({
           includeShelves: selection.included,
           excludeShelves: selection.excluded,
         });
+      }}
+    />
+  ) : null;
+
+  const periodFilters = showPeriodPresets ? (
+    <PeriodFilterFields
+      idPrefix={`catalog-filter-${sectionId}`}
+      dateFrom={filters.dateFrom}
+      dateTo={filters.dateTo}
+      onChange={({ dateFrom, dateTo }) => {
+        onChange({ ...filters, dateFrom, dateTo });
       }}
     />
   ) : null;
@@ -154,17 +170,20 @@ export function CatalogFilterPane({
       {header}
 
       {shelvesFirst ? shelfFilters : null}
+      {periodFilters}
       {sourceFilters}
       {sortFilters}
       {shelvesFirst ? null : shelfFilters}
 
-      <LyricFilterFields
-        idPrefix={`catalog-filter-${sectionId}`}
-        value={filters}
-        onChange={(patch) => {
-          onChange({ ...filters, ...patch });
-        }}
-      />
+      {hideLyricFields ? null : (
+        <LyricFilterFields
+          idPrefix={`catalog-filter-${sectionId}`}
+          value={filters}
+          onChange={(patch) => {
+            onChange({ ...filters, ...patch });
+          }}
+        />
+      )}
 
       <Button
         type="button"

@@ -191,8 +191,20 @@ export const INGEST_PENDING_LYRICS = gql`
 `;
 
 export const CATALOG_STATS = gql`
-  query CatalogStats {
-    catalogStats {
+  query CatalogStats(
+    $dateFrom: String
+    $dateTo: String
+    $includeShelves: [String!]
+    $excludeShelves: [String!]
+    $sources: [LyricSource!]
+  ) {
+    catalogStats(
+      dateFrom: $dateFrom
+      dateTo: $dateTo
+      includeShelves: $includeShelves
+      excludeShelves: $excludeShelves
+      sources: $sources
+    ) {
       phraseCount
       addedLastMonth
       references {
@@ -262,8 +274,22 @@ export const CATALOG_STATS = gql`
 `;
 
 export const CATALOG_ACTIVITY = gql`
-  query CatalogActivity($days: Int!) {
-    catalogActivity(days: $days) {
+  query CatalogActivity(
+    $days: Int!
+    $dateFrom: String
+    $dateTo: String
+    $includeShelves: [String!]
+    $excludeShelves: [String!]
+    $sources: [LyricSource!]
+  ) {
+    catalogActivity(
+      days: $days
+      dateFrom: $dateFrom
+      dateTo: $dateTo
+      includeShelves: $includeShelves
+      excludeShelves: $excludeShelves
+      sources: $sources
+    ) {
       date
       count
     }
