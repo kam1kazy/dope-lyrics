@@ -42,6 +42,7 @@ export const LyricList = () => {
     excludeReadiness,
     energy,
     excludeEnergy,
+    selectedSources,
     settingsReady,
   } = useLyricView();
   const { mode, queue, prepend, sessionKey } = useCarouselSession();
@@ -68,6 +69,7 @@ export const LyricList = () => {
         excludeReadiness: excludeReadiness.length > 0 ? excludeReadiness : null,
         energy: energy.length > 0 ? energy : null,
         excludeEnergy: excludeEnergy.length > 0 ? excludeEnergy : null,
+        sources: selectedSources.length > 0 ? selectedSources : null,
       }),
     [
       dateFrom,
@@ -86,6 +88,7 @@ export const LyricList = () => {
       queryEmojis,
       queryTags,
       readiness,
+      selectedSources,
       songRole,
     ]
   );
@@ -162,6 +165,7 @@ export const LyricList = () => {
     excludeReadiness,
     energy,
     excludeEnergy,
+    selectedSources,
   });
 
   if (queueMode && queue.length === 0) {
@@ -211,7 +215,7 @@ export const LyricList = () => {
       className="flex h-full min-h-0 w-full flex-col items-center overflow-hidden break-keep px-4 pt-4 text-center"
     >
       <Viewport
-        key={`${sessionKey}-${activeQueryVariables.includeShelves?.join('|') ?? ''}-${activeQueryVariables.excludeShelves?.join('|') ?? ''}-${activeQueryVariables.oldestFirst}-${sortMode}-${activeQueryVariables.tags?.join('|') ?? ''}-${activeQueryVariables.emojis?.join('|') ?? ''}-${activeQueryVariables.keyword ?? ''}-${activeQueryVariables.dateFrom ?? ''}-${activeQueryVariables.dateTo ?? ''}-${activeQueryVariables.mood?.join('|') ?? ''}-${activeQueryVariables.excludeMood?.join('|') ?? ''}-${activeQueryVariables.delivery?.join('|') ?? ''}-${activeQueryVariables.excludeDelivery?.join('|') ?? ''}-${activeQueryVariables.songRole?.join('|') ?? ''}-${activeQueryVariables.excludeSongRole?.join('|') ?? ''}-${activeQueryVariables.readiness?.join('|') ?? ''}-${activeQueryVariables.excludeReadiness?.join('|') ?? ''}-${activeQueryVariables.energy?.join('|') ?? ''}-${activeQueryVariables.excludeEnergy?.join('|') ?? ''}-${shuffleSeed}`}
+        key={`${sessionKey}-${activeQueryVariables.includeShelves?.join('|') ?? ''}-${activeQueryVariables.excludeShelves?.join('|') ?? ''}-${activeQueryVariables.oldestFirst}-${sortMode}-${activeQueryVariables.tags?.join('|') ?? ''}-${activeQueryVariables.emojis?.join('|') ?? ''}-${activeQueryVariables.keyword ?? ''}-${activeQueryVariables.dateFrom ?? ''}-${activeQueryVariables.dateTo ?? ''}-${activeQueryVariables.mood?.join('|') ?? ''}-${activeQueryVariables.excludeMood?.join('|') ?? ''}-${activeQueryVariables.delivery?.join('|') ?? ''}-${activeQueryVariables.excludeDelivery?.join('|') ?? ''}-${activeQueryVariables.songRole?.join('|') ?? ''}-${activeQueryVariables.excludeSongRole?.join('|') ?? ''}-${activeQueryVariables.readiness?.join('|') ?? ''}-${activeQueryVariables.excludeReadiness?.join('|') ?? ''}-${activeQueryVariables.energy?.join('|') ?? ''}-${activeQueryVariables.excludeEnergy?.join('|') ?? ''}-${activeQueryVariables.sources?.join('|') ?? ''}-${shuffleSeed}`}
         data={carouselList}
         lyrics={sessionLyrics ?? []}
         queryVariables={queueMode ? queryVariables : activeQueryVariables}

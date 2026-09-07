@@ -30,6 +30,7 @@ import { Label } from '@/shared/ui/shadcn/ui/label';
 
 import { LyricFilterFields } from './lyric-filter-fields';
 import { ShelfFilterChips } from './shelf-filter-chips';
+import { SourceFilterChips } from './source-filter-chips';
 
 type PanelTab = 'settings' | 'filters';
 
@@ -299,6 +300,7 @@ function FiltersTab() {
     dateFrom,
     dateTo,
     resetFilters,
+    selectedSources,
     mood,
     excludeMood,
     delivery,
@@ -322,6 +324,7 @@ function FiltersTab() {
     setKeyword,
     setDateFrom,
     setDateTo,
+    setSelectedSources,
     toggleTag,
     toggleEmoji,
   } = useLyricView();
@@ -337,6 +340,7 @@ function FiltersTab() {
     keyword,
     dateFrom,
     dateTo,
+    selectedSources,
     mood,
     excludeMood,
     delivery,
@@ -354,6 +358,11 @@ function FiltersTab() {
       <ShelfFilterChips
         selection={shelfSelection}
         onChange={setShelfSelection}
+      />
+
+      <SourceFilterChips
+        selected={selectedSources}
+        onChange={setSelectedSources}
       />
 
       <LyricFilterFields

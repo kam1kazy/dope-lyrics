@@ -93,6 +93,7 @@ export const ALL_LYRICS = gql`
     $energy: [LyricEnergy!]
     $excludeEnergy: [LyricEnergy!]
     $sources: [LyricSource!]
+    $sortField: LyricSortField
   ) {
     lyrics(
       tags: $tags
@@ -124,6 +125,7 @@ export const ALL_LYRICS = gql`
       energy: $energy
       excludeEnergy: $excludeEnergy
       sources: $sources
+      sortField: $sortField
     ) {
       ...LyricListFields
     }
@@ -476,6 +478,7 @@ export const LYRIC_IDS = gql`
     $energy: [LyricEnergy!]
     $excludeEnergy: [LyricEnergy!]
     $sources: [LyricSource!]
+    $sortField: LyricSortField
   ) {
     lyricIds(
       tags: $tags
@@ -505,6 +508,7 @@ export const LYRIC_IDS = gql`
       energy: $energy
       excludeEnergy: $excludeEnergy
       sources: $sources
+      sortField: $sortField
     )
   }
 `;

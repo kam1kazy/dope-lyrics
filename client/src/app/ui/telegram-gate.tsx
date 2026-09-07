@@ -2,6 +2,7 @@
 
 import { type ReactNode, useEffect, useState } from 'react';
 
+import { reloadIfStaleDeploy } from '@/shared/lib/deploy-at';
 import {
   prepareTelegramWebApp,
   whenTelegramWebAppReady,
@@ -20,7 +21,13 @@ export function TelegramGate({ children }: { children: ReactNode }) {
 
     let cancelled = false;
 
-    void whenTelegramWebAppReady().then((webApp) => {
+    void (async () => {
+      const reloading = await reloadIfStaleDeploy();
+      if (reloading || cancelled) {
+        return;
+      }
+
+      const webApp = await whenTelegramWebAppReady();
       if (cancelled) {
         return;
       }
@@ -31,7 +38,7 @@ export function TelegramGate({ children }: { children: ReactNode }) {
 
       setAllowed(Boolean(webApp?.initData));
       setReady(true);
-    });
+    })();
 
     return () => {
       cancelled = true;

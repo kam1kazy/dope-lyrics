@@ -2,9 +2,9 @@
 
 import { CalendarRange } from 'lucide-react';
 
+import { DateRangeInputs } from '@/features/filter-panel';
 import { cn } from '@/shared/lib/utils/cn';
 import { Button } from '@/shared/ui/shadcn/ui/button';
-import { Input } from '@/shared/ui/shadcn/ui/input';
 import { Label } from '@/shared/ui/shadcn/ui/label';
 
 import {
@@ -68,28 +68,12 @@ export function PeriodFilterFields({
           );
         })}
       </div>
-      <div className="grid min-w-0 grid-cols-2 gap-2">
-        <Input
-          id={`${idPrefix}-date-from`}
-          type="date"
-          value={dateFrom}
-          aria-label="Дата с"
-          onChange={(event) =>
-            onChange({ dateFrom: event.target.value, dateTo })
-          }
-          className="h-9 w-full min-w-0 max-w-full"
-        />
-        <Input
-          id={`${idPrefix}-date-to`}
-          type="date"
-          value={dateTo}
-          aria-label="Дата по"
-          onChange={(event) =>
-            onChange({ dateFrom, dateTo: event.target.value })
-          }
-          className="h-9 w-full min-w-0 max-w-full"
-        />
-      </div>
+      <DateRangeInputs
+        idPrefix={idPrefix}
+        dateFrom={dateFrom}
+        dateTo={dateTo}
+        onChange={onChange}
+      />
     </div>
   );
 }

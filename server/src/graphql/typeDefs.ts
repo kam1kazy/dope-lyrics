@@ -51,6 +51,11 @@ export const typeDefinitions = /* GraphQL */ `
     APPLE_NOTES
   }
 
+  enum LyricSortField {
+    CREATED
+    ADDED
+  }
+
   type User {
     id: Int!
     username: String!
@@ -347,6 +352,7 @@ export const typeDefinitions = /* GraphQL */ `
     excludeReadiness: [LyricReadiness!]
     energy: [LyricEnergy!]
     excludeEnergy: [LyricEnergy!]
+    sources: [LyricSource!]
   }
 
   input TrackFormQuotas {
@@ -391,6 +397,7 @@ export const typeDefinitions = /* GraphQL */ `
       energy: [LyricEnergy!]
       excludeEnergy: [LyricEnergy!]
       sources: [LyricSource!]
+      sortField: LyricSortField
     ): [Lyric!]!
     lyricIngestPreview: LyricIngestPreview!
     catalogStats(
@@ -442,6 +449,7 @@ export const typeDefinitions = /* GraphQL */ `
       energy: [LyricEnergy!]
       excludeEnergy: [LyricEnergy!]
       sources: [LyricSource!]
+      sortField: LyricSortField
     ): [Int!]!
     lyricsByIds(ids: [Int!]!): [Lyric!]!
     carouselHistories: [CarouselHistory!]!

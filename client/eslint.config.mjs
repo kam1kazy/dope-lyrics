@@ -35,6 +35,7 @@ export default defineConfig([
       globals: {
         ...globals.browser,
         ...globals.es2024,
+        process: 'readonly',
       },
       parser: tsParser,
       parserOptions: {

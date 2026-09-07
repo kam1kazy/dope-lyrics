@@ -115,6 +115,7 @@ web_modules/
 
 .next
 out
+.deploy-at
 
 # Nuxt.js build / generate output
 

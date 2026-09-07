@@ -36,6 +36,7 @@ type LyricsArgs = {
   energy?: string[] | null;
   excludeEnergy?: string[] | null;
   sources?: string[] | null;
+  sortField?: 'CREATED' | 'ADDED' | null;
 };
 
 type UpdateLyricFlagsArgs = {
@@ -99,6 +100,7 @@ type AssembleTrackFilter = {
   excludeReadiness?: string[] | null;
   energy?: string[] | null;
   excludeEnergy?: string[] | null;
+  sources?: string[] | null;
 };
 
 type AssembleTrackArgs = {
@@ -168,6 +170,7 @@ function lyricsListOptionsFromArgs(
     energy: args.energy,
     excludeEnergy: args.excludeEnergy,
     sources: args.sources,
+    sortField: args.sortField,
   };
 }
 

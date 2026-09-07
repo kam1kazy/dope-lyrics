@@ -23,6 +23,7 @@ import {
   LYRIC_SONG_ROLES,
   LYRIC_TAGS,
 } from '@/entities/lyric';
+import type { DateSortState } from '@/shared/lib/catalog-section-filters';
 import type {
   LyricDelivery,
   LyricEnergy,
@@ -34,6 +35,9 @@ import { Badge } from '@/shared/ui/shadcn/ui/badge';
 import { Input } from '@/shared/ui/shadcn/ui/input';
 import { Label } from '@/shared/ui/shadcn/ui/label';
 import { Skeleton } from '@/shared/ui/shadcn/ui/skeleton';
+
+import { DateRangeInputs } from './date-range-inputs';
+import { DateSortButtons } from './date-sort-buttons';
 
 export type LyricFilterFieldsValue = {
   selectedTags: string[];
@@ -105,10 +109,14 @@ export function LyricFilterFields({
   value,
   onChange,
   idPrefix,
+  dateSort,
+  onDateSortChange,
 }: {
   value: LyricFilterFieldsValue;
   onChange: (patch: Partial<LyricFilterFieldsValue>) => void;
   idPrefix: string;
+  dateSort?: DateSortState;
+  onDateSortChange?: (next: DateSortState) => void;
 }) {
   const { data: tagsData, loading: tagsLoading } = useQuery<{
     lyricTags: string[];
@@ -127,24 +135,16 @@ export function LyricFilterFields({
           <CalendarRange className="size-3.5" aria-hidden />
           Период
         </Label>
-        <div className="grid min-w-0 grid-cols-1 gap-2 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:gap-3">
-          <Input
-            id={`${idPrefix}-date-from`}
-            type="date"
-            value={value.dateFrom}
-            aria-label="Дата с"
-            onChange={(event) => onChange({ dateFrom: event.target.value })}
-            className="h-9 w-full min-w-0 max-w-full md:h-10 md:text-sm"
-          />
-          <Input
-            id={`${idPrefix}-date-to`}
-            type="date"
-            value={value.dateTo}
-            aria-label="Дата по"
-            onChange={(event) => onChange({ dateTo: event.target.value })}
-            className="h-9 w-full min-w-0 max-w-full md:h-10 md:text-sm"
-          />
-        </div>
+        <DateRangeInputs
+          idPrefix={idPrefix}
+          dateFrom={value.dateFrom}
+          dateTo={value.dateTo}
+          onChange={onChange}
+          inputClassName="md:h-10 md:text-sm"
+        />
+        {dateSort && onDateSortChange ? (
+          <DateSortButtons value={dateSort} onChange={onDateSortChange} />
+        ) : null}
       </div>
 
       <div className="flex flex-col gap-2 md:gap-3">

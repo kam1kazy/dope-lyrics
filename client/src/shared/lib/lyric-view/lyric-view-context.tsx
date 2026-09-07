@@ -16,6 +16,7 @@ import type {
   LyricMood,
   LyricReadiness,
   LyricSongRole,
+  LyricSource,
 } from '@/shared/lib/lyric-facets';
 import {
   DEFAULT_SHELF_SELECTION,
@@ -39,6 +40,7 @@ export const LYRIC_VIEW_DEFAULTS = {
   keyword: '',
   dateFrom: '',
   dateTo: '',
+  selectedSources: [] as LyricSource[],
   mood: [] as LyricMood[],
   excludeMood: [] as LyricMood[],
   delivery: [] as LyricDelivery[],
@@ -160,6 +162,7 @@ interface LyricViewContextValue {
   keyword: string;
   dateFrom: string;
   dateTo: string;
+  selectedSources: LyricSource[];
   mood: LyricMood[];
   excludeMood: LyricMood[];
   delivery: LyricDelivery[];
@@ -184,6 +187,7 @@ interface LyricViewContextValue {
   setKeyword: (value: string) => void;
   setDateFrom: (value: string) => void;
   setDateTo: (value: string) => void;
+  setSelectedSources: (value: LyricSource[]) => void;
   setMood: (value: LyricMood[]) => void;
   setExcludeMood: (value: LyricMood[]) => void;
   setDelivery: (value: LyricDelivery[]) => void;
@@ -222,6 +226,9 @@ export function LyricViewProvider({ children }: { children: ReactNode }) {
   const [keyword, setKeyword] = useState(LYRIC_VIEW_DEFAULTS.keyword);
   const [dateFrom, setDateFrom] = useState(LYRIC_VIEW_DEFAULTS.dateFrom);
   const [dateTo, setDateTo] = useState(LYRIC_VIEW_DEFAULTS.dateTo);
+  const [selectedSources, setSelectedSources] = useState<LyricSource[]>(
+    LYRIC_VIEW_DEFAULTS.selectedSources
+  );
   const [mood, setMood] = useState<LyricMood[]>(LYRIC_VIEW_DEFAULTS.mood);
   const [excludeMood, setExcludeMood] = useState<LyricMood[]>(
     LYRIC_VIEW_DEFAULTS.excludeMood
@@ -334,6 +341,7 @@ export function LyricViewProvider({ children }: { children: ReactNode }) {
     setKeyword(LYRIC_VIEW_DEFAULTS.keyword);
     setDateFrom(LYRIC_VIEW_DEFAULTS.dateFrom);
     setDateTo(LYRIC_VIEW_DEFAULTS.dateTo);
+    setSelectedSources([...LYRIC_VIEW_DEFAULTS.selectedSources]);
     setMood(LYRIC_VIEW_DEFAULTS.mood);
     setExcludeMood(LYRIC_VIEW_DEFAULTS.excludeMood);
     setDelivery(LYRIC_VIEW_DEFAULTS.delivery);
@@ -361,6 +369,7 @@ export function LyricViewProvider({ children }: { children: ReactNode }) {
       keyword,
       dateFrom,
       dateTo,
+      selectedSources,
       mood,
       excludeMood,
       delivery,
@@ -383,6 +392,7 @@ export function LyricViewProvider({ children }: { children: ReactNode }) {
       setKeyword,
       setDateFrom,
       setDateTo,
+      setSelectedSources,
       setMood,
       setExcludeMood,
       setDelivery,
@@ -410,6 +420,7 @@ export function LyricViewProvider({ children }: { children: ReactNode }) {
       keyword,
       dateFrom,
       dateTo,
+      selectedSources,
       mood,
       excludeMood,
       delivery,
@@ -486,6 +497,7 @@ export function hasActiveLyricFilters(options: {
   keyword: string;
   dateFrom: string;
   dateTo: string;
+  selectedSources: LyricSource[];
   mood: LyricMood[];
   excludeMood: LyricMood[];
   delivery: LyricDelivery[];
@@ -507,6 +519,7 @@ export function hasActiveLyricFilters(options: {
     options.keyword.trim().length > 0 ||
     options.dateFrom.trim().length > 0 ||
     options.dateTo.trim().length > 0 ||
+    options.selectedSources.length > 0 ||
     options.mood.length > 0 ||
     options.excludeMood.length > 0 ||
     options.delivery.length > 0 ||

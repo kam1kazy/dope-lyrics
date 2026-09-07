@@ -32,7 +32,20 @@ export interface LyricsListOptions {
   energy?: string[] | null;
   excludeEnergy?: string[] | null;
   sources?: string[] | null;
+  sortField?: 'CREATED' | 'ADDED' | null;
 }
+
+export const lyricsListOrderBy = (
+  options: Pick<LyricsListOptions, 'oldestFirst' | 'sortField'>
+): Prisma.LyricsOrderByWithRelationInput[] => {
+  const direction = options.oldestFirst ? 'asc' : 'desc';
+
+  if (options.sortField === 'ADDED') {
+    return [{ id: direction }];
+  }
+
+  return [{ date: direction }, { lyric_id: direction }];
+};
 
 export const normalizeTags = (tags: string[] | null | undefined): string[] => {
   if (!tags?.length) {

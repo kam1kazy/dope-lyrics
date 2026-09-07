@@ -38,6 +38,7 @@ export type LyricsQueryVariables = {
   energy: LyricEnergy[] | null;
   excludeEnergy: LyricEnergy[] | null;
   sources: LyricSource[] | null;
+  sortField?: 'CREATED' | 'ADDED' | null;
 };
 
 export const EMPTY_LYRIC_FACET_FILTERS = {
@@ -79,6 +80,7 @@ export function catalogLyricsVariables(
     shuffleSeed: null,
     ...EMPTY_LYRIC_FACET_FILTERS,
     sources: null,
+    sortField: null,
     ...overrides,
   };
 }
@@ -120,6 +122,8 @@ export function assembleTrackFilterFromSection(filters: CatalogSectionFilters) {
     energy: filters.energy.length > 0 ? filters.energy : null,
     excludeEnergy:
       filters.excludeEnergy.length > 0 ? filters.excludeEnergy : null,
+    sources:
+      filters.selectedSources.length > 0 ? filters.selectedSources : null,
   };
 }
 
@@ -136,7 +140,16 @@ export function catalogQueryVariablesForSection(
     dateTo: filters.dateTo.trim() || null,
     favoritesOnly: section === 'favorites' ? true : null,
     demosOnly: section === 'demos' ? true : null,
-    oldestFirst: section === 'list' ? false : filters.sortMode === 'reverse',
+    oldestFirst:
+      section === 'list'
+        ? filters.dateSort.direction === 'asc'
+        : filters.sortMode === 'reverse',
+    sortField:
+      section === 'list'
+        ? filters.dateSort.field === 'added'
+          ? 'ADDED'
+          : 'CREATED'
+        : null,
     shuffleSeed:
       section === 'list'
         ? null
@@ -164,8 +177,6 @@ export function catalogQueryVariablesForSection(
     excludeShelves: section === 'list' ? filters.excludeShelves : null,
     includeCensored: section === 'list' ? null : includeCensored ? true : null,
     sources:
-      section === 'list' && filters.selectedSources.length > 0
-        ? filters.selectedSources
-        : null,
+      filters.selectedSources.length > 0 ? filters.selectedSources : null,
   });
 }

@@ -559,11 +559,8 @@ export function CatalogMenu() {
                             filterableSection === 'list' ||
                             filterableSection === 'stats'
                           }
-                          showSources={
-                            filterableSection === 'list' ||
-                            filterableSection === 'stats'
-                          }
                           showPeriodPresets={filterableSection === 'stats'}
+                          showDateSort={filterableSection === 'list'}
                           hideLyricFields={filterableSection === 'stats'}
                           shelfVariant="icons"
                           shelvesFirst

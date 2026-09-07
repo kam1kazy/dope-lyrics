@@ -12,6 +12,22 @@ import {
   type ShelfFlag,
 } from '@/shared/lib/lyric-view/shelf-filter';
 
+export const DATE_SORT_FIELDS = ['created', 'added'] as const;
+
+export type DateSortField = (typeof DATE_SORT_FIELDS)[number];
+
+export type DateSortDirection = 'asc' | 'desc';
+
+export type DateSortState = {
+  field: DateSortField;
+  direction: DateSortDirection;
+};
+
+export const DEFAULT_DATE_SORT: DateSortState = {
+  field: 'created',
+  direction: 'desc',
+};
+
 export type CatalogSectionFilters = {
   sortMode: SortMode;
   shuffleSeed: number;
@@ -20,6 +36,7 @@ export type CatalogSectionFilters = {
   keyword: string;
   dateFrom: string;
   dateTo: string;
+  dateSort: DateSortState;
   includeShelves: ShelfFlag[];
   excludeShelves: ShelfFlag[];
   selectedSources: LyricSource[];
@@ -57,6 +74,7 @@ export const DEFAULT_CATALOG_SECTION_FILTERS: CatalogSectionFilters = {
   keyword: '',
   dateFrom: '',
   dateTo: '',
+  dateSort: { ...DEFAULT_DATE_SORT },
   includeShelves: [],
   excludeShelves: [],
   selectedSources: [],
@@ -94,6 +112,8 @@ export function hasActiveCatalogSectionFilters(
     filters.keyword.trim().length > 0 ||
     filters.dateFrom.trim().length > 0 ||
     filters.dateTo.trim().length > 0 ||
+    filters.dateSort.field !== defaults.dateSort.field ||
+    filters.dateSort.direction !== defaults.dateSort.direction ||
     !sameList(filters.includeShelves, defaults.includeShelves) ||
     !sameList(filters.excludeShelves, defaults.excludeShelves) ||
     !sameList(filters.selectedSources, defaults.selectedSources) ||
@@ -108,4 +128,18 @@ export function hasActiveCatalogSectionFilters(
     filters.energy.length > 0 ||
     filters.excludeEnergy.length > 0
   );
+}
+
+export function nextDateSort(
+  current: DateSortState,
+  field: DateSortField
+): DateSortState {
+  if (current.field !== field) {
+    return { field, direction: 'desc' };
+  }
+
+  return {
+    field,
+    direction: current.direction === 'desc' ? 'asc' : 'desc',
+  };
 }

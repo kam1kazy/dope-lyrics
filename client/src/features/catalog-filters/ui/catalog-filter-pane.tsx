@@ -3,7 +3,11 @@
 import { ArrowDownAZ, ArrowUpAZ, RotateCcw, Shuffle } from 'lucide-react';
 import type { ReactNode } from 'react';
 
-import { LyricFilterFields, ShelfFilterChips } from '@/features/filter-panel';
+import {
+  LyricFilterFields,
+  ShelfFilterChips,
+  SourceFilterChips,
+} from '@/features/filter-panel';
 import {
   type CatalogSectionFilters,
   DEFAULT_CATALOG_SECTION_FILTERS,
@@ -18,7 +22,6 @@ import { Button } from '@/shared/ui/shadcn/ui/button';
 import { Label } from '@/shared/ui/shadcn/ui/label';
 
 import { PeriodFilterFields } from './period-filter-fields';
-import { SourceFilterChips } from './source-filter-chips';
 
 const SORT_OPTIONS: {
   mode: SortMode;
@@ -39,6 +42,7 @@ interface CatalogFilterPaneProps {
   showShelves?: boolean;
   showSources?: boolean;
   showPeriodPresets?: boolean;
+  showDateSort?: boolean;
   hideLyricFields?: boolean;
   shelfVariant?: 'labeled' | 'icons';
   shelvesFirst?: boolean;
@@ -52,8 +56,9 @@ export function CatalogFilterPane({
   header,
   hideSort = false,
   showShelves = false,
-  showSources = false,
+  showSources = true,
   showPeriodPresets = false,
+  showDateSort = false,
   hideLyricFields = false,
   shelfVariant = 'labeled',
   shelvesFirst = false,
@@ -179,6 +184,14 @@ export function CatalogFilterPane({
         <LyricFilterFields
           idPrefix={`catalog-filter-${sectionId}`}
           value={filters}
+          dateSort={showDateSort ? filters.dateSort : undefined}
+          onDateSortChange={
+            showDateSort
+              ? (dateSort) => {
+                  onChange({ ...filters, dateSort });
+                }
+              : undefined
+          }
           onChange={(patch) => {
             onChange({ ...filters, ...patch });
           }}

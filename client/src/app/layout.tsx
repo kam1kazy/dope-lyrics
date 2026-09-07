@@ -10,6 +10,8 @@ const inter = Inter({
   subsets: ['latin', 'cyrillic'],
 });
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: 'DOPE LYRICS',
   description: 'App to Telegram lyrics bot',

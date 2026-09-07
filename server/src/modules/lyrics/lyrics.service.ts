@@ -41,6 +41,7 @@ import {
   buildLyricsWhere,
   type LyricScopeFilter,
   type LyricsListOptions,
+  lyricsListOrderBy,
 } from '~/modules/lyrics/lyrics-list-filters';
 import { createLyricData } from '~/modules/lyrics/persist/create-lyric-data';
 import { shuffleIds, toShuffleSeed } from '~/modules/lyrics/shuffle-ids';
@@ -91,13 +92,11 @@ export class LyricsService {
       });
     }
 
-    const dateOrder = options.oldestFirst ? 'asc' : 'desc';
-
     return this.prisma.lyrics.findMany({
       where,
       take: options.limit,
       skip: options.offset,
-      orderBy: [{ date: dateOrder }, { lyric_id: dateOrder }],
+      orderBy: lyricsListOrderBy(options),
       include: lyricInclude,
     });
   }
@@ -118,11 +117,10 @@ export class LyricsService {
       );
     }
 
-    const dateOrder = options.oldestFirst ? 'asc' : 'desc';
     const rows = await this.prisma.lyrics.findMany({
       where,
       select: { id: true },
-      orderBy: [{ date: dateOrder }, { lyric_id: dateOrder }],
+      orderBy: lyricsListOrderBy(options),
     });
 
     return rows.map((row) => row.id);
@@ -266,6 +264,7 @@ export class LyricsService {
       | 'excludeReadiness'
       | 'energy'
       | 'excludeEnergy'
+      | 'sources'
     > | null
   ) {
     const quotas = parseTrackFormQuotas(formRaw);
@@ -288,6 +287,7 @@ export class LyricsService {
       excludeReadiness: filter?.excludeReadiness,
       energy: filter?.energy,
       excludeEnergy: filter?.excludeEnergy,
+      sources: filter?.sources,
     });
 
     const rows = await this.prisma.lyrics.findMany({
