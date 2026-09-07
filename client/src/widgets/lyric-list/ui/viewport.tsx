@@ -46,9 +46,9 @@ const SCRUB_HOLD_MS = 200;
 const SCRUB_CLICK_SLIP_PX = 64;
 const DOUBLE_TAP_MS = 400;
 const DOUBLE_TAP_PX = 48;
-const AXIS_MOVE_PX = 10;
-const LIKE_SWIPE_PX = 56;
-const LIKE_FLASH_MS = 450;
+const AXIS_MOVE_PX = 8;
+const LIKE_SWIPE_PX = 36;
+const LIKE_FLASH_MS = 320;
 
 function eventElement(event: ReactPointerEvent<HTMLDivElement>) {
   const target = event.target;
@@ -653,13 +653,24 @@ export function Viewport({
         lastTapRef.current = { t: 0, x: 0, y: 0 };
         suppressToggle();
         event.currentTarget.setPointerCapture(event.pointerId);
-        return;
+      } else {
+        axisRef.current = 'y';
       }
-
-      axisRef.current = 'y';
     }
 
     if (axisRef.current === 'x') {
+      if (
+        !likeSwipedRef.current &&
+        dx <= -LIKE_SWIPE_PX &&
+        likeTargetRef.current !== null
+      ) {
+        applyLikeSwipe(likeTargetRef.current);
+      }
+
+      return;
+    }
+
+    if (axisRef.current !== 'y') {
       return;
     }
 
@@ -718,7 +729,8 @@ export function Viewport({
       const target = likeTargetRef.current;
       likeTargetRef.current = null;
 
-      if (dx <= -LIKE_SWIPE_PX && target !== null) {
+      // если порог уже сработал на move — повторно не лайкаем
+      if (!likeSwipedRef.current && dx <= -LIKE_SWIPE_PX && target !== null) {
         applyLikeSwipe(target);
       }
 

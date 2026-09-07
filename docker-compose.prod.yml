@@ -59,7 +59,8 @@ services:
       retries: 5
       start_period: 10s
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      # PG 18+: mount parent dir (data lives in PG_MAJOR/docker)
+      - postgres_data:/var/lib/postgresql
     networks:
       - legoblokk
     env_file:
