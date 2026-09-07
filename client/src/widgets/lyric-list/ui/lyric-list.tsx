@@ -186,7 +186,7 @@ export const LyricList = () => {
   }
 
   if (error && !sessionLyrics) {
-    return <ErrorText title="Ошибка" />;
+    return <ErrorText title="Ошибка" error={error} />;
   }
 
   if (!sessionLyrics?.length && !hasRenderedCarousel.current) {

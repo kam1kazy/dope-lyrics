@@ -167,7 +167,7 @@ export function CatalogLyricsList({
       ) : error ? (
         <>
           {queueFilter}
-          <ErrorText title="Ошибка" />
+          <ErrorText title="Ошибка" error={error} />
         </>
       ) : !lyrics?.length ? (
         <>

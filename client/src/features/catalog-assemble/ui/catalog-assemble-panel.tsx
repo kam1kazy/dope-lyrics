@@ -450,7 +450,10 @@ export function CatalogAssemblePanel({
         )}
 
         {assembleError || likeError || unlikeError || glueError ? (
-          <ErrorText title="Не удалось собрать, сохранить или склеить" />
+          <ErrorText
+            title="Не удалось собрать, сохранить или склеить"
+            error={assembleError ?? likeError ?? unlikeError ?? glueError}
+          />
         ) : null}
 
         {!slots ? (

@@ -117,7 +117,7 @@ export function CatalogAssembleHistory({
   if (error) {
     return (
       <div className="p-4">
-        <ErrorText title="Не удалось загрузить историю" />
+        <ErrorText title="Не удалось загрузить историю" error={error} />
       </div>
     );
   }

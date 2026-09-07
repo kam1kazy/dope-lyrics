@@ -204,7 +204,7 @@ export function CatalogStatsPanel({
   }
 
   if (error) {
-    return <ErrorText title="Ошибка" />;
+    return <ErrorText title="Ошибка" error={error} />;
   }
 
   if (!stats) {
