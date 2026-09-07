@@ -1,4 +1,4 @@
-import { BotKeyboard, TelegramClient } from '@mtcute/bun';
+import { BotCommands, BotKeyboard, TelegramClient } from '@mtcute/bun';
 import { CallbackDataBuilder, Dispatcher, filters } from '@mtcute/dispatcher';
 import fs from 'fs';
 import path from 'path';
@@ -15,7 +15,9 @@ import {
 } from '~/mtcute/commands';
 import {
   commandAppleNotes,
+  handleAppleNotesPathText,
   handleAppleNotesZipDocument,
+  handleNotesCallback,
 } from '~/mtcute/commands/apple-notes';
 import { assertAdmin } from '~/mtcute/guards/assert-admin';
 import { startIngestHttp } from '~/mtcute/ingest-http';
@@ -48,8 +50,17 @@ await tg
   .start({
     botToken,
   })
-  .then(() => {
+  .then(async () => {
     console.log('MTCUTE: 🤖 Бот запущен');
+    await tg.setMyCommands({
+      commands: [
+        BotCommands.cmd('chatid', 'Показать ID чата'),
+        BotCommands.cmd('app', 'Открыть приложение'),
+        BotCommands.cmd('bd', 'Управление базой'),
+        BotCommands.cmd('notes', 'Импорт Apple Notes'),
+      ],
+    });
+    console.log('MTCUTE: 📋 Команды бота обновлены');
   })
   .catch((error) => {
     console.error('MTCUTE: ❌ Ошибка при запуске бота:', error);
@@ -133,10 +144,22 @@ dp.onNewMessage(filters.document, async (msg) => {
   await handleAppleNotesZipDocument({ tg, msg });
 });
 
+dp.onNewMessage(async (msg) => {
+  if (msg.text?.startsWith('/')) {
+    return;
+  }
+  await handleAppleNotesPathText({ tg, msg });
+});
+
 dp.onCallbackQuery(async (query) => {
   if (!query.data) {
     return;
   }
+
+  if (await handleNotesCallback({ tg, query })) {
+    return;
+  }
+
   const data = BdButton.parse(Buffer.from(query.data).toString());
   if (!data) {
     return;
