@@ -19,7 +19,9 @@ import {
   handleAppleNotesZipDocument,
   handleNotesCallback,
 } from '~/mtcute/commands/apple-notes';
-import { assertAdmin } from '~/mtcute/guards/assert-admin';
+import { commandChannel } from '~/mtcute/commands/channel';
+import { assertPermission } from '~/mtcute/guards/assert-admin';
+import { ingestChannelPost } from '~/mtcute/ingest-channel-post';
 import { startIngestHttp } from '~/mtcute/ingest-http';
 import { sendToBotChat } from '~/mtcute/send';
 
@@ -58,6 +60,7 @@ await tg
         BotCommands.cmd('app', 'Открыть приложение'),
         BotCommands.cmd('bd', 'Управление базой'),
         BotCommands.cmd('notes', 'Импорт Apple Notes'),
+        BotCommands.cmd('channel', 'Привязать канал'),
       ],
     });
     console.log('MTCUTE: 📋 Команды бота обновлены');
@@ -140,6 +143,17 @@ dp.onNewMessage(filters.command('notes'), async (msg) =>
   commandAppleNotes({ tg, msg })
 );
 
+dp.onNewMessage(filters.command('channel'), async (msg) =>
+  commandChannel({ tg, msg })
+);
+
+dp.onNewMessage(filters.chat('channel'), async (msg) => {
+  if (msg.text?.startsWith('/')) {
+    return;
+  }
+  await ingestChannelPost(msg);
+});
+
 dp.onNewMessage(filters.document, async (msg) => {
   await handleAppleNotesZipDocument({ tg, msg });
 });
@@ -173,10 +187,30 @@ dp.onCallbackQuery(async (query) => {
     return;
   }
 
-  await assertAdmin({
+  const permission =
+    action === 'stats'
+      ? 'users:list'
+      : action === 'history'
+        ? 'db:parse'
+        : action === 'seed'
+          ? 'db:seed'
+          : action === 'clear'
+            ? 'db:clear'
+            : null;
+
+  if (!permission) {
+    await query.answer({
+      text: '❌ Неизвестная команда',
+      alert: true,
+    });
+    return;
+  }
+
+  await assertPermission({
     tg,
     msg: query as never,
     msgCallback: query,
+    permission,
     action: async () => {
       if (!tgAdmin) {
         await query.answer({

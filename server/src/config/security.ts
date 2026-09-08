@@ -1,8 +1,12 @@
 import { Elysia } from 'elysia';
 
+import {
+  type AuthUser,
+  resolveAuthUser,
+} from '~/modules/auth/resolve-auth-user';
+
 import { isOriginAllowed } from './cors';
-import { env, isProduction, telegramAdminId } from './env';
-import { verifyTelegramWebAppUserId } from './telegram-webapp';
+import { env, isProduction } from './env';
 
 type RateBucket = {
   count: number;
@@ -32,6 +36,32 @@ const requestPath = (request: Request): string => {
 };
 
 export const securityPlugin = new Elysia({ name: 'security' })
+  .derive({ as: 'global' }, async ({ request }) => {
+    const path = requestPath(request);
+    const method = request.method.toUpperCase();
+
+    if (
+      method === 'OPTIONS' ||
+      path === '/health' ||
+      path.startsWith('/auth/')
+    ) {
+      return { authUser: null as AuthUser | null };
+    }
+
+    const host = request.headers.get('host') ?? '';
+    const isLocalHost = /^(localhost|127\.0\.0\.1)(:\d+)?$/i.test(host);
+
+    if (!isProduction && isLocalHost) {
+      return { authUser: null as AuthUser | null };
+    }
+
+    if (!path.startsWith('/graphql')) {
+      return { authUser: null as AuthUser | null };
+    }
+
+    const authUser = await resolveAuthUser(request);
+    return { authUser };
+  })
   .onRequest(({ request, set }) => {
     const requestId =
       request.headers.get('x-request-id')?.trim() || crypto.randomUUID();
@@ -49,11 +79,15 @@ export const securityPlugin = new Elysia({ name: 'security' })
         'max-age=15552000; includeSubDomains';
     }
   })
-  .onBeforeHandle(({ request, set }) => {
+  .onBeforeHandle(({ request, set, authUser }) => {
     const method = request.method.toUpperCase();
     const path = requestPath(request);
 
-    if (method === 'OPTIONS' || path === '/health') {
+    if (
+      method === 'OPTIONS' ||
+      path === '/health' ||
+      path.startsWith('/auth/')
+    ) {
       return;
     }
 
@@ -61,14 +95,7 @@ export const securityPlugin = new Elysia({ name: 'security' })
     const isLocalHost = /^(localhost|127\.0\.0\.1)(:\d+)?$/i.test(host);
 
     if (!isLocalHost && path.startsWith('/graphql')) {
-      const initData = request.headers.get('x-telegram-init-data') ?? '';
-      const userId = verifyTelegramWebAppUserId({
-        initData,
-        botToken: env.BOT_TOKEN,
-        maxAgeSec: env.TELEGRAM_INIT_DATA_MAX_AGE_SEC,
-      });
-
-      if (userId === null || userId !== telegramAdminId) {
+      if (!authUser) {
         set.status = 401;
         return { error: 'Нет доступа' };
       }

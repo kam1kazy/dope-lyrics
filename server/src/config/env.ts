@@ -41,6 +41,13 @@ const httpEnvSchema = z.object({
     .int()
     .positive()
     .default(86_400),
+  SESSION_MAX_AGE_SEC: z.coerce.number().int().positive().default(2_592_000),
+  AUTH_RATE_LIMIT_WINDOW_MS: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(900_000),
+  AUTH_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(60),
 });
 
 const parsedHttp = httpEnvSchema.safeParse(process.env);

@@ -2,7 +2,6 @@ import { prisma } from '~/infrastructure/prisma';
 import { readinessFromLineCount } from '~/modules/lyrics/lyric-facets';
 import { parseAppleNoteFile } from '~/modules/lyrics/parse/apple-note-file';
 import { countParagraphs, countWords } from '~/modules/lyrics/parse/text-utils';
-import { usersService } from '~/modules/users/users.service';
 
 const INSERT_CONCURRENCY = 20;
 const FILE_NAME_RE = /^(\d+)\s*-/;
@@ -53,6 +52,7 @@ export const parseAppleNoteLyricId = (fileName: string): number | null => {
 };
 
 const planRows = async (
+  userId: number,
   files: AppleNoteInputFile[]
 ): Promise<{
   rows: NoteRow[];
@@ -63,7 +63,7 @@ const planRows = async (
   existingIds: Set<number>;
 }> => {
   const existing = await prisma.lyrics.findMany({
-    where: { source: 'APPLE_NOTES' },
+    where: { userId, source: 'APPLE_NOTES' },
     select: {
       id: true,
       lyric_id: true,
@@ -93,7 +93,7 @@ const planRows = async (
 
   for (const file of files) {
     const lyricId = parseAppleNoteLyricId(file.fileName);
-    if (lyricId == null) {
+    if (lyricId === null) {
       skippedBadName += 1;
       continue;
     }
@@ -151,10 +151,10 @@ const planRows = async (
 };
 
 export const importAppleNotesFromFiles = async (
+  userId: number,
   files: AppleNoteInputFile[]
 ): Promise<AppleNotesImportResult> => {
-  const owner = await usersService.ensureOwner();
-  const planned = await planRows(files);
+  const planned = await planRows(userId, files);
   const {
     rows,
     skippedDup,
@@ -164,9 +164,9 @@ export const importAppleNotesFromFiles = async (
     existingIds,
   } = planned;
 
-  const pendingCreate = rows.filter((row) => row.existingId == null).length;
+  const pendingCreate = rows.filter((row) => row.existingId === null).length;
   const pendingDateUpdate = rows.filter(
-    (row) => row.existingId != null && row.hasMeta
+    (row) => row.existingId !== null && row.hasMeta
   ).length;
 
   let loaded = 0;
@@ -177,7 +177,7 @@ export const importAppleNotesFromFiles = async (
     await Promise.all(
       batch.map(async (row) => {
         try {
-          if (row.existingId != null) {
+          if (row.existingId !== null) {
             if (!row.hasMeta) {
               return;
             }
@@ -195,7 +195,7 @@ export const importAppleNotesFromFiles = async (
 
           await prisma.lyrics.create({
             data: {
-              userId: owner.id,
+              userId,
               lyric_id: row.lyricId,
               source: 'APPLE_NOTES',
               date: row.date,

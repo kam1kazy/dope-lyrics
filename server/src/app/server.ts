@@ -7,6 +7,7 @@ import { isProduction } from '~/config/env';
 import { securityPlugin } from '~/config/security';
 import { graphqlPath, yoga } from '~/graphql/schema';
 import { prisma } from '~/infrastructure/prisma';
+import { authRoutes } from '~/modules/auth/auth.routes';
 
 export function createApp() {
   const app = new Elysia()
@@ -33,6 +34,7 @@ export function createApp() {
         maxAge: 86400,
       })
     )
+    .use(authRoutes)
     .get('/health', async () => {
       await prisma.$queryRaw`SELECT 1`;
       return { status: 'ok' };

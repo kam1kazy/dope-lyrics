@@ -52,6 +52,10 @@ const NextConfig = {
         source: '/graphql',
         destination: `${apiOrigin}/graphql`,
       },
+      {
+        source: '/auth/:path*',
+        destination: `${apiOrigin}/auth/:path*`,
+      },
     ];
   },
 };

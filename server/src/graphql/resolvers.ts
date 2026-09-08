@@ -1,3 +1,5 @@
+import { GraphQLError } from 'graphql';
+
 import { env } from '~/config/env';
 import { fetchIngestApply, fetchIngestPreview } from '~/graphql/ingest-client';
 import { roleProfilesFromJson } from '~/modules/lyrics/lyric-facets';
@@ -135,12 +137,22 @@ type LyricsByIdsArgs = {
   ids: number[];
 };
 
+function requireUser(context: GraphQLContext) {
+  if (!context.user) {
+    throw new GraphQLError('Нет доступа');
+  }
+
+  return context.user;
+}
+
 function lyricsListOptionsFromArgs(
+  userId: number,
   args: LyricsArgs,
   limit: number,
   offset: number
 ) {
   return {
+    userId,
     limit,
     offset,
     tags: args.tags,
@@ -200,26 +212,27 @@ export const resolvers = {
     users: (_parent: unknown, _args: unknown, _context: GraphQLContext) => {
       return usersService.list();
     },
-    lyricTags: (_parent: unknown, _args: unknown, _context: GraphQLContext) => {
-      return lyricsService.listTags();
+    lyricTags: (_parent: unknown, _args: unknown, context: GraphQLContext) => {
+      const user = requireUser(context);
+      return lyricsService.listTags(user.id);
     },
     lyricEmojis: (
       _parent: unknown,
       _args: unknown,
-      _context: GraphQLContext
+      context: GraphQLContext
     ) => {
-      return lyricsService.listEmojis();
+      const user = requireUser(context);
+      return lyricsService.listEmojis(user.id);
     },
-    lyricDemos: (
-      _parent: unknown,
-      _args: unknown,
-      _context: GraphQLContext
-    ) => {
-      return lyricsService.listDemos();
+    lyricDemos: (_parent: unknown, _args: unknown, context: GraphQLContext) => {
+      const user = requireUser(context);
+      return lyricsService.listDemos(user.id);
     },
-    lyrics: (_parent: unknown, args: LyricsArgs, _context: GraphQLContext) => {
+    lyrics: (_parent: unknown, args: LyricsArgs, context: GraphQLContext) => {
+      const user = requireUser(context);
       return lyricsService.list(
         lyricsListOptionsFromArgs(
+          user.id,
           args,
           clampLimit(args.limit),
           clampOffset(args.offset)
@@ -229,69 +242,74 @@ export const resolvers = {
     lyricIngestPreview: (
       _parent: unknown,
       _args: unknown,
-      _context: GraphQLContext
+      context: GraphQLContext
     ) => {
+      requireUser(context);
       return fetchIngestPreview();
     },
     catalogStats: (
       _parent: unknown,
       args: CatalogScopeArgs,
-      _context: GraphQLContext
+      context: GraphQLContext
     ) => {
-      return lyricsService.catalogStats(args);
+      const user = requireUser(context);
+      return lyricsService.catalogStats(user.id, args);
     },
     catalogActivity: (
       _parent: unknown,
       args: CatalogScopeArgs & { days: number },
-      _context: GraphQLContext
+      context: GraphQLContext
     ) => {
-      return lyricsService.catalogActivity(args.days, args);
+      const user = requireUser(context);
+      return lyricsService.catalogActivity(user.id, args.days, args);
     },
     assembleTrack: (
       _parent: unknown,
       args: AssembleTrackArgs,
-      _context: GraphQLContext
+      context: GraphQLContext
     ) => {
-      return lyricsService.assembleTrack(args.form, args.filter);
+      const user = requireUser(context);
+      return lyricsService.assembleTrack(user.id, args.form, args.filter);
     },
     lyricCollages: (
       _parent: unknown,
       _args: unknown,
-      _context: GraphQLContext
+      context: GraphQLContext
     ) => {
-      return lyricsService.listCollages();
+      const user = requireUser(context);
+      return lyricsService.listCollages(user.id);
     },
-    lyricIds: (
-      _parent: unknown,
-      args: LyricsArgs,
-      _context: GraphQLContext
-    ) => {
+    lyricIds: (_parent: unknown, args: LyricsArgs, context: GraphQLContext) => {
+      const user = requireUser(context);
       return lyricsService.listOrderedIds(
-        lyricsListOptionsFromArgs(args, 0, 0)
+        lyricsListOptionsFromArgs(user.id, args, 0, 0)
       );
     },
     lyricsByIds: (
       _parent: unknown,
       args: LyricsByIdsArgs,
-      _context: GraphQLContext
+      context: GraphQLContext
     ) => {
-      return lyricsService.listByIds(args.ids);
+      const user = requireUser(context);
+      return lyricsService.listByIds(user.id, args.ids);
     },
     carouselHistories: (
       _parent: unknown,
       _args: unknown,
-      _context: GraphQLContext
+      context: GraphQLContext
     ) => {
-      return lyricsService.listCarouselHistories();
+      const user = requireUser(context);
+      return lyricsService.listCarouselHistories(user.id);
     },
   },
   Mutation: {
     updateLyricFlags: (
       _parent: unknown,
       args: UpdateLyricFlagsArgs,
-      _context: GraphQLContext
+      context: GraphQLContext
     ) => {
-      return lyricsService.updateFlags(args.id, {
+      const user = requireUser(context);
+      return lyricsService.updateFlags(user.id, args.id, {
         isHidden: args.isHidden ?? undefined,
         isFavorite: args.isFavorite ?? undefined,
         isReference: args.isReference ?? undefined,
@@ -303,9 +321,10 @@ export const resolvers = {
     updateLyricProfile: (
       _parent: unknown,
       args: UpdateLyricProfileArgs,
-      _context: GraphQLContext
+      context: GraphQLContext
     ) => {
-      return lyricsService.updateProfile(args.id, {
+      const user = requireUser(context);
+      return lyricsService.updateProfile(user.id, args.id, {
         mood: args.mood,
         delivery: args.delivery,
         roleProfiles: args.roleProfiles,
@@ -316,23 +335,27 @@ export const resolvers = {
     updateLyricText: (
       _parent: unknown,
       args: UpdateLyricTextArgs,
-      _context: GraphQLContext
+      context: GraphQLContext
     ) => {
-      return lyricsService.updateLyricText(args.id, args.text);
+      const user = requireUser(context);
+      return lyricsService.updateLyricText(user.id, args.id, args.text);
     },
     splitLyric: (
       _parent: unknown,
       args: SplitLyricArgs,
-      _context: GraphQLContext
+      context: GraphQLContext
     ) => {
-      return lyricsService.splitLyric(args.id, args.afterLine);
+      const user = requireUser(context);
+      return lyricsService.splitLyric(user.id, args.id, args.afterLine);
     },
     sliceLyric: (
       _parent: unknown,
       args: SliceLyricArgs,
-      _context: GraphQLContext
+      context: GraphQLContext
     ) => {
+      const user = requireUser(context);
       return lyricsService.sliceLyric(
+        user.id,
         args.id,
         args.ranges,
         Boolean(args.ripDonor)
@@ -341,58 +364,74 @@ export const resolvers = {
     ingestPendingLyrics: (
       _parent: unknown,
       _args: unknown,
-      _context: GraphQLContext
+      context: GraphQLContext
     ) => {
+      requireUser(context);
       return fetchIngestApply();
     },
     likeCollage: (
       _parent: unknown,
       args: LikeCollageArgs,
-      _context: GraphQLContext
+      context: GraphQLContext
     ) => {
-      return lyricsService.likeCollage(args.slots);
+      const user = requireUser(context);
+      return lyricsService.likeCollage(user.id, args.slots);
     },
     unlikeCollage: (
       _parent: unknown,
       args: UnlikeCollageArgs,
-      _context: GraphQLContext
+      context: GraphQLContext
     ) => {
-      return lyricsService.unlikeCollage(args.id);
+      const user = requireUser(context);
+      return lyricsService.unlikeCollage(user.id, args.id);
     },
     glueLyrics: (
       _parent: unknown,
       args: GlueLyricsArgs,
-      _context: GraphQLContext
+      context: GraphQLContext
     ) => {
-      return lyricsService.glueLyrics(args.slots, Boolean(args.hideOriginals));
+      const user = requireUser(context);
+      return lyricsService.glueLyrics(
+        user.id,
+        args.slots,
+        Boolean(args.hideOriginals)
+      );
     },
     saveCarouselHistory: (
       _parent: unknown,
       args: SaveCarouselHistoryArgs,
-      _context: GraphQLContext
+      context: GraphQLContext
     ) => {
-      return lyricsService.saveCarouselHistory(args.lyricIds, args.source);
+      const user = requireUser(context);
+      return lyricsService.saveCarouselHistory(
+        user.id,
+        args.lyricIds,
+        args.source
+      );
     },
     likeCarouselHistory: (
       _parent: unknown,
       args: CarouselHistoryIdArgs,
-      _context: GraphQLContext
+      context: GraphQLContext
     ) => {
-      return lyricsService.likeCarouselHistory(args.id);
+      const user = requireUser(context);
+      return lyricsService.likeCarouselHistory(user.id, args.id);
     },
     unlikeCarouselHistory: (
       _parent: unknown,
       args: CarouselHistoryIdArgs,
-      _context: GraphQLContext
+      context: GraphQLContext
     ) => {
-      return lyricsService.unlikeCarouselHistory(args.id);
+      const user = requireUser(context);
+      return lyricsService.unlikeCarouselHistory(user.id, args.id);
     },
     deleteCarouselHistory: (
       _parent: unknown,
       args: CarouselHistoryIdArgs,
-      _context: GraphQLContext
+      context: GraphQLContext
     ) => {
-      return lyricsService.deleteCarouselHistory(args.id);
+      const user = requireUser(context);
+      return lyricsService.deleteCarouselHistory(user.id, args.id);
     },
   },
   Lyric: {

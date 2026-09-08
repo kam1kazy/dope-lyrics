@@ -1,18 +1,26 @@
 'use client';
 
-import { type ReactNode, useEffect, useState } from 'react';
+import { type ReactNode, useCallback, useEffect, useState } from 'react';
 
+import { fetchAuthMe, loginWithTelegramWebApp } from '@/shared/api';
 import { reloadIfStaleDeploy } from '@/shared/lib/deploy-at';
 import {
   prepareTelegramWebApp,
   whenTelegramWebAppReady,
 } from '@/shared/lib/telegram-webapp';
 
+import { LoginScreen } from './login-screen';
+
 const isProductionBuild = process.env.NODE_ENV === 'production';
 
 export function TelegramGate({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(!isProductionBuild);
   const [allowed, setAllowed] = useState(!isProductionBuild);
+
+  const allow = useCallback(() => {
+    setAllowed(true);
+    setReady(true);
+  }, []);
 
   useEffect(() => {
     if (!isProductionBuild) {
@@ -27,16 +35,42 @@ export function TelegramGate({ children }: { children: ReactNode }) {
         return;
       }
 
+      try {
+        const sessionUser = await fetchAuthMe();
+        if (cancelled) {
+          return;
+        }
+
+        if (sessionUser) {
+          setAllowed(true);
+          setReady(true);
+          return;
+        }
+      } catch {
+        // continue to Mini App / login
+      }
+
       const webApp = await whenTelegramWebAppReady();
       if (cancelled) {
         return;
       }
 
-      if (webApp) {
+      if (webApp?.initData) {
         prepareTelegramWebApp();
+
+        const result = await loginWithTelegramWebApp(webApp.initData);
+        if (cancelled) {
+          return;
+        }
+
+        if (result.ok) {
+          setAllowed(true);
+          setReady(true);
+          return;
+        }
       }
 
-      setAllowed(Boolean(webApp?.initData));
+      setAllowed(false);
       setReady(true);
     })();
 
@@ -50,11 +84,7 @@ export function TelegramGate({ children }: { children: ReactNode }) {
   }
 
   if (!allowed) {
-    return (
-      <div className="lyric-app bg-background text-foreground flex h-svh items-center justify-center p-6 text-center">
-        <p>Откройте каталог из Telegram</p>
-      </div>
-    );
+    return <LoginScreen onSuccess={allow} />;
   }
 
   return children;

@@ -42,7 +42,8 @@ const seed = async () => {
 
   const chatHistory = readJson<IChatHistoryItem[]>(chatHistoryPath);
   if (chatHistory?.length) {
-    await lyricsService.loadNewRecords(chatHistory);
+    const owner = await usersService.ensureOwner();
+    await lyricsService.loadNewRecords(owner.id, chatHistory);
   }
 };
 

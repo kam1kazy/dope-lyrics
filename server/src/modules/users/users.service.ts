@@ -1,14 +1,8 @@
-import { env } from '~/config/env';
+import { env, telegramAdminId } from '~/config/env';
+import type { UserRole } from '~/generated/prisma/client';
 import { lyricInclude } from '~/graphql/lyric-include';
 import { prisma } from '~/infrastructure/prisma';
 import type { IUser } from '~/modules/users/users.types';
-
-const DEFAULT_OWNER = {
-  id: 1,
-  username: 'owner',
-  email: 'owner@localhost',
-  password: 'owner',
-} as const;
 
 export class UsersService {
   private readonly prisma = prisma;
@@ -18,6 +12,8 @@ export class UsersService {
       select: {
         id: true,
         username: true,
+        role: true,
+        telegramId: true,
         lyrics: {
           take: env.GRAPHQL_MAX_LIMIT,
           orderBy: { date: 'desc' },
@@ -29,9 +25,52 @@ export class UsersService {
 
   async getOwner() {
     return (
+      (await this.prisma.users.findFirst({
+        where: { role: 'OWNER' },
+        orderBy: { id: 'asc' },
+      })) ??
       (await this.prisma.users.findUnique({ where: { id: 1 } })) ??
       (await this.prisma.users.findFirst())
     );
+  }
+
+  async findByTelegramId(telegramId: number | bigint) {
+    return this.prisma.users.findUnique({
+      where: { telegramId: BigInt(telegramId) },
+    });
+  }
+
+  async findOrCreateByTelegramId({
+    telegramId,
+    username,
+  }: {
+    telegramId: number;
+    username?: string | null;
+  }) {
+    const existing = await this.findByTelegramId(telegramId);
+    if (existing) {
+      const nextUsername =
+        username?.trim() || existing.username || `tg_${telegramId}`;
+      if (nextUsername !== existing.username) {
+        return this.prisma.users.update({
+          where: { id: existing.id },
+          data: { username: nextUsername },
+        });
+      }
+      return existing;
+    }
+
+    const isOwner =
+      Number.isFinite(telegramAdminId) && telegramId === telegramAdminId;
+    const role: UserRole = isOwner ? 'OWNER' : 'USER';
+
+    return this.prisma.users.create({
+      data: {
+        telegramId: BigInt(telegramId),
+        username: username?.trim() || `tg_${telegramId}`,
+        role,
+      },
+    });
   }
 
   async ensureOwner() {
@@ -41,12 +80,18 @@ export class UsersService {
       return existing;
     }
 
+    if (!Number.isFinite(telegramAdminId) || telegramAdminId <= 0) {
+      throw new Error(
+        'PRISMA: не задан BOT_ADMIN_ID — нельзя создать владельца каталога'
+      );
+    }
+
     const created = await this.prisma.users.create({
       data: {
-        id: DEFAULT_OWNER.id,
-        username: DEFAULT_OWNER.username,
-        email: DEFAULT_OWNER.email,
-        password: DEFAULT_OWNER.password,
+        id: 1,
+        username: 'owner',
+        telegramId: BigInt(telegramAdminId),
+        role: 'OWNER',
       },
     });
     console.log(`PRISMA: 📝 Создан владелец каталога UserID: ${created.id}`);
@@ -71,6 +116,7 @@ export class UsersService {
             username,
             email,
             password,
+            role: id === 1 ? 'OWNER' : 'USER',
           })),
           skipDuplicates: true,
         });

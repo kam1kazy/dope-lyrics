@@ -1,6 +1,7 @@
 import { lyricsService } from '~/modules/lyrics/lyrics.service';
 import { fetchNewHistory } from '~/modules/lyrics/parse/fetch-new-history';
 import { lyricToHistoryItem } from '~/modules/lyrics/persist/lyric-to-history-item';
+import { usersService } from '~/modules/users/users.service';
 import type { TypeBotClient } from '~/mtcute/types';
 
 export type IngestPreviewResponse = {
@@ -64,7 +65,14 @@ export function startIngestHttp({
 
         try {
           return await withIngestLock(async () => {
-            const existingIds = new Set(await lyricsService.listLyricIds());
+            const owner = await usersService.getOwner();
+            if (!owner) {
+              throw new Error('Владелец каталога не найден');
+            }
+
+            const existingIds = new Set(
+              await lyricsService.listLyricIds(owner.id)
+            );
             const fresh = await fetchNewHistory({
               tg: tgAdmin,
               chatId: channelId,
@@ -82,7 +90,10 @@ export function startIngestHttp({
             const records = fresh
               .map(lyricToHistoryItem)
               .filter((item) => item !== null);
-            const addedCount = await lyricsService.loadNewRecords(records);
+            const addedCount = await lyricsService.loadNewRecords(
+              owner.id,
+              records
+            );
             const body: IngestApplyResponse = {
               available: true,
               addedCount,

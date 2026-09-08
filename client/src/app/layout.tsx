@@ -1,6 +1,6 @@
 import '@/shared/styles/globals.css';
 
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import Script from 'next/script';
 import type { ReactNode } from 'react';
@@ -15,6 +15,40 @@ export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {
   title: 'DOPE LYRICS',
   description: 'App to Telegram lyrics bot',
+  applicationName: 'Dope Lyrics',
+  appleWebApp: {
+    title: 'Dope Lyrics',
+    capable: true,
+    statusBarStyle: 'default',
+  },
+  icons: {
+    icon: [
+      {
+        url: '/favicon/favicon-32x32.png',
+        sizes: '32x32',
+        type: 'image/png',
+      },
+      {
+        url: '/favicon/favicon-16x16.png',
+        sizes: '16x16',
+        type: 'image/png',
+      },
+    ],
+    apple: [
+      {
+        url: '/favicon/apple-touch-icon.png',
+        sizes: '180x180',
+      },
+    ],
+    other: [
+      {
+        rel: 'mask-icon',
+        url: '/favicon/safari-pinned-tab.svg',
+        color: '#0f110e',
+      },
+    ],
+  },
+  manifest: '/favicon/site.webmanifest',
   robots: {
     index: false,
     follow: false,
@@ -25,6 +59,10 @@ export const metadata: Metadata = {
       noimageindex: true,
     },
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: '#0f110e',
 };
 
 export default function RootLayout({

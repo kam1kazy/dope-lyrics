@@ -8,7 +8,8 @@ import {
 import { parseBotEnv } from '~/config/env';
 import { lyricsService } from '~/modules/lyrics/lyrics.service';
 import { getChatHistory } from '~/modules/lyrics/parse/get-chat-history';
-import { assertAdmin } from '~/mtcute/guards/assert-admin';
+import { usersService } from '~/modules/users/users.service';
+import { assertPermission } from '~/mtcute/guards/assert-admin';
 import { sendToBotChat } from '~/mtcute/send';
 import type { TypeBotClient } from '~/mtcute/types';
 
@@ -30,9 +31,10 @@ interface ICommandChat {
 const commandChatId = async ({ tg, msg }: ICommandChat) => {
   if (!tg) return;
 
-  await assertAdmin({
+  await assertPermission({
     tg,
     msg: msg as filters.Modify<MessageContext, { command: string[] }>,
+    permission: 'db:parse',
     action: async () => {
       const text = '💳 Chat ID: ' + msg.chat.id;
       sendToBotChat({ tg, chatId: msg.chat.id, text });
@@ -42,9 +44,10 @@ const commandChatId = async ({ tg, msg }: ICommandChat) => {
 
 const commandStartApp = async ({ tg, msg }: ICommandChat) => {
   if (!tg) return;
-  await assertAdmin({
+  await assertPermission({
     tg,
     msg: msg as filters.Modify<MessageContext, { command: string[] }>,
+    permission: 'catalog:own',
     action: async () => {
       const text = '📱 Вы хотите открыть приложение?';
       await tg.sendText(msg.chat.id, text, {
@@ -58,9 +61,10 @@ const commandStartApp = async ({ tg, msg }: ICommandChat) => {
 
 const commandStartBd = async ({ tg, msg, keyboard }: ICommandChat) => {
   if (!tg) return;
-  await assertAdmin({
+  await assertPermission({
     tg,
     msg: msg as filters.Modify<MessageContext, { command: string[] }>,
+    permission: 'db:seed',
     action: async () => {
       const text = '⚡️ Управление базой данных';
       await tg.sendText(msg.chat.id, text, {
@@ -72,9 +76,10 @@ const commandStartBd = async ({ tg, msg, keyboard }: ICommandChat) => {
 
 const commandChatHistory = async ({ tgAdmin, msg }: ICommandChat) => {
   if (!tgAdmin) return;
-  await assertAdmin({
+  await assertPermission({
     tg: tgAdmin,
     msg: msg as filters.Modify<MessageContext, { command: string[] }>,
+    permission: 'db:parse',
     action: async () => {
       await getChatHistory({ tg: tgAdmin, chatId: channelId });
     },
@@ -84,10 +89,11 @@ const commandChatHistory = async ({ tgAdmin, msg }: ICommandChat) => {
 const seedToDb = async ({ tgAdmin, msg }: ICommandChat) => {
   if (!tgAdmin) return;
 
-  await assertAdmin({
+  await assertPermission({
     tg: tgAdmin,
     msg: msg as filters.Modify<MessageContext, { command: string[] }>,
     msgCallback: msg as CallbackQueryContext,
+    permission: 'db:seed',
     action: async () => {
       sendToBotChat({
         tg: tgAdmin,
@@ -102,26 +108,32 @@ const seedToDb = async ({ tgAdmin, msg }: ICommandChat) => {
 
 const clearDb = async ({ tgAdmin, msg }: ICommandChat) => {
   if (!tgAdmin) return;
-  await assertAdmin({
+  await assertPermission({
     tg: tgAdmin,
     msg: msg as filters.Modify<MessageContext, { command: string[] }>,
     msgCallback: msg as CallbackQueryContext,
+    permission: 'db:clear',
     action: async () => {
       sendToBotChat({
         tg: tgAdmin,
         chatId,
         text: '🧹 Началась очистка базы...',
       });
-      await lyricsService.clearCatalog();
+      const owner = await usersService.getOwner();
+      if (!owner) {
+        throw new Error('Владелец каталога не найден');
+      }
+      await lyricsService.clearCatalog(owner.id);
     },
   });
 };
 
 const getStats = async ({ tgAdmin, msg }: ICommandChat) => {
   if (!tgAdmin) return;
-  await assertAdmin({
+  await assertPermission({
     tg: tgAdmin,
     msg: msg as filters.Modify<MessageContext, { command: string[] }>,
+    permission: 'users:list',
     action: async () => {
       const stats = await lyricsService.getStats();
 

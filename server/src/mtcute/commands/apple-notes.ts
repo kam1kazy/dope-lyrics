@@ -10,6 +10,7 @@ import {
   formatAppleNotesImportSummary,
   importAppleNotesFromFiles,
 } from '~/modules/lyrics/import/apple-notes-import';
+import { usersService } from '~/modules/users/users.service';
 import {
   buildAppleNotesExportScript,
   DEFAULT_NOTES_FOLDER_PATH,
@@ -19,7 +20,7 @@ import {
   extractAppleNotesFromZip,
   MAX_APPLE_NOTES_ZIP_BYTES,
 } from '~/mtcute/apple-notes/extract-zip';
-import { assertAdmin } from '~/mtcute/guards/assert-admin';
+import { assertPermission } from '~/mtcute/guards/assert-admin';
 import type { TypeBotClient } from '~/mtcute/types';
 
 const PENDING_TTL_MS = 30 * 60 * 1000;
@@ -39,65 +40,68 @@ type NotesSettings = {
   folderPath: string;
 };
 
-const pendingZipByAdmin = new Map<number, PendingZip>();
-const pendingPathByAdmin = new Map<number, PendingPath>();
-const settingsByAdmin = new Map<number, NotesSettings>();
+/** Ожидание zip / путь / настройки — по Telegram id отправителя. */
+const pendingZipByTelegramId = new Map<number, PendingZip>();
+const pendingPathByTelegramId = new Map<number, PendingPath>();
+const settingsByTelegramId = new Map<number, NotesSettings>();
 
-const adminIdFromMessage = (msg: MessageContext): number =>
+const telegramIdFromMessage = (msg: MessageContext): number =>
   Number(msg.sender?.id);
 
-const adminIdFromCallback = (query: CallbackQueryContext): number =>
+const telegramIdFromCallback = (query: CallbackQueryContext): number =>
   Number(query.user?.id);
 
-const getFolderPath = (adminId: number): string =>
-  settingsByAdmin.get(adminId)?.folderPath ?? DEFAULT_NOTES_FOLDER_PATH;
+const getFolderPath = (telegramId: number): string =>
+  settingsByTelegramId.get(telegramId)?.folderPath ?? DEFAULT_NOTES_FOLDER_PATH;
 
-const saveFolderPath = (adminId: number, rawPath: string): string => {
+const saveFolderPath = (telegramId: number, rawPath: string): string => {
   const normalized = parseNotesFolderPath(rawPath).join('/');
-  settingsByAdmin.set(adminId, { folderPath: normalized });
+  settingsByTelegramId.set(telegramId, { folderPath: normalized });
   return normalized;
 };
 
-export const clearAppleNotesPending = (adminId: number) => {
-  pendingZipByAdmin.delete(adminId);
+export const clearAppleNotesPending = (telegramId: number) => {
+  pendingZipByTelegramId.delete(telegramId);
 };
 
-export const setAppleNotesPending = (adminId: number) => {
-  pendingZipByAdmin.set(adminId, { expiresAt: Date.now() + PENDING_TTL_MS });
+export const setAppleNotesPending = (telegramId: number) => {
+  pendingZipByTelegramId.set(telegramId, {
+    expiresAt: Date.now() + PENDING_TTL_MS,
+  });
 };
 
-export const hasAppleNotesPending = (adminId: number): boolean => {
-  const pending = pendingZipByAdmin.get(adminId);
+export const hasAppleNotesPending = (telegramId: number): boolean => {
+  const pending = pendingZipByTelegramId.get(telegramId);
   if (!pending) {
     return false;
   }
 
   if (pending.expiresAt < Date.now()) {
-    pendingZipByAdmin.delete(adminId);
+    pendingZipByTelegramId.delete(telegramId);
     return false;
   }
 
   return true;
 };
 
-const clearPathAwait = (adminId: number) => {
-  pendingPathByAdmin.delete(adminId);
+const clearPathAwait = (telegramId: number) => {
+  pendingPathByTelegramId.delete(telegramId);
 };
 
-const setPathAwait = (adminId: number) => {
-  pendingPathByAdmin.set(adminId, {
+const setPathAwait = (telegramId: number) => {
+  pendingPathByTelegramId.set(telegramId, {
     expiresAt: Date.now() + PATH_AWAIT_TTL_MS,
   });
 };
 
-export const hasPathAwait = (adminId: number): boolean => {
-  const pending = pendingPathByAdmin.get(adminId);
+export const hasPathAwait = (telegramId: number): boolean => {
+  const pending = pendingPathByTelegramId.get(telegramId);
   if (!pending) {
     return false;
   }
 
   if (pending.expiresAt < Date.now()) {
-    pendingPathByAdmin.delete(adminId);
+    pendingPathByTelegramId.delete(telegramId);
     return false;
   }
 
@@ -135,13 +139,13 @@ const cancelKeyboard = () =>
     ],
   ]);
 
-const cancelAwaiting = (adminId: number) => {
-  clearAppleNotesPending(adminId);
-  clearPathAwait(adminId);
+const cancelAwaiting = (telegramId: number) => {
+  clearAppleNotesPending(telegramId);
+  clearPathAwait(telegramId);
 };
 
-const menuText = (adminId: number) => {
-  const path = getFolderPath(adminId);
+const menuText = (telegramId: number) => {
+  const path = getFolderPath(telegramId);
   return thtml`🍎 <b>Apple Notes</b>
 
 Текущий путь в Notes: <code>${path}</code>
@@ -154,7 +158,7 @@ const faqText = () =>
   thtml`📖 <b>FAQ · импорт Apple Notes</b>
 
 <b>Зачем это</b>
-Выгружаешь папку из Notes на Mac → сжимаешь в zip → кидаешь боту. В каталог попадают тексты с источником <code>APPLE_NOTES</code> и датами из шапки файла.
+Выгружаешь папку из Notes на Mac → сжимаешь в zip → кидаешь боту. В каталог попадают тексты с источником <code>APPLE_NOTES</code> и датами из шапки файла. Импорт пишется <b>только в твой</b> каталог.
 
 <b>Как пользоваться</b>
 1️⃣ <b>Настройки</b> — укажи путь папки внутри Notes через <code>/</code>
@@ -165,6 +169,10 @@ const faqText = () =>
 4️⃣ Сожми эту папку в <b>zip</b>
 5️⃣ В боте нажми <b>Загрузить</b> и пришли zip (до 40 МБ, ~30 мин)
 
+<b>Канал Telegram</b>
+<code>/channel bind</code> — новые посты канала в твой каталог.
+Историю бот <b>не читает</b>: попадут только посты после привязки. Старый корпус — через Notes или экспорт.
+
 <b>Повторный импорт</b>
 Те же тексты не плодятся. Если в YAML обновились даты — они подтянутся.
 
@@ -174,13 +182,13 @@ const faqText = () =>
 const sendScript = async ({
   tg,
   chatId,
-  adminId,
+  telegramId,
 }: {
   tg: TypeBotClient;
   chatId: number;
-  adminId: number;
+  telegramId: number;
 }) => {
-  const folderPath = getFolderPath(adminId);
+  const folderPath = getFolderPath(telegramId);
   const built = buildAppleNotesExportScript(folderPath);
   const fileName = 'dope-notes-export.applescript';
   const scriptBytes = Buffer.from(built.script, 'utf8');
@@ -206,11 +214,12 @@ export const commandAppleNotes = async ({
   tg: TypeBotClient;
   msg: filters.Modify<MessageContext, { command: string[] }>;
 }) => {
-  await assertAdmin({
+  await assertPermission({
     tg,
     msg,
+    permission: 'notes:import',
     action: async () => {
-      const adminId = adminIdFromMessage(msg);
+      const telegramId = telegramIdFromMessage(msg);
       const arg = msg.command
         .slice(1)
         .map((part) => part.trim())
@@ -218,7 +227,7 @@ export const commandAppleNotes = async ({
         .join(' ');
 
       if (arg.toLowerCase() === 'cancel') {
-        cancelAwaiting(adminId);
+        cancelAwaiting(telegramId);
         await tg.sendText(msg.chat.id, 'Ожидание zip и ввод пути отменены.', {
           replyMarkup: notesKeyboard(),
         });
@@ -227,7 +236,7 @@ export const commandAppleNotes = async ({
 
       if (arg) {
         try {
-          saveFolderPath(adminId, arg);
+          saveFolderPath(telegramId, arg);
         } catch (error) {
           const message =
             error instanceof Error ? error.message : 'Некорректный путь папки';
@@ -236,7 +245,7 @@ export const commandAppleNotes = async ({
         }
       }
 
-      await tg.sendText(msg.chat.id, menuText(adminId), {
+      await tg.sendText(msg.chat.id, menuText(telegramId), {
         replyMarkup: notesKeyboard(),
       });
     },
@@ -265,12 +274,13 @@ export const handleNotesCallback = async ({
     return true;
   }
 
-  await assertAdmin({
+  await assertPermission({
     tg,
     msg: query as never,
     msgCallback: query,
+    permission: 'notes:import',
     action: async () => {
-      const adminId = adminIdFromCallback(query);
+      const telegramId = telegramIdFromCallback(query);
       const action = data.action;
 
       switch (action) {
@@ -282,14 +292,14 @@ export const handleNotesCallback = async ({
 
         case 'settings': {
           await query.answer({ text: 'Настройки' });
-          setPathAwait(adminId);
-          clearAppleNotesPending(adminId);
+          setPathAwait(telegramId);
+          clearAppleNotesPending(telegramId);
           await tg.sendText(
             chatId,
             thtml`⚙️ <b>Путь папки в Notes</b>
 
 Пришли путь сегментами через <code>/</code>.
-Сейчас: <code>${getFolderPath(adminId)}</code>
+Сейчас: <code>${getFolderPath(telegramId)}</code>
 
 Пример: <code>Музыка/Рэпчик</code>`,
             { replyMarkup: cancelKeyboard() }
@@ -300,7 +310,7 @@ export const handleNotesCallback = async ({
         case 'script': {
           await query.answer({ text: 'Отправляю скрипт…' });
           try {
-            await sendScript({ tg, chatId, adminId });
+            await sendScript({ tg, chatId, telegramId });
           } catch (error) {
             const message =
               error instanceof Error ? error.message : 'Ошибка скрипта';
@@ -311,8 +321,8 @@ export const handleNotesCallback = async ({
 
         case 'upload': {
           await query.answer({ text: 'Жду zip' });
-          clearPathAwait(adminId);
-          setAppleNotesPending(adminId);
+          clearPathAwait(telegramId);
+          setAppleNotesPending(telegramId);
           await tg.sendText(
             chatId,
             thtml`📦 <b>Жду zip</b> с экспортом
@@ -325,7 +335,7 @@ export const handleNotesCallback = async ({
         }
 
         case 'cancel': {
-          cancelAwaiting(adminId);
+          cancelAwaiting(telegramId);
           await query.answer({ text: 'Отменено' });
           await tg.sendText(chatId, 'Ожидание zip и ввод пути отменены.', {
             replyMarkup: notesKeyboard(),
@@ -349,8 +359,8 @@ export const handleAppleNotesPathText = async ({
   tg: TypeBotClient;
   msg: MessageContext;
 }): Promise<boolean> => {
-  const adminId = adminIdFromMessage(msg);
-  if (!hasPathAwait(adminId)) {
+  const telegramId = telegramIdFromMessage(msg);
+  if (!hasPathAwait(telegramId)) {
     return false;
   }
 
@@ -359,13 +369,14 @@ export const handleAppleNotesPathText = async ({
     return false;
   }
 
-  await assertAdmin({
+  await assertPermission({
     tg,
     msg: msg as filters.Modify<MessageContext, { command: string[] }>,
+    permission: 'notes:import',
     action: async () => {
       try {
-        const normalized = saveFolderPath(adminId, text);
-        clearPathAwait(adminId);
+        const normalized = saveFolderPath(telegramId, text);
+        clearPathAwait(telegramId);
         await tg.sendText(
           msg.chat.id,
           thtml`✅ Путь сохранён: <code>${normalized}</code>
@@ -391,8 +402,8 @@ export const handleAppleNotesZipDocument = async ({
   tg: TypeBotClient;
   msg: MessageContext;
 }): Promise<boolean> => {
-  const adminId = adminIdFromMessage(msg);
-  if (!hasAppleNotesPending(adminId)) {
+  const telegramId = telegramIdFromMessage(msg);
+  if (!hasAppleNotesPending(telegramId)) {
     return false;
   }
 
@@ -427,8 +438,13 @@ export const handleAppleNotesZipDocument = async ({
   try {
     const bytes = await tg.downloadAsBuffer(msg.media);
     const files = extractAppleNotesFromZip(bytes);
-    const result = await importAppleNotesFromFiles(files);
-    clearAppleNotesPending(adminId);
+    const catalogUser = await usersService.findByTelegramId(telegramId);
+    if (!catalogUser) {
+      await tg.sendText(msg.chat.id, 'Сначала откройте приложение');
+      return true;
+    }
+    const result = await importAppleNotesFromFiles(catalogUser.id, files);
+    clearAppleNotesPending(telegramId);
 
     await tg.sendText(
       msg.chat.id,

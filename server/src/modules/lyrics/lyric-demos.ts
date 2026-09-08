@@ -6,20 +6,24 @@ export interface LyricDemoGroup {
   count: number;
 }
 
-const demoLyricsWhere = {
-  isHidden: false,
-  message: {
-    hashtags: {
-      is: {
-        tags: { has: DEMO_TAG },
+const demoLyricsWhere = (userId: number) =>
+  ({
+    userId,
+    isHidden: false,
+    message: {
+      hashtags: {
+        is: {
+          tags: { has: DEMO_TAG },
+        },
       },
     },
-  },
-} as const;
+  }) as const;
 
-export async function listLyricDemos(): Promise<LyricDemoGroup[]> {
+export async function listLyricDemos(
+  userId: number
+): Promise<LyricDemoGroup[]> {
   const rows = await prisma.lyrics.findMany({
-    where: demoLyricsWhere,
+    where: demoLyricsWhere(userId),
     select: {
       message: {
         select: {

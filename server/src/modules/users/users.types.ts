@@ -1,7 +1,9 @@
 export interface IUser {
   id: number;
   username: string;
-  email: string;
-  password: string;
-  isAdmin: boolean;
+  email?: string | null;
+  password?: string | null;
+  isAdmin?: boolean;
+  role?: 'OWNER' | 'ADMIN' | 'USER';
+  telegramId?: bigint | number | null;
 }

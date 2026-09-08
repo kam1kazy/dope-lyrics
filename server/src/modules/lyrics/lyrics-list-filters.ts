@@ -3,6 +3,7 @@ import { LYRIC_SONG_ROLES } from '~/modules/lyrics/lyric-facets';
 import { DEMO_TAG, UNNAMED_DEMO_NAME } from '~/modules/lyrics/shelf-tags';
 
 export interface LyricsListOptions {
+  userId: number;
   limit: number;
   offset: number;
   tags?: string[] | null;
@@ -112,7 +113,12 @@ const buildDateWhere = (
 
 export type LyricScopeFilter = Pick<
   LyricsListOptions,
-  'dateFrom' | 'dateTo' | 'includeShelves' | 'excludeShelves' | 'sources'
+  | 'userId'
+  | 'dateFrom'
+  | 'dateTo'
+  | 'includeShelves'
+  | 'excludeShelves'
+  | 'sources'
 >;
 
 const jsonFacetContains = (
@@ -262,7 +268,7 @@ const isShelfFlag = (value: string): value is ShelfFlag => {
 const normalizeShelfFlags = (
   values: string[] | null | undefined
 ): ShelfFlag[] | null => {
-  if (values == null) {
+  if (values === null || values === undefined) {
     return null;
   }
 
@@ -276,7 +282,7 @@ const buildShelfClause = (
   const included = normalizeShelfFlags(includeShelves);
   const excluded = normalizeShelfFlags(excludeShelves);
 
-  if (included == null && excluded == null) {
+  if (included === null && excluded === null) {
     return null;
   }
 
@@ -361,7 +367,9 @@ const buildShelfClause = (
 export const buildLyricScopeWhere = (
   options: LyricScopeFilter
 ): Prisma.LyricsWhereInput => {
-  const where: Prisma.LyricsWhereInput = {};
+  const where: Prisma.LyricsWhereInput = {
+    userId: options.userId,
+  };
   const andParts: Prisma.LyricsWhereInput[] = [];
   const shelfClause = buildShelfClause(
     options.includeShelves,
@@ -398,6 +406,7 @@ export const buildLyricScopeWhere = (
 export const buildLyricsWhere = (
   options: Pick<
     LyricsListOptions,
+    | 'userId'
     | 'tags'
     | 'keyword'
     | 'emojis'
@@ -500,6 +509,7 @@ export const buildLyricsWhere = (
   }
 
   const where: Prisma.LyricsWhereInput = {
+    userId: options.userId,
     message: {
       AND: messageConditions,
     },

@@ -9,6 +9,7 @@ import {
   History,
   List,
   ListFilter,
+  LogOut,
   PanelLeft,
   Shuffle,
   Sparkles,
@@ -31,6 +32,7 @@ import { CatalogFavoritesPanel } from '@/features/catalog-favorites';
 import { CatalogFilterPane } from '@/features/catalog-filters';
 import { CatalogListPanel } from '@/features/catalog-list';
 import { CatalogStatsPanel } from '@/features/catalog-stats';
+import { logoutSession } from '@/shared/api';
 import {
   type CatalogMenuSection,
   useCatalogMenu,
@@ -258,6 +260,13 @@ export function CatalogMenu() {
     );
   const sidePaneOpen = filtersOpen || historyOpen;
 
+  const handleLogout = () => {
+    void (async () => {
+      await logoutSession();
+      window.location.reload();
+    })();
+  };
+
   return (
     <>
       <div
@@ -329,39 +338,51 @@ export function CatalogMenu() {
             )}
             aria-label="Разделы каталога"
           >
-            {MENU_ITEMS.map(({ id, label, icon: Icon, disabled }) => {
-              const isActive = activeSection === id;
+            <div className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
+              {MENU_ITEMS.map(({ id, label, icon: Icon, disabled }) => {
+                const isActive = activeSection === id;
 
-              return (
-                <Button
-                  key={id}
-                  type="button"
-                  variant={isActive ? 'secondary' : 'ghost'}
-                  className={cn(
-                    'h-auto justify-start gap-2 py-2 pr-2 pl-2 text-left text-sm font-normal whitespace-normal has-[>svg]:pr-3 has-[>svg]:pl-2',
-                    disabled &&
-                      'text-muted-foreground pointer-events-none opacity-50'
-                  )}
-                  aria-disabled={disabled}
-                  disabled={disabled}
-                  aria-pressed={isActive}
-                  onClick={() => {
-                    if (
-                      disabled ||
-                      id === 'references' ||
-                      id === 'ai-settings'
-                    ) {
-                      return;
-                    }
+                return (
+                  <Button
+                    key={id}
+                    type="button"
+                    variant={isActive ? 'secondary' : 'ghost'}
+                    className={cn(
+                      'h-auto justify-start gap-2 py-2 pr-2 pl-2 text-left text-sm font-normal whitespace-normal has-[>svg]:pr-3 has-[>svg]:pl-2',
+                      disabled &&
+                        'text-muted-foreground pointer-events-none opacity-50'
+                    )}
+                    aria-disabled={disabled}
+                    disabled={disabled}
+                    aria-pressed={isActive}
+                    onClick={() => {
+                      if (
+                        disabled ||
+                        id === 'references' ||
+                        id === 'ai-settings'
+                      ) {
+                        return;
+                      }
 
-                    selectSection(id);
-                  }}
-                >
-                  <Icon className="size-4 shrink-0" aria-hidden />
-                  <span className="leading-snug">{label}</span>
-                </Button>
-              );
-            })}
+                      selectSection(id);
+                    }}
+                  >
+                    <Icon className="size-4 shrink-0" aria-hidden />
+                    <span className="leading-snug">{label}</span>
+                  </Button>
+                );
+              })}
+            </div>
+
+            <Button
+              type="button"
+              variant="ghost"
+              className="mt-auto h-auto justify-start gap-2 py-2 pr-2 pl-2 text-left text-sm font-normal has-[>svg]:pr-3 has-[>svg]:pl-2"
+              onClick={handleLogout}
+            >
+              <LogOut className="size-4 shrink-0" aria-hidden />
+              <span className="leading-snug">Выйти</span>
+            </Button>
           </nav>
 
           <div

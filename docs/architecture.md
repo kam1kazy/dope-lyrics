@@ -97,7 +97,7 @@ HTTP: Elysia 1.4 + GraphQL Yoga 5 (не `@elysiajs/graphql-yoga`). Zod env, CORS
 | Apollo → `/graphql` | Без прокси локальный клиент не увидит API |
 | Жёсткий env бота | `parseBotEnv()` без секретов бот не стартует |
 | `password` / `email` в GraphQL | Схема больше не отдаёт; в Prisma-типе User могут остаться |
-| Auth / cookie-сессии | Когда появится вход — модель youways, не invent и не develop |
+| Auth / cookie-сессии | Telegram-учётка + httpOnly cookie; роли OWNER/ADMIN/USER; [ADR 0009](./decisions/0009-user-auth-roles.md) |
 | Linux-хост | Когда будет свой сервер: TLS, закрытый SSH, не светить Postgres |
 | Prisma generate | После клона без `setup` клиент не появится в `src/generated/prisma` |
 | Прод-Docker seed | Контейнер больше не сидит на каждый старт |

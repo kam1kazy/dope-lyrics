@@ -7,14 +7,26 @@ datasource db {
   provider = "postgresql"
 }
 
+enum UserRole {
+  OWNER
+  ADMIN
+  USER
+}
+
 model Users {
   id Int @id @default(autoincrement())
 
-  username String
-  email    String
-  password String
+  username   String
+  email      String?
+  password   String?
+  telegramId BigInt?  @unique
+  role       UserRole @default(USER)
 
-  lyrics Lyrics[]
+  lyrics           Lyrics[]
+  collages         LyricCollage[]
+  carouselHistory  CarouselHistory[]
+  sessions         Session[]
+  channelBindings  ChannelBinding[]
 }
 
 enum LyricSource {
@@ -64,8 +76,8 @@ model Lyrics {
   owner  Users @relation(fields: [userId], references: [id])
 
   @@index([lyric_id])
-  @@index([source, lyric_id])
   @@index([date])
+  @@index([userId, date])
 }
 
 model Message {
@@ -160,7 +172,11 @@ model LyricCollage {
   /// [{ songRole, parts: [{ lyricId, startLine, endLine }] }]. Старый shape { lyricId } ещё читается.
   slots     Json
 
+  userId Int
+  owner  Users @relation(fields: [userId], references: [id])
+
   @@index([createdAt])
+  @@index([userId, createdAt])
 }
 
 enum CarouselHistorySource {
@@ -179,6 +195,36 @@ model CarouselHistory {
   previewText String                 @default("")
   isLiked     Boolean                @default(false)
 
+  userId Int
+  owner  Users @relation(fields: [userId], references: [id])
+
   @@index([createdAt])
   @@index([isLiked])
+  @@index([userId, createdAt])
+}
+
+model Session {
+  id        Int       @id @default(autoincrement())
+  tokenHash String    @unique
+  userId    Int
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  owner Users @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model ChannelBinding {
+  id         Int      @id @default(autoincrement())
+  channelId  BigInt   @unique
+  userId     Int
+  title      String?
+  createdAt  DateTime @default(now())
+
+  owner Users @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
