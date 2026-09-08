@@ -32,7 +32,11 @@ import { CatalogFavoritesPanel } from '@/features/catalog-favorites';
 import { CatalogFilterPane } from '@/features/catalog-filters';
 import { CatalogListPanel } from '@/features/catalog-list';
 import { CatalogStatsPanel } from '@/features/catalog-stats';
-import { logoutSession } from '@/shared/api';
+import {
+  apolloClient,
+  AUTH_SIGNED_OUT_EVENT,
+  logoutSession,
+} from '@/shared/api';
 import {
   type CatalogMenuSection,
   useCatalogMenu,
@@ -122,6 +126,7 @@ export function CatalogMenu() {
     usePlayback();
   const { openRequest, closeSignal, consumeOpenRequest } = useCatalogMenu();
   const [catalogLit, setCatalogLit] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const playing = !paused && canPlay;
 
   useEffect(() => {
@@ -261,9 +266,19 @@ export function CatalogMenu() {
   const sidePaneOpen = filtersOpen || historyOpen;
 
   const handleLogout = () => {
+    if (loggingOut) {
+      return;
+    }
+
     void (async () => {
+      setLoggingOut(true);
       await logoutSession();
-      window.location.reload();
+      try {
+        await apolloClient.clearStore();
+      } catch {
+        // ignore in-flight queries
+      }
+      window.dispatchEvent(new Event(AUTH_SIGNED_OUT_EVENT));
     })();
   };
 
@@ -378,10 +393,13 @@ export function CatalogMenu() {
               type="button"
               variant="ghost"
               className="mt-auto h-auto justify-start gap-2 py-2 pr-2 pl-2 text-left text-sm font-normal has-[>svg]:pr-3 has-[>svg]:pl-2"
+              disabled={loggingOut}
               onClick={handleLogout}
             >
               <LogOut className="size-4 shrink-0" aria-hidden />
-              <span className="leading-snug">Выйти</span>
+              <span className="leading-snug">
+                {loggingOut ? 'Выходим…' : 'Выйти'}
+              </span>
             </Button>
           </nav>
 

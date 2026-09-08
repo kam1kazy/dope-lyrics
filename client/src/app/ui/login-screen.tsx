@@ -3,9 +3,14 @@
 import { useEffect, useRef, useState } from 'react';
 
 import {
+  loginWithTelegramWebApp,
   loginWithTelegramWidget,
   type TelegramLoginPayload,
 } from '@/shared/api';
+import {
+  getTelegramInitData,
+  whenTelegramWebAppReady,
+} from '@/shared/lib/telegram-webapp';
 import { Button } from '@/shared/ui/shadcn/ui/button';
 
 const botUsername =
@@ -26,9 +31,48 @@ export function LoginScreen({ onSuccess }: LoginScreenProps) {
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [hintOpen, setHintOpen] = useState(false);
+  const [webAppInitData, setWebAppInitData] = useState(getTelegramInitData);
+
+  const handleWebAppLogin = () => {
+    if (!webAppInitData || pending) {
+      return;
+    }
+
+    void (async () => {
+      setPending(true);
+      setError(null);
+
+      const result = await loginWithTelegramWebApp(webAppInitData);
+      setPending(false);
+
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+
+      onSuccess();
+    })();
+  };
 
   useEffect(() => {
-    if (!botUsername || !widgetHostRef.current) {
+    let cancelled = false;
+
+    void (async () => {
+      const webApp = await whenTelegramWebAppReady();
+      if (!cancelled && webApp?.initData) {
+        setWebAppInitData(webApp.initData);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const showWidget = Boolean(botUsername) && !webAppInitData;
+
+  useEffect(() => {
+    if (!showWidget || !widgetHostRef.current) {
       return;
     }
 
@@ -75,7 +119,7 @@ export function LoginScreen({ onSuccess }: LoginScreenProps) {
       delete window.onDopeLyricsTelegramAuth;
       host.replaceChildren();
     };
-  }, [onSuccess]);
+  }, [onSuccess, showWidget]);
 
   return (
     <div className="lyric-app bg-background text-foreground flex h-svh items-center justify-center p-6">
@@ -85,7 +129,11 @@ export function LoginScreen({ onSuccess }: LoginScreenProps) {
           Войдите через Telegram, чтобы открыть свой каталог
         </p>
 
-        {botUsername ? (
+        {webAppInitData ? (
+          <Button type="button" onClick={handleWebAppLogin} disabled={pending}>
+            Войти
+          </Button>
+        ) : showWidget ? (
           <div
             ref={widgetHostRef}
             className="flex min-h-10 items-center justify-center"

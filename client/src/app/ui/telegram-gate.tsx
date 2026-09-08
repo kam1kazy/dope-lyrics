@@ -2,7 +2,13 @@
 
 import { type ReactNode, useCallback, useEffect, useState } from 'react';
 
-import { fetchAuthMe, loginWithTelegramWebApp } from '@/shared/api';
+import {
+  AUTH_SIGNED_OUT_EVENT,
+  clearExplicitLogout,
+  fetchAuthMe,
+  hasExplicitLogout,
+  loginWithTelegramWebApp,
+} from '@/shared/api';
 import { reloadIfStaleDeploy } from '@/shared/lib/deploy-at';
 import {
   prepareTelegramWebApp,
@@ -18,8 +24,22 @@ export function TelegramGate({ children }: { children: ReactNode }) {
   const [allowed, setAllowed] = useState(!isProductionBuild);
 
   const allow = useCallback(() => {
+    clearExplicitLogout();
     setAllowed(true);
     setReady(true);
+  }, []);
+
+  useEffect(() => {
+    const onSignedOut = () => {
+      setAllowed(false);
+      setReady(true);
+    };
+
+    window.addEventListener(AUTH_SIGNED_OUT_EVENT, onSignedOut);
+
+    return () => {
+      window.removeEventListener(AUTH_SIGNED_OUT_EVENT, onSignedOut);
+    };
   }, []);
 
   useEffect(() => {
@@ -32,6 +52,12 @@ export function TelegramGate({ children }: { children: ReactNode }) {
     void (async () => {
       const reloading = await reloadIfStaleDeploy();
       if (reloading || cancelled) {
+        return;
+      }
+
+      if (hasExplicitLogout()) {
+        setAllowed(false);
+        setReady(true);
         return;
       }
 

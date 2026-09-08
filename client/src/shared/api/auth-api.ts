@@ -1,5 +1,32 @@
 const apiBasePath = (): string => process.env.NEXT_PUBLIC_BASE_PATH || '';
 
+const EXPLICIT_LOGOUT_KEY = 'dl_logged_out';
+export const AUTH_SIGNED_OUT_EVENT = 'dl-auth-signed-out';
+
+export const hasExplicitLogout = (): boolean => {
+  try {
+    return sessionStorage.getItem(EXPLICIT_LOGOUT_KEY) === '1';
+  } catch {
+    return false;
+  }
+};
+
+export const markExplicitLogout = (): void => {
+  try {
+    sessionStorage.setItem(EXPLICIT_LOGOUT_KEY, '1');
+  } catch {
+    // private mode / blocked storage
+  }
+};
+
+export const clearExplicitLogout = (): void => {
+  try {
+    sessionStorage.removeItem(EXPLICIT_LOGOUT_KEY);
+  } catch {
+    // ignore
+  }
+};
+
 export const authUrl = (path: string): string => {
   const normalized = path.startsWith('/') ? path : `/${path}`;
   return `${apiBasePath()}/auth${normalized}`;
@@ -158,6 +185,8 @@ export async function loginWithTelegramWidget(
 }
 
 export async function logoutSession(): Promise<void> {
+  markExplicitLogout();
+
   try {
     await fetch(authUrl('/logout'), {
       method: 'POST',
@@ -165,6 +194,6 @@ export async function logoutSession(): Promise<void> {
       headers: { Accept: 'application/json' },
     });
   } catch {
-    // reload anyway
+    // show login anyway
   }
 }
