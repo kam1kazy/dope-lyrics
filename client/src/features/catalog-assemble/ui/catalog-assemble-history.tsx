@@ -38,7 +38,7 @@ export function CatalogAssembleHistory({
   const [revealedId, setRevealedId] = useState<number | null>(null);
 
   useEffect(() => {
-    if (revealedId == null) {
+    if (revealedId === null) {
       return;
     }
 
@@ -73,7 +73,7 @@ export function CatalogAssembleHistory({
   >(UNLIKE_COLLAGE, {
     update(cache, { data: result }) {
       const removedId = result?.unlikeCollage;
-      if (removedId == null) {
+      if (removedId === null || removedId === undefined) {
         return;
       }
 

@@ -188,7 +188,10 @@ export function CarouselLikesPanel({
         },
       });
 
-      if (saved.data?.saveCarouselHistory == null) {
+      if (
+        saved.data?.saveCarouselHistory === null ||
+        saved.data?.saveCarouselHistory === undefined
+      ) {
         toast.error('Не удалось сохранить в историю');
         return;
       }
@@ -230,7 +233,7 @@ export function CarouselLikesPanel({
                 const lyric = lyricsById.get(entry.lyricId);
                 const prev = index > 0 ? likedLines[index - 1] : null;
                 const newMessage =
-                  prev != null && prev.lyricId !== entry.lyricId;
+                  prev !== null && prev.lyricId !== entry.lyricId;
 
                 return (
                   <li

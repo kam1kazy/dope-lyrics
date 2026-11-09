@@ -43,7 +43,7 @@ const parseQuotaCount = (value: unknown, label: string): number => {
 };
 
 export const parseTrackFormQuotas = (raw: unknown): TrackFormQuotas => {
-  if (raw == null || typeof raw !== 'object') {
+  if (raw === null || raw === undefined || typeof raw !== 'object') {
     return DEFAULT_TRACK_FORM_QUOTAS;
   }
 

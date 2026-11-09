@@ -37,7 +37,10 @@ export function useSaveCarouselSnapshot() {
         },
       });
 
-      if (saved.data?.saveCarouselHistory == null) {
+      if (
+        saved.data?.saveCarouselHistory === null ||
+        saved.data?.saveCarouselHistory === undefined
+      ) {
         toast.error('Не удалось сохранить в историю');
         return false;
       }

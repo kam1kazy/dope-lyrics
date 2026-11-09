@@ -56,7 +56,7 @@ export const readGeneratorForm = (): TrackFormQuotas => {
     }
 
     const parsed: unknown = JSON.parse(raw);
-    if (parsed == null || typeof parsed !== 'object') {
+    if (parsed === null || typeof parsed !== 'object') {
       return { ...DEFAULT_TRACK_FORM_QUOTAS };
     }
 
@@ -65,7 +65,7 @@ export const readGeneratorForm = (): TrackFormQuotas => {
     const verse = parseCount(record.verse);
     const hook = parseCount(record.hook);
     const bridge = parseCount(record.bridge);
-    if (intro == null || verse == null || hook == null || bridge == null) {
+    if (intro === null || verse === null || hook === null || bridge === null) {
       return { ...DEFAULT_TRACK_FORM_QUOTAS };
     }
 

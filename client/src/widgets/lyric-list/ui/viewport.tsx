@@ -301,7 +301,7 @@ export function Viewport({
   timingRef.current = { slideIntervalMs, animationMs, dataLength };
 
   const showLikeFlash = useCallback((key: string) => {
-    if (flashTimerRef.current != null) {
+    if (flashTimerRef.current !== null) {
       window.clearTimeout(flashTimerRef.current);
     }
 
@@ -603,7 +603,7 @@ export function Viewport({
   useEffect(() => {
     return () => {
       clearTapToggle();
-      if (flashTimerRef.current != null) {
+      if (flashTimerRef.current !== null) {
         window.clearTimeout(flashTimerRef.current);
       }
     };

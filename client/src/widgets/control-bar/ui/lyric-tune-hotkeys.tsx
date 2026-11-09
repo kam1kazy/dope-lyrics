@@ -10,6 +10,7 @@ import {
   type PointerEvent as ReactPointerEvent,
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -119,12 +120,15 @@ export function LyricTuneHotkeys() {
     carouselSpeed,
   };
 
-  const setters: Record<TuneId, (value: number) => void> = {
-    fontSize: setFontSize,
-    lineHeight: setLineHeight,
-    lineGap: setLineGap,
-    carouselSpeed: setCarouselSpeed,
-  };
+  const setters = useMemo<Record<TuneId, (value: number) => void>>(
+    () => ({
+      fontSize: setFontSize,
+      lineHeight: setLineHeight,
+      lineGap: setLineGap,
+      carouselSpeed: setCarouselSpeed,
+    }),
+    [setCarouselSpeed, setFontSize, setLineGap, setLineHeight]
+  );
 
   const applyDrag = useCallback(
     (clientY: number) => {
@@ -155,7 +159,7 @@ export function LyricTuneHotkeys() {
       setDragRatio(nextRatio);
       setters[tune.id](next);
     },
-    [setCarouselSpeed, setFontSize, setLineGap, setLineHeight]
+    [setters]
   );
 
   const onPointerDown = (

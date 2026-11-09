@@ -154,7 +154,7 @@ export function CatalogAssemblePanel({
     useMutation<{ unlikeCollage: number }, { id: number }>(UNLIKE_COLLAGE, {
       update(cache, { data }) {
         const removedId = data?.unlikeCollage;
-        if (removedId == null) {
+        if (removedId === null || removedId === undefined) {
           return;
         }
 
@@ -212,7 +212,7 @@ export function CatalogAssemblePanel({
     draftKeyValue !== null && draftKeyValue === likedDraftKey;
   const viewingHistory = viewedCollage !== null;
   const slots = viewedCollage?.slots ?? draft;
-  const canGlue = slots != null && slotsHaveParts(slots);
+  const canGlue = slots !== null && slotsHaveParts(slots);
 
   const handleAssemble = async () => {
     const result = await assemble({
@@ -235,7 +235,10 @@ export function CatalogAssemblePanel({
 
   const handleUnlike = async (id: number) => {
     const result = await unlikeCollage({ variables: { id } });
-    if (result.data?.unlikeCollage == null) {
+    if (
+      result.data?.unlikeCollage === null ||
+      result.data?.unlikeCollage === undefined
+    ) {
       return;
     }
 

@@ -14,7 +14,7 @@ import {
   Shuffle,
   Sparkles,
 } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useEffectEvent, useRef, useState } from 'react';
 
 import type { ILyricCollage, TrackFormQuotas } from '@/entities/lyric';
 import { CarouselHistoryPanel } from '@/features/carousel-history';
@@ -144,6 +144,9 @@ export function CatalogMenu() {
     setIsOpen(true);
   };
 
+  const openMenuFromEffect = useEffectEvent(openMenu);
+  const closeMenuFromEffect = useEffectEvent(closeMenu);
+
   const swipeFromEdge = useSwipeFromLeftEdge({
     enabled: !isOpen,
     onOpen: openMenu,
@@ -220,7 +223,7 @@ export function CatalogMenu() {
       return;
     }
 
-    openMenu();
+    openMenuFromEffect();
     activeSectionRef.current = openRequest;
     setActiveSection(openRequest);
     setRenderedSection(openRequest);
@@ -234,7 +237,7 @@ export function CatalogMenu() {
       return;
     }
 
-    closeMenu();
+    closeMenuFromEffect();
   }, [closeSignal]);
 
   const filterableSection: FilterableSection | null =

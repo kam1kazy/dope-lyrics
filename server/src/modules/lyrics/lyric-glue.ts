@@ -96,7 +96,7 @@ export const ripCleanedRangesFromText = (
 
   for (let rawIndex = 0; rawIndex < rawLines.length; rawIndex += 1) {
     const cleanedIndex = cleanedMap[rawIndex];
-    if (cleanedIndex != null && removedCleaned.has(cleanedIndex)) {
+    if (cleanedIndex !== null && removedCleaned.has(cleanedIndex)) {
       removedAny = true;
       continue;
     }
@@ -194,15 +194,19 @@ const remapPartAfterRip = (
     }
 
     const shifted = shiftMap[cursor];
-    if (shifted != null) {
+    if (shifted !== null && shifted !== undefined) {
       let runEnd = cursor + 1;
-      while (runEnd < end && shiftMap[runEnd] != null) {
+      while (
+        runEnd < end &&
+        shiftMap[runEnd] !== null &&
+        shiftMap[runEnd] !== undefined
+      ) {
         runEnd += 1;
       }
 
       const newStart = shifted;
       const lastShifted = shiftMap[runEnd - 1];
-      if (lastShifted == null) {
+      if (lastShifted === null || lastShifted === undefined) {
         break;
       }
 
@@ -224,7 +228,7 @@ const remapPartAfterRip = (
     let runEnd = cursor + 1;
     while (
       runEnd < end &&
-      shiftMap[runEnd] == null &&
+      (shiftMap[runEnd] === null || shiftMap[runEnd] === undefined) &&
       findGluedPlacement(placements, donorId, runEnd)?.gluedStart ===
         placement.gluedStart
     ) {
@@ -287,7 +291,7 @@ export const buildGluedText = (
 
     for (const part of slot.parts) {
       const raw = textsById.get(part.lyricId);
-      if (raw == null) {
+      if (raw === undefined) {
         throw new GraphQLError('Фраза из сборки не найдена');
       }
 

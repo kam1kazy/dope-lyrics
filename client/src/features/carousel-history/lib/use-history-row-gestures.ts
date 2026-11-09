@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  type MouseEvent as ReactMouseEvent,
   type PointerEvent as ReactPointerEvent,
   useRef,
   useState,
@@ -59,17 +60,17 @@ export function useHistoryRowGestures({
   };
 
   const offset = dragOffset ?? (revealed ? -HISTORY_SWIPE_REVEAL_PX : 0);
-  const dragging = dragOffset != null;
+  const dragging = dragOffset !== null;
 
   const clearLongPress = () => {
-    if (longPressTimerRef.current != null) {
+    if (longPressTimerRef.current !== null) {
       window.clearTimeout(longPressTimerRef.current);
       longPressTimerRef.current = null;
     }
   };
 
   const releaseCapture = (event: ReactPointerEvent<HTMLElement>) => {
-    if (pointerIdRef.current == null) {
+    if (pointerIdRef.current === null) {
       return;
     }
 
@@ -179,7 +180,7 @@ export function useHistoryRowGestures({
     releaseCapture(event);
   };
 
-  const onClick = (event: React.MouseEvent<HTMLElement>) => {
+  const onClick = (event: ReactMouseEvent<HTMLElement>) => {
     if (skipClickRef.current) {
       event.preventDefault();
       skipClickRef.current = false;
@@ -189,7 +190,7 @@ export function useHistoryRowGestures({
     onTapRef.current();
   };
 
-  const onContextMenu = (event: React.MouseEvent<HTMLElement>) => {
+  const onContextMenu = (event: ReactMouseEvent<HTMLElement>) => {
     event.preventDefault();
   };
 

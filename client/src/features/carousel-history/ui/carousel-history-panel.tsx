@@ -36,7 +36,7 @@ export function CarouselHistoryPanel({
   const [revealedId, setRevealedId] = useState<number | null>(null);
 
   useEffect(() => {
-    if (selectedId == null && revealedId == null) {
+    if (selectedId === null && revealedId === null) {
       return;
     }
 
@@ -100,7 +100,7 @@ export function CarouselHistoryPanel({
   >(UNLIKE_CAROUSEL_HISTORY, {
     update(cache, { data: result }) {
       const removedId = result?.unlikeCarouselHistory;
-      if (removedId == null) {
+      if (removedId === null || removedId === undefined) {
         return;
       }
 
@@ -123,7 +123,7 @@ export function CarouselHistoryPanel({
   >(DELETE_CAROUSEL_HISTORY, {
     update(cache, { data: result }) {
       const removedId = result?.deleteCarouselHistory;
-      if (removedId == null) {
+      if (removedId === null || removedId === undefined) {
         return;
       }
 

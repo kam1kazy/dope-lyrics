@@ -61,14 +61,14 @@ export function FacetChipGroup<T extends string>({
 
   useEffect(() => {
     return () => {
-      if (clickTimerRef.current != null) {
+      if (clickTimerRef.current !== null) {
         window.clearTimeout(clickTimerRef.current);
       }
     };
   }, []);
 
   const clearClickTimer = () => {
-    if (clickTimerRef.current != null) {
+    if (clickTimerRef.current !== null) {
       window.clearTimeout(clickTimerRef.current);
       clickTimerRef.current = null;
     }

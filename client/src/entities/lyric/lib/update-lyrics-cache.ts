@@ -38,8 +38,8 @@ function lyricMatchesQueryShelves(
   queryVariables: LyricsQueryVariables
 ): boolean {
   if (
-    queryVariables.includeShelves != null ||
-    queryVariables.excludeShelves != null
+    queryVariables.includeShelves !== null ||
+    queryVariables.excludeShelves !== null
   ) {
     return lyricMatchesShelves(lyric, {
       included: toShelfFlags(queryVariables.includeShelves),
@@ -118,23 +118,23 @@ function lyricMatchesFacets(
 
   if (
     includeReadiness.length > 0 &&
-    (lyric.readiness == null || !includeReadiness.includes(lyric.readiness))
+    (lyric.readiness === null || !includeReadiness.includes(lyric.readiness))
   ) {
     return false;
   }
 
-  if (lyric.readiness != null && excludeReadiness.includes(lyric.readiness)) {
+  if (lyric.readiness !== null && excludeReadiness.includes(lyric.readiness)) {
     return false;
   }
 
   if (
     includeEnergy.length > 0 &&
-    (lyric.energy == null || !includeEnergy.includes(lyric.energy))
+    (lyric.energy === null || !includeEnergy.includes(lyric.energy))
   ) {
     return false;
   }
 
-  if (lyric.energy != null && excludeEnergy.includes(lyric.energy)) {
+  if (lyric.energy !== null && excludeEnergy.includes(lyric.energy)) {
     return false;
   }
 
