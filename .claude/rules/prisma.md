@@ -1,0 +1,18 @@
+---
+paths:
+  - "server/prisma/**"
+  - "server/src/modules/**"
+---
+
+# Prisma
+
+- Папка `server/prisma/migrations` раньше была в `.gitignore`. Новые миграции **коммитим**. Не советовать снова игнорировать их.
+- Prisma **7.10** + `@prisma/adapter-pg`. URL — в `server/prisma.config.ts`, не в `schema.prisma`. Клиент генерируется в `server/src/generated/prisma` (`provider = "prisma-client"`).
+- После клона без корневого `setup` — из `server/`: `bun prisma generate`. Не ставить CLI 8 RC, пока `@prisma/client` 8 нет в реестре.
+- Схему менять только под задачу, без нормализации «на будущее».
+- `migrate reset` и `db push --force-reset` — только если пользователь явно просит стереть данные.
+- Seed создаёт владельца `Users.id = 1` (`owner@localhost`), если нет `bot-data/data/usersData.json` и в БД ещё нет пользователя. Не подставлять прод-секреты в seed.
+- Фразы ждут файлы истории в `server/bot-data/data/`.
+- `lyric_id` без unique: повторный парсинг может дать дубли — не игнорировать, если задача про загрузку.
+- В GraphQL не светить `password` новыми полями.
+- Команды из `server/`: `bunx prisma migrate dev`, `bunx prisma studio`. Не ходить в youways-БД за таблицами этого проекта.

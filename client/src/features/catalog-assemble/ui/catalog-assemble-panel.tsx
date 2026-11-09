@@ -310,8 +310,8 @@ export function CatalogAssemblePanel({
   const heartFilled = viewingHistory || alreadyLiked;
 
   return (
-    <div className="flex flex-col gap-6 p-4">
-      <section className="flex flex-col gap-10">
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="bg-background shrink-0 px-4 pt-4 pb-3">
         {gluePromptOpen ? (
           <div className="flex flex-col gap-3">
             <p className="text-lg font-semibold">Оригиналы скрыть?</p>
@@ -448,7 +448,9 @@ export function CatalogAssemblePanel({
             )}
           </div>
         )}
+      </div>
 
+      <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-4 pt-2 pb-4">
         {assembleError || likeError || unlikeError || glueError ? (
           <ErrorText
             title="Не удалось собрать, сохранить или склеить"
@@ -470,7 +472,7 @@ export function CatalogAssemblePanel({
             ))}
           </div>
         )}
-      </section>
+      </div>
     </div>
   );
 }

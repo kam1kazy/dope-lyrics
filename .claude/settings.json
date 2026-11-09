@@ -1,0 +1,40 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./server/.env)",
+      "Read(./server/.env.*)",
+      "Read(./server/bot-data/**)",
+      "Read(./**/*.pem)",
+      "Read(./**/*.key)",
+      "Bash(printenv:*)",
+      "Bash(docker inspect:*)",
+      "Bash(docker compose config:*)"
+    ],
+    "ask": [
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git merge:*)",
+      "Bash(git rebase:*)",
+      "Bash(git reset --hard:*)",
+      "Bash(git config:*)",
+      "Bash(gh pr create:*)",
+      "Bash(npm install:*)",
+      "Bash(npm i:*)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/format-and-lint-edited-file.mjs\""
+          }
+        ]
+      }
+    ]
+  }
+}
