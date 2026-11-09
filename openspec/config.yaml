@@ -5,7 +5,7 @@ context: |
   (рандом / карусель / караоке). Потом фильтры и ИИ на своём корпусе.
 
   Стек: Bun, Elysia + GraphQL Yoga, Prisma + PostgreSQL 18.6, Next.js 16, Apollo 4,
-  mtcute. UI — shadcn (Chakra снят). Корень — client/ и server/. Version 0.7.0.
+  mtcute. UI — shadcn (Chakra снят). Корень — client/ и server/. Version 0.8.0.
 
   Документация — это бэклог (Jira нет). Новый чат читает `docs/00_vision.md`.
   - `docs/tasks/` — текущие задачи
