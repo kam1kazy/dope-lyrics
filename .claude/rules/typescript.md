@@ -1,0 +1,30 @@
+---
+paths:
+  - "**/*.ts"
+  - "**/*.tsx"
+---
+
+# TypeScript
+
+ESLint: `@typescript-eslint/no-explicit-any` — warning. В новом коде без `any`, `as any`, `@ts-ignore`.
+
+```ts
+// плохо
+} catch (error: any) {
+  console.error(error.message)
+}
+
+// хорошо
+} catch (error: unknown) {
+  const message = error instanceof Error ? error.message : String(error)
+  console.error(message)
+}
+```
+
+- Внешние данные (Telegram, JSON, GraphQL) — `unknown` + сужение, не `as ILyric`.
+- История чата — `Message` / `MessageEntity` / `Peer` из `@mtcute/core`, не самописные `any`-DTO. FLOOD_WAIT и прочие ошибки — `unknown`.
+- `editDate` в `ILyric` — `Date | null`.
+- Самописный `dataMessage.ts` не возвращать. `any` на сервере уже сняты — не копить снова.
+- `satisfies` вместо `as`, если можно. Prisma `include` / `select` — константа с `satisfies`.
+- Обычные функции не называть `use*` — сработает `react-hooks/rules-of-hooks`.
+- Легаси `useAdminCheck` не плодить — использовать `assertAdmin` в `mtcute/guards/`.

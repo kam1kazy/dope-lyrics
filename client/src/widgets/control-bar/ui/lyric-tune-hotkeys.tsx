@@ -217,7 +217,7 @@ export function LyricTuneHotkeys() {
     <div
       className={cn(
         'flex flex-col items-center gap-1 transition-transform duration-500 ease-[cubic-bezier(0.05,0.85,0.15,1)] motion-reduce:transition-none',
-        playing ? 'translate-y-0' : '-translate-y-16'
+        playing ? '-translate-y-16' : 'translate-y-0'
       )}
     >
       {TUNES.map(({ id, label, icon: Icon, min, max }) => {

@@ -521,7 +521,12 @@ export function CatalogMenu() {
 
                 <div className="relative flex min-h-0 flex-1 overflow-hidden">
                   <div
-                    className="min-h-0 min-w-0 flex-1 overflow-y-auto"
+                    className={cn(
+                      'min-h-0 min-w-0 flex-1',
+                      renderedSection === 'generator'
+                        ? 'flex flex-col overflow-hidden'
+                        : 'overflow-y-auto'
+                    )}
                     data-lyrics-scroll
                   >
                     {renderedSection === 'list' ? (

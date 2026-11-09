@@ -1,0 +1,85 @@
+# Dope Lyrics
+
+Личный каталог фраз музыканта из Telegram: парсинг чата → Postgres → карусель на экране (это караоке; случайный порядок — сортировка). Потом фильтры и ИИ на своём корпусе.
+
+## Начало работы
+
+- Новый чат: `docs/00_vision.md`, затем `docs/01_pillars.md`, `docs/02_loop.md`, `docs/tasks/current_task.md`. Состояние машины — `docs/status.md`.
+- `docs/` — бэклог и память. Это наша Jira, Jira нет. Сюда писать.
+- `guide/` — косметика GitHub. Не редактировать без явной просьбы. Не создавать `guide/PLAN.md`.
+
+## Язык
+
+Отвечать по-русски. Текст в UI, ошибки для пользователя и subject коммита — тоже по-русски.
+
+## Как менять код
+
+- Минимальный diff, явные зависимости, без абстракций «на будущее».
+- Не переименовывать сущности «для красоты».
+- Задача на данные / бота / схему — не тащить редизайн. Задача на UI — не перекладывать парсер.
+- Не комментировать очевидное. Без `any` в новом коде.
+- Не менять продуктовую цель и стек (Bun, Elysia, Prisma, Next, mtcute) без явной просьбы.
+- Не предлагать фичи вне `docs/` и `openspec/`. Не полировать прототип UI как финальный дизайн.
+- ИИ без живого каталога не начинать. JWT / tenant — когда появится вход, эталон youways.
+
+## Пакеты, lint, format
+
+- Пакетный менеджер — **только Bun**. Не `npm install`, не `package-lock.json`.
+- В `client/` и `server/`: ESLint 10, Prettier 3, `simple-import-sort`.
+- Скрипты: `bun run lint`, `lint:fix`, `format`, `typecheck`, `fix` (= lint:fix + format + typecheck). Из корня `bun run fix` гоняет оба пакета.
+- Hook `PostToolUse` (`.claude/hooks/format-and-lint-edited-file.mjs`) гоняет prettier и eslint --fix **только на изменённом файле**. Не дублировать на весь пакет, если hook сработал.
+- Не запускать `eslint .` и `fix` на весь пакет «на всякий случай».
+- Перед push: `bun run fix` в каждом затронутом `client/` и `server/`. Чинить errors **и** warnings. Не пушить, если `fix` красный.
+- Корневые `docs/` и `openspec/` — `fix` не нужен.
+- После правок типов: `bun run typecheck` в затронутом пакете.
+
+## Git
+
+- База работы — `main`. Фича и фикс — от актуального `main`: `feat/…`, `fix/…`. Не коммитить в `main` «заодно».
+- `origin/develop` ушла далеко вперёд (auth, JWT, рефакторинг). Это склад, не ствол. Не мержить develop «чтобы подтянуть» — нужный кусок cherry-pick или руками.
+- Auth и сессии — из youways (`docs/youways-baseline.md`), не с develop.
+- Подробности: `docs/git.md`.
+- Upstream ветки = `origin/<имя-ветки>`, не `origin/main`. Перед push: `git status -sb` и проверить `@{upstream}`.
+- **Без явной просьбы не делать:** `git commit`, `git push`, merge в `main`, создание PR, `push --force`, `reset --hard`, rebase уже запушенной ветки, `--no-verify`, правка `git config`.
+- «Закоммить» = только локальный коммит, это не разрешение на push. «Пуш» без указания ветки, если цель `main` — сначала спросить.
+- Subject коммита — одна фраза по-русски про суть, без списка файлов. Не `wip` / `fix` / `update`. Префикс `feat:` / `fix:` / `docs:` допустим, текст после двоеточия по-русски.
+- Не добавлять трейлер `Co-authored-by: Cursor`.
+- Не класть в коммит `.env`, `server/bot-data/`, ключи, дампы чата.
+
+## Секреты
+
+Не доставать значения секретов из файлов, контейнеров и SSH — даже «чтобы выполнить команду».
+
+- Не читать и не печатать: `.env`, `.env.*`, `*.pem`, `*.key`, сессии `server/bot-data/`, `BOT_TOKEN`, `API_HASH`, `BOT_PASS`, `DATABASE_URL`, пароли.
+- Нельзя: `printenv`, `docker inspect` ради Env, `docker compose config` (разворачивает переменные), `grep` / `sed` по `.env` ради значения.
+- Можно проверить **факт** ключа без значения: `grep -c '^DATABASE_URL=' server/.env`. Или попросить пользователя вставить секрет самому.
+- Если без секрета команду не запустить — остановиться и спросить, не искать обход в истории shell и бэкапах.
+
+## Локальное окружение
+
+- Docker уже крутится. Контейнер `postgres` на **5432** — это youways (`postgres:18-alpine`). Не сносить и не переиспользовать вслепую.
+- База проекта — `dope-lyrics-db` на **5433** (или БД `dope_lyrics` в уже живом Postgres). Второй сервер на 5432 не поднимать.
+- Прод-`docker-compose.prod.yml` (nginx, SSL, htpasswd, образы с Docker Hub) локально целиком не запускать.
+- GraphQL и клиент поднимаются без Telegram-переменных. `parseBotEnv()` в `server/src/config/env.ts` уронит процесс, если нет `API_ID` / токена / телефона — бота не стартовать, пока секретов нет.
+- Telegram читает user-сеанс (телефон + 2FA), не бот. Публичный домен нужен только для Mini App (`/app`) и бота без включённого компа.
+
+## Документация, версия, OpenSpec
+
+- `docs/decisions/` — ADR. `docs/tasks/` — текущая работа.
+- После archive обновить `docs/status.md` и `docs/tasks/current_task.md`.
+- `openspec/` — спеки фич. Слаг change — kebab-case по смыслу (`telegram-ingest`), не ключ тикета. Контекст стека — `openspec/config.yaml`, в артефакты его не копировать.
+- **Когда предлагать OpenSpec:** хотя бы одно — новая фича, client + server, ≥5 файлов, неочевидные требования, новый контракт GraphQL или схема Prisma. Предложить одной строкой и ждать согласия. Propose — только артефакты, код не писать, пока не сказали apply.
+- **Не навязывать:** стили, 1–2 файла с очевидным фиксом, «просто сделай», «без openspec».
+- Порядок: `/opsx:explore` (код не писать) → `/opsx:propose` → `/opsx:apply` (после ок плана) → `/opsx:archive`. Команды — из `.claude/commands/opsx/`, их генерирует CLI `openspec`.
+- **Версия 0.x.** Источник — поле `version` в корневом, `client/` и `server/` `package.json` (одинаковые). Дневник — `docs/versions.md`, ADR `docs/decisions/0008-version-0x.md`.
+- После `/opsx:archive` ощутимого change или закрытия дорожки — **сразу апнуть MINOR** (вторая цифра +1), не спрашивать. Одной строкой сказать новую цифру. Несколько спек за один заход — один ап.
+- Не версия: шлифовка, доки, lint, тулчейн, правка roadmap. `1.0.0` — только если автор сказал.
+- Ап: три `package.json` + строка в `docs/versions.md` + цифра в `docs/status.md` и `current_task`. Коммит — только по просьбе.
+
+## Path-правила
+
+Загружаются автоматически при работе с соответствующими файлами:
+
+- `.claude/rules/prisma.md` — `server/prisma/**`, `server/src/modules/**`
+- `.claude/rules/typescript.md` — `*.ts`, `*.tsx`
+- `.claude/rules/ui.md` — `client/**`

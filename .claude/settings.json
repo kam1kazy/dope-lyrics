@@ -1,0 +1,53 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./server/.env)",
+      "Read(./server/.env.*)",
+      "Read(./server/bot-data/**)",
+      "Read(./**/*.pem)",
+      "Read(./**/*.key)",
+      "Bash(printenv:*)",
+      "Bash(docker inspect:*)",
+      "Bash(docker compose config:*)"
+    ],
+    "allow": [
+      "Bash(git add *)",
+      "Bash(git ls-remote *)",
+      "Bash(git checkout *)",
+      "Bash(sed -i 's|^\\\\\\( *\\\\\\)NEXT_PUBLIC_MATERIAL_ANALYTICS_EVENTS_ENABLED=true$|&\\\\n\\\\1NEXT_PUBLIC_LIVEKIT_URL=wss://livekit-dev.youways.tech|' .github/workflows/deploy-develop.yml)",
+      "Bash(sed -i '' -e '224d' -e '222d' -e '219d' .github/workflows/deploy-develop.yml)",
+      "Bash(python3 -)",
+      "Bash(git fetch *)",
+      "Bash(git switch *)",
+      "Bash(git rev-list *)",
+      "Bash(sort -k2 -n -r)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git merge:*)",
+      "Bash(sed -i '' -E 's/^- \\\\[ \\\\] \\([1-4]\\)\\\\./- [x] \\\\1./' openspec/changes/message-polls/tasks.md)",
+      "Bash(npm i:*)",
+      "Bash(npm install:*)"
+    ],
+    "ask": [
+      "Bash(git rebase:*)",
+      "Bash(git reset --hard:*)",
+      "Bash(git config:*)",
+      "Bash(gh pr create:*)",
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/format-and-lint-edited-file.mjs\""
+          }
+        ]
+      }
+    ]
+  }
+}
