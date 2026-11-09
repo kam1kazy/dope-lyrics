@@ -2,6 +2,7 @@ import { GraphQLError } from 'graphql';
 
 import { env } from '~/config/env';
 import { fetchIngestApply, fetchIngestPreview } from '~/graphql/ingest-client';
+import { can } from '~/modules/auth/permissions';
 import { roleProfilesFromJson } from '~/modules/lyrics/lyric-facets';
 import { lyricsService } from '~/modules/lyrics/lyrics.service';
 import { usersService } from '~/modules/users/users.service';
@@ -209,7 +210,11 @@ const clampOffset = (value: number | null | undefined): number => {
 
 export const resolvers = {
   Query: {
-    users: (_parent: unknown, _args: unknown, _context: GraphQLContext) => {
+    users: (_parent: unknown, _args: unknown, context: GraphQLContext) => {
+      const user = requireUser(context);
+      if (!can(user, 'users:list')) {
+        throw new GraphQLError('Нет доступа');
+      }
       return usersService.list();
     },
     lyricTags: (_parent: unknown, _args: unknown, context: GraphQLContext) => {

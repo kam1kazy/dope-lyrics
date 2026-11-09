@@ -126,3 +126,32 @@ describe('ротация сессии', () => {
     expect(replay.status).toBe(401);
   });
 });
+
+describe('список пользователей', () => {
+  const graphql = async (token: string, query: string) => {
+    const response = await post('/graphql', {
+      headers: {
+        ...sessionCookie(token),
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({ query }),
+    });
+    return (await response.json()) as {
+      data?: unknown;
+      errors?: { message: string }[];
+    };
+  };
+
+  test('USER не получает список учёток', async () => {
+    const { token } = await sessionService.create(userId);
+    const result = await graphql(token, '{ users { id username } }');
+    expect(result.errors?.[0]?.message).toBe('Нет доступа');
+  });
+
+  test('через учётки нельзя дотянуться до чужих фраз', async () => {
+    const { token } = await sessionService.create(userId);
+    const result = await graphql(token, '{ users { id lyrics { id } } }');
+    expect(result.data).toBeUndefined();
+    expect(result.errors?.[0]?.message).toContain('lyrics');
+  });
+});

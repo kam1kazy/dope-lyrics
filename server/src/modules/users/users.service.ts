@@ -1,6 +1,5 @@
-import { env, telegramAdminId } from '~/config/env';
+import { telegramAdminId } from '~/config/env';
 import type { UserRole } from '~/generated/prisma/client';
-import { lyricInclude } from '~/graphql/lyric-include';
 import { prisma } from '~/infrastructure/prisma';
 import type { IUser } from '~/modules/users/users.types';
 
@@ -14,11 +13,6 @@ export class UsersService {
         username: true,
         role: true,
         telegramId: true,
-        lyrics: {
-          take: env.GRAPHQL_MAX_LIMIT,
-          orderBy: { date: 'desc' },
-          include: lyricInclude,
-        },
       },
     });
   }

@@ -59,7 +59,6 @@ export const typeDefinitions = /* GraphQL */ `
   type User {
     id: Int!
     username: String!
-    lyrics: [Lyric!]
   }
 
   type Lyric {
