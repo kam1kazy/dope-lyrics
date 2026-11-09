@@ -2,6 +2,12 @@ import { gql } from '@apollo/client';
 
 export type UserRole = 'OWNER' | 'ADMIN' | 'USER';
 
+export const USER_ROLE_LABELS: Record<UserRole, string> = {
+  OWNER: 'Владелец',
+  ADMIN: 'Админ',
+  USER: 'Пользователь',
+};
+
 export type IngestSourceKind = 'MAIN' | 'CHANNEL';
 export type IngestSourceState = 'READY' | 'UNAVAILABLE' | 'ERROR';
 

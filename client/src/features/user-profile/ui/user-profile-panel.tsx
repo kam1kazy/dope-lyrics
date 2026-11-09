@@ -6,15 +6,9 @@ import { ErrorText } from '@/shared/ui/error-text';
 import { Separator } from '@/shared/ui/shadcn/ui/separator';
 import { Spinner } from '@/shared/ui/shadcn/ui/spinner';
 
-import { type IProfile, PROFILE, type UserRole } from '../api/queries';
+import { type IProfile, PROFILE, USER_ROLE_LABELS } from '../api/queries';
 import { ProfileIngest } from './profile-ingest';
 import { ProfileInvites } from './profile-invites';
-
-const ROLE_LABELS: Record<UserRole, string> = {
-  OWNER: 'Владелец',
-  ADMIN: 'Админ',
-  USER: 'Пользователь',
-};
 
 type ProfileData = { profile: IProfile };
 
@@ -39,7 +33,7 @@ export function UserProfilePanel() {
       <section className="flex flex-col gap-1">
         <p className="text-base font-medium">{profile.username}</p>
         <p className="text-muted-foreground text-sm">
-          {ROLE_LABELS[profile.role]}
+          {USER_ROLE_LABELS[profile.role]}
         </p>
       </section>
 

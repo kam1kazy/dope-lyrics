@@ -9,11 +9,9 @@ import {
   History,
   List,
   ListFilter,
-  LogOut,
   PanelLeft,
   Shuffle,
   Sparkles,
-  UserRound,
 } from 'lucide-react';
 import { useEffect, useEffectEvent, useRef, useState } from 'react';
 
@@ -57,6 +55,8 @@ import { cn } from '@/shared/lib/utils/cn';
 import { CatalogPanel } from '@/shared/ui/catalog-panel/catalog-panel';
 import { Button } from '@/shared/ui/shadcn/ui/button';
 
+import { CatalogNavUser } from './catalog-nav-user';
+
 type CatalogSection = CatalogMenuSection;
 
 type FilterableSection = Exclude<
@@ -72,7 +72,6 @@ type MenuItem = {
 };
 
 const MENU_ITEMS: MenuItem[] = [
-  { id: 'profile', label: 'Профиль', icon: UserRound },
   { id: 'list', label: 'Список', icon: List },
   { id: 'favorites', label: 'Избранное', icon: Bookmark },
   { id: 'demos', label: 'Тексты из демок', icon: AudioLines },
@@ -400,18 +399,16 @@ export function CatalogMenu() {
               })}
             </div>
 
-            <Button
-              type="button"
-              variant="ghost"
-              className="mt-auto h-auto justify-start gap-2 py-2 pr-2 pl-2 text-left text-sm font-normal has-[>svg]:pr-3 has-[>svg]:pl-2"
-              disabled={loggingOut}
-              onClick={handleLogout}
-            >
-              <LogOut className="size-4 shrink-0" aria-hidden />
-              <span className="leading-snug">
-                {loggingOut ? 'Выходим…' : 'Выйти'}
-              </span>
-            </Button>
+            <CatalogNavUser
+              active={activeSection === 'profile'}
+              loggingOut={loggingOut}
+              onOpenProfile={() => {
+                if (activeSectionRef.current !== 'profile') {
+                  selectSection('profile');
+                }
+              }}
+              onLogout={handleLogout}
+            />
           </nav>
 
           <div
