@@ -34,7 +34,7 @@
       "Bash(git rebase:*)",
       "Bash(git reset --hard:*)",
       "Bash(git config:*)",
-      "Bash(gh pr create:*)",
+      "Bash(gh pr create:*)"
     ]
   },
   "hooks": {
