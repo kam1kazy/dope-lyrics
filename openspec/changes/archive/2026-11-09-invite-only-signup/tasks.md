@@ -42,4 +42,4 @@
 ## 8. Документация
 
 - [x] 8.1 `docs/decisions/0009-user-auth-roles.md`: регистрация по приглашениям вместо открытой
-- [ ] 8.2 `docs/status.md`, `docs/tasks/current_task.md`, `docs/versions.md` — при архиве
+- [x] 8.2 `docs/status.md`, `docs/tasks/current_task.md`, `docs/versions.md` — при архиве

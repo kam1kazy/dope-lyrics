@@ -50,4 +50,4 @@
 ## 7. Документация
 
 - [x] 7.1 `docs/status.md`: строки «Регистрация» и «Карусель/Сервер» — профиль, подкачка по источникам
-- [ ] 7.2 При архиве: `docs/tasks/current_task.md`, `docs/versions.md`, MINOR-ап
+- [x] 7.2 При архиве: `docs/tasks/current_task.md`, `docs/versions.md`, MINOR-ап
