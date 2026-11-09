@@ -59,7 +59,10 @@ describe('buildSourceText', () => {
 
 describe('pickStyleExamples', () => {
   test('берутся только эталоны, не больше лимита, пустые выпадают', () => {
-    const references = ['', ...Array.from({ length: 30 }, (_, i) => `эталон ${i}`)];
+    const references = [
+      '',
+      ...Array.from({ length: 30 }, (_, i) => `эталон ${i}`),
+    ];
 
     const result = pickStyleExamples(references, 25);
 
