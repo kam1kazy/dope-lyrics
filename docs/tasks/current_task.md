@@ -1,6 +1,6 @@
 # Current task
 
-Фаза: **F закрыта**, дальше только **E — ИИ**, когда автор скажет. Продукт **0.9.0** — [versions.md](../versions.md). Активных changes OpenSpec нет.
+Фаза: **F закрыта**, идёт **E — ИИ**. Продукт **0.9.0** — [versions.md](../versions.md). В работе change `ai-generation-base` (ветка `feat/ai-generation-base`): настройки ИИ, «Поправить ИИ» в генераторе, тексты с тремя снимками и «Готово». Остальное — [roadmap E](../roadmap.md).
 
 A–E без ИИ закрыты. Каталог многопользовательский: учётка через Telegram, cookie-сессия, роли OWNER/ADMIN/USER, личный корпус, `/channel`, `/notes` в свой каталог.
 

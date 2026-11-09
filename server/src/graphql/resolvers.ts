@@ -1,6 +1,7 @@
 import { GraphQLError } from 'graphql';
 
 import { env } from '~/config/env';
+import { aiMutationResolvers, aiQueryResolvers } from '~/graphql/ai.resolvers';
 import { applyIngestSource, fetchIngestSources } from '~/graphql/ingest-client';
 import { can } from '~/modules/auth/permissions';
 import { roleProfilesFromJson } from '~/modules/lyrics/lyric-facets';
@@ -220,6 +221,7 @@ const clampOffset = (value: number | null | undefined): number => {
 
 export const resolvers = {
   Query: {
+    ...aiQueryResolvers,
     users: (_parent: unknown, _args: unknown, context: GraphQLContext) => {
       const user = requireUser(context);
       if (!can(user, 'users:list')) {
@@ -335,6 +337,7 @@ export const resolvers = {
     },
   },
   Mutation: {
+    ...aiMutationResolvers,
     updateLyricFlags: (
       _parent: unknown,
       args: UpdateLyricFlagsArgs,

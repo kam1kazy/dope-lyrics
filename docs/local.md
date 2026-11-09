@@ -24,4 +24,6 @@
 
 Порт **5432 занят youways** (`postgres`). Второй Postgres туда не сажать. Каталог — контейнер `dope-lyrics-db` на **5433**.
 
+ИИ: в `server/.env` — `AI_BASE_URL`, `AI_API_KEY`, `AI_MODEL`, `AI_COST_RUB_PER_1M_IN/OUT` (имена в `server/.env.example`). Пустой `AI_API_KEY` — ИИ выключен, остальное работает.
+
 Значения из `.env` в чат и в коммит не копировать. Агент не читает эти файлы целиком.

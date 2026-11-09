@@ -323,6 +323,59 @@ export const typeDefinitions = /* GraphQL */ `
     parts: [CollagePartInput!]!
   }
 
+  type AiStatus {
+    enabled: Boolean!
+  }
+
+  type AiPromptVersion {
+    id: Int!
+    text: String!
+    createdAt: String!
+  }
+
+  type AiUsagePeriod {
+    requests: Int!
+    tokensIn: Int!
+    tokensOut: Int!
+    costRub: Float
+  }
+
+  type AiUsageSummary {
+    today: AiUsagePeriod!
+    month: AiUsagePeriod!
+    all: AiUsagePeriod!
+  }
+
+  type AiUsageItem {
+    id: Int!
+    createdAt: String!
+    kind: String!
+    model: String!
+    tokensIn: Int!
+    tokensOut: Int!
+    costRub: Float
+    latencyMs: Int!
+    status: String!
+    error: String
+  }
+
+  type CollageRewrite {
+    sourceText: String!
+    aiText: String!
+    usageId: Int!
+  }
+
+  type TrackText {
+    id: Int!
+    createdAt: String!
+    theme: String
+    sourceText: String!
+    aiText: String!
+    text: String!
+    finalText: String
+    doneAt: String
+  }
+
   enum UserRole {
     OWNER
     ADMIN
@@ -459,6 +512,13 @@ export const typeDefinitions = /* GraphQL */ `
       filter: LyricPoolFilter
     ): AssembledTrack!
     lyricCollages: [LyricCollage!]!
+    aiStatus: AiStatus!
+    aiPrompt: AiPromptVersion
+    aiPromptVersions: [AiPromptVersion!]!
+    aiUsageSummary: AiUsageSummary!
+    aiUsageRecent: [AiUsageItem!]!
+    trackTexts: [TrackText!]!
+    trackText(id: Int!): TrackText!
     lyricIds(
       tags: [String!]
       keyword: String
@@ -523,6 +583,22 @@ export const typeDefinitions = /* GraphQL */ `
     revokeInvite(id: Int!): Boolean!
     likeCollage(slots: [CollageSlotInput!]!): LyricCollage!
     unlikeCollage(id: Int!): Int!
+    saveAiPrompt(text: String!): AiPromptVersion!
+    rewriteCollage(
+      slots: [CollageSlotInput!]!
+      theme: String
+      filter: LyricPoolFilter
+      hideAdlibs: Boolean
+    ): CollageRewrite!
+    createTrackText(
+      slots: [CollageSlotInput!]!
+      theme: String
+      aiText: String!
+      usageId: Int
+      hideAdlibs: Boolean
+    ): TrackText!
+    updateTrackText(id: Int!, text: String!): TrackText!
+    markTrackTextDone(id: Int!): TrackText!
     glueLyrics(slots: [CollageSlotInput!]!, hideOriginals: Boolean!): Lyric!
     saveCarouselHistory(
       lyricIds: [Int!]!

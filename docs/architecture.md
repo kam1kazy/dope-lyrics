@@ -41,6 +41,8 @@ server/src/
   modules/
     lyrics/      — service, parse (mt→JSON), persist (seed)
     users/       — service (owner, loadUsers, GraphQL list)
+    ai/          — polza-клиент, промпт автора, учёт расхода, правка склейки
+    track-texts/ — тексты из генератора (три снимка, «Готово»)
   mtcute/        — bot + admin client, commands, guards
 ```
 

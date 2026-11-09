@@ -10,6 +10,7 @@ export const PERMISSIONS = [
   'catalog:own',
   'channel:bind',
   'notes:import',
+  'ai:use',
 ] as const;
 
 export type Permission = (typeof PERMISSIONS)[number];

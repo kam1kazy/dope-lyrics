@@ -16,7 +16,8 @@ export type CatalogMenuSection =
   | 'demos'
   | 'stats'
   | 'generator'
-  | 'history';
+  | 'history'
+  | 'ai-settings';
 
 interface CatalogMenuContextValue {
   openRequest: CatalogMenuSection | null;

@@ -1,10 +1,12 @@
 'use client';
 
+import { useQuery } from '@apollo/client/react';
 import {
   AudioLines,
   Bookmark,
   Bot,
   ChartColumn,
+  FileText,
   Heart,
   History,
   List,
@@ -16,6 +18,7 @@ import {
 import { useEffect, useEffectEvent, useRef, useState } from 'react';
 
 import type { ILyricCollage, TrackFormQuotas } from '@/entities/lyric';
+import { AiSettingsPanel } from '@/features/ai-settings';
 import { CarouselHistoryPanel } from '@/features/carousel-history';
 import {
   CatalogAssembleHistory,
@@ -31,7 +34,12 @@ import { CatalogFavoritesPanel } from '@/features/catalog-favorites';
 import { CatalogFilterPane } from '@/features/catalog-filters';
 import { CatalogListPanel } from '@/features/catalog-list';
 import { CatalogStatsPanel } from '@/features/catalog-stats';
-import { UserProfilePanel } from '@/features/user-profile';
+import { TrackTextsList, TrackTextView } from '@/features/track-texts';
+import {
+  type IProfile,
+  PROFILE,
+  UserProfilePanel,
+} from '@/features/user-profile';
 import {
   apolloClient,
   AUTH_SIGNED_OUT_EVENT,
@@ -61,11 +69,11 @@ type CatalogSection = CatalogMenuSection;
 
 type FilterableSection = Exclude<
   CatalogSection,
-  'profile' | 'generator' | 'history'
+  'profile' | 'generator' | 'history' | 'ai-settings'
 >;
 
 type MenuItem = {
-  id: CatalogSection | 'references' | 'ai-settings';
+  id: CatalogSection | 'references';
   label: string;
   icon: typeof Bookmark;
   disabled?: boolean;
@@ -79,7 +87,7 @@ const MENU_ITEMS: MenuItem[] = [
   { id: 'stats', label: 'Сводка', icon: ChartColumn },
   { id: 'references', label: 'Эталоны', icon: Sparkles, disabled: true },
   { id: 'generator', label: 'Генератор', icon: Shuffle },
-  { id: 'ai-settings', label: 'Настройки ИИ', icon: Bot, disabled: true },
+  { id: 'ai-settings', label: 'Настройки ИИ', icon: Bot },
 ];
 
 const SECTION_TITLES: Record<CatalogSection, string> = {
@@ -90,6 +98,7 @@ const SECTION_TITLES: Record<CatalogSection, string> = {
   history: 'История карусели',
   stats: 'Сводка',
   generator: 'Генератор',
+  'ai-settings': 'Настройки ИИ',
 };
 
 const EMPTY_SECTION_FILTERS: Record<FilterableSection, CatalogSectionFilters> =
@@ -115,6 +124,10 @@ export function CatalogMenu() {
   const sectionToggleGuardUntilRef = useRef(0);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [textsOpen, setTextsOpen] = useState(false);
+  const [selectedTextId, setSelectedTextId] = useState<number | null>(null);
+  const { data: profileData } = useQuery<{ profile: IProfile }>(PROFILE);
+  const isOwner = profileData?.profile.role === 'OWNER';
   const [likedOnly, setLikedOnly] = useState(false);
   const [generatorForm, setGeneratorForm] = useState<TrackFormQuotas>(
     DEFAULT_TRACK_FORM_QUOTAS
@@ -210,6 +223,7 @@ export function CatalogMenu() {
       setActiveSection(null);
       setFiltersOpen(false);
       setHistoryOpen(false);
+      setTextsOpen(false);
       return;
     }
 
@@ -222,6 +236,7 @@ export function CatalogMenu() {
     setRenderedSection(section);
     setFiltersOpen(false);
     setHistoryOpen(false);
+    setTextsOpen(false);
   };
 
   useEffect(() => {
@@ -235,6 +250,7 @@ export function CatalogMenu() {
     setRenderedSection(openRequest);
     setFiltersOpen(false);
     setHistoryOpen(false);
+    setTextsOpen(false);
     consumeOpenRequest();
   }, [consumeOpenRequest, openRequest]);
 
@@ -250,7 +266,8 @@ export function CatalogMenu() {
     renderedSection &&
     renderedSection !== 'profile' &&
     renderedSection !== 'generator' &&
-    renderedSection !== 'history'
+    renderedSection !== 'history' &&
+    renderedSection !== 'ai-settings'
       ? renderedSection
       : null;
   const sectionDefaults =
@@ -273,7 +290,10 @@ export function CatalogMenu() {
       generatorFilters,
       DEFAULT_GENERATOR_SECTION_FILTERS
     );
-  const sidePaneOpen = filtersOpen || historyOpen;
+  const sidePaneOpen = filtersOpen || historyOpen || textsOpen;
+  const visibleMenuItems = MENU_ITEMS.filter(
+    (item) => item.id !== 'ai-settings' || isOwner
+  );
 
   const handleLogout = () => {
     if (loggingOut) {
@@ -364,7 +384,7 @@ export function CatalogMenu() {
             aria-label="Разделы каталога"
           >
             <div className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
-              {MENU_ITEMS.map(({ id, label, icon: Icon, disabled }) => {
+              {visibleMenuItems.map(({ id, label, icon: Icon, disabled }) => {
                 const isActive = activeSection === id;
 
                 return (
@@ -381,11 +401,7 @@ export function CatalogMenu() {
                     disabled={disabled}
                     aria-pressed={isActive}
                     onClick={() => {
-                      if (
-                        disabled ||
-                        id === 'references' ||
-                        id === 'ai-settings'
-                      ) {
+                      if (disabled || id === 'references') {
                         return;
                       }
 
@@ -437,6 +453,11 @@ export function CatalogMenu() {
                         return;
                       }
 
+                      if (textsOpen) {
+                        setTextsOpen(false);
+                        return;
+                      }
+
                       activeSectionRef.current = null;
                       setActiveSection(null);
                     }}
@@ -478,10 +499,28 @@ export function CatalogMenu() {
                         onClick={() => {
                           setHistoryOpen((open) => !open);
                           setFiltersOpen(false);
+                          setTextsOpen(false);
                         }}
                       >
                         <History className="size-4" />
                       </Button>
+                      {isOwner ? (
+                        <Button
+                          type="button"
+                          variant={textsOpen ? 'secondary' : 'ghost'}
+                          size="icon"
+                          className="size-8"
+                          aria-label="Тексты"
+                          aria-pressed={textsOpen}
+                          onClick={() => {
+                            setTextsOpen((open) => !open);
+                            setHistoryOpen(false);
+                            setFiltersOpen(false);
+                          }}
+                        >
+                          <FileText className="size-4" />
+                        </Button>
+                      ) : null}
                       <Button
                         type="button"
                         variant={filtersOpen ? 'secondary' : 'ghost'}
@@ -492,6 +531,7 @@ export function CatalogMenu() {
                         onClick={() => {
                           setFiltersOpen((open) => !open);
                           setHistoryOpen(false);
+                          setTextsOpen(false);
                         }}
                       >
                         <ListFilter className="size-4" />
@@ -550,8 +590,24 @@ export function CatalogMenu() {
                         likedOnly={likedOnly}
                         onPlay={closeMenu}
                       />
+                    ) : renderedSection === 'ai-settings' ? (
+                      <AiSettingsPanel />
+                    ) : renderedSection === 'generator' &&
+                      isOwner &&
+                      selectedTextId !== null ? (
+                      <TrackTextView
+                        id={selectedTextId}
+                        onClose={() => {
+                          setSelectedTextId(null);
+                        }}
+                      />
                     ) : renderedSection === 'generator' ? (
                       <CatalogAssemblePanel
+                        aiEnabled={isOwner}
+                        onTextSaved={(id) => {
+                          setSelectedTextId(id);
+                          setTextsOpen(true);
+                        }}
                         form={generatorForm}
                         hideAdlibs={hideAdlibs}
                         filters={generatorFilters}
@@ -577,11 +633,19 @@ export function CatalogMenu() {
                     )}
                   >
                     <div className="flex h-0 min-h-0 w-full flex-1 flex-col overflow-y-auto sm:w-80">
-                      {renderedSection === 'generator' && historyOpen ? (
+                      {renderedSection === 'generator' && textsOpen ? (
+                        <TrackTextsList
+                          selectedId={selectedTextId}
+                          onSelect={setSelectedTextId}
+                        />
+                      ) : renderedSection === 'generator' && historyOpen ? (
                         <CatalogAssembleHistory
                           hideAdlibs={hideAdlibs}
                           selectedId={selectedCollage?.id ?? null}
-                          onSelect={setSelectedCollage}
+                          onSelect={(collage) => {
+                            setSelectedTextId(null);
+                            setSelectedCollage(collage);
+                          }}
                           onDeleted={(id) => {
                             setSelectedCollage((current) =>
                               current?.id === id ? null : current

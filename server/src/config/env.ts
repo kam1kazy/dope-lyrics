@@ -49,6 +49,14 @@ const httpEnvSchema = z.object({
     .positive()
     .default(900_000),
   AUTH_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(60),
+  AI_BASE_URL: z.string().optional().default(''),
+  AI_API_KEY: z.string().optional().default(''),
+  AI_MODEL: z.string().optional().default(''),
+  AI_TIMEOUT_MS: z.coerce.number().int().positive().default(60_000),
+  AI_MAX_TOKENS: z.coerce.number().int().positive().default(2048),
+  AI_STYLE_EXAMPLES: z.coerce.number().int().positive().default(60),
+  AI_COST_RUB_PER_1M_IN: z.coerce.number().nonnegative().default(0),
+  AI_COST_RUB_PER_1M_OUT: z.coerce.number().nonnegative().default(0),
 });
 
 const parsedHttp = httpEnvSchema.safeParse(process.env);

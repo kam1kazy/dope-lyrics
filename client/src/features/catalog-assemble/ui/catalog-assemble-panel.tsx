@@ -30,6 +30,7 @@ import {
 
 import { formatCollageDate } from '../lib/generator-text';
 import { AssembleSlotCard } from './assemble-slot-card';
+import { CollageRewritePanel } from './collage-rewrite-panel';
 
 const GLUE_HINT =
   'Склеить сборку в одну запись каталога. Оригиналы можно оставить или спрятать.';
@@ -103,12 +104,16 @@ export function CatalogAssemblePanel({
   filters,
   selectedCollage,
   onCloseSelected,
+  aiEnabled,
+  onTextSaved,
 }: {
   form: TrackFormQuotas;
   hideAdlibs: boolean;
   filters: CatalogSectionFilters;
   selectedCollage: ILyricCollage | null;
   onCloseSelected: () => void;
+  aiEnabled: boolean;
+  onTextSaved: (id: number) => void;
 }) {
   const [draft, setDraft] = useState<IAssembledTrackSlot[] | null>(null);
   const [likedDraftKey, setLikedDraftKey] = useState<string | null>(null);
@@ -458,6 +463,16 @@ export function CatalogAssemblePanel({
           <ErrorText
             title="Не удалось собрать, сохранить или склеить"
             error={assembleError ?? likeError ?? unlikeError ?? glueError}
+          />
+        ) : null}
+
+        {aiEnabled && slots && canGlue ? (
+          <CollageRewritePanel
+            key={draftKey(slots)}
+            slots={slots}
+            filters={filters}
+            hideAdlibs={hideAdlibs}
+            onSaved={onTextSaved}
           />
         ) : null}
 

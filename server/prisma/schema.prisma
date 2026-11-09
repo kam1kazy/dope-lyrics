@@ -27,6 +27,9 @@ model Users {
   carouselHistory CarouselHistory[]
   sessions        Session[]
   channelBindings ChannelBinding[]
+  aiPrompts       AiPrompt[]
+  aiUsage         AiUsage[]
+  trackTexts      TrackText[]
   invitesCreated  Invite[]          @relation("InviteCreatedBy")
   invitesUsed     Invite[]          @relation("InviteUsedBy")
 }
@@ -248,4 +251,77 @@ model ChannelBinding {
   owner Users @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+enum AiUsageKind {
+  COLLAGE_REWRITE
+}
+
+enum AiUsageStatus {
+  OK
+  ERROR
+}
+
+/// Промпт автора: каждое сохранение — новая строка, текущий — последний.
+model AiPrompt {
+  id        Int      @id @default(autoincrement())
+  text      String
+  createdAt DateTime @default(now())
+
+  userId Int
+  owner  Users @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  usage      AiUsage[]
+  trackTexts TrackText[]
+
+  @@index([userId, createdAt])
+}
+
+/// Учёт вызова модели; пишется и на ошибку.
+model AiUsage {
+  id           Int           @id @default(autoincrement())
+  kind         AiUsageKind
+  model        String
+  frameVersion Int
+  tokensIn     Int           @default(0)
+  tokensOut    Int           @default(0)
+  /// Оценка по env-ценам; null — цена не задана.
+  costRub      Decimal?      @db.Decimal(12, 4)
+  latencyMs    Int
+  status       AiUsageStatus
+  error        String?
+  createdAt    DateTime      @default(now())
+
+  userId   Int
+  owner    Users     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  promptId Int?
+  prompt   AiPrompt? @relation(fields: [promptId], references: [id], onDelete: SetNull)
+
+  trackTexts TrackText[]
+
+  @@index([userId, createdAt])
+}
+
+/// Текст из генератора. sourceText и aiText после создания не меняются.
+model TrackText {
+  id         Int       @id @default(autoincrement())
+  theme      String?
+  /// Как у LyricCollage.slots.
+  slots      Json
+  sourceText String
+  aiText     String
+  text       String
+  finalText  String?
+  doneAt     DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  userId   Int
+  owner    Users     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  promptId Int?
+  prompt   AiPrompt? @relation(fields: [promptId], references: [id], onDelete: SetNull)
+  usageId  Int?
+  usage    AiUsage?  @relation(fields: [usageId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
 }

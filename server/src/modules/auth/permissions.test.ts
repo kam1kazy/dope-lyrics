@@ -15,6 +15,7 @@ describe('permissions', () => {
     expect(can(user, 'users:list')).toBe(false);
     expect(can(user, 'users:role')).toBe(false);
     expect(can(user, 'users:invite')).toBe(false);
+    expect(can(user, 'ai:use')).toBe(false);
   });
 
   test('ADMIN: users:list без разрушающих db и users:role', () => {
@@ -27,6 +28,7 @@ describe('permissions', () => {
     expect(can(user, 'db:seed')).toBe(false);
     expect(can(user, 'db:parse')).toBe(false);
     expect(can(user, 'users:role')).toBe(false);
+    expect(can(user, 'ai:use')).toBe(false);
   });
 
   test('OWNER: все права', () => {
@@ -42,6 +44,7 @@ describe('permissions', () => {
     expect(can(user, 'db:parse')).toBe(true);
     expect(can(user, 'users:role')).toBe(true);
     expect(can(user, 'users:invite')).toBe(true);
+    expect(can(user, 'ai:use')).toBe(true);
   });
 
   test('неизвестное право и пустой пользователь запрещены', () => {
