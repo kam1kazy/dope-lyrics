@@ -2,12 +2,12 @@
 
 Продукт: [00_vision.md](./00_vision.md). Текущая задача: [tasks/current_task.md](./tasks/current_task.md).
 
-Снимок: **9 ноября 2026**. Продукт **0.9.0** — [versions.md](./versions.md). Дорожка D закрыта. **E без ИИ** закрыта. **F: вход и изоляция** — на стенде: учётка по приглашению, cookie-сессия, личный каталог, профиль с подкачкой. Что ещё не делали — [roadmap](./roadmap.md).
+Снимок: **9 ноября 2026**. Продукт **0.9.0** — [versions.md](./versions.md). Дорожка D закрыта. **E без ИИ** закрыта. **F закрыта**: учётка по приглашению, cookie-сессия, личный каталог, профиль с подкачкой; хост защищён, CI/CD. Что ещё не делали — [roadmap](./roadmap.md).
 
 | Кусок | Сейчас |
 | --- | --- |
 | Код | `main` = стенд. `origin/develop` — склад — [git.md](./git.md) |
-| Стенд | https://legoblokk.ru/essence, деплой на `marzban` через CI: push в `main` → `.github/workflows/deploy.yml` (образы GHCR, `scripts/deploy/deploy-prod.sh` с бэкапом БД) |
+| Стенд | https://legoblokk.ru/essence, деплой на `marzban` через CI: push в `main` → `.github/workflows/deploy.yml` (образы GHCR, `scripts/deploy/deploy-prod.sh` с бэкапом БД). Хост — [006](./tasks/006_server_hardening.md): SSH по ключу, fail2ban, бэкап в 03:30 |
 | Контур | GraphQL + Next, TG и Apple Notes, карусель |
 | UI | shadcn. Меню: список (фильтр «Откуда»), избранное, демки, история, сводка, генератор; внизу — блок пользователя (клик → профиль, ⋮ → «Профиль» / «Выйти»). Экран входа |
 | Фильтры | `lyrics(...)` по тегам, полкам, граням; `sources` только в списке |
@@ -20,4 +20,4 @@
 | Тулчейн | Postgres **18.6** (`dope-lyrics-db` на 5433). Корень/`client`/`server` — version **0.9.0**. TS 7 — не сейчас |
 | OpenSpec | Активных changes нет. Архив: `2026-11-09-profile-page`, `2026-11-09-invite-only-signup`, `2026-11-09-multi-user-catalog`, `2026-09-07-lyric-energy`, `2026-09-07-catalog-stats-dashboard`, … |
 
-Ближайшее без ИИ — шлифовка. ИИ и шов — не сейчас.
+Без ИИ открытых задач нет. Дальше — дорожка E (ИИ), когда автор скажет.

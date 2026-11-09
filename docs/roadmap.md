@@ -71,9 +71,13 @@ Chakra снят. Экран на **shadcn**, как в youways. Иконки Luc
 
 **Mini App и браузер** — вход по Telegram: `initData` в Mini App и Login Widget в браузере/PWA. Сессия — httpOnly cookie; GraphQL пускает по сессии или `initData`. Каталог личный по владельцу. Роли `OWNER` | `ADMIN` | `USER`, права через `can()` — [ADR 0009](./decisions/0009-user-auth-roles.md).
 
-**Регистрация** — учётка создаётся при первом входе через Telegram (без email/пароля). Модель сессии youways, не `origin/develop`.
+**Регистрация** — только по приглашению: `/invite` в боте или блок «Приглашения» в профиле (`ADMIN`/`OWNER`), одноразовая ссылка на 7 дней. Без email и пароля. Модель сессии youways, не `origin/develop`.
 
-**Linux-хост** — когда нужен Mini App или бот без компа: TLS, закрытый SSH, fail2ban, не светить Postgres.
+**Linux-хост** — стенд на `marzban` (`https://legoblokk.ru/essence`): TLS, SSH только по ключу, fail2ban на порт SSH, Postgres не наружу, ежедневный бэкап базы, ротация логов — [006](./tasks/006_server_hardening.md).
+
+**CI/CD** — push в `main`: lint и тесты параллельно (не держат выкатку), образы в GHCR, деплой по SSH с бэкапом, проверка снаружи и чистка Docker — `.github/workflows/deploy.yml`.
+
+**Дорожка F закрыта** (9.11.2026).
 
 См. [youways-baseline.md](./youways-baseline.md).
 
