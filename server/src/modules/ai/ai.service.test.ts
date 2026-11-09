@@ -86,7 +86,7 @@ afterAll(async () => {
 
 describe('примеры стиля для ИИ', () => {
   test('эталон первым, фразы склейки и чужого каталога не попадают', async () => {
-    const examples = await loadStyleExamples(userAId, [slotLyricId], null);
+    const examples = await loadStyleExamples(userAId, [slotLyricId]);
 
     expect(examples[0]).toBe(`эталон ${SUFFIX}`);
     expect(examples).toContain(`обычная ${SUFFIX}`);
