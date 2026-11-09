@@ -143,25 +143,25 @@ export function CollageRewritePanel({
             setTheme(event.target.value);
           }}
         />
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          className="shrink-0"
-          disabled={!enabled || !hasLines || rewriting}
-          onClick={() => {
-            void handleRewrite();
-          }}
-        >
-          {rewriting ? (
-            <Spinner className="size-4" />
-          ) : (
-            <>
+        <Hint label="Поправить ИИ">
+          <Button
+            type="button"
+            size="icon"
+            variant="outline"
+            className="size-8 shrink-0"
+            aria-label="Поправить ИИ"
+            disabled={!enabled || !hasLines || rewriting}
+            onClick={() => {
+              void handleRewrite();
+            }}
+          >
+            {rewriting ? (
+              <Spinner className="size-4" />
+            ) : (
               <Sparkles className="size-4" />
-              Поправить ИИ
-            </>
-          )}
-        </Button>
+            )}
+          </Button>
+        </Hint>
       </div>
       {status && !enabled ? (
         <p className="text-muted-foreground text-xs">ИИ не настроен</p>
