@@ -15,7 +15,7 @@
     "kill-port": "bun run kill"
   },
   "devDependencies": {
-    "concurrently": "^10.0.5"
+    "concurrently": "^10.0.7"
   },
   "compileOptions": {
     "paths": {
