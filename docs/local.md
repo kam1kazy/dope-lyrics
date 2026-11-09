@@ -24,6 +24,15 @@
 
 Порт **5432 занят youways** (`postgres`). Второй Postgres туда не сажать. Каталог — контейнер `dope-lyrics-db` на **5433**.
 
+Поднять контейнер (один раз, дальше стартует вместе с Docker):
+
+```sh
+docker build -t dope-lyrics-db ./db
+docker run -d --name dope-lyrics-db --restart unless-stopped -e POSTGRES_USER=dope -e POSTGRES_PASSWORD=dope_local -e POSTGRES_DB=dope_lyrics -p 5433:5432 -v dope_lyrics_data:/var/lib/postgresql dope-lyrics-db
+```
+
+Перед push — то же, что `checks` в CI: `bun run ci` в `server/` (миграции, lint, prettier, типы, тесты) и `bun run check` в `client/`.
+
 ИИ: в `server/.env` — `AI_BASE_URL`, `AI_API_KEY`, `AI_MODEL`, `AI_COST_RUB_PER_1M_IN/OUT` (имена в `server/.env.example`). Пустой `AI_API_KEY` — ИИ выключен, остальное работает.
 
 Значения из `.env` в чат и в коммит не копировать. Агент не читает эти файлы целиком.
