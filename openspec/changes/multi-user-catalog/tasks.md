@@ -73,3 +73,15 @@
 - [x] 8.2 `docs/roadmap.md` (дорожка F) и `docs/architecture.md`: многопользовательский режим вместо «когда появится вход»
 - [x] 8.3 `docs/versions.md` и `docs/tasks/current_task.md`: новая версия и текущее состояние
 - [x] 8.4 FAQ бота: что бот не читает историю канала, попадёт только новое
+
+## 9. Сессия: сверка с youways
+
+Ручная проверка 7.7 — после этого раздела.
+
+- [x] 9.1 `server/src/config/security.ts`: `/auth/*` проходит общую проверку Origin и лимит тела; POST на `/auth/*` — только `application/json` или `X-Requested-With: XMLHttpRequest`, иначе 403 (как `csrfProtectionMiddleware` youways, закрывает login CSRF через форму `text/plain`)
+- [x] 9.2 IP для rate limit — сначала `X-Real-IP` от nginx, потом `X-Forwarded-For`; одна функция на `security.ts` и `auth.routes.ts`
+- [x] 9.3 Чистка просроченных и отозванных сессий (`sessionService.cleanupExpired`) по таймеру раз в сутки; таймер снимается при остановке сервера
+- [x] 9.4 Скользящая сессия: гейт при старте зовёт `/auth/refresh` вместо `/auth/me` (ротация, новый срок); refresh между вкладками через `navigator.locks`, чтобы две вкладки не отозвали друг друга
+- [x] 9.5 `client/src/shared/api/apollo-client.ts`: HTTP 401 от GraphQL → `AUTH_SIGNED_OUT_EVENT`, гейт показывает вход (в Mini App — тихий вход по `initData`), а не «Ошибка загрузки»
+- [x] 9.6 Тесты: POST `text/plain` и чужой Origin на `/auth/*` → 403; после `/auth/refresh` старый токен не пускает
+- [x] 9.7 ADR 0009: одна серверная сессия вместо пары access/refresh youways — почему; детект повторного refresh не делаем

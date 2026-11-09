@@ -15,16 +15,24 @@ type RateBucket = {
 
 const rateBuckets = new Map<string, RateBucket>();
 
-const clientIp = (request: Request): string => {
-  const forwarded = request.headers.get('x-forwarded-for');
-  if (forwarded) {
-    const first = forwarded.split(',')[0]?.trim();
-    if (first) {
-      return first;
-    }
+// X-Real-IP ставит nginx из $remote_addr; начало X-Forwarded-For клиент подделывает сам
+export const clientIp = (request: Request): string => {
+  const realIp = request.headers.get('x-real-ip')?.trim();
+  if (realIp) {
+    return realIp;
   }
 
-  return request.headers.get('x-real-ip') ?? 'unknown';
+  const forwarded = request.headers.get('x-forwarded-for');
+  const first = forwarded?.split(',')[0]?.trim();
+  return first || 'unknown';
+};
+
+const isCsrfSafeAuthPost = (request: Request): boolean => {
+  const contentType = request.headers.get('content-type') ?? '';
+  return (
+    contentType.includes('application/json') ||
+    request.headers.get('x-requested-with') === 'XMLHttpRequest'
+  );
 };
 
 const requestPath = (request: Request): string => {
@@ -83,14 +91,11 @@ export const securityPlugin = new Elysia({ name: 'security' })
     const method = request.method.toUpperCase();
     const path = requestPath(request);
 
-    if (
-      method === 'OPTIONS' ||
-      path === '/health' ||
-      path.startsWith('/auth/')
-    ) {
+    if (method === 'OPTIONS' || path === '/health') {
       return;
     }
 
+    const isAuthPath = path.startsWith('/auth/');
     const host = request.headers.get('host') ?? '';
     const isLocalHost = /^(localhost|127\.0\.0\.1)(:\d+)?$/i.test(host);
 
@@ -114,6 +119,11 @@ export const securityPlugin = new Elysia({ name: 'security' })
     if (origin && !isOriginAllowed(origin)) {
       set.status = 403;
       return { error: 'Origin не разрешён' };
+    }
+
+    if (isAuthPath && method === 'POST' && !isCsrfSafeAuthPost(request)) {
+      set.status = 403;
+      return { error: 'Запрос заблокирован' };
     }
 
     if (method !== 'GET' && method !== 'HEAD' && path.startsWith('/graphql')) {

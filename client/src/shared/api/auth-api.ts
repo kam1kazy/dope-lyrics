@@ -74,36 +74,6 @@ const readErrorMessage = async (
   return fallback;
 };
 
-export async function fetchAuthMe(): Promise<AuthUser | null> {
-  const response = await fetch(authUrl('/me'), {
-    method: 'GET',
-    credentials: 'include',
-    headers: { Accept: 'application/json' },
-  });
-
-  if (!response.ok) {
-    return null;
-  }
-
-  const body: unknown = await response.json();
-  if (
-    !body ||
-    typeof body !== 'object' ||
-    !('user' in body) ||
-    !body.user ||
-    typeof body.user !== 'object'
-  ) {
-    return null;
-  }
-
-  const user = body.user as AuthUser;
-  if (typeof user.id !== 'number' || typeof user.username !== 'string') {
-    return null;
-  }
-
-  return user;
-}
-
 const readAuthUser = async (response: Response): Promise<AuthUser | null> => {
   try {
     const body: unknown = await response.json();
@@ -127,6 +97,34 @@ const readAuthUser = async (response: Response): Promise<AuthUser | null> => {
     return null;
   }
 };
+
+const REFRESH_LOCK_NAME = 'dl-auth-refresh';
+
+const postRefresh = async (): Promise<AuthUser | null> => {
+  const response = await fetch(authUrl('/refresh'), {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      Accept: 'application/json',
+      'X-Requested-With': 'XMLHttpRequest',
+    },
+  });
+
+  if (!response.ok) {
+    return null;
+  }
+
+  return readAuthUser(response);
+};
+
+// Ротация отзывает старый токен: две вкладки без замка выбили бы друг друга
+export async function refreshSession(): Promise<AuthUser | null> {
+  if (typeof navigator !== 'undefined' && navigator.locks) {
+    return navigator.locks.request(REFRESH_LOCK_NAME, postRefresh);
+  }
+
+  return postRefresh();
+}
 
 export async function loginWithTelegramWebApp(
   initData: string
@@ -191,7 +189,10 @@ export async function logoutSession(): Promise<void> {
     await fetch(authUrl('/logout'), {
       method: 'POST',
       credentials: 'include',
-      headers: { Accept: 'application/json' },
+      headers: {
+        Accept: 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
+      },
     });
   } catch {
     // show login anyway

@@ -1,6 +1,7 @@
 import { Elysia, t } from 'elysia';
 
 import { env } from '~/config/env';
+import { clientIp } from '~/config/security';
 import {
   type TelegramLoginPayload,
   verifyTelegramLoginUserId,
@@ -16,17 +17,6 @@ import {
 import { usersService } from '~/modules/users/users.service';
 
 const authRateBuckets = new Map<string, { count: number; resetAt: number }>();
-
-const clientIp = (request: Request): string => {
-  const forwarded = request.headers.get('x-forwarded-for');
-  if (forwarded) {
-    const first = forwarded.split(',')[0]?.trim();
-    if (first) {
-      return first;
-    }
-  }
-  return request.headers.get('x-real-ip') ?? 'unknown';
-};
 
 const consumeAuthRate = (request: Request): boolean => {
   const now = Date.now();

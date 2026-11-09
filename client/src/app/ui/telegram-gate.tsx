@@ -5,9 +5,9 @@ import { type ReactNode, useCallback, useEffect, useState } from 'react';
 import {
   AUTH_SIGNED_OUT_EVENT,
   clearExplicitLogout,
-  fetchAuthMe,
   hasExplicitLogout,
   loginWithTelegramWebApp,
+  refreshSession,
 } from '@/shared/api';
 import { reloadIfStaleDeploy } from '@/shared/lib/deploy-at';
 import {
@@ -62,7 +62,7 @@ export function TelegramGate({ children }: { children: ReactNode }) {
       }
 
       try {
-        const sessionUser = await fetchAuthMe();
+        const sessionUser = await refreshSession();
         if (cancelled) {
           return;
         }

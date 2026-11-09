@@ -4,10 +4,10 @@ export {
   authUrl,
   type AuthUser,
   clearExplicitLogout,
-  fetchAuthMe,
   hasExplicitLogout,
   loginWithTelegramWebApp,
   loginWithTelegramWidget,
   logoutSession,
+  refreshSession,
   type TelegramLoginPayload,
 } from './auth-api';
