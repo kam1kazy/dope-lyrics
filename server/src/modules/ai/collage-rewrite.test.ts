@@ -58,32 +58,18 @@ describe('buildSourceText', () => {
 });
 
 describe('pickStyleExamples', () => {
-  test('эталоны идут первыми, остальное добирается из пула до лимита', () => {
-    const references = Array.from({ length: 10 }, (_, i) => `эталон ${i}`);
-    const pool = Array.from({ length: 100 }, (_, i) => `фраза ${i}`);
+  test('берутся только эталоны, не больше лимита, пустые выпадают', () => {
+    const references = ['', ...Array.from({ length: 30 }, (_, i) => `эталон ${i}`)];
 
-    const result = pickStyleExamples(references, pool, 60);
+    const result = pickStyleExamples(references, 25);
 
-    expect(result).toHaveLength(60);
-    expect(result.slice(0, 10)).toEqual(references);
-    expect(result.slice(10).every((text) => text.startsWith('фраза'))).toBe(
-      true
-    );
-  });
-
-  test('эталоны занимают не больше половины лимита', () => {
-    const references = Array.from({ length: 50 }, (_, i) => `эталон ${i}`);
-    const pool = Array.from({ length: 50 }, (_, i) => `фраза ${i}`);
-
-    const result = pickStyleExamples(references, pool, 20);
-
-    expect(result.filter((text) => text.startsWith('эталон'))).toHaveLength(10);
-    expect(result).toHaveLength(20);
+    expect(result).toHaveLength(25);
+    expect(result[0]).toBe('эталон 0');
   });
 
   test('длинная фраза режется до 8 строк, хештеги чистятся', () => {
     const long = Array.from({ length: 12 }, (_, i) => `строка ${i}`).join('\n');
-    const [example] = pickStyleExamples([`${long} #тег`], [], 4);
+    const [example] = pickStyleExamples([`${long} #тег`], 4);
 
     expect(example?.split('\n')).toHaveLength(8);
     expect(example).not.toContain('#');

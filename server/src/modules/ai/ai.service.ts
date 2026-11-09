@@ -17,10 +17,7 @@ import {
   completeWithModel,
   isAiConfigured,
 } from '~/modules/ai/polza.client';
-import {
-  buildLyricsWhere,
-  type LyricsListOptions,
-} from '~/modules/lyrics/lyrics-list-filters';
+import { type LyricsListOptions } from '~/modules/lyrics/lyrics-list-filters';
 import {
   lyricIdsFromSlots,
   parseCollageSlotsInput,
@@ -79,47 +76,23 @@ export const sourceTextFromSlots = async (
 
 export const loadStyleExamples = async (
   userId: number,
-  excludeIds: number[],
-  filter: RewriteFilter | null | undefined
+  excludeIds: number[]
 ): Promise<string[]> => {
-  const includeCensored = (filter?.includeShelves ?? []).includes('censored');
-  const notInSlots = { id: { notIn: excludeIds } };
-
   const references = await prisma.lyrics.findMany({
     where: {
       userId,
       isReference: true,
       isHidden: false,
       isCensored: false,
-      ...notInSlots,
+      id: { notIn: excludeIds },
     },
     orderBy: { date: 'desc' },
     take: env.AI_STYLE_EXAMPLES,
     select: { message: { select: { text: true } } },
   });
 
-  const pool = await prisma.lyrics.findMany({
-    where: {
-      AND: [
-        buildLyricsWhere({
-          userId,
-          ...filter,
-          excludeShelves: filter?.excludeShelves ?? ['hidden', 'donors'],
-        }),
-        includeCensored ? {} : { isCensored: false },
-        { isReference: false },
-        notInSlots,
-      ],
-    },
-    select: { message: { select: { text: true } } },
-  });
-
-  const texts = (rows: { message: { text: string | null } | null }[]) =>
-    rows.map((row) => row.message?.text ?? '');
-
   return pickStyleExamples(
-    texts(references),
-    texts(pool),
+    references.map((row) => row.message?.text ?? ''),
     env.AI_STYLE_EXAMPLES
   );
 };
@@ -144,7 +117,7 @@ export const rewriteCollage = async (
 
   const theme = input.theme?.trim() || null;
   const prompt = await getCurrentPrompt(userId);
-  const examples = await loadStyleExamples(userId, lyricIds, input.filter);
+  const examples = await loadStyleExamples(userId, lyricIds);
   const startedAt = Date.now();
 
   try {

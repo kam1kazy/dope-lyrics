@@ -5,7 +5,7 @@ import {
   splitGeneratorLines,
 } from '~/modules/lyrics/track-assemble';
 
-export const FRAME_VERSION = 1;
+export const FRAME_VERSION = 2;
 
 const QUATRAIN_LINES = 4;
 const MAX_EXAMPLE_LINES = 8;
@@ -21,9 +21,21 @@ const ROLE_LABELS: Record<LyricSongRole, string> = {
 };
 
 export const COLLAGE_REWRITE_FRAME = [
-  'Ты помогаешь автору править черновик его рэп-трека. Автор пишет по-русски.',
-  'Тебе дают склейку из его старых фраз, разбитую на части с метками в квадратных скобках, и примеры того, как он пишет.',
-  'Перепиши склейку так, чтобы она звучала как цельный текст автора: свяжи куски, убери швы, выровняй ритм и рифмы. Можно менять строки как угодно, если так лучше.',
+  'Ты редактор черновика рэп-трека. Автор пишет по-русски. Текст его, не твой: сделай автора сильнее, а не похожим на усреднённую модель.',
+  'Тебе дают склейку из его фраз, разбитую на части с метками в квадратных скобках, и его эталоны — строки, которые он сам считает сильными.',
+  '',
+  'Что сохранять:',
+  '- Строки, которые не правишь, оставь буква в букву, вместе со сленгом, ошибками в ударениях и англицизмами.',
+  '- Иронию, абсурд, двойные смыслы, пошлость и провокацию не смягчай, не объясняй и не делай серьёзными.',
+  '- Странное не значит плохое. Если строка непонятна, сначала ищи в ней шутку, подтекст или звук. Не нашёл — оставь как есть.',
+  '- Строка может держаться на подаче: на звуке, растяжке, интонации. Не правь её ради логики или грамматики.',
+  '- Смысловые скачки между кусками — часть стиля. Не досочиняй связующих строк и не превращай склейку в линейную историю.',
+  '',
+  'Что можно править:',
+  '- Только явно слабое: сломанный ритм, лишнее слово, рифма, которая разваливает строку, банальность без характера.',
+  '- Правь локально: проблема в слове — меняй слово, не строку. Не больше одной-двух строк на четверостишие.',
+  '- Новая строка должна звучать как эталоны автора, а не как литературный текст.',
+  '',
   'Сохрани метки частей в квадратных скобках на отдельных строках и порядок частей. Пустых частей не добавляй.',
   'Ответь только текстом трека. Без вступления, пояснений и markdown-обёртки.',
 ].join('\n');
@@ -89,41 +101,15 @@ export const buildSourceText = (
 export const toExampleText = (raw: string): string =>
   splitGeneratorLines(raw).slice(0, MAX_EXAMPLE_LINES).join('\n');
 
-const shuffled = <T>(items: readonly T[]): T[] => {
-  const copy = [...items];
-
-  for (let index = copy.length - 1; index > 0; index -= 1) {
-    const swap = Math.floor(Math.random() * (index + 1));
-    const current = copy[index];
-    const other = copy[swap];
-    if (current === undefined || other === undefined) {
-      continue;
-    }
-
-    copy[index] = other;
-    copy[swap] = current;
-  }
-
-  return copy;
-};
-
-/** Эталоны первыми (до половины лимита), остальное — случайно из пула. */
+/** Только эталоны: случайные фразы из пула модель принимает за норму. */
 export const pickStyleExamples = (
   references: readonly string[],
-  pool: readonly string[],
   limit: number
-): string[] => {
-  const picked = references
+): string[] =>
+  references
     .map(toExampleText)
     .filter((text) => text.length > 0)
-    .slice(0, Math.ceil(limit / 2));
-
-  const rest = shuffled(
-    pool.map(toExampleText).filter((text) => text.length > 0)
-  ).slice(0, limit - picked.length);
-
-  return [...picked, ...rest];
-};
+    .slice(0, limit);
 
 export const buildRewriteSystem = (authorPrompt: string): string => {
   const prompt = authorPrompt.trim();
@@ -145,7 +131,9 @@ export const buildRewriteUser = (input: {
   }
 
   if (input.examples.length > 0) {
-    parts.push(`Примеры, как я пишу:\n${input.examples.join('\n---\n')}`);
+    parts.push(
+      `Мои эталоны — так я пишу, когда получается:\n${input.examples.join('\n---\n')}`
+    );
   }
 
   parts.push(`Склейка для правки:\n${input.sourceText}`);
