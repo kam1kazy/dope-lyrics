@@ -41,7 +41,7 @@ const replyChatId = (msg: MessageLike, msgCallback?: CallbackQueryContext) => {
 
 /**
  * Находит учётку по Telegram id отправителя.
- * Если учётки нет — отвечает «Сначала откройте приложение» и возвращает null.
+ * Если учётки нет — отвечает «Доступ по приглашению…» и возвращает null.
  */
 export const assertUser = async ({
   tg,
@@ -53,13 +53,19 @@ export const assertUser = async ({
   const chatId = replyChatId(msg, msgCallback);
 
   if (telegramId === null) {
-    await tg.sendText(chatId, 'Сначала откройте приложение');
+    await tg.sendText(
+      chatId,
+      'Доступ по приглашению — попросите ссылку у автора каталога'
+    );
     return null;
   }
 
   const user = await usersService.findByTelegramId(telegramId);
   if (!user) {
-    await tg.sendText(chatId, 'Сначала откройте приложение');
+    await tg.sendText(
+      chatId,
+      'Доступ по приглашению — попросите ссылку у автора каталога'
+    );
     return null;
   }
 

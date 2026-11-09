@@ -173,6 +173,9 @@ const faqText = () =>
 <code>/channel bind</code> — новые посты канала в твой каталог.
 Историю бот <b>не читает</b>: попадут только посты после привязки. Старый корпус — через Notes или экспорт.
 
+<b>Доступ</b>
+Каталог по приглашению: автор присылает ссылку из <code>/invite</code>, она срабатывает один раз.
+
 <b>Повторный импорт</b>
 Те же тексты не плодятся. Если в YAML обновились даты — они подтянутся.
 
@@ -440,7 +443,10 @@ export const handleAppleNotesZipDocument = async ({
     const files = extractAppleNotesFromZip(bytes);
     const catalogUser = await usersService.findByTelegramId(telegramId);
     if (!catalogUser) {
-      await tg.sendText(msg.chat.id, 'Сначала откройте приложение');
+      await tg.sendText(
+        msg.chat.id,
+        'Доступ по приглашению — попросите ссылку у автора каталога'
+      );
       return true;
     }
     const result = await importAppleNotesFromFiles(catalogUser.id, files);

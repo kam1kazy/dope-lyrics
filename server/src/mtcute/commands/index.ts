@@ -9,6 +9,7 @@ import { parseBotEnv } from '~/config/env';
 import { lyricsService } from '~/modules/lyrics/lyrics.service';
 import { getChatHistory } from '~/modules/lyrics/parse/get-chat-history';
 import { usersService } from '~/modules/users/users.service';
+import { catalogUrl } from '~/mtcute/catalog-url';
 import { assertPermission } from '~/mtcute/guards/assert-admin';
 import { sendToBotChat } from '~/mtcute/send';
 import type { TypeBotClient } from '~/mtcute/types';
@@ -52,7 +53,7 @@ const commandStartApp = async ({ tg, msg }: ICommandChat) => {
       const text = '📱 Вы хотите открыть приложение?';
       await tg.sendText(msg.chat.id, text, {
         replyMarkup: BotKeyboard.inline([
-          [BotKeyboard.url('Запустить', `https://${botEnv.SITE_URL}/`)],
+          [BotKeyboard.url('Запустить', catalogUrl())],
         ]),
       });
     },

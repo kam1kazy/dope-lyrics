@@ -6,6 +6,7 @@ export const PERMISSIONS = [
   'db:parse',
   'users:list',
   'users:role',
+  'users:invite',
   'catalog:own',
   'channel:bind',
   'notes:import',
@@ -24,6 +25,7 @@ const USER_PERMISSIONS: ReadonlySet<Permission> = new Set([
 const ADMIN_PERMISSIONS: ReadonlySet<Permission> = new Set([
   ...USER_PERMISSIONS,
   'users:list',
+  'users:invite',
 ]);
 
 const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<Permission>> = {

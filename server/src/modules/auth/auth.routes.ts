@@ -16,6 +16,8 @@ import {
 } from '~/modules/auth/session.service';
 import { usersService } from '~/modules/users/users.service';
 
+const INVITE_ONLY_ERROR = 'Доступ по приглашению';
+
 const authRateBuckets = new Map<string, { count: number; resetAt: number }>();
 
 const consumeAuthRate = (request: Request): boolean => {
@@ -88,10 +90,11 @@ export const authRoutes = new Elysia({ prefix: '/auth' })
       username = undefined;
     }
 
-    const user = await usersService.findOrCreateByTelegramId({
-      telegramId,
-      username,
-    });
+    const user = await usersService.findForLogin({ telegramId, username });
+    if (!user) {
+      set.status = 403;
+      return { error: INVITE_ONLY_ERROR };
+    }
     const session = await sessionService.create(user.id);
     cookie[SESSION_COOKIE_NAME].set({
       value: session.token,
@@ -120,10 +123,14 @@ export const authRoutes = new Elysia({ prefix: '/auth' })
         return { error: 'Нет доступа' };
       }
 
-      const user = await usersService.findOrCreateByTelegramId({
+      const user = await usersService.findForLogin({
         telegramId,
         username: payload.username,
       });
+      if (!user) {
+        set.status = 403;
+        return { error: INVITE_ONLY_ERROR };
+      }
       const session = await sessionService.create(user.id);
       cookie[SESSION_COOKIE_NAME].set({
         value: session.token,

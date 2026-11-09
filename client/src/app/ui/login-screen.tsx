@@ -16,6 +16,9 @@ import { Button } from '@/shared/ui/shadcn/ui/button';
 const botUsername =
   process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME?.trim().replace(/^@/, '') ?? '';
 
+// Текст отказа сервера для аккаунта без учётки (server/src/modules/auth/auth.routes.ts)
+const INVITE_ONLY_ERROR = 'Доступ по приглашению';
+
 declare global {
   interface Window {
     onDopeLyricsTelegramAuth?: (user: TelegramLoginPayload) => void;
@@ -167,6 +170,12 @@ export function LoginScreen({ onSuccess }: LoginScreenProps) {
         {error ? (
           <p className="text-destructive text-sm" role="alert">
             {error}
+          </p>
+        ) : null}
+        {error === INVITE_ONLY_ERROR ? (
+          <p className="text-muted-foreground text-xs leading-relaxed">
+            Попросите ссылку-приглашение у автора каталога и откройте её в
+            Telegram.
           </p>
         ) : null}
         {pending ? (

@@ -22,11 +22,13 @@ model Users {
   telegramId BigInt?  @unique
   role       UserRole @default(USER)
 
-  lyrics           Lyrics[]
-  collages         LyricCollage[]
-  carouselHistory  CarouselHistory[]
-  sessions         Session[]
-  channelBindings  ChannelBinding[]
+  lyrics          Lyrics[]
+  collages        LyricCollage[]
+  carouselHistory CarouselHistory[]
+  sessions        Session[]
+  channelBindings ChannelBinding[]
+  invitesCreated  Invite[]          @relation("InviteCreatedBy")
+  invitesUsed     Invite[]          @relation("InviteUsedBy")
 }
 
 enum LyricSource {
@@ -45,23 +47,23 @@ model Lyrics {
   isPinned       Boolean
   isChannelPost  Boolean
   /// Эталон каталога: ставит приложение (позже ИИ), не хештег из Telegram.
-  isReference    Boolean  @default(false)
+  isReference    Boolean     @default(false)
   /// Скрыто из обычной карусели; seed не сбрасывает.
-  isHidden       Boolean  @default(false)
+  isHidden       Boolean     @default(false)
   /// Избранное для полки в drawer.
-  isFavorite     Boolean  @default(false)
+  isFavorite     Boolean     @default(false)
   /// Полка «цензура»: ставит приложение, seed не трогает.
-  isCensored     Boolean  @default(false)
+  isCensored     Boolean     @default(false)
   /// Донор: сообщение разделили при склейке и спрятали; seed не трогает.
-  isDonor        Boolean  @default(false)
+  isDonor        Boolean     @default(false)
   /// Уже брали в работу; подсветка, не скрытие. Seed не трогает.
-  isUsed         Boolean  @default(false)
+  isUsed         Boolean     @default(false)
   /// Авторский профиль: словари в lyric-facets.ts, seed не трогает.
   /// mood/delivery без роли; у каждой роли — свой набор в roleProfiles.
-  mood           String[] @default([])
-  delivery       String[] @default([])
-  songRole       String[] @default([])
-  roleProfiles   Json     @default("{}")
+  mood           String[]    @default([])
+  delivery       String[]    @default([])
+  songRole       String[]    @default([])
+  roleProfiles   Json        @default("{}")
   readiness      String?
   /// Накал строки (шёпот…крик); seed не трогает.
   energy         String?
@@ -188,12 +190,12 @@ enum CarouselHistorySource {
 
 /// Снимок порядка карусели; seed не трогает.
 model CarouselHistory {
-  id          Int                    @id @default(autoincrement())
-  createdAt   DateTime               @default(now())
+  id          Int                   @id @default(autoincrement())
+  createdAt   DateTime              @default(now())
   source      CarouselHistorySource
   lyricIds    Int[]
-  previewText String                 @default("")
-  isLiked     Boolean                @default(false)
+  previewText String                @default("")
+  isLiked     Boolean               @default(false)
 
   userId Int
   owner  Users @relation(fields: [userId], references: [id])
@@ -217,12 +219,28 @@ model Session {
   @@index([expiresAt])
 }
 
+model Invite {
+  id          Int       @id @default(autoincrement())
+  codeHash    String    @unique
+  createdById Int
+  createdAt   DateTime  @default(now())
+  expiresAt   DateTime
+  usedById    Int?
+  usedAt      DateTime?
+  revokedAt   DateTime?
+
+  createdBy Users  @relation("InviteCreatedBy", fields: [createdById], references: [id], onDelete: Cascade)
+  usedBy    Users? @relation("InviteUsedBy", fields: [usedById], references: [id], onDelete: SetNull)
+
+  @@index([createdById, createdAt])
+}
+
 model ChannelBinding {
-  id         Int      @id @default(autoincrement())
-  channelId  BigInt   @unique
-  userId     Int
-  title      String?
-  createdAt  DateTime @default(now())
+  id        Int      @id @default(autoincrement())
+  channelId BigInt   @unique
+  userId    Int
+  title     String?
+  createdAt DateTime @default(now())
 
   owner Users @relation(fields: [userId], references: [id], onDelete: Cascade)
 

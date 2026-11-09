@@ -1,5 +1,4 @@
 import { telegramAdminId } from '~/config/env';
-import type { UserRole } from '~/generated/prisma/client';
 import { prisma } from '~/infrastructure/prisma';
 import type { IUser } from '~/modules/users/users.types';
 
@@ -34,7 +33,8 @@ export class UsersService {
     });
   }
 
-  async findOrCreateByTelegramId({
+  /** Учётку при входе заводит только владелец из BOT_ADMIN_ID; остальные — по приглашению в боте. */
+  async findForLogin({
     telegramId,
     username,
   }: {
@@ -56,13 +56,15 @@ export class UsersService {
 
     const isOwner =
       Number.isFinite(telegramAdminId) && telegramId === telegramAdminId;
-    const role: UserRole = isOwner ? 'OWNER' : 'USER';
+    if (!isOwner) {
+      return null;
+    }
 
     return this.prisma.users.create({
       data: {
         telegramId: BigInt(telegramId),
         username: username?.trim() || `tg_${telegramId}`,
-        role,
+        role: 'OWNER',
       },
     });
   }

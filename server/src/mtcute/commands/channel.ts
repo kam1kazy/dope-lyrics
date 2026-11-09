@@ -131,7 +131,10 @@ export const commandChannel = async ({
   }
 
   if (user.telegramId === null) {
-    await tg.sendText(msg.chat.id, 'Сначала откройте приложение');
+    await tg.sendText(
+      msg.chat.id,
+      'Доступ по приглашению — попросите ссылку у автора каталога'
+    );
     return;
   }
 

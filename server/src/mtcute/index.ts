@@ -20,6 +20,12 @@ import {
   handleNotesCallback,
 } from '~/mtcute/commands/apple-notes';
 import { commandChannel } from '~/mtcute/commands/channel';
+import {
+  commandInvite,
+  commandInvites,
+  handleInviteCallback,
+  handleInviteStart,
+} from '~/mtcute/commands/invite';
 import { assertPermission } from '~/mtcute/guards/assert-admin';
 import { ingestChannelPost } from '~/mtcute/ingest-channel-post';
 import { startIngestHttp } from '~/mtcute/ingest-http';
@@ -61,6 +67,8 @@ await tg
         BotCommands.cmd('bd', 'Управление базой'),
         BotCommands.cmd('notes', 'Импорт Apple Notes'),
         BotCommands.cmd('channel', 'Привязать канал'),
+        BotCommands.cmd('invite', 'Пригласить в каталог'),
+        BotCommands.cmd('invites', 'Приглашения: список и отзыв'),
       ],
     });
     console.log('MTCUTE: 📋 Команды бота обновлены');
@@ -127,6 +135,18 @@ startIngestHttp({
   port: botEnv.INGEST_PORT,
 });
 
+dp.onNewMessage(filters.deeplink(/^inv_(.+)$/), async (msg) =>
+  handleInviteStart({ tg, msg })
+);
+
+dp.onNewMessage(filters.command('invite'), async (msg) =>
+  commandInvite({ tg, msg })
+);
+
+dp.onNewMessage(filters.command('invites'), async (msg) =>
+  commandInvites({ tg, msg })
+);
+
 dp.onNewMessage(filters.command('chatid'), async (msg) =>
   commandChatId({ tg, msg })
 );
@@ -171,6 +191,10 @@ dp.onCallbackQuery(async (query) => {
   }
 
   if (await handleNotesCallback({ tg, query })) {
+    return;
+  }
+
+  if (await handleInviteCallback({ tg, query })) {
     return;
   }
 

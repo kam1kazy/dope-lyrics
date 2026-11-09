@@ -63,10 +63,10 @@ export async function resolveAuthUser(
     username = undefined;
   }
 
-  const user = await usersService.findOrCreateByTelegramId({
-    telegramId,
-    username,
-  });
+  const user = await usersService.findForLogin({ telegramId, username });
+  if (!user) {
+    return null;
+  }
 
   return {
     id: user.id,
