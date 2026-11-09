@@ -259,7 +259,23 @@ const fillSlot = (
     used.add(part.lyricId);
   }
 
-  return parts;
+  return shuffleKeepingLyricOrder(parts);
+};
+
+/** Размеченные фразы не всегда открывают слот; куски одной фразы — по возрастанию строк. */
+const shuffleKeepingLyricOrder = (
+  parts: CollagePartStored[]
+): CollagePartStored[] => {
+  const queues = new Map<number, CollagePartStored[]>();
+  for (const part of parts) {
+    const queue = queues.get(part.lyricId) ?? [];
+    queue.push(part);
+    queues.set(part.lyricId, queue);
+  }
+
+  return shuffleInPlace([...parts]).map(
+    (part) => queues.get(part.lyricId)?.shift() ?? part
+  );
 };
 
 /** Слоты по каркасу: квота строк, без повтора lyricId, второй хук копирует первый. */

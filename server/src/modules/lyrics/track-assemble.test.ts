@@ -113,6 +113,41 @@ describe('assembleSlotsFromPools', () => {
 
     expect(partLines(slots[1]?.parts ?? [])).toBe(12);
   });
+
+  test('единственная размеченная фраза не всегда открывает куплет', () => {
+    const untagged = Array.from({ length: 30 }, (_, index) => ({
+      ...poolLyric(index + 100, 'VERSE', 4),
+      songRoles: [],
+    }));
+    const catalog = [poolLyric(1, 'VERSE', 6), ...untagged];
+    const firstIds = new Set<number>();
+
+    for (let run = 0; run < 50; run += 1) {
+      const slots = assembleSlotsFromPools(catalog, {
+        intro: 0,
+        verse: 6,
+        hook: 0,
+        bridge: 0,
+      });
+      const parts = verseParts(slots);
+      expect(parts.some((part) => part.lyricId === 1)).toBe(true);
+      firstIds.add(parts[0]?.lyricId ?? 0);
+    }
+
+    expect(firstIds.size).toBeGreaterThan(1);
+  });
+
+  test('куски одной фразы идут по возрастанию строк', () => {
+    const slots = assembleSlotsFromPools([poolLyric(1, 'VERSE', 40)], {
+      intro: 0,
+      verse: 6,
+      hook: 0,
+      bridge: 0,
+    });
+    const starts = verseParts(slots).map((part) => part.startLine);
+
+    expect(starts).toEqual([...starts].sort((left, right) => left - right));
+  });
 });
 
 describe('parseTrackFormQuotas', () => {
