@@ -12,6 +12,9 @@ const inter = Inter({
 
 export const dynamic = 'force-dynamic';
 
+const withBasePath = (path: string): string =>
+  `${process.env.NEXT_PUBLIC_BASE_PATH || ''}${path}`;
+
 export const metadata: Metadata = {
   title: 'DOPE LYRICS',
   description: 'App to Telegram lyrics bot',
@@ -24,31 +27,31 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       {
-        url: '/favicon/favicon-32x32.png',
+        url: withBasePath('/favicon/favicon-32x32.png'),
         sizes: '32x32',
         type: 'image/png',
       },
       {
-        url: '/favicon/favicon-16x16.png',
+        url: withBasePath('/favicon/favicon-16x16.png'),
         sizes: '16x16',
         type: 'image/png',
       },
     ],
     apple: [
       {
-        url: '/favicon/apple-touch-icon.png',
+        url: withBasePath('/favicon/apple-touch-icon.png'),
         sizes: '180x180',
       },
     ],
     other: [
       {
         rel: 'mask-icon',
-        url: '/favicon/safari-pinned-tab.svg',
+        url: withBasePath('/favicon/safari-pinned-tab.svg'),
         color: '#0f110e',
       },
     ],
   },
-  manifest: '/favicon/site.webmanifest',
+  manifest: withBasePath('/favicon/site.webmanifest'),
   robots: {
     index: false,
     follow: false,
