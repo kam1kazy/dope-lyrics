@@ -60,3 +60,9 @@ export const MARK_TRACK_TEXT_DONE = gql`
     }
   }
 `;
+
+export const DELETE_TRACK_TEXT = gql`
+  mutation DeleteTrackText($id: Int!) {
+    deleteTrackText(id: $id)
+  }
+`;

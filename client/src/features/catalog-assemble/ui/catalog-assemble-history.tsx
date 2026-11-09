@@ -125,7 +125,7 @@ export function CatalogAssembleHistory({
   if (history.length === 0) {
     return (
       <p className="text-muted-foreground p-4 text-sm">
-        Пока нет сохранённых склеек. Соберите трек и поставьте лайк.
+        В избранном пока пусто. Соберите трек и нажмите сердечко с плюсом.
       </p>
     );
   }

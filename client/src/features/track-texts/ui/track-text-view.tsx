@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation, useQuery } from '@apollo/client/react';
-import { Check, Highlighter, Save, X } from 'lucide-react';
+import { Check, Highlighter, Save, Trash2, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -12,9 +12,18 @@ import { BeforeAfterText } from '@/shared/ui/before-after-text';
 import { ErrorText } from '@/shared/ui/error-text';
 import { Hint } from '@/shared/ui/hint';
 import { Button } from '@/shared/ui/shadcn/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/shared/ui/shadcn/ui/dialog';
 import { Spinner } from '@/shared/ui/shadcn/ui/spinner';
 
 import {
+  DELETE_TRACK_TEXT,
   type ITrackText,
   MARK_TRACK_TEXT_DONE,
   TRACK_TEXT,
@@ -86,6 +95,11 @@ export function TrackTextView({
     MARK_TRACK_TEXT_DONE,
     { refetchQueries: [TRACK_TEXTS] }
   );
+  const [deleteText, { loading: deleting, error: deleteError }] = useMutation(
+    DELETE_TRACK_TEXT,
+    { refetchQueries: [TRACK_TEXTS] }
+  );
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [drafts, setDrafts] = useRetainedState<Record<number, string>>(
     'track-text-drafts',
     {}
@@ -141,6 +155,18 @@ export function TrackTextView({
     toast.success('Текст отмечен готовым');
   };
 
+  const handleDelete = async () => {
+    const result = await deleteText({ variables: { id } }).catch(() => null);
+    if (!result?.data) {
+      return;
+    }
+
+    setConfirmOpen(false);
+    setDraft(null);
+    toast.success('Текст удалён');
+    onClose();
+  };
+
   const toggleSeam = () => {
     const next = !seamOn;
     setSeamOn(next);
@@ -169,7 +195,7 @@ export function TrackTextView({
         </Hint>
       </div>
 
-      <div className="flex flex-col gap-3">
+      <div className="flex min-h-0 flex-1 flex-col gap-3">
         <div className="flex items-center gap-4">
           {(Object.keys(TAB_LABELS) as SnapshotTab[]).map((key) => (
             <Button
@@ -225,6 +251,21 @@ export function TrackTextView({
                   )}
                 </Button>
               </Hint>
+              <Hint label="Удалить текст">
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
+                  className="size-8"
+                  aria-label="Удалить текст"
+                  disabled={saving || marking || deleting}
+                  onClick={() => {
+                    setConfirmOpen(true);
+                  }}
+                >
+                  <Trash2 className="size-4" />
+                </Button>
+              </Hint>
               <Hint label="Готово">
                 <Button
                   type="button"
@@ -254,18 +295,19 @@ export function TrackTextView({
         ) : null}
         {tab === 'final' ? (
           seamOn ? (
-            <SeamText
-              source={row.sourceText}
-              ai={row.aiText}
-              final={value}
-              enabled
-            />
+            <div className="min-h-0 flex-1 overflow-y-auto">
+              <SeamText
+                source={row.sourceText}
+                ai={row.aiText}
+                final={value}
+                enabled
+              />
+            </div>
           ) : (
             <textarea
               data-swipe-ignore
               value={value}
-              rows={12}
-              className="border-input bg-background focus-visible:ring-ring/50 w-full resize-y rounded-md border p-3 text-sm outline-none focus-visible:ring-2"
+              className="border-input bg-background focus-visible:ring-ring/50 min-h-40 w-full flex-1 resize-none rounded-md border p-3 text-sm outline-none focus-visible:ring-2"
               onChange={(event) => {
                 setDraft(event.target.value);
               }}
@@ -284,6 +326,44 @@ export function TrackTextView({
           </p>
         ) : null}
       </div>
+      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Удалить текст?</DialogTitle>
+            <DialogDescription>
+              Рабочая версия и все снимки («Из моих», «ИИ», «Финал») пропадут
+              насовсем.
+            </DialogDescription>
+          </DialogHeader>
+          {deleteError ? (
+            <p className="text-destructive text-xs">
+              Не удалось удалить, попробуйте ещё раз
+            </p>
+          ) : null}
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="ghost"
+              disabled={deleting}
+              onClick={() => {
+                setConfirmOpen(false);
+              }}
+            >
+              Отмена
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={deleting}
+              onClick={() => {
+                void handleDelete();
+              }}
+            >
+              {deleting ? <Spinner className="size-4" /> : 'Удалить'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

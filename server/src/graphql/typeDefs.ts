@@ -599,6 +599,7 @@ export const typeDefinitions = /* GraphQL */ `
     ): TrackText!
     updateTrackText(id: Int!, text: String!): TrackText!
     markTrackTextDone(id: Int!): TrackText!
+    deleteTrackText(id: Int!): Int!
     glueLyrics(slots: [CollageSlotInput!]!, hideOriginals: Boolean!): Lyric!
     saveCarouselHistory(
       lyricIds: [Int!]!

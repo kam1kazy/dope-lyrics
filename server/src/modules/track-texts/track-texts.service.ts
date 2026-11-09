@@ -107,3 +107,11 @@ export const markTrackTextDone = async (userId: number, id: number) => {
     data: { finalText: row.text, doneAt: new Date() },
   });
 };
+
+/** Удаляет текст целиком; снимки хранились только в нём. */
+export const deleteTrackText = async (userId: number, id: number) => {
+  await findOwned(userId, id);
+  await prisma.trackText.delete({ where: { id } });
+
+  return id;
+};

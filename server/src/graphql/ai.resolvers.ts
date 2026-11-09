@@ -15,6 +15,7 @@ import { can } from '~/modules/auth/permissions';
 import {
   createTrackText,
   type CreateTrackTextInput,
+  deleteTrackText,
   getTrackText,
   listTrackTexts,
   markTrackTextDone,
@@ -141,6 +142,11 @@ export const aiMutationResolvers = {
     const user = requireAi(context);
     return trackTextDto(await updateTrackText(user.id, args.id, args.text));
   },
+  deleteTrackText: async (
+    _parent: unknown,
+    args: { id: number },
+    context: GraphQLContext
+  ) => deleteTrackText(requireAi(context).id, args.id),
   markTrackTextDone: async (
     _parent: unknown,
     args: { id: number },

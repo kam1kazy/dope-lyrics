@@ -491,13 +491,13 @@ export function CatalogMenu() {
                   ) : null}
                   {renderedSection === 'generator' ? (
                     <div className="ml-auto flex items-center gap-1">
-                      <Hint label="История сборок">
+                      <Hint label="Избранные">
                         <Button
                           type="button"
                           variant={historyOpen ? 'secondary' : 'ghost'}
                           size="icon"
                           className="size-8"
-                          aria-label="История"
+                          aria-label="Избранные"
                           aria-pressed={historyOpen}
                           onClick={() => {
                             setHistoryOpen((open) => !open);
@@ -505,7 +505,7 @@ export function CatalogMenu() {
                             setTextsOpen(false);
                           }}
                         >
-                          <History className="size-4" />
+                          <Heart className="size-4" />
                         </Button>
                       </Hint>
                       {isOwner ? (
@@ -636,7 +636,7 @@ export function CatalogMenu() {
                     className={cn(
                       'border-border bg-background flex min-h-0 flex-col overflow-hidden',
                       'max-sm:absolute max-sm:inset-0 max-sm:z-10 max-sm:transition-transform max-sm:duration-200 max-sm:ease-out',
-                      'sm:shrink-0 sm:transition-[width] sm:duration-200 sm:ease-out',
+                      'sm:shrink-0 sm:transition-[width] sm:duration-200 sm:ease-[cubic-bezier(0.32,0.72,0,1)]',
                       sidePaneOpen
                         ? 'max-sm:translate-x-0 sm:w-80 sm:border-l'
                         : 'pointer-events-none max-sm:translate-x-full sm:w-0 sm:border-l-transparent'

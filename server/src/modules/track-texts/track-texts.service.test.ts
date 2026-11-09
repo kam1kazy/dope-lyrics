@@ -3,6 +3,7 @@ import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
 import { prisma } from '~/infrastructure/prisma';
 import {
   createTrackText,
+  deleteTrackText,
   getTrackText,
   listTrackTexts,
   markTrackTextDone,
@@ -131,5 +132,11 @@ describe('тексты из генератора', () => {
         aiText: 'текст',
       })
     ).rejects.toThrow('В склейке нет строк');
+  });
+
+  test('чужой текст не удаляется, свой удаляется', async () => {
+    await expect(deleteTrackText(userBId, textId)).rejects.toThrow();
+    expect(await deleteTrackText(userAId, textId)).toBe(textId);
+    await expect(getTrackText(userAId, textId)).rejects.toThrow();
   });
 });

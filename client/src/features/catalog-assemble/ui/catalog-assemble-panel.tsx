@@ -1,7 +1,7 @@
 'use client';
 
 import { useLazyQuery, useMutation, useQuery } from '@apollo/client/react';
-import { Combine, FileText, Heart, X } from 'lucide-react';
+import { Combine, FileText, Heart, HeartPlus, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -438,14 +438,14 @@ export function CatalogAssemblePanel({
                     setGluePromptOpen(true);
                   }}
                 />
-                <Hint label="Убрать из истории">
+                <Hint label="Убрать из избранного">
                   <Button
                     type="button"
                     size="icon"
                     variant="secondary"
                     className="size-8"
                     disabled={heartBusy}
-                    aria-label="Убрать из истории"
+                    aria-label="Убрать из избранного"
                     onClick={() => {
                       void handleUnlike(viewedCollage.id);
                     }}
@@ -491,30 +491,33 @@ export function CatalogAssemblePanel({
                       setGluePromptOpen(true);
                     }}
                   />
-                  <Button
-                    type="button"
-                    size="icon"
-                    variant={heartFilled ? 'secondary' : 'outline'}
-                    className="size-8"
-                    disabled={!draft || heartBusy}
-                    aria-label={
-                      alreadyLiked
-                        ? 'Убрать из истории'
-                        : 'Лайк — сохранить в историю'
+                  <Hint
+                    label={
+                      alreadyLiked ? 'Убрать из избранного' : 'В избранные'
                     }
-                    onClick={() => {
-                      void handleLike();
-                    }}
                   >
-                    {heartBusy ? (
-                      <Spinner className="size-4" />
-                    ) : (
-                      <Heart
-                        className="size-4"
-                        fill={heartFilled ? 'currentColor' : 'none'}
-                      />
-                    )}
-                  </Button>
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant={heartFilled ? 'secondary' : 'outline'}
+                      className="size-8"
+                      disabled={!draft || heartBusy}
+                      aria-label={
+                        alreadyLiked ? 'Убрать из избранного' : 'В избранные'
+                      }
+                      onClick={() => {
+                        void handleLike();
+                      }}
+                    >
+                      {heartBusy ? (
+                        <Spinner className="size-4" />
+                      ) : heartFilled ? (
+                        <Heart className="size-4" fill="currentColor" />
+                      ) : (
+                        <HeartPlus className="size-4" />
+                      )}
+                    </Button>
+                  </Hint>
                 </div>
               </div>
             )}
