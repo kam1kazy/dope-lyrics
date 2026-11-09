@@ -55,6 +55,7 @@ jobs:
             nginx: ['nginx.prod.conf']
 
   build:
+    name: build ${{ matrix.service }}
     needs: changes
     runs-on: ubuntu-latest
     strategy:

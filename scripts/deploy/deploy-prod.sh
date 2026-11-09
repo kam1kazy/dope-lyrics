@@ -12,26 +12,11 @@ set -euo pipefail
 cd "$(dirname "$0")/../.."
 
 COMPOSE=(docker compose -p dope-lyrics -f docker-compose.prod.yml -f docker-compose.prod.images.yml --profile app --profile bot)
-BACKUP_DIR=/root/backups/dope-lyrics
-BACKUP_KEEP=10
 HEALTH_TIMEOUT_SEC=120
 
 : "${DEPLOY_SHA:?DEPLOY_SHA обязателен}"
 
 log() { echo "=== $*"; }
-
-backup_db() {
-  mkdir -p "$BACKUP_DIR"
-  local file
-  file="$BACKUP_DIR/deploy-$(date +%Y%m%d-%H%M%S)-${DEPLOY_SHA:0:7}.dump"
-  docker exec dope-lyrics-db sh -c 'pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Fc' >"$file" || {
-    rm -f "$file"
-    echo "Бэкап не удался — деплой остановлен" >&2
-    exit 1
-  }
-  log "бэкап $(du -h "$file" | cut -f1) → $file"
-  ls -1t "$BACKUP_DIR"/deploy-*.dump | tail -n +$((BACKUP_KEEP + 1)) | xargs -r rm --
-}
 
 wait_backend() {
   local deadline=$((SECONDS + HEALTH_TIMEOUT_SEC))
@@ -75,7 +60,7 @@ if [[ "${DEPLOY_BACKEND:-false}" == true || "${DEPLOY_FRONTEND:-false}" == true 
 fi
 
 if [[ "${DEPLOY_BACKEND:-false}" == true ]]; then
-  backup_db
+  bash scripts/deploy/backup-db.sh deploy 10 "${DEPLOY_SHA:0:7}"
   export BACKEND_TAG="$DEPLOY_SHA"
   log "backend и бот → $BACKEND_TAG"
   "${COMPOSE[@]}" pull -q backend

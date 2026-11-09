@@ -1,6 +1,6 @@
 # 006 — Защита сервера marzban
 
-Статус: план, ничего не применено. Аудит только чтением — 9.11.2026.
+Статус: шаги 1–2 применены 9.11.2026; шаг 3 — в репо, ждёт выката и cron; шаг 4 (перезагрузка) и 5 (вопросы автору) — открыты.
 Дорожка: F (хост).
 
 ## Зачем
@@ -18,19 +18,19 @@
 
 Шаги 1–3 VPN не задевают: Marzban в `network_mode: host`, xray не зависит от sshd и fail2ban. Шаги делать по одному, после каждого — проверка. **Перед шагами 1–2 держать открытой текущую SSH-сессию** и проверять вход из второй.
 
-### 1. fail2ban банит не тот порт — 🔴
+### 1. fail2ban банит не тот порт — ✅ 9.11 (`jail.d/sshd-port.local`, `reload --restart sshd`)
 
 Сейчас jail `sshd` без `port`, по умолчанию `ssh` = 22, а sshd слушает **2222**. Баны в `inet f2b-table` стоят на `tcp dport 22` — перебор на 2222 не блокируется.
 
 ```bash
 printf '[sshd]\nport = 2222\n' > /etc/fail2ban/jail.d/sshd-port.local
-fail2ban-client reload sshd
+fail2ban-client reload --restart sshd   # просто reload не пересоздаёт правило nft
 nft list table inet f2b-table | grep dport   # ждём: tcp dport 2222
 ```
 
 Откат: `rm /etc/fail2ban/jail.d/sshd-port.local && fail2ban-client reload sshd`.
 
-### 2. SSH только по ключу — 🔴
+### 2. SSH только по ключу — ✅ 9.11 (`sshd_config.d/00-hardening.conf`, правило UFW 22 удалено)
 
 В `/etc/ssh/sshd_config` уже `PasswordAuthentication no`, но `sshd_config.d/50-cloud-init.conf` ставит `yes` и выигрывает (Include в начале файла, первое значение побеждает). Root тоже пускается по паролю (`PermitRootLogin yes`). Ключей у root два.
 

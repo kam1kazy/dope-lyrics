@@ -1,3 +1,10 @@
+# Ротация логов только для контейнеров каталога: глобальный daemon.json требует рестарта dockerd (и VPN)
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: '3'
+
 networks:
   legoblokk:
 
@@ -80,6 +87,7 @@ services:
         NEXT_PUBLIC_TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME:-}
     image: dope-lyrics-frontend:local
     container_name: dope-lyrics-frontend
+    logging: *logging
     restart: unless-stopped
     hostname: frontend
     environment:
@@ -104,6 +112,7 @@ services:
       target: release
     image: dope-lyrics-backend:local
     container_name: dope-lyrics-backend
+    logging: *logging
     restart: unless-stopped
     hostname: backend
     depends_on:
@@ -121,6 +130,7 @@ services:
     profiles: ['bot']
     image: dope-lyrics-backend:local
     container_name: dope-lyrics-bot
+    logging: *logging
     restart: unless-stopped
     command: bun run bot:admin
     depends_on:
