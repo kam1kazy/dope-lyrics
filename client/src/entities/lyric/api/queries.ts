@@ -174,24 +174,6 @@ export const UPDATE_LYRIC_PROFILE = gql`
   }
 `;
 
-export const LYRIC_INGEST_PREVIEW = gql`
-  query LyricIngestPreview {
-    lyricIngestPreview {
-      available
-      pendingCount
-    }
-  }
-`;
-
-export const INGEST_PENDING_LYRICS = gql`
-  mutation IngestPendingLyrics {
-    ingestPendingLyrics {
-      available
-      addedCount
-    }
-  }
-`;
-
 export const CATALOG_STATS = gql`
   query CatalogStats(
     $dateFrom: String

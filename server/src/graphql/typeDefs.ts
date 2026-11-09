@@ -323,14 +323,51 @@ export const typeDefinitions = /* GraphQL */ `
     parts: [CollagePartInput!]!
   }
 
-  type LyricIngestPreview {
-    available: Boolean!
+  enum UserRole {
+    OWNER
+    ADMIN
+    USER
+  }
+
+  type Profile {
+    id: Int!
+    username: String!
+    role: UserRole!
+  }
+
+  enum IngestSourceKind {
+    MAIN
+    CHANNEL
+  }
+
+  enum IngestSourceState {
+    READY
+    UNAVAILABLE
+    ERROR
+  }
+
+  type IngestSource {
+    key: String!
+    title: String!
+    kind: IngestSourceKind!
+    state: IngestSourceState!
     pendingCount: Int!
   }
 
-  type LyricIngestResult {
-    available: Boolean!
+  type IngestApplyResult {
+    ok: Boolean!
     addedCount: Int!
+  }
+
+  type Invite {
+    id: Int!
+    createdAt: String!
+    expiresAt: String!
+  }
+
+  type CreatedInvite {
+    code: String!
+    expiresAt: String!
   }
 
   input LyricPoolFilter {
@@ -398,7 +435,9 @@ export const typeDefinitions = /* GraphQL */ `
       sources: [LyricSource!]
       sortField: LyricSortField
     ): [Lyric!]!
-    lyricIngestPreview: LyricIngestPreview!
+    profile: Profile!
+    ingestSources: [IngestSource!]!
+    myInvites: [Invite!]!
     catalogStats(
       dateFrom: String
       dateTo: String
@@ -479,7 +518,9 @@ export const typeDefinitions = /* GraphQL */ `
       ranges: [LyricLineRange!]!
       ripDonor: Boolean!
     ): SliceLyricPayload!
-    ingestPendingLyrics: LyricIngestResult!
+    ingestSource(key: String!): IngestApplyResult!
+    createInvite: CreatedInvite!
+    revokeInvite(id: Int!): Boolean!
     likeCollage(slots: [CollageSlotInput!]!): LyricCollage!
     unlikeCollage(id: Int!): Int!
     glueLyrics(slots: [CollageSlotInput!]!, hideOriginals: Boolean!): Lyric!

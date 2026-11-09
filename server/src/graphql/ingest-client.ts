@@ -1,79 +1,101 @@
+import { GraphQLError } from 'graphql';
+
 import { env } from '~/config/env';
+import type {
+  IngestApplyResponse,
+  IngestSourceKind,
+  IngestSourceResponse,
+  IngestSourceState,
+} from '~/mtcute/ingest-http';
 
-export type LyricIngestPreview = {
-  available: boolean;
-  pendingCount: number;
-};
+const INGEST_TIMEOUT_MS = 5 * 60_000;
+const BOT_UNAVAILABLE = 'Бот недоступен';
 
-export type LyricIngestResult = {
-  available: boolean;
-  addedCount: number;
-};
+const SOURCE_KINDS: ReadonlySet<string> = new Set<IngestSourceKind>([
+  'MAIN',
+  'CHANNEL',
+]);
+const SOURCE_STATES: ReadonlySet<string> = new Set<IngestSourceState>([
+  'READY',
+  'UNAVAILABLE',
+  'ERROR',
+]);
 
-const unavailablePreview = (): LyricIngestPreview => ({
-  available: false,
-  pendingCount: 0,
-});
+const isSourceKind = (value: unknown): value is IngestSourceKind =>
+  typeof value === 'string' && SOURCE_KINDS.has(value);
 
-const unavailableResult = (): LyricIngestResult => ({
-  available: false,
-  addedCount: 0,
-});
-
-const postIngest = async (path: '/preview' | '/apply'): Promise<unknown> => {
-  const response = await fetch(`${env.INGEST_URL}${path}`, {
-    method: 'POST',
-    signal: AbortSignal.timeout(120_000),
-  });
-
-  if (!response.ok) {
-    throw new Error(`ingest ${response.status}`);
-  }
-
-  const payload: unknown = await response.json();
-  return payload;
-};
+const isSourceState = (value: unknown): value is IngestSourceState =>
+  typeof value === 'string' && SOURCE_STATES.has(value);
 
 const isRecord = (value: unknown): value is Record<string, unknown> => {
   return typeof value === 'object' && value !== null;
 };
 
-export async function fetchIngestPreview(): Promise<LyricIngestPreview> {
-  try {
-    const payload = await postIngest('/preview');
-    if (!isRecord(payload)) {
-      return unavailablePreview();
-    }
+const toCount = (value: unknown): number =>
+  typeof value === 'number' && Number.isFinite(value)
+    ? Math.max(0, Math.floor(value))
+    : 0;
 
-    return {
-      available: payload.available === true,
-      pendingCount:
-        typeof payload.pendingCount === 'number' &&
-        Number.isFinite(payload.pendingCount)
-          ? Math.max(0, Math.floor(payload.pendingCount))
-          : 0,
-    };
+const postIngest = async (
+  path: '/sources' | '/apply',
+  body: Record<string, unknown>
+): Promise<{ status: number; payload: unknown }> => {
+  try {
+    const response = await fetch(`${env.INGEST_URL}${path}`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-ingest-token': env.INGEST_TOKEN,
+      },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(INGEST_TIMEOUT_MS),
+    });
+    const payload: unknown = await response.json().catch(() => null);
+    return { status: response.status, payload };
   } catch {
-    return unavailablePreview();
+    throw new GraphQLError(BOT_UNAVAILABLE);
   }
+};
+
+const toSource = (value: unknown): IngestSourceResponse | null => {
+  if (!isRecord(value)) {
+    return null;
+  }
+  const { key, title, kind, state } = value;
+  if (
+    typeof key !== 'string' ||
+    typeof title !== 'string' ||
+    !isSourceKind(kind) ||
+    !isSourceState(state)
+  ) {
+    return null;
+  }
+  return { key, title, kind, state, pendingCount: toCount(value.pendingCount) };
+};
+
+export async function fetchIngestSources(
+  userId: number
+): Promise<IngestSourceResponse[]> {
+  const { status, payload } = await postIngest('/sources', { userId });
+  if (status !== 200 || !isRecord(payload) || !Array.isArray(payload.sources)) {
+    throw new GraphQLError(BOT_UNAVAILABLE);
+  }
+  return payload.sources.map(toSource).filter((source) => source !== null);
 }
 
-export async function fetchIngestApply(): Promise<LyricIngestResult> {
-  try {
-    const payload = await postIngest('/apply');
-    if (!isRecord(payload)) {
-      return unavailableResult();
-    }
-
-    return {
-      available: payload.available === true,
-      addedCount:
-        typeof payload.addedCount === 'number' &&
-        Number.isFinite(payload.addedCount)
-          ? Math.max(0, Math.floor(payload.addedCount))
-          : 0,
-    };
-  } catch {
-    return unavailableResult();
+export async function applyIngestSource(
+  userId: number,
+  key: string
+): Promise<IngestApplyResponse> {
+  const { status, payload } = await postIngest('/apply', { userId, key });
+  if (status === 403) {
+    throw new GraphQLError('Нет доступа');
   }
+  if (!isRecord(payload)) {
+    throw new GraphQLError(BOT_UNAVAILABLE);
+  }
+  return {
+    ok: status === 200 && payload.ok === true,
+    addedCount: toCount(payload.addedCount),
+  };
 }

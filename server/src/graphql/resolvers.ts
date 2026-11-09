@@ -1,10 +1,11 @@
 import { GraphQLError } from 'graphql';
 
 import { env } from '~/config/env';
-import { fetchIngestApply, fetchIngestPreview } from '~/graphql/ingest-client';
+import { applyIngestSource, fetchIngestSources } from '~/graphql/ingest-client';
 import { can } from '~/modules/auth/permissions';
 import { roleProfilesFromJson } from '~/modules/lyrics/lyric-facets';
 import { lyricsService } from '~/modules/lyrics/lyrics.service';
+import { invitesService } from '~/modules/users/invites.service';
 import { usersService } from '~/modules/users/users.service';
 
 import type { GraphQLContext } from './context';
@@ -146,6 +147,15 @@ function requireUser(context: GraphQLContext) {
   return context.user;
 }
 
+function requireInviter(context: GraphQLContext) {
+  const user = requireUser(context);
+  if (!can(user, 'users:invite')) {
+    throw new GraphQLError('Нет доступа');
+  }
+
+  return user;
+}
+
 function lyricsListOptionsFromArgs(
   userId: number,
   args: LyricsArgs,
@@ -244,13 +254,30 @@ export const resolvers = {
         )
       );
     },
-    lyricIngestPreview: (
+    profile: (_parent: unknown, _args: unknown, context: GraphQLContext) => {
+      const user = requireUser(context);
+      return { id: user.id, username: user.username, role: user.role };
+    },
+    ingestSources: (
       _parent: unknown,
       _args: unknown,
       context: GraphQLContext
     ) => {
-      requireUser(context);
-      return fetchIngestPreview();
+      const user = requireUser(context);
+      return fetchIngestSources(user.id);
+    },
+    myInvites: async (
+      _parent: unknown,
+      _args: unknown,
+      context: GraphQLContext
+    ) => {
+      const user = requireInviter(context);
+      const invites = await invitesService.listActive(user.id);
+      return invites.map((invite) => ({
+        id: invite.id,
+        createdAt: invite.createdAt.toISOString(),
+        expiresAt: invite.expiresAt.toISOString(),
+      }));
     },
     catalogStats: (
       _parent: unknown,
@@ -366,13 +393,30 @@ export const resolvers = {
         Boolean(args.ripDonor)
       );
     },
-    ingestPendingLyrics: (
+    ingestSource: (
+      _parent: unknown,
+      args: { key: string },
+      context: GraphQLContext
+    ) => {
+      const user = requireUser(context);
+      return applyIngestSource(user.id, args.key);
+    },
+    createInvite: async (
       _parent: unknown,
       _args: unknown,
       context: GraphQLContext
     ) => {
-      requireUser(context);
-      return fetchIngestApply();
+      const user = requireInviter(context);
+      const { code, expiresAt } = await invitesService.create(user.id);
+      return { code, expiresAt: expiresAt.toISOString() };
+    },
+    revokeInvite: (
+      _parent: unknown,
+      args: { id: number },
+      context: GraphQLContext
+    ) => {
+      const user = requireInviter(context);
+      return invitesService.revoke(args.id, user.id);
     },
     likeCollage: (
       _parent: unknown,

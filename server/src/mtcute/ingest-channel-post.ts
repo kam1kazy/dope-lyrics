@@ -4,6 +4,7 @@ import { prisma } from '~/infrastructure/prisma';
 import { lyricsService } from '~/modules/lyrics/lyrics.service';
 import { filterHistory } from '~/modules/lyrics/parse/filter-history';
 import { lyricToHistoryItem } from '~/modules/lyrics/persist/lyric-to-history-item';
+import { withIngestLock } from '~/mtcute/ingest-http';
 
 /**
  * Новый пост в привязанном канале → запись в каталог владельца привязки (TELEGRAM).
@@ -37,7 +38,9 @@ export const ingestChannelPost = async (msg: Message): Promise<void> => {
     return;
   }
 
-  const loaded = await lyricsService.loadNewRecords(binding.userId, [record]);
+  const loaded = await withIngestLock(() =>
+    lyricsService.loadNewRecords(binding.userId, [record])
+  );
   if (loaded > 0) {
     console.log(
       `MTCUTE: 📥 Канал ${channelId.toString()} → user ${binding.userId}, +${loaded}`

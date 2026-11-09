@@ -154,9 +154,9 @@ export class LyricsService {
     });
   }
 
-  async listLyricIds(userId: number): Promise<number[]> {
+  async listKnownMessageIds(userId: number, chatId: number): Promise<number[]> {
     const rows = await this.prisma.lyrics.findMany({
-      where: { userId },
+      where: { userId, source: 'TELEGRAM', chatId: BigInt(chatId) },
       select: { lyric_id: true },
     });
     return rows.map((row) => row.lyric_id);
@@ -933,6 +933,7 @@ export class LyricsService {
             bottomCounts.paragraph_count
           ),
           replyToMessage: row.replyToMessage,
+          chatId: row.chatId,
           userId: row.userId,
           message: {
             create: {
@@ -1053,6 +1054,7 @@ export class LyricsService {
             createdCounts.paragraph_count
           ),
           replyToMessage: row.replyToMessage,
+          chatId: row.chatId,
           userId: row.userId,
           message: {
             create: {
@@ -1234,19 +1236,27 @@ export class LyricsService {
 
       const existing = await this.prisma.lyrics.findMany({
         where: { userId, source: 'TELEGRAM' },
-        select: { lyric_id: true },
+        select: { lyric_id: true, chatId: true },
       });
-      const existingIds = new Set(existing.map((row) => row.lyric_id));
+      const messageKey = (chatId: bigint | number | null, lyricId: number) =>
+        `${chatId ?? ''}:${lyricId}`;
+      const existingKeys = new Set(
+        existing.map((row) => messageKey(row.chatId, row.lyric_id))
+      );
 
       const fresh = records.filter((item) => {
-        const lyricId = item.message.message_id;
-        return !existingIds.has(lyricId);
+        const key = messageKey(item.chat.id, item.message.message_id);
+        if (existingKeys.has(key)) {
+          return false;
+        }
+        existingKeys.add(key);
+        return true;
       });
 
       const skipped = records.length - fresh.length;
       if (skipped > 0) {
         console.log(
-          `PRISMA: ⏭️ Пропущено дублей lyric_id (TELEGRAM): ${skipped}`
+          `PRISMA: ⏭️ Пропущено дублей чат + lyric_id (TELEGRAM): ${skipped}`
         );
       }
 
@@ -1260,7 +1270,6 @@ export class LyricsService {
               await this.prisma.lyrics.create({
                 data: createLyricData(item, userId),
               });
-              existingIds.add(item.message.message_id);
               loaded += 1;
             } catch (error) {
               console.error(

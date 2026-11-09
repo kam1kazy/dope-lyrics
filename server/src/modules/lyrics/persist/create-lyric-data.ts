@@ -15,6 +15,7 @@ export const createLyricData = (
     isPinned: record.isPinned,
     isChannelPost: record.isChannelPost,
     readiness: readinessFromLineCount(record.message?.paragraph_count),
+    chatId: record.chat ? BigInt(record.chat.id) : null,
 
     message: record.message
       ? {

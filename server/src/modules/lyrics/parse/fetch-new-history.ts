@@ -1,3 +1,5 @@
+import type { InputPeerLike } from '@mtcute/core';
+
 import type { ILyric } from '~/modules/lyrics/lyrics.types';
 import { filterHistory } from '~/modules/lyrics/parse/filter-history';
 import type { TypeBotClient } from '~/mtcute/types';
@@ -26,7 +28,7 @@ export async function fetchNewHistory({
   existingIds,
 }: {
   tg: TypeBotClient;
-  chatId: number;
+  chatId: InputPeerLike;
   existingIds: Set<number>;
 }): Promise<ILyric[]> {
   const params = {
@@ -90,7 +92,7 @@ export async function fetchNewHistory({
 
       params.offset = {
         id: history[history.length - 1].id,
-        date: history[history.length - 1].date.getTime(),
+        date: Math.floor(history[history.length - 1].date.getTime() / 1000),
       };
     } catch (error: unknown) {
       const waitSeconds = floodWaitSeconds(error);

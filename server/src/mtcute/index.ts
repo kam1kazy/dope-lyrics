@@ -131,9 +131,11 @@ if (botType === 'admin') {
 
 startIngestHttp({
   tgAdmin,
-  channelId,
+  tgBot: tg,
+  mainChatId: channelId,
   hostname: botEnv.INGEST_HOST,
   port: botEnv.INGEST_PORT,
+  token: botEnv.INGEST_TOKEN,
 });
 
 dp.onNewMessage(filters.deeplink(/^inv_(.+)$/), async (msg) =>

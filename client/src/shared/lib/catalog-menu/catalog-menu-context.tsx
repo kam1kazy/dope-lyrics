@@ -10,7 +10,13 @@ import {
 } from 'react';
 
 export type CatalogMenuSection =
-  'list' | 'favorites' | 'demos' | 'stats' | 'generator' | 'history';
+  | 'profile'
+  | 'list'
+  | 'favorites'
+  | 'demos'
+  | 'stats'
+  | 'generator'
+  | 'history';
 
 interface CatalogMenuContextValue {
   openRequest: CatalogMenuSection | null;

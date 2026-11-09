@@ -13,6 +13,7 @@ import {
   PanelLeft,
   Shuffle,
   Sparkles,
+  UserRound,
 } from 'lucide-react';
 import { useEffect, useEffectEvent, useRef, useState } from 'react';
 
@@ -32,6 +33,7 @@ import { CatalogFavoritesPanel } from '@/features/catalog-favorites';
 import { CatalogFilterPane } from '@/features/catalog-filters';
 import { CatalogListPanel } from '@/features/catalog-list';
 import { CatalogStatsPanel } from '@/features/catalog-stats';
+import { UserProfilePanel } from '@/features/user-profile';
 import {
   apolloClient,
   AUTH_SIGNED_OUT_EVENT,
@@ -57,7 +59,10 @@ import { Button } from '@/shared/ui/shadcn/ui/button';
 
 type CatalogSection = CatalogMenuSection;
 
-type FilterableSection = Exclude<CatalogSection, 'generator' | 'history'>;
+type FilterableSection = Exclude<
+  CatalogSection,
+  'profile' | 'generator' | 'history'
+>;
 
 type MenuItem = {
   id: CatalogSection | 'references' | 'ai-settings';
@@ -67,6 +72,7 @@ type MenuItem = {
 };
 
 const MENU_ITEMS: MenuItem[] = [
+  { id: 'profile', label: 'Профиль', icon: UserRound },
   { id: 'list', label: 'Список', icon: List },
   { id: 'favorites', label: 'Избранное', icon: Bookmark },
   { id: 'demos', label: 'Тексты из демок', icon: AudioLines },
@@ -78,6 +84,7 @@ const MENU_ITEMS: MenuItem[] = [
 ];
 
 const SECTION_TITLES: Record<CatalogSection, string> = {
+  profile: 'Профиль',
   list: 'Список',
   favorites: 'Избранное',
   demos: 'Тексты из демок',
@@ -242,6 +249,7 @@ export function CatalogMenu() {
 
   const filterableSection: FilterableSection | null =
     renderedSection &&
+    renderedSection !== 'profile' &&
     renderedSection !== 'generator' &&
     renderedSection !== 'history'
       ? renderedSection
@@ -532,7 +540,9 @@ export function CatalogMenu() {
                     )}
                     data-lyrics-scroll
                   >
-                    {renderedSection === 'list' ? (
+                    {renderedSection === 'profile' ? (
+                      <UserProfilePanel />
+                    ) : renderedSection === 'list' ? (
                       <CatalogListPanel filters={sectionFilters} />
                     ) : renderedSection === 'favorites' ? (
                       <CatalogFavoritesPanel filters={sectionFilters} />

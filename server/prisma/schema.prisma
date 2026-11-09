@@ -68,6 +68,8 @@ model Lyrics {
   /// Накал строки (шёпот…крик); seed не трогает.
   energy         String?
   replyToMessage Int?
+  /// Чат Telegram записи (копия `Chat.id`): дубликаты считаются по паре чат + `lyric_id`.
+  chatId         BigInt?
 
   message Message?
   user    UserLyric?
@@ -80,6 +82,7 @@ model Lyrics {
   @@index([lyric_id])
   @@index([date])
   @@index([userId, date])
+  @@index([userId, source, chatId, lyric_id])
 }
 
 model Message {

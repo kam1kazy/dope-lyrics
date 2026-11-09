@@ -73,8 +73,6 @@ services:
       - legoblokk
     env_file:
       - ./server/.env
-    environment:
-      INGEST_URL: http://telegram-bot:4071
     mem_limit: 512m
 
   frontend:
@@ -126,6 +124,8 @@ services:
       - legoblokk
     env_file:
       - ./server/.env
+    environment:
+      INGEST_URL: http://telegram-bot:4071
     mem_limit: 512m
 
   telegram-bot:

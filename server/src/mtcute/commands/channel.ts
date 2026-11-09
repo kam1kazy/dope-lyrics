@@ -6,7 +6,7 @@ import { assertUser } from '~/mtcute/guards/assert-user';
 import type { TypeBotClient } from '~/mtcute/types';
 
 const HISTORY_WARNING =
-  '⚠️ История канала не импортируется — в каталог попадут только новые посты после привязки.';
+  '⚠️ Сам бот историю не читает — в каталог попадут новые посты после привязки. Пропущенное можно докачать в профиле каталога, если канал открыт для чтения.';
 
 const helpText = () =>
   thtml`📺 <b>Привязка канала</b>

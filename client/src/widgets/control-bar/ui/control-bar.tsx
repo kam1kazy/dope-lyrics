@@ -230,7 +230,7 @@ export const ControlBar = () => {
               Внешний вид, порядок показа и фильтры каталога
             </DrawerDescription>
           </DrawerHeader>
-          <FilterPanel checkIngest={isOpen} />
+          <FilterPanel />
         </DrawerContent>
       </Drawer>
     </>

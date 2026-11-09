@@ -16,7 +16,6 @@ import {
 import { useTheme } from 'next-themes';
 import { type ReactNode, useEffect, useState } from 'react';
 
-import { CatalogIngest } from '@/features/catalog-ingest';
 import { useCarouselSession } from '@/shared/lib/carousel-session/carousel-session-context';
 import {
   hasActiveLyricFilters,
@@ -118,7 +117,7 @@ function SliderRow({
   );
 }
 
-function SettingsTab({ checkIngest }: { checkIngest: boolean }) {
+function SettingsTab() {
   const {
     sortMode,
     setSortMode,
@@ -283,8 +282,6 @@ function SettingsTab({ checkIngest }: { checkIngest: boolean }) {
         <RotateCcw className="size-4" />
         Сбросить настройки
       </Button>
-
-      <CatalogIngest enabled={checkIngest} />
     </div>
   );
 }
@@ -477,11 +474,7 @@ function FiltersTab() {
   );
 }
 
-export function FilterPanel({
-  checkIngest = false,
-}: {
-  checkIngest?: boolean;
-}) {
+export function FilterPanel() {
   const [tab, setTab] = useState<PanelTab>('settings');
 
   return (
@@ -525,7 +518,7 @@ export function FilterPanel({
         className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto"
       >
         <div hidden={tab !== 'settings'}>
-          <SettingsTab checkIngest={checkIngest} />
+          <SettingsTab />
         </div>
         {tab === 'filters' ? <FiltersTab /> : null}
       </div>
