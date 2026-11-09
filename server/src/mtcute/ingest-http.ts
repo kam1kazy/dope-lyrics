@@ -33,15 +33,17 @@ const withIngestLock = async <T>(fn: () => Promise<T>): Promise<T> => {
 export function startIngestHttp({
   tgAdmin,
   channelId,
+  hostname,
   port,
 }: {
   tgAdmin: TypeBotClient | null;
   channelId: number;
+  hostname: string;
   port: number;
 }) {
   try {
     const server = Bun.serve({
-      hostname: '127.0.0.1',
+      hostname,
       port,
       async fetch(request) {
         if (request.method !== 'POST') {
@@ -118,7 +120,7 @@ export function startIngestHttp({
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error);
     console.error(
-      `MTCUTE: 🛑 Не удалось открыть ingest на 127.0.0.1:${port}: ${message}`
+      `MTCUTE: 🛑 Не удалось открыть ingest на ${hostname}:${port}: ${message}`
     );
   }
 }

@@ -95,6 +95,7 @@ const botEnvSchema = z.object({
     .transform((value) => Number.parseInt(value, 10)),
   BOT_TYPE: z.string().optional().default(''),
   SITE_URL: z.string().optional().default(''),
+  INGEST_HOST: z.string().optional().default('127.0.0.1'),
   INGEST_PORT: z.coerce.number().int().positive().default(4071),
 });
 

@@ -132,6 +132,7 @@ if (botType === 'admin') {
 startIngestHttp({
   tgAdmin,
   channelId,
+  hostname: botEnv.INGEST_HOST,
   port: botEnv.INGEST_PORT,
 });
 
