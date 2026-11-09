@@ -20,6 +20,21 @@ const postgresUrl = z
     { message: 'DATABASE_URL должен быть PostgreSQL connection string' }
   );
 
+/** Числа ИИ не должны ронять сервер: пусто, запятая или мусор — значение по умолчанию. */
+const aiNumber = (fallback: number, positiveInt = false) =>
+  z.preprocess((value) => {
+    const parsed = Number(
+      String(value ?? '')
+        .trim()
+        .replace(',', '.')
+    );
+    const valid = positiveInt
+      ? Number.isInteger(parsed) && parsed > 0
+      : Number.isFinite(parsed) && parsed >= 0;
+
+    return valid ? parsed : fallback;
+  }, z.number());
+
 const httpEnvSchema = z.object({
   NODE_ENV: z
     .enum(['development', 'production', 'test'])
@@ -52,11 +67,11 @@ const httpEnvSchema = z.object({
   AI_BASE_URL: z.string().optional().default(''),
   AI_API_KEY: z.string().optional().default(''),
   AI_MODEL: z.string().optional().default(''),
-  AI_TIMEOUT_MS: z.coerce.number().int().positive().default(60_000),
-  AI_MAX_TOKENS: z.coerce.number().int().positive().default(2048),
-  AI_STYLE_EXAMPLES: z.coerce.number().int().positive().default(60),
-  AI_COST_RUB_PER_1M_IN: z.coerce.number().nonnegative().default(0),
-  AI_COST_RUB_PER_1M_OUT: z.coerce.number().nonnegative().default(0),
+  AI_TIMEOUT_MS: aiNumber(60_000, true),
+  AI_MAX_TOKENS: aiNumber(2048, true),
+  AI_STYLE_EXAMPLES: aiNumber(60, true),
+  AI_COST_RUB_PER_1M_IN: aiNumber(0),
+  AI_COST_RUB_PER_1M_OUT: aiNumber(0),
 });
 
 const parsedHttp = httpEnvSchema.safeParse(process.env);
