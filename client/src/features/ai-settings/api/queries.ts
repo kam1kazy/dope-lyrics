@@ -2,8 +2,16 @@ import { gql } from '@apollo/client';
 
 export interface IAiPromptVersion {
   id: number;
+  number: number;
   text: string;
+  name: string | null;
+  description: string | null;
   createdAt: string;
+}
+
+export interface IAiPromptMeta {
+  name: string;
+  description: string;
 }
 
 export interface IAiUsagePeriod {
@@ -39,12 +47,18 @@ export const AI_SETTINGS = gql`
     }
     aiPrompt {
       id
+      number
       text
+      name
+      description
       createdAt
     }
     aiPromptVersions {
       id
+      number
       text
+      name
+      description
       createdAt
     }
     aiUsageSummary {
@@ -82,12 +96,23 @@ export const AI_SETTINGS = gql`
   }
 `;
 
-export const SAVE_AI_PROMPT = gql`
-  mutation SaveAiPrompt($text: String!) {
-    saveAiPrompt(text: $text) {
+export const CREATE_AI_PROMPT = gql`
+  mutation CreateAiPrompt(
+    $text: String!
+    $name: String!
+    $description: String!
+  ) {
+    createAiPrompt(text: $text, name: $name, description: $description) {
       id
-      text
-      createdAt
+    }
+  }
+`;
+
+export const SUGGEST_AI_PROMPT_META = gql`
+  mutation SuggestAiPromptMeta($text: String!) {
+    suggestAiPromptMeta(text: $text) {
+      name
+      description
     }
   }
 `;

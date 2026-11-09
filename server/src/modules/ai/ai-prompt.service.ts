@@ -12,12 +12,38 @@ export const listPromptVersions = (userId: number) =>
     orderBy: { id: 'desc' },
   });
 
-export const savePrompt = async (userId: number, text: string) => {
+export const countPromptVersions = (userId: number) =>
+  prisma.aiPrompt.count({ where: { userId } });
+
+export type CreatePromptInput = {
+  text: string;
+  name: string;
+  description: string;
+};
+
+export const createPrompt = async (
+  userId: number,
+  input: CreatePromptInput
+) => {
+  const name = input.name.trim();
+  const description = input.description.trim();
+
+  if (!name) {
+    throw new Error('Укажите название промпта');
+  }
+
   const current = await getCurrentPrompt(userId);
 
-  if (current && current.text === text) {
+  if (
+    current &&
+    current.text === input.text &&
+    current.name === name &&
+    (current.description ?? '') === description
+  ) {
     return current;
   }
 
-  return prisma.aiPrompt.create({ data: { userId, text } });
+  return prisma.aiPrompt.create({
+    data: { userId, text: input.text, name, description: description || null },
+  });
 };

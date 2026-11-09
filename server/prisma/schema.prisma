@@ -255,6 +255,7 @@ model ChannelBinding {
 
 enum AiUsageKind {
   COLLAGE_REWRITE
+  PROMPT_META
 }
 
 enum AiUsageStatus {
@@ -262,11 +263,13 @@ enum AiUsageStatus {
   ERROR
 }
 
-/// Промпт автора: каждое сохранение — новая строка, текущий — последний.
+/// Промпт автора: каждое создание — новая строка, текущий — последний.
 model AiPrompt {
-  id        Int      @id @default(autoincrement())
-  text      String
-  createdAt DateTime @default(now())
+  id          Int      @id @default(autoincrement())
+  text        String
+  name        String?
+  description String?
+  createdAt   DateTime @default(now())
 
   userId Int
   owner  Users @relation(fields: [userId], references: [id], onDelete: Cascade)

@@ -329,8 +329,16 @@ export const typeDefinitions = /* GraphQL */ `
 
   type AiPromptVersion {
     id: Int!
+    number: Int!
     text: String!
+    name: String
+    description: String
     createdAt: String!
+  }
+
+  type AiPromptMeta {
+    name: String!
+    description: String!
   }
 
   type AiUsagePeriod {
@@ -583,7 +591,12 @@ export const typeDefinitions = /* GraphQL */ `
     revokeInvite(id: Int!): Boolean!
     likeCollage(slots: [CollageSlotInput!]!): LyricCollage!
     unlikeCollage(id: Int!): Int!
-    saveAiPrompt(text: String!): AiPromptVersion!
+    createAiPrompt(
+      text: String!
+      name: String!
+      description: String!
+    ): AiPromptVersion!
+    suggestAiPromptMeta(text: String!): AiPromptMeta!
     rewriteCollage(
       slots: [CollageSlotInput!]!
       theme: String

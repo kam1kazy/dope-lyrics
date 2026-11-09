@@ -5,10 +5,13 @@ import {
   type RewriteCollageInput,
 } from '~/modules/ai/ai.service';
 import {
+  countPromptVersions,
+  createPrompt,
+  type CreatePromptInput,
   getCurrentPrompt,
   listPromptVersions,
-  savePrompt,
 } from '~/modules/ai/ai-prompt.service';
+import { suggestPromptMeta } from '~/modules/ai/ai-prompt-meta';
 import { recentUsage, usageSummary } from '~/modules/ai/ai-usage.service';
 import { isAiConfigured } from '~/modules/ai/polza.client';
 import { can } from '~/modules/auth/permissions';
@@ -34,9 +37,21 @@ const requireAi = (context: GraphQLContext) => {
 
 const iso = (date: Date | null): string | null => date?.toISOString() ?? null;
 
-const promptDto = (row: { id: number; text: string; createdAt: Date }) => ({
+const promptDto = (
+  row: {
+    id: number;
+    text: string;
+    name: string | null;
+    description: string | null;
+    createdAt: Date;
+  },
+  number: number
+) => ({
   id: row.id,
+  number,
   text: row.text,
+  name: row.name,
+  description: row.description,
   createdAt: row.createdAt.toISOString(),
 });
 
@@ -62,8 +77,11 @@ export const aiQueryResolvers = {
     context: GraphQLContext
   ) => {
     const user = requireAi(context);
-    const row = await getCurrentPrompt(user.id);
-    return row ? promptDto(row) : null;
+    const [row, count] = await Promise.all([
+      getCurrentPrompt(user.id),
+      countPromptVersions(user.id),
+    ]);
+    return row ? promptDto(row, count) : null;
   },
   aiPromptVersions: async (
     _parent: unknown,
@@ -71,7 +89,10 @@ export const aiQueryResolvers = {
     context: GraphQLContext
   ) => {
     const user = requireAi(context);
-    return (await listPromptVersions(user.id)).map(promptDto);
+    const versions = await listPromptVersions(user.id);
+    return versions.map((row, index) =>
+      promptDto(row, versions.length - index)
+    );
   },
   aiUsageSummary: (_parent: unknown, _args: unknown, context: GraphQLContext) =>
     usageSummary(requireAi(context).id),
@@ -113,14 +134,27 @@ export const aiQueryResolvers = {
 };
 
 export const aiMutationResolvers = {
-  saveAiPrompt: async (
+  createAiPrompt: async (
     _parent: unknown,
-    args: { text: string },
+    args: CreatePromptInput,
     context: GraphQLContext
   ) => {
     const user = requireAi(context);
-    return promptDto(await savePrompt(user.id, args.text));
+
+    try {
+      const row = await createPrompt(user.id, args);
+      return promptDto(row, await countPromptVersions(user.id));
+    } catch (error: unknown) {
+      throw new GraphQLError(
+        error instanceof Error ? error.message : 'Не удалось создать промпт'
+      );
+    }
   },
+  suggestAiPromptMeta: (
+    _parent: unknown,
+    args: { text: string },
+    context: GraphQLContext
+  ) => suggestPromptMeta(requireAi(context).id, args.text),
   rewriteCollage: (
     _parent: unknown,
     args: RewriteCollageInput,
