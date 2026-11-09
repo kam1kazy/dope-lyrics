@@ -1,0 +1,12 @@
+# Поверх docker-compose.prod.yml: сервисы берут образы из GHCR (собирает CI), на сервере ничего не собирается.
+# docker compose -p dope-lyrics -f docker-compose.prod.yml -f docker-compose.prod.images.yml ...
+# Теги — SHA коммита, на котором собран образ; без тега — latest.
+services:
+  backend:
+    image: ghcr.io/kam1kazy/dope-lyrics-backend:${BACKEND_TAG:-latest}
+
+  telegram-bot:
+    image: ghcr.io/kam1kazy/dope-lyrics-backend:${BACKEND_TAG:-latest}
+
+  frontend:
+    image: ghcr.io/kam1kazy/dope-lyrics-frontend:${FRONTEND_TAG:-latest}
