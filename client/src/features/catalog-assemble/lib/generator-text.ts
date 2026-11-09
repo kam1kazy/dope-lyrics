@@ -153,3 +153,14 @@ export const collageCarouselText = (
 export const formatCollageDate = (iso: string): string => {
   return formatRuDateTime(iso);
 };
+
+export const collageTitle = (
+  slots: IAssembledTrackSlot[],
+  hideAdlibs: boolean
+): string => {
+  return (
+    collageCarouselText(slots, hideAdlibs)
+      .split('\n')
+      .find((line) => line.trim() !== '') ?? ''
+  );
+};

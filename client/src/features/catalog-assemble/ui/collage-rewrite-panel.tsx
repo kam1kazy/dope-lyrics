@@ -1,8 +1,8 @@
 'use client';
 
 import { useMutation, useQuery } from '@apollo/client/react';
-import { Sparkles } from 'lucide-react';
-import { useState } from 'react';
+import { FilePlus, RotateCw, Sparkles } from 'lucide-react';
+import { useEffect } from 'react';
 import { toast } from 'sonner';
 
 import {
@@ -11,6 +11,9 @@ import {
 } from '@/entities/lyric';
 import type { CatalogSectionFilters } from '@/shared/lib/catalog-section-filters';
 import { formatQueryError } from '@/shared/lib/format-query-error';
+import { useRetainedState } from '@/shared/lib/retained-state';
+import { BeforeAfterText } from '@/shared/ui/before-after-text';
+import { Hint } from '@/shared/ui/hint';
 import { Button } from '@/shared/ui/shadcn/ui/button';
 import { Input } from '@/shared/ui/shadcn/ui/input';
 import { Spinner } from '@/shared/ui/shadcn/ui/spinner';
@@ -38,14 +41,20 @@ export function CollageRewritePanel({
   filters,
   hideAdlibs,
   onSaved,
+  onResultChange,
 }: {
   slots: IAssembledTrackSlot[];
   filters: CatalogSectionFilters;
   hideAdlibs: boolean;
   onSaved: (id: number) => void;
+  onResultChange: (active: boolean) => void;
 }) {
-  const [theme, setTheme] = useState('');
-  const [result, setResult] = useState<ICollageRewrite | null>(null);
+  const storeKey = JSON.stringify(slotsToInput(slots));
+  const [theme, setTheme] = useRetainedState(`rewrite-theme:${storeKey}`, '');
+  const [result, setResult] = useRetainedState<ICollageRewrite | null>(
+    `rewrite-result:${storeKey}`,
+    null
+  );
   const { data: status } = useQuery<{ aiStatus: { enabled: boolean } }>(
     AI_STATUS
   );
@@ -68,6 +77,14 @@ export function CollageRewritePanel({
       hideAdlibs: boolean;
     }
   >(CREATE_TRACK_TEXT, { refetchQueries: ['TrackTexts'] });
+
+  const hasResult = result !== null;
+  useEffect(() => {
+    onResultChange(hasResult);
+    return () => {
+      onResultChange(false);
+    };
+  }, [hasResult, onResultChange]);
 
   const enabled = status?.aiStatus.enabled === true;
   const hasLines = slots.some((slot) => slot.parts.length > 0);
@@ -153,31 +170,57 @@ export function CollageRewritePanel({
         <p className="text-destructive text-xs">{formatQueryError(error)}</p>
       ) : null}
       {result ? (
-        <div className="border-border flex flex-col gap-2 rounded-md border p-3">
-          <p className="text-sm whitespace-pre-wrap">{result.aiText}</p>
-          <div className="flex items-center gap-2">
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              disabled={rewriting || saving}
-              onClick={() => {
-                void handleRewrite();
-              }}
-            >
-              Ещё раз
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              disabled={rewriting || saving}
-              onClick={() => {
-                void handleSave();
-              }}
-            >
-              {saving ? <Spinner className="size-4" /> : 'Сохранить'}
-            </Button>
-          </div>
+        <div className="flex flex-col gap-2">
+          <BeforeAfterText
+            key={result.usageId}
+            before={result.sourceText}
+            after={result.aiText}
+            onAfterChange={(aiText) => {
+              setResult({ ...result, aiText });
+            }}
+            actions={
+              <>
+                <Hint label="Ещё раз">
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    className="size-8"
+                    aria-label="Ещё раз"
+                    disabled={rewriting || saving}
+                    onClick={() => {
+                      void handleRewrite();
+                    }}
+                  >
+                    {rewriting ? (
+                      <Spinner className="size-4" />
+                    ) : (
+                      <RotateCw className="size-4" />
+                    )}
+                  </Button>
+                </Hint>
+                <Hint label="Сохранить в тексты">
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    className="size-8"
+                    aria-label="Сохранить в тексты"
+                    disabled={rewriting || saving}
+                    onClick={() => {
+                      void handleSave();
+                    }}
+                  >
+                    {saving ? (
+                      <Spinner className="size-4" />
+                    ) : (
+                      <FilePlus className="size-4" />
+                    )}
+                  </Button>
+                </Hint>
+              </>
+            }
+          />
         </div>
       ) : null}
     </div>

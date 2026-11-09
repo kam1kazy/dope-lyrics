@@ -35,6 +35,12 @@ const PERIODS: { key: keyof IAiUsageSummary; label: string }[] = [
 const formatRub = (value: number | null): string =>
   value === null ? '—' : `${value.toFixed(2)} ₽`;
 
+const firstLine = (text: string): string =>
+  text
+    .split('\n')
+    .find((line) => line.trim() !== '')
+    ?.trim() ?? '';
+
 const formatTokens = (value: number): string => value.toLocaleString('ru-RU');
 
 const KIND_LABELS: Record<string, string> = {
@@ -153,8 +159,15 @@ export function AiSettingsPanel() {
                   );
                 }}
               >
-                {formatRuDateTime(version.createdAt)}
-                {index === 0 ? ' · текущая' : ''}
+                <span className="shrink-0">
+                  {formatRuDateTime(version.createdAt)}
+                  {index === 0 ? ' · текущая' : ''}
+                </span>
+                {firstLine(version.text) ? (
+                  <span className="text-muted-foreground truncate font-normal">
+                    · {firstLine(version.text)}
+                  </span>
+                ) : null}
               </Button>
             ))}
             {viewedVersion ? (

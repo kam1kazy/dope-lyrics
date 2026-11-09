@@ -8,6 +8,7 @@ import { Button } from '@/shared/ui/shadcn/ui/button';
 import { Spinner } from '@/shared/ui/shadcn/ui/spinner';
 
 import { type ITrackTextItem, TRACK_TEXTS } from '../api/queries';
+import { trackTextTitle } from '../lib/title';
 
 export function TrackTextsList({
   selectedId,
@@ -54,7 +55,7 @@ export function TrackTextsList({
           }}
         >
           <span className="max-w-full truncate text-sm">
-            {item.theme ?? 'Без темы'}
+            {trackTextTitle(item)}
           </span>
           <span className="text-muted-foreground text-xs font-normal">
             {formatRuDateTime(item.createdAt)}

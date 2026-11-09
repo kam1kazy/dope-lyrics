@@ -4,13 +4,13 @@ export interface ITrackTextItem {
   id: number;
   createdAt: string;
   theme: string | null;
+  text: string;
   doneAt: string | null;
 }
 
 export interface ITrackText extends ITrackTextItem {
   sourceText: string;
   aiText: string;
-  text: string;
   finalText: string | null;
 }
 
@@ -31,6 +31,7 @@ export const TRACK_TEXTS = gql`
       id
       createdAt
       theme
+      text
       doneAt
     }
   }

@@ -38,7 +38,7 @@ export const CREATE_TRACK_TEXT = gql`
   mutation CreateTrackText(
     $slots: [CollageSlotInput!]!
     $theme: String
-    $aiText: String!
+    $aiText: String
     $usageId: Int
     $hideAdlibs: Boolean
   ) {

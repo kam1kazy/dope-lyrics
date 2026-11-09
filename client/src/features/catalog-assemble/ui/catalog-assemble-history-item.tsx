@@ -11,7 +11,7 @@ import {
 import { cn } from '@/shared/lib/utils/cn';
 import { Button } from '@/shared/ui/shadcn/ui/button';
 
-import { collageCarouselText } from '../lib/generator-text';
+import { collageCarouselText, formatCollageDate } from '../lib/generator-text';
 
 function previewLines(text: string, max: number) {
   return text
@@ -101,17 +101,22 @@ export function CatalogAssembleHistoryItem({
           onPlay();
         }}
       >
-        <p
-          aria-expanded={expanded}
-          className={cn(
-            'min-w-0 flex-1 overflow-hidden text-sm leading-5',
-            expanded
-              ? 'line-clamp-[12] max-h-60 break-words whitespace-pre-line'
-              : 'h-5 truncate'
-          )}
-        >
-          {preview}
-        </p>
+        <div className="min-w-0 flex-1">
+          <p className="text-muted-foreground text-xs leading-4">
+            {formatCollageDate(collage.createdAt)}
+          </p>
+          <p
+            aria-expanded={expanded}
+            className={cn(
+              'overflow-hidden text-sm leading-5',
+              expanded
+                ? 'line-clamp-[12] max-h-60 break-words whitespace-pre-line'
+                : 'h-5 truncate'
+            )}
+          >
+            {preview}
+          </p>
+        </div>
         {selected ? (
           <Button
             type="button"

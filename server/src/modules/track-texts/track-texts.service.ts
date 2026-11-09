@@ -8,7 +8,8 @@ const NOT_FOUND = 'Текст не найден';
 export type CreateTrackTextInput = {
   slots: unknown;
   theme?: string | null;
-  aiText: string;
+  /** Без ответа ИИ текст стартует с исходных строк склейки. */
+  aiText?: string | null;
   usageId?: number | null;
   hideAdlibs?: boolean | null;
 };
@@ -35,7 +36,6 @@ export const createTrackText = async (
   userId: number,
   input: CreateTrackTextInput
 ) => {
-  const aiText = requireText(input.aiText, 'Ответ ИИ');
   const { slots, sourceText } = await sourceTextFromSlots(
     userId,
     input.slots,
@@ -45,6 +45,11 @@ export const createTrackText = async (
   if (!sourceText) {
     throw new GraphQLError('В склейке нет строк');
   }
+
+  const aiText =
+    input.aiText === undefined || input.aiText === null
+      ? sourceText
+      : requireText(input.aiText, 'Ответ ИИ');
 
   const usage = input.usageId
     ? await prisma.aiUsage.findFirst({

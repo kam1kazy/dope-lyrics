@@ -1,13 +1,16 @@
 'use client';
 
 import { useMutation, useQuery } from '@apollo/client/react';
-import { X } from 'lucide-react';
+import { Check, Highlighter, Save, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
 import { formatRuDateTime } from '@/shared/lib/format-datetime';
+import { useRetainedState } from '@/shared/lib/retained-state';
 import { cn } from '@/shared/lib/utils/cn';
+import { BeforeAfterText } from '@/shared/ui/before-after-text';
 import { ErrorText } from '@/shared/ui/error-text';
+import { Hint } from '@/shared/ui/hint';
 import { Button } from '@/shared/ui/shadcn/ui/button';
 import { Spinner } from '@/shared/ui/shadcn/ui/spinner';
 
@@ -19,6 +22,7 @@ import {
   UPDATE_TRACK_TEXT,
 } from '../api/queries';
 import { buildSeam, SEAM_STORAGE_KEY } from '../lib/seam';
+import { trackTextTitle } from '../lib/title';
 
 type SnapshotTab = 'source' | 'ai' | 'final';
 
@@ -82,17 +86,26 @@ export function TrackTextView({
     MARK_TRACK_TEXT_DONE,
     { refetchQueries: [TRACK_TEXTS] }
   );
-  const [draft, setDraft] = useState<string | null>(null);
+  const [drafts, setDrafts] = useRetainedState<Record<number, string>>(
+    'track-text-drafts',
+    {}
+  );
+  const draft = drafts[id] ?? null;
+  const setDraft = (next: string | null) => {
+    setDrafts((current) => {
+      const { [id]: _removed, ...rest } = current;
+      return next === null ? rest : { ...rest, [id]: next };
+    });
+  };
   const [tab, setTab] = useState<SnapshotTab>('final');
-  const [seamOn, setSeamOn] = useState(true);
+  const [seamOn, setSeamOn] = useState(false);
 
   useEffect(() => {
-    setDraft(null);
     setTab('final');
   }, [id]);
 
   useEffect(() => {
-    setSeamOn(window.localStorage.getItem(SEAM_STORAGE_KEY) !== 'off');
+    setSeamOn(window.localStorage.getItem(SEAM_STORAGE_KEY) === 'on');
   }, []);
 
   const row = data?.trackText;
@@ -111,7 +124,6 @@ export function TrackTextView({
 
   const value = draft ?? row.text;
   const dirty = value !== row.text;
-  const shownFinal = row.finalText ?? row.text;
 
   const handleSave = async () => {
     await updateText({ variables: { id, text: value } });
@@ -139,67 +151,39 @@ export function TrackTextView({
     <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4">
       <div className="flex items-center gap-2">
         <h3 className="min-w-0 flex-1 truncate text-sm font-medium">
-          {row.theme ?? 'Без темы'} · {formatRuDateTime(row.createdAt)}
+          {trackTextTitle({ theme: row.theme, text: row.text })} ·{' '}
+          {formatRuDateTime(row.createdAt)}
           {row.doneAt ? ' · готово' : ''}
         </h3>
-        <Button
-          type="button"
-          size="icon"
-          variant="ghost"
-          className="size-8"
-          aria-label="Закрыть"
-          onClick={onClose}
-        >
-          <X className="size-4" />
-        </Button>
+        <Hint label="Закрыть">
+          <Button
+            type="button"
+            size="icon"
+            variant="ghost"
+            className="size-8"
+            aria-label="Закрыть"
+            onClick={onClose}
+          >
+            <X className="size-4" />
+          </Button>
+        </Hint>
       </div>
 
-      <textarea
-        data-swipe-ignore
-        value={value}
-        rows={12}
-        className="border-input bg-background focus-visible:ring-ring/50 w-full resize-y rounded-md border p-3 text-sm outline-none focus-visible:ring-2"
-        onChange={(event) => {
-          setDraft(event.target.value);
-        }}
-      />
-      <div className="flex items-center gap-2">
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          disabled={!dirty || saving || marking}
-          onClick={() => {
-            void handleSave();
-          }}
-        >
-          {saving ? <Spinner className="size-4" /> : 'Сохранить'}
-        </Button>
-        <Button
-          type="button"
-          size="sm"
-          disabled={saving || marking || value.trim().length === 0}
-          onClick={() => {
-            void handleDone();
-          }}
-        >
-          {marking ? <Spinner className="size-4" /> : 'Готово'}
-        </Button>
-      </div>
-      {saveError || doneError ? (
-        <p className="text-destructive text-xs">
-          Не удалось сохранить, попробуйте ещё раз
-        </p>
-      ) : null}
-
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center gap-1">
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center gap-4">
           {(Object.keys(TAB_LABELS) as SnapshotTab[]).map((key) => (
             <Button
               key={key}
               type="button"
               size="sm"
-              variant={tab === key ? 'secondary' : 'ghost'}
+              variant="ghost"
+              className={cn(
+                'h-8 px-0 hover:bg-transparent',
+                tab === key
+                  ? 'text-foreground underline underline-offset-4'
+                  : 'text-muted-foreground'
+              )}
+              aria-pressed={tab === key}
               onClick={() => {
                 setTab(key);
               }}
@@ -208,35 +192,95 @@ export function TrackTextView({
             </Button>
           ))}
           {tab === 'final' ? (
-            <Button
-              type="button"
-              size="sm"
-              variant="ghost"
-              className={cn('ml-auto', !seamOn && 'text-muted-foreground')}
-              aria-pressed={seamOn}
-              onClick={toggleSeam}
-            >
-              Шов
-            </Button>
+            <div className="ml-auto flex items-center gap-1">
+              <Hint label="Шов: слова ИИ и автора">
+                <Button
+                  type="button"
+                  size="icon"
+                  variant={seamOn ? 'secondary' : 'ghost'}
+                  className="size-8"
+                  aria-label="Шов: слова ИИ и автора"
+                  aria-pressed={seamOn}
+                  onClick={toggleSeam}
+                >
+                  <Highlighter className="size-4" />
+                </Button>
+              </Hint>
+              <Hint label="Сохранить">
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
+                  className="size-8"
+                  aria-label="Сохранить"
+                  disabled={!dirty || saving || marking}
+                  onClick={() => {
+                    void handleSave();
+                  }}
+                >
+                  {saving ? (
+                    <Spinner className="size-4" />
+                  ) : (
+                    <Save className="size-4" />
+                  )}
+                </Button>
+              </Hint>
+              <Hint label="Готово">
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
+                  className="size-8"
+                  aria-label="Готово"
+                  disabled={saving || marking || value.trim().length === 0}
+                  onClick={() => {
+                    void handleDone();
+                  }}
+                >
+                  {marking ? (
+                    <Spinner className="size-4" />
+                  ) : (
+                    <Check className="size-4" />
+                  )}
+                </Button>
+              </Hint>
+            </div>
           ) : null}
         </div>
-        <div className="border-border rounded-md border p-3">
-          {tab === 'source' ? (
-            <p className="text-sm whitespace-pre-wrap">{row.sourceText}</p>
-          ) : tab === 'ai' ? (
-            <p className="text-sm whitespace-pre-wrap">{row.aiText}</p>
-          ) : (
+        {saveError || doneError ? (
+          <p className="text-destructive text-xs">
+            Не удалось сохранить, попробуйте ещё раз
+          </p>
+        ) : null}
+        {tab === 'final' ? (
+          seamOn ? (
             <SeamText
               source={row.sourceText}
               ai={row.aiText}
-              final={shownFinal}
-              enabled={seamOn}
+              final={value}
+              enabled
             />
-          )}
-        </div>
+          ) : (
+            <textarea
+              data-swipe-ignore
+              value={value}
+              rows={12}
+              className="border-input bg-background focus-visible:ring-ring/50 w-full resize-y rounded-md border p-3 text-sm outline-none focus-visible:ring-2"
+              onChange={(event) => {
+                setDraft(event.target.value);
+              }}
+            />
+          )
+        ) : (
+          <BeforeAfterText
+            before={row.sourceText}
+            after={row.aiText}
+            side={tab === 'source' ? 'before' : 'after'}
+          />
+        )}
         {tab === 'final' && !row.finalText ? (
           <p className="text-muted-foreground text-xs">
-            Пока «Готово» не нажато, здесь рабочая версия.
+            Пока «Готово» не нажато, это рабочая версия.
           </p>
         ) : null}
       </div>

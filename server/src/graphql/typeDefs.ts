@@ -593,7 +593,7 @@ export const typeDefinitions = /* GraphQL */ `
     createTrackText(
       slots: [CollageSlotInput!]!
       theme: String
-      aiText: String!
+      aiText: String
       usageId: Int
       hideAdlibs: Boolean
     ): TrackText!

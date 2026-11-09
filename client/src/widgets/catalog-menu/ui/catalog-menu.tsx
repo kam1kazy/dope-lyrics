@@ -61,6 +61,7 @@ import { useSwipeFromLeftEdge } from '@/shared/lib/swipe/use-swipe-from-left-edg
 import { chromeKeyClass } from '@/shared/lib/utils/chrome-key-class';
 import { cn } from '@/shared/lib/utils/cn';
 import { CatalogPanel } from '@/shared/ui/catalog-panel/catalog-panel';
+import { Hint } from '@/shared/ui/hint';
 import { Button } from '@/shared/ui/shadcn/ui/button';
 
 import { CatalogNavUser } from './catalog-nav-user';
@@ -184,7 +185,6 @@ export function CatalogMenu() {
     setFiltersOpen(false);
     setHistoryOpen(false);
     setLikedOnly(false);
-    setSelectedCollage(null);
     document.body.style.removeProperty('pointer-events');
   }, [beginOverlay, endOverlay, isOpen]);
 
@@ -468,102 +468,112 @@ export function CatalogMenu() {
                     {SECTION_TITLES[renderedSection]}
                   </h2>
                   {renderedSection === 'history' ? (
-                    <Button
-                      type="button"
-                      variant={likedOnly ? 'secondary' : 'ghost'}
-                      size="icon"
-                      className="ml-auto size-8"
-                      aria-label="Сохранённые"
-                      aria-pressed={likedOnly}
-                      onClick={() => {
-                        setLikedOnly((open) => !open);
-                      }}
-                    >
-                      <Heart
-                        className={cn(
-                          'size-4',
-                          likedOnly && 'fill-rose-400 text-rose-400'
-                        )}
-                      />
-                    </Button>
+                    <Hint label="Только сохранённые">
+                      <Button
+                        type="button"
+                        variant={likedOnly ? 'secondary' : 'ghost'}
+                        size="icon"
+                        className="ml-auto size-8"
+                        aria-label="Сохранённые"
+                        aria-pressed={likedOnly}
+                        onClick={() => {
+                          setLikedOnly((open) => !open);
+                        }}
+                      >
+                        <Heart
+                          className={cn(
+                            'size-4',
+                            likedOnly && 'fill-rose-400 text-rose-400'
+                          )}
+                        />
+                      </Button>
+                    </Hint>
                   ) : null}
                   {renderedSection === 'generator' ? (
                     <div className="ml-auto flex items-center gap-1">
-                      <Button
-                        type="button"
-                        variant={historyOpen ? 'secondary' : 'ghost'}
-                        size="icon"
-                        className="size-8"
-                        aria-label="История"
-                        aria-pressed={historyOpen}
-                        onClick={() => {
-                          setHistoryOpen((open) => !open);
-                          setFiltersOpen(false);
-                          setTextsOpen(false);
-                        }}
-                      >
-                        <History className="size-4" />
-                      </Button>
-                      {isOwner ? (
+                      <Hint label="История сборок">
                         <Button
                           type="button"
-                          variant={textsOpen ? 'secondary' : 'ghost'}
+                          variant={historyOpen ? 'secondary' : 'ghost'}
                           size="icon"
                           className="size-8"
-                          aria-label="Тексты"
-                          aria-pressed={textsOpen}
+                          aria-label="История"
+                          aria-pressed={historyOpen}
                           onClick={() => {
-                            setTextsOpen((open) => !open);
-                            setHistoryOpen(false);
+                            setHistoryOpen((open) => !open);
                             setFiltersOpen(false);
+                            setTextsOpen(false);
                           }}
                         >
-                          <FileText className="size-4" />
+                          <History className="size-4" />
                         </Button>
+                      </Hint>
+                      {isOwner ? (
+                        <Hint label="Сохранённые тексты">
+                          <Button
+                            type="button"
+                            variant={textsOpen ? 'secondary' : 'ghost'}
+                            size="icon"
+                            className="size-8"
+                            aria-label="Тексты"
+                            aria-pressed={textsOpen}
+                            onClick={() => {
+                              setTextsOpen((open) => !open);
+                              setHistoryOpen(false);
+                              setFiltersOpen(false);
+                            }}
+                          >
+                            <FileText className="size-4" />
+                          </Button>
+                        </Hint>
                       ) : null}
+                      <Hint label="Фильтры">
+                        <Button
+                          type="button"
+                          variant={filtersOpen ? 'secondary' : 'ghost'}
+                          size="icon"
+                          className="relative size-8"
+                          aria-label="Фильтры"
+                          aria-pressed={filtersOpen}
+                          onClick={() => {
+                            setFiltersOpen((open) => !open);
+                            setHistoryOpen(false);
+                            setTextsOpen(false);
+                          }}
+                        >
+                          <ListFilter className="size-4" />
+                          {generatorHasSettings ? (
+                            <span
+                              className="bg-primary absolute top-1.5 right-1.5 size-1.5 rounded-full"
+                              aria-hidden
+                            />
+                          ) : null}
+                        </Button>
+                      </Hint>
+                    </div>
+                  ) : null}
+                  {filterableSection ? (
+                    <Hint label="Фильтры">
                       <Button
                         type="button"
                         variant={filtersOpen ? 'secondary' : 'ghost'}
                         size="icon"
-                        className="relative size-8"
+                        className="relative ml-auto size-8"
                         aria-label="Фильтры"
                         aria-pressed={filtersOpen}
                         onClick={() => {
                           setFiltersOpen((open) => !open);
-                          setHistoryOpen(false);
-                          setTextsOpen(false);
                         }}
                       >
                         <ListFilter className="size-4" />
-                        {generatorHasSettings ? (
+                        {sectionHasFilters ? (
                           <span
                             className="bg-primary absolute top-1.5 right-1.5 size-1.5 rounded-full"
                             aria-hidden
                           />
                         ) : null}
                       </Button>
-                    </div>
-                  ) : null}
-                  {filterableSection ? (
-                    <Button
-                      type="button"
-                      variant={filtersOpen ? 'secondary' : 'ghost'}
-                      size="icon"
-                      className="relative ml-auto size-8"
-                      aria-label="Фильтры"
-                      aria-pressed={filtersOpen}
-                      onClick={() => {
-                        setFiltersOpen((open) => !open);
-                      }}
-                    >
-                      <ListFilter className="size-4" />
-                      {sectionHasFilters ? (
-                        <span
-                          className="bg-primary absolute top-1.5 right-1.5 size-1.5 rounded-full"
-                          aria-hidden
-                        />
-                      ) : null}
-                    </Button>
+                    </Hint>
                   ) : null}
                 </div>
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useLazyQuery, useMutation, useQuery } from '@apollo/client/react';
-import { Combine, Heart, X } from 'lucide-react';
+import { Combine, FileText, Heart, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -19,7 +19,9 @@ import {
   UNLIKE_COLLAGE,
 } from '@/entities/lyric';
 import type { CatalogSectionFilters } from '@/shared/lib/catalog-section-filters';
+import { useRetainedState } from '@/shared/lib/retained-state';
 import { ErrorText } from '@/shared/ui/error-text';
+import { Hint } from '@/shared/ui/hint';
 import { Button } from '@/shared/ui/shadcn/ui/button';
 import { Spinner } from '@/shared/ui/shadcn/ui/spinner';
 import {
@@ -28,7 +30,8 @@ import {
   TooltipTrigger,
 } from '@/shared/ui/shadcn/ui/tooltip';
 
-import { formatCollageDate } from '../lib/generator-text';
+import { CREATE_TRACK_TEXT } from '../api/ai-queries';
+import { collageTitle, formatCollageDate } from '../lib/generator-text';
 import { AssembleSlotCard } from './assemble-slot-card';
 import { CollageRewritePanel } from './collage-rewrite-panel';
 
@@ -115,10 +118,20 @@ export function CatalogAssemblePanel({
   aiEnabled: boolean;
   onTextSaved: (id: number) => void;
 }) {
-  const [draft, setDraft] = useState<IAssembledTrackSlot[] | null>(null);
-  const [likedDraftKey, setLikedDraftKey] = useState<string | null>(null);
-  const [likedCollageId, setLikedCollageId] = useState<number | null>(null);
+  const [draft, setDraft] = useRetainedState<IAssembledTrackSlot[] | null>(
+    'generator-draft',
+    null
+  );
+  const [likedDraftKey, setLikedDraftKey] = useRetainedState<string | null>(
+    'generator-liked-key',
+    null
+  );
+  const [likedCollageId, setLikedCollageId] = useRetainedState<number | null>(
+    'generator-liked-id',
+    null
+  );
   const [gluePromptOpen, setGluePromptOpen] = useState(false);
+  const [rewriteActive, setRewriteActive] = useState(false);
 
   const [assemble, { loading: assembleLoading, error: assembleError }] =
     useLazyQuery<{ assembleTrack: IAssembledTrack }>(ASSEMBLE_TRACK, {
@@ -194,6 +207,14 @@ export function CatalogAssemblePanel({
       cache.gc();
     },
   });
+
+  const [createText, { loading: textLoading, error: textError }] = useMutation<
+    { createTrackText: { id: number } },
+    {
+      slots: ReturnType<typeof slotsToInput>;
+      hideAdlibs: boolean;
+    }
+  >(CREATE_TRACK_TEXT, { refetchQueries: ['TrackTexts'] });
 
   const { data: historyData } = useQuery<{ lyricCollages: ILyricCollage[] }>(
     LYRIC_COLLAGES,
@@ -286,6 +307,21 @@ export function CatalogAssemblePanel({
     setLikedCollageId(created.id);
   };
 
+  const handleOpenAsText = async () => {
+    if (!slots) {
+      return;
+    }
+
+    const result = await createText({
+      variables: { slots: slotsToInput(slots), hideAdlibs },
+    }).catch(() => null);
+
+    const id = result?.data?.createTrackText.id;
+    if (id !== undefined) {
+      onTextSaved(id);
+    }
+  };
+
   const handleGlue = async (hideOriginals: boolean) => {
     if (!slots) {
       return;
@@ -370,7 +406,31 @@ export function CatalogAssemblePanel({
               <>
                 <h3 className="min-w-0 flex-1 truncate text-sm font-medium">
                   {formatCollageDate(viewedCollage.createdAt)}
+                  {collageTitle(viewedCollage.slots, hideAdlibs)
+                    ? ` · ${collageTitle(viewedCollage.slots, hideAdlibs)}`
+                    : ''}
                 </h3>
+                {aiEnabled ? (
+                  <Hint label="Открыть как текст для правки">
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="outline"
+                      className="size-8"
+                      disabled={!canGlue || textLoading}
+                      aria-label="Открыть как текст для правки"
+                      onClick={() => {
+                        void handleOpenAsText();
+                      }}
+                    >
+                      {textLoading ? (
+                        <Spinner className="size-4" />
+                      ) : (
+                        <FileText className="size-4" />
+                      )}
+                    </Button>
+                  </Hint>
+                ) : null}
                 <GlueButton
                   disabled={!canGlue || glueLoading}
                   loading={glueLoading}
@@ -378,33 +438,37 @@ export function CatalogAssemblePanel({
                     setGluePromptOpen(true);
                   }}
                 />
-                <Button
-                  type="button"
-                  size="icon"
-                  variant="secondary"
-                  className="size-8"
-                  disabled={heartBusy}
-                  aria-label="Убрать из истории"
-                  onClick={() => {
-                    void handleUnlike(viewedCollage.id);
-                  }}
-                >
-                  {unlikeLoading ? (
-                    <Spinner className="size-4" />
-                  ) : (
-                    <Heart className="size-4" fill="currentColor" />
-                  )}
-                </Button>
-                <Button
-                  type="button"
-                  size="icon"
-                  variant="ghost"
-                  className="size-8"
-                  aria-label="Закрыть"
-                  onClick={onCloseSelected}
-                >
-                  <X className="size-4" />
-                </Button>
+                <Hint label="Убрать из истории">
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="secondary"
+                    className="size-8"
+                    disabled={heartBusy}
+                    aria-label="Убрать из истории"
+                    onClick={() => {
+                      void handleUnlike(viewedCollage.id);
+                    }}
+                  >
+                    {unlikeLoading ? (
+                      <Spinner className="size-4" />
+                    ) : (
+                      <Heart className="size-4" fill="currentColor" />
+                    )}
+                  </Button>
+                </Hint>
+                <Hint label="Закрыть">
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    className="size-8"
+                    aria-label="Закрыть"
+                    onClick={onCloseSelected}
+                  >
+                    <X className="size-4" />
+                  </Button>
+                </Hint>
               </>
             ) : (
               <div className="flex w-full justify-between">
@@ -459,10 +523,16 @@ export function CatalogAssemblePanel({
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-4 pt-2 pb-4">
-        {assembleError || likeError || unlikeError || glueError ? (
+        {assembleError || likeError || unlikeError || glueError || textError ? (
           <ErrorText
             title="Не удалось собрать, сохранить или склеить"
-            error={assembleError ?? likeError ?? unlikeError ?? glueError}
+            error={
+              assembleError ??
+              likeError ??
+              unlikeError ??
+              glueError ??
+              textError
+            }
           />
         ) : null}
 
@@ -473,10 +543,11 @@ export function CatalogAssemblePanel({
             filters={filters}
             hideAdlibs={hideAdlibs}
             onSaved={onTextSaved}
+            onResultChange={setRewriteActive}
           />
         ) : null}
 
-        {!slots ? (
+        {rewriteActive ? null : !slots ? (
           <p className="text-muted-foreground text-sm"></p>
         ) : (
           <div className="flex flex-col gap-4">
