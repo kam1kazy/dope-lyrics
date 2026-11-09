@@ -85,13 +85,9 @@ afterAll(async () => {
 });
 
 describe('примеры стиля для ИИ', () => {
-  test('эталон первым, фразы склейки и чужого каталога не попадают', async () => {
+  test('только свои эталоны, обычные фразы и чужой каталог не попадают', async () => {
     const examples = await loadStyleExamples(userAId, [slotLyricId]);
 
-    expect(examples[0]).toBe(`эталон ${SUFFIX}`);
-    expect(examples).toContain(`обычная ${SUFFIX}`);
-    expect(examples.some((text) => text.includes('в склейке'))).toBe(false);
-    expect(examples.some((text) => text.includes('чужая'))).toBe(false);
-    expect(examples.some((text) => text.includes('чужой эталон'))).toBe(false);
+    expect(examples).toEqual([`эталон ${SUFFIX}`]);
   });
 });
