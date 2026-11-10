@@ -6,6 +6,7 @@ import {
   buildSourceText,
   COLLAGE_REWRITE_FRAME,
   pickStyleExamples,
+  REWRITE_JOB,
   stripModelWrapper,
 } from '~/modules/ai/collage-rewrite';
 import type { CollageSlotStored } from '~/modules/lyrics/track-assemble';
@@ -102,10 +103,12 @@ describe('stripModelWrapper', () => {
 });
 
 describe('сборка запроса', () => {
-  test('промпт автора идёт после рамки, пустой промпт её не меняет', () => {
-    expect(buildRewriteSystem('  ')).toBe(COLLAGE_REWRITE_FRAME);
+  test('промпт автора идёт после рамки, задача правки — последней', () => {
+    expect(buildRewriteSystem('  ')).toBe(
+      `${COLLAGE_REWRITE_FRAME}\n\n${REWRITE_JOB}`
+    );
     expect(buildRewriteSystem('жёстко')).toBe(
-      `${COLLAGE_REWRITE_FRAME}\n\nПромпт автора:\nжёстко`
+      `${COLLAGE_REWRITE_FRAME}\n\nПромпт автора:\nжёстко\n\n${REWRITE_JOB}`
     );
   });
 
