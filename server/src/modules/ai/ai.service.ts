@@ -105,7 +105,7 @@ export const rewriteCollage = async (
     throw new GraphQLError('ИИ не настроен');
   }
 
-  const { lyricIds, sourceText } = await sourceTextFromSlots(
+  const { sourceText } = await sourceTextFromSlots(
     userId,
     input.slots,
     input.hideAdlibs === true
@@ -117,13 +117,12 @@ export const rewriteCollage = async (
 
   const theme = input.theme?.trim() || null;
   const prompt = await getCurrentPrompt(userId);
-  const examples = await loadStyleExamples(userId, lyricIds);
   const startedAt = Date.now();
 
   try {
     const result = await completeWithModel({
       system: buildRewriteSystem(prompt?.text ?? ''),
-      user: buildRewriteUser({ theme, examples, sourceText }),
+      user: buildRewriteUser({ theme, examples: [], sourceText }),
       maxTokens: env.AI_MAX_TOKENS,
     });
     const aiText = stripModelWrapper(result.text);

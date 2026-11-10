@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 
+import { ARTIST_ORIENTATION } from '~/modules/ai/artist-orientation';
 import {
   buildRewriteSystem,
   buildRewriteUser,
@@ -103,13 +104,48 @@ describe('stripModelWrapper', () => {
 });
 
 describe('сборка запроса', () => {
-  test('промпт автора идёт после рамки, задача правки — последней', () => {
+  test('ориентир артистов между рамкой и задачей, промпт автора его не заменяет', () => {
     expect(buildRewriteSystem('  ')).toBe(
-      `${COLLAGE_REWRITE_FRAME}\n\n${REWRITE_JOB}`
+      `${COLLAGE_REWRITE_FRAME}\n\n${ARTIST_ORIENTATION}\n\n${REWRITE_JOB}`
     );
     expect(buildRewriteSystem('жёстко')).toBe(
-      `${COLLAGE_REWRITE_FRAME}\n\nПромпт автора:\nжёстко\n\n${REWRITE_JOB}`
+      `${COLLAGE_REWRITE_FRAME}\n\n${ARTIST_ORIENTATION}\n\nПромпт автора:\nжёстко\n\n${REWRITE_JOB}`
     );
+  });
+
+  test('в ориентире есть все названные артисты', () => {
+    const names = [
+      'Future',
+      'Don Toliver',
+      'Travis Scott',
+      'Linkin Park',
+      'Slipknot',
+      'Kanye West',
+      'Che Ecru',
+      'Oxxxymiron',
+      'Скриптонит',
+      'OG Buda',
+      'MAYOT',
+      'Kidd',
+      'STED.D',
+      'ATL',
+      'Markul',
+      'Pharaoh',
+      'Платина',
+      'Rocket',
+      'Boulevard Depo',
+      'Loqiemean',
+      'Сидоджи Дубоshit',
+      'Scarlxrd',
+      'Trippie Redd',
+      'XXXTentacion',
+      'Juice WRLD',
+      'Мэйти',
+    ];
+
+    for (const name of names) {
+      expect(ARTIST_ORIENTATION).toContain(name);
+    }
   });
 
   test('тема и примеры попадают в запрос только когда есть', () => {
