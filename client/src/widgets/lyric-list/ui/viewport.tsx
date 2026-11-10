@@ -1002,6 +1002,7 @@ export function Viewport({
         lyric={deskLyric}
         open={deskOpen}
         queryVariables={queryVariables}
+        showQueueActions
         onLyricChange={(next) => {
           setDeskLyricId(next.id);
           setDeskLyricSnapshot(next);

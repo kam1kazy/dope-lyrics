@@ -6,6 +6,7 @@ import {
   Check,
   CheckCheck,
   EyeOff,
+  ListMusic,
   ListPlus,
   ListX,
   MoreHorizontal,
@@ -16,13 +17,7 @@ import {
   Star,
   X,
 } from 'lucide-react';
-import {
-  type ReactNode,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import {
@@ -83,6 +78,7 @@ import { SplitTextView } from '@/features/message-desk/ui/split-text-view';
 import { useCarouselSession } from '@/shared/lib/carousel-session/carousel-session-context';
 import { usePlayback } from '@/shared/lib/playback/playback-context';
 import { cn } from '@/shared/lib/utils/cn';
+import { Hint } from '@/shared/ui/hint';
 import { Badge } from '@/shared/ui/shadcn/ui/badge';
 import { Button } from '@/shared/ui/shadcn/ui/button';
 import {
@@ -93,11 +89,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/shared/ui/shadcn/ui/dialog';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/shared/ui/shadcn/ui/tooltip';
 
 interface MessageDeskDialogProps {
   lyric: ILyric | null;
@@ -144,37 +135,6 @@ function lyricTypename(id: number, lyricId: number | undefined) {
   };
 }
 
-function QueueActionButton({
-  hint,
-  disabled,
-  onClick,
-  className,
-  children,
-}: {
-  hint: string;
-  disabled: boolean;
-  onClick: () => void;
-  className?: string;
-  children: ReactNode;
-}) {
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Button
-          type="button"
-          variant="ghost"
-          disabled={disabled}
-          className={cn('h-10 gap-2 px-2', className)}
-          onClick={onClick}
-        >
-          {children}
-        </Button>
-      </TooltipTrigger>
-      <TooltipContent side="top">{hint}</TooltipContent>
-    </Tooltip>
-  );
-}
-
 export function MessageDeskDialog({
   lyric,
   open,
@@ -206,7 +166,9 @@ export function MessageDeskDialog({
   const holdTimerRef = useRef<number | null>(null);
   const holdOriginRef = useRef<{ x: number; y: number } | null>(null);
   const holdConsumedRef = useRef(false);
-  const [deskTitle, setDeskTitle] = useState('Сообщение');
+  const [deskReadiness, setDeskReadiness] = useState<LyricReadiness | null>(
+    null
+  );
   const [activeSongRole, setActiveSongRole] = useState<LyricSongRole | null>(
     null
   );
@@ -214,6 +176,8 @@ export function MessageDeskDialog({
   const [flagsError, setFlagsError] = useState<string | null>(null);
   const [moreOpen, setMoreOpen] = useState(false);
   const moreMenuRef = useRef<HTMLDivElement>(null);
+  const [queueMenuOpen, setQueueMenuOpen] = useState(false);
+  const queueMenuRef = useRef<HTMLDivElement>(null);
   const [profileOverride, setProfileOverride] = useState<ProfileFields | null>(
     null
   );
@@ -241,6 +205,7 @@ export function MessageDeskDialog({
       setFlagsOverride(null);
       setActiveSongRole(null);
       setMoreOpen(false);
+      setQueueMenuOpen(false);
     }
   }, [open]);
 
@@ -257,7 +222,7 @@ export function MessageDeskDialog({
       return;
     }
 
-    setDeskTitle(lyric?.readiness === 'LINE' ? 'фразочка' : 'Сообщение');
+    setDeskReadiness(lyric?.readiness ?? null);
     // Заголовок только на открытии: смена готовности в открытой карточке его не трогает.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- lyric.readiness нарочно не в зависимостях
   }, [open, lyric?.id]);
@@ -277,23 +242,29 @@ export function MessageDeskDialog({
     setDraftText(lyric?.message?.text ?? '');
     setActiveSongRole(lyric?.roleProfiles?.[0]?.songRole ?? null);
     setMoreOpen(false);
+    setQueueMenuOpen(false);
     // Сброс только при смене фразы, не при правке текста в кэше.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- lyric.id нарочно единственная зависимость
   }, [lyric?.id]);
 
   useEffect(() => {
-    if (!moreOpen) {
+    if (!moreOpen && !queueMenuOpen) {
       return;
     }
 
     const onPointerDown = (event: PointerEvent) => {
       const target = event.target;
 
-      if (target instanceof Node && moreMenuRef.current?.contains(target)) {
+      if (
+        target instanceof Node &&
+        (moreMenuRef.current?.contains(target) ||
+          queueMenuRef.current?.contains(target))
+      ) {
         return;
       }
 
       setMoreOpen(false);
+      setQueueMenuOpen(false);
     };
 
     const onKeyDown = (event: KeyboardEvent) => {
@@ -301,6 +272,7 @@ export function MessageDeskDialog({
         event.preventDefault();
         event.stopPropagation();
         setMoreOpen(false);
+        setQueueMenuOpen(false);
       }
     };
 
@@ -311,7 +283,7 @@ export function MessageDeskDialog({
       document.removeEventListener('pointerdown', onPointerDown);
       document.removeEventListener('keydown', onKeyDown, true);
     };
-  }, [moreOpen]);
+  }, [moreOpen, queueMenuOpen]);
 
   const [updateFlags] = useMutation<
     {
@@ -918,10 +890,16 @@ export function MessageDeskDialog({
         }}
       >
         <DialogHeader className="shrink-0 gap-2 sm:gap-3 sm:pr-8">
-          <DialogTitle className="sm:text-xl">{deskTitle}</DialogTitle>
+          <DialogTitle className="sm:text-xl">
+            {deskReadiness
+              ? LYRIC_READINESS_LABELS[deskReadiness]
+              : 'Сообщение'}
+          </DialogTitle>
           <DialogDescription className="sm:text-base">
             {tab === 'text'
-              ? 'Полный текст из каталога.'
+              ? deskReadiness
+                ? LYRIC_READINESS_HINTS[deskReadiness]
+                : 'Целое сообщение из чата.'
               : tab === 'chunks'
                 ? 'Нарезанные куски.'
                 : 'Настроение, подача, роль, энергия и готовность.'}
@@ -1053,26 +1031,30 @@ export function MessageDeskDialog({
                       aria-label="Текст фразы"
                     />
                     <div className="absolute top-2 right-2 flex gap-1">
-                      <Button
-                        type="button"
-                        size="icon"
-                        variant="ghost"
-                        className="size-8"
-                        onClick={saveEdit}
-                        aria-label="Сохранить"
-                      >
-                        <Check className="size-4" />
-                      </Button>
-                      <Button
-                        type="button"
-                        size="icon"
-                        variant="ghost"
-                        className="size-8"
-                        onClick={requestExitEdit}
-                        aria-label="Выйти без сохранения"
-                      >
-                        <X className="size-4" />
-                      </Button>
+                      <Hint label="Сохранить">
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="ghost"
+                          className="size-8"
+                          onClick={saveEdit}
+                          aria-label="Сохранить"
+                        >
+                          <Check className="size-4" />
+                        </Button>
+                      </Hint>
+                      <Hint label="Выйти без сохранения">
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="ghost"
+                          className="size-8"
+                          onClick={requestExitEdit}
+                          aria-label="Выйти без сохранения"
+                        >
+                          <X className="size-4" />
+                        </Button>
+                      </Hint>
                     </div>
                   </div>
                 ) : (
@@ -1347,229 +1329,302 @@ export function MessageDeskDialog({
             ) : (
               <div className="flex w-full flex-col gap-2">
                 <div className="flex w-full items-center justify-between">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    disabled={!lyric}
-                    aria-label="Избранное"
-                    aria-pressed={flags.isFavorite}
-                    className="size-10"
-                    onClick={() =>
-                      patchFlags({ isFavorite: !flags.isFavorite })
-                    }
-                  >
-                    <Star
-                      className={cn(
-                        'size-4',
-                        flags.isFavorite && 'fill-amber-400 text-amber-400'
-                      )}
-                      aria-hidden
-                    />
-                  </Button>
-
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    disabled={!lyric}
-                    aria-label="Эталон"
-                    aria-pressed={flags.isReference}
-                    className="size-10"
-                    onClick={() =>
-                      patchFlags({ isReference: !flags.isReference })
-                    }
-                  >
-                    <Sparkles
-                      className={cn(
-                        'size-4',
-                        flags.isReference && 'fill-violet-400 text-violet-400'
-                      )}
-                      aria-hidden
-                    />
-                  </Button>
-
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    disabled={!lyric}
-                    aria-label="Использовал"
-                    aria-pressed={flags.isUsed}
-                    className="size-10"
-                    onClick={() => patchFlags({ isUsed: !flags.isUsed })}
-                  >
-                    <CheckCheck
-                      className={cn('size-4', flags.isUsed && 'text-amber-400')}
-                      aria-hidden
-                    />
-                  </Button>
-
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    disabled={!lyric}
-                    aria-label="Скрыть"
-                    aria-pressed={flags.isHidden}
-                    className="size-10"
-                    onClick={() => patchFlags({ isHidden: !flags.isHidden })}
-                  >
-                    <EyeOff
-                      className={cn(
-                        'size-4',
-                        flags.isHidden && 'text-rose-400'
-                      )}
-                      aria-hidden
-                    />
-                  </Button>
-
-                  <div ref={moreMenuRef} className="relative">
+                  <Hint label="Избранное">
                     <Button
                       type="button"
                       variant="ghost"
                       size="icon"
                       disabled={!lyric}
-                      aria-label="Ещё"
-                      aria-expanded={moreOpen}
-                      aria-haspopup="menu"
-                      className="relative size-10"
-                      onClick={() => setMoreOpen((openMenu) => !openMenu)}
+                      aria-label="Избранное"
+                      aria-pressed={flags.isFavorite}
+                      className="size-10"
+                      onClick={() =>
+                        patchFlags({ isFavorite: !flags.isFavorite })
+                      }
                     >
-                      <MoreHorizontal className="size-4" aria-hidden />
-                      {flags.isCensored || flags.isDonor ? (
-                        <>
-                          <span
-                            className="bg-primary absolute top-1.5 right-1.5 size-1.5 rounded-full"
-                            aria-hidden
-                          />
-                          <span className="sr-only">есть метки</span>
-                        </>
-                      ) : null}
+                      <Star
+                        className={cn(
+                          'size-4',
+                          flags.isFavorite && 'fill-amber-400 text-amber-400'
+                        )}
+                        aria-hidden
+                      />
                     </Button>
+                  </Hint>
+
+                  <Hint label="Эталон">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      disabled={!lyric}
+                      aria-label="Эталон"
+                      aria-pressed={flags.isReference}
+                      className="size-10"
+                      onClick={() =>
+                        patchFlags({ isReference: !flags.isReference })
+                      }
+                    >
+                      <Sparkles
+                        className={cn(
+                          'size-4',
+                          flags.isReference && 'fill-violet-400 text-violet-400'
+                        )}
+                        aria-hidden
+                      />
+                    </Button>
+                  </Hint>
+
+                  <Hint label="Использовал">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      disabled={!lyric}
+                      aria-label="Использовал"
+                      aria-pressed={flags.isUsed}
+                      className="size-10"
+                      onClick={() => patchFlags({ isUsed: !flags.isUsed })}
+                    >
+                      <CheckCheck
+                        className={cn(
+                          'size-4',
+                          flags.isUsed && 'text-amber-400'
+                        )}
+                        aria-hidden
+                      />
+                    </Button>
+                  </Hint>
+
+                  <Hint label="Скрыть">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      disabled={!lyric}
+                      aria-label="Скрыть"
+                      aria-pressed={flags.isHidden}
+                      className="size-10"
+                      onClick={() => patchFlags({ isHidden: !flags.isHidden })}
+                    >
+                      <EyeOff
+                        className={cn(
+                          'size-4',
+                          flags.isHidden && 'text-rose-400'
+                        )}
+                        aria-hidden
+                      />
+                    </Button>
+                  </Hint>
+
+                  {showQueueActions && tab === 'text' ? (
+                    <div ref={queueMenuRef} className="relative">
+                      <Hint label="Карусель">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          disabled={!lyric}
+                          aria-label="Карусель"
+                          aria-expanded={queueMenuOpen}
+                          aria-haspopup="menu"
+                          className={cn('size-10', inQueue && 'bg-muted')}
+                          onClick={() => {
+                            setMoreOpen(false);
+                            setQueueMenuOpen((openMenu) => !openMenu);
+                          }}
+                        >
+                          <ListMusic className="size-4" aria-hidden />
+                        </Button>
+                      </Hint>
+                      {queueMenuOpen ? (
+                        <div
+                          role="menu"
+                          className="bg-popover text-popover-foreground absolute right-0 bottom-full z-10 mb-1 min-w-[12rem] rounded-md border p-1 shadow-md"
+                        >
+                          <Hint label="Убрать все фразы с экрана" side="left">
+                            <button
+                              type="button"
+                              role="menuitem"
+                              className="hover:bg-accent flex w-full items-center gap-2 rounded-sm px-2 py-2 text-left text-sm"
+                              onClick={() => {
+                                setQueueMenuOpen(false);
+                                void (async () => {
+                                  const saved = await saveSnapshot();
+                                  if (!saved) {
+                                    return;
+                                  }
+
+                                  clearQueue();
+                                  toast('Карусель очищена');
+                                })();
+                              }}
+                            >
+                              <ListX
+                                className="size-4 text-rose-400"
+                                aria-hidden
+                              />
+                              Очистить
+                            </button>
+                          </Hint>
+                          <Hint
+                            label={
+                              inQueue
+                                ? 'Убрать из своей карусели'
+                                : 'В свою карусель — дальше только добавленные'
+                            }
+                            side="left"
+                          >
+                            <button
+                              type="button"
+                              role="menuitem"
+                              className={cn(
+                                'hover:bg-accent flex w-full items-center gap-2 rounded-sm px-2 py-2 text-left text-sm',
+                                inQueue && 'bg-muted'
+                              )}
+                              onClick={() => {
+                                if (!lyric) {
+                                  return;
+                                }
+
+                                setQueueMenuOpen(false);
+
+                                if (inQueue) {
+                                  removeFromQueue(lyric.id);
+                                  return;
+                                }
+
+                                addToQueue(lyric);
+                              }}
+                            >
+                              <ListPlus
+                                className="size-4 text-sky-400"
+                                aria-hidden
+                              />
+                              {inQueue ? 'Убрать' : 'Добавить'}
+                            </button>
+                          </Hint>
+                          <Hint
+                            label="Поставить сверху и сразу запустить"
+                            side="left"
+                          >
+                            <button
+                              type="button"
+                              role="menuitem"
+                              className="hover:bg-accent flex w-full items-center gap-2 rounded-sm px-2 py-2 text-left text-sm"
+                              onClick={() => {
+                                if (!lyric) {
+                                  return;
+                                }
+
+                                setQueueMenuOpen(false);
+                                playNow(lyric);
+                                suppressToggle();
+                                onOpenChange(false);
+                                setPaused(false);
+                              }}
+                            >
+                              <Play
+                                className="size-4 fill-emerald-400 text-emerald-400"
+                                aria-hidden
+                              />
+                              Играть
+                            </button>
+                          </Hint>
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : null}
+
+                  <div ref={moreMenuRef} className="relative">
+                    <Hint label="Ещё">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        disabled={!lyric}
+                        aria-label="Ещё"
+                        aria-expanded={moreOpen}
+                        aria-haspopup="menu"
+                        className="relative size-10"
+                        onClick={() => {
+                          setQueueMenuOpen(false);
+                          setMoreOpen((openMenu) => !openMenu);
+                        }}
+                      >
+                        <MoreHorizontal className="size-4" aria-hidden />
+                        {flags.isCensored || flags.isDonor ? (
+                          <>
+                            <span
+                              className="bg-primary absolute top-1.5 right-1.5 size-1.5 rounded-full"
+                              aria-hidden
+                            />
+                            <span className="sr-only">есть метки</span>
+                          </>
+                        ) : null}
+                      </Button>
+                    </Hint>
                     {moreOpen ? (
                       <div
                         role="menu"
                         className="bg-popover text-popover-foreground absolute right-0 bottom-full z-10 mb-1 min-w-[12rem] rounded-md border p-1 shadow-md"
                       >
-                        <button
-                          type="button"
-                          role="menuitemcheckbox"
-                          aria-checked={flags.isCensored}
-                          className="hover:bg-accent flex w-full items-center gap-2 rounded-sm px-2 py-2 text-left text-sm"
-                          onClick={() =>
-                            patchFlags({ isCensored: !flags.isCensored })
-                          }
-                        >
-                          <Ban
-                            className={cn(
-                              'size-4',
-                              flags.isCensored && 'text-rose-400'
-                            )}
-                            aria-hidden
-                          />
-                          Цензура
-                          {flags.isCensored ? (
-                            <span
-                              className="bg-rose-400 ml-auto size-1.5 rounded-full"
+                        <Hint label="Нужна цензура" side="left">
+                          <button
+                            type="button"
+                            role="menuitemcheckbox"
+                            aria-checked={flags.isCensored}
+                            className="hover:bg-accent flex w-full items-center gap-2 rounded-sm px-2 py-2 text-left text-sm"
+                            onClick={() =>
+                              patchFlags({ isCensored: !flags.isCensored })
+                            }
+                          >
+                            <Ban
+                              className={cn(
+                                'size-4',
+                                flags.isCensored && 'text-rose-400'
+                              )}
                               aria-hidden
                             />
-                          ) : null}
-                        </button>
-                        <button
-                          type="button"
-                          role="menuitemcheckbox"
-                          aria-checked={flags.isDonor}
-                          className="hover:bg-accent flex w-full items-center gap-2 rounded-sm px-2 py-2 text-left text-sm"
-                          onClick={() =>
-                            patchFlags({ isDonor: !flags.isDonor })
-                          }
-                        >
-                          <Split
-                            className={cn(
-                              'size-4',
-                              flags.isDonor && 'text-sky-400'
-                            )}
-                            aria-hidden
-                          />
-                          Донор
-                          {flags.isDonor ? (
-                            <span
-                              className="bg-sky-400 ml-auto size-1.5 rounded-full"
+                            Цензура
+                            {flags.isCensored ? (
+                              <span
+                                className="bg-rose-400 ml-auto size-1.5 rounded-full"
+                                aria-hidden
+                              />
+                            ) : null}
+                          </button>
+                        </Hint>
+                        <Hint label="Источник для нарезки кусков" side="left">
+                          <button
+                            type="button"
+                            role="menuitemcheckbox"
+                            aria-checked={flags.isDonor}
+                            className="hover:bg-accent flex w-full items-center gap-2 rounded-sm px-2 py-2 text-left text-sm"
+                            onClick={() =>
+                              patchFlags({ isDonor: !flags.isDonor })
+                            }
+                          >
+                            <Split
+                              className={cn(
+                                'size-4',
+                                flags.isDonor && 'text-sky-400'
+                              )}
                               aria-hidden
                             />
-                          ) : null}
-                        </button>
+                            Донор
+                            {flags.isDonor ? (
+                              <span
+                                className="bg-sky-400 ml-auto size-1.5 rounded-full"
+                                aria-hidden
+                              />
+                            ) : null}
+                          </button>
+                        </Hint>
                       </div>
                     ) : null}
                   </div>
                 </div>
-                {showQueueActions && tab === 'text' ? (
-                  <div className="flex w-full items-center justify-between gap-1">
-                    <QueueActionButton
-                      hint="Убрать все фразы с экрана"
-                      disabled={!lyric}
-                      onClick={() => {
-                        void (async () => {
-                          const saved = await saveSnapshot();
-                          if (!saved) {
-                            return;
-                          }
-
-                          clearQueue();
-                          toast('Карусель очищена');
-                        })();
-                      }}
-                    >
-                      <ListX className="size-4 text-rose-400" aria-hidden />
-                      Очистить
-                    </QueueActionButton>
-                    <QueueActionButton
-                      hint={
-                        inQueue
-                          ? 'Убрать из своей карусели'
-                          : 'В свою карусель — дальше только добавленные'
-                      }
-                      disabled={!lyric}
-                      className={cn(inQueue && 'bg-muted')}
-                      onClick={() => {
-                        if (!lyric) {
-                          return;
-                        }
-
-                        if (inQueue) {
-                          removeFromQueue(lyric.id);
-                          return;
-                        }
-
-                        addToQueue(lyric);
-                      }}
-                    >
-                      <ListPlus className="size-4 text-sky-400" aria-hidden />
-                      Добавить
-                    </QueueActionButton>
-                    <QueueActionButton
-                      hint="Поставить сверху и сразу запустить"
-                      disabled={!lyric}
-                      onClick={() => {
-                        if (!lyric) {
-                          return;
-                        }
-
-                        playNow(lyric);
-                        suppressToggle();
-                        onOpenChange(false);
-                        setPaused(false);
-                      }}
-                    >
-                      <Play
-                        className="size-4 fill-emerald-400 text-emerald-400"
-                        aria-hidden
-                      />
-                      Играть
-                    </QueueActionButton>
-                  </div>
-                ) : null}
               </div>
             )}
           </DialogFooter>
