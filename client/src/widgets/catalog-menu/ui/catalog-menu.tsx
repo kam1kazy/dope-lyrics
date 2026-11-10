@@ -12,12 +12,19 @@ import {
   List,
   ListFilter,
   PanelLeft,
+  Search,
   Shuffle,
   Sparkles,
 } from 'lucide-react';
-import { useEffect, useEffectEvent, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useEffectEvent,
+  useRef,
+  useState,
+} from 'react';
 
-import type { ILyricCollage, TrackFormQuotas } from '@/entities/lyric';
+import type { ILyric, ILyricCollage, TrackFormQuotas } from '@/entities/lyric';
 import { AiSettingsPanel } from '@/features/ai-settings';
 import { CarouselHistoryPanel } from '@/features/carousel-history';
 import {
@@ -33,6 +40,10 @@ import { CatalogDemosPanel } from '@/features/catalog-demos';
 import { CatalogFavoritesPanel } from '@/features/catalog-favorites';
 import { CatalogFilterPane } from '@/features/catalog-filters';
 import { CatalogListPanel } from '@/features/catalog-list';
+import {
+  SectionSearchBox,
+  type SectionSearchHit,
+} from '@/features/catalog-search';
 import { CatalogStatsPanel } from '@/features/catalog-stats';
 import { TrackTextsList, TrackTextView } from '@/features/track-texts';
 import {
@@ -142,6 +153,13 @@ export function CatalogMenu() {
   const [filtersBySection, setFiltersBySection] = useState(
     EMPTY_SECTION_FILTERS
   );
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [lyricOpenRequest, setLyricOpenRequest] = useState<{
+    token: number;
+    lyric: ILyric;
+  } | null>(null);
+  const lyricOpenToken = useRef(0);
   const { paused, canPlay, suppressToggle, beginOverlay, endOverlay } =
     usePlayback();
   const { openRequest, closeSignal, consumeOpenRequest } = useCatalogMenu();
@@ -185,6 +203,9 @@ export function CatalogMenu() {
     setFiltersOpen(false);
     setHistoryOpen(false);
     setLikedOnly(false);
+    setSearchOpen(false);
+    setSearchQuery('');
+    setLyricOpenRequest(null);
     document.body.style.removeProperty('pointer-events');
   }, [beginOverlay, endOverlay, isOpen]);
 
@@ -208,6 +229,38 @@ export function CatalogMenu() {
     };
   }, [activeSection, isOpen]);
 
+  const closeSearch = () => {
+    setSearchOpen(false);
+    setSearchQuery('');
+  };
+
+  const consumeLyricOpen = useCallback(() => {
+    setLyricOpenRequest(null);
+  }, []);
+
+  const pickSearchHit = (hit: SectionSearchHit) => {
+    if (hit.kind === 'lyric') {
+      lyricOpenToken.current += 1;
+      setLyricOpenRequest({
+        token: lyricOpenToken.current,
+        lyric: hit.lyric,
+      });
+    } else if (hit.kind === 'favorite') {
+      setSelectedTextId(null);
+      setSelectedCollage(hit.collage);
+      setHistoryOpen(false);
+      setTextsOpen(false);
+      setFiltersOpen(false);
+    } else {
+      setSelectedTextId(hit.id);
+      setHistoryOpen(false);
+      setTextsOpen(false);
+      setFiltersOpen(false);
+    }
+
+    closeSearch();
+  };
+
   const selectSection = (section: CatalogSection) => {
     const now = Date.now();
     const current = activeSectionRef.current;
@@ -224,6 +277,7 @@ export function CatalogMenu() {
       setFiltersOpen(false);
       setHistoryOpen(false);
       setTextsOpen(false);
+      closeSearch();
       return;
     }
 
@@ -237,6 +291,7 @@ export function CatalogMenu() {
     setFiltersOpen(false);
     setHistoryOpen(false);
     setTextsOpen(false);
+    closeSearch();
   };
 
   useEffect(() => {
@@ -251,6 +306,8 @@ export function CatalogMenu() {
     setFiltersOpen(false);
     setHistoryOpen(false);
     setTextsOpen(false);
+    setSearchOpen(false);
+    setSearchQuery('');
     consumeOpenRequest();
   }, [consumeOpenRequest, openRequest]);
 
@@ -311,6 +368,38 @@ export function CatalogMenu() {
       window.dispatchEvent(new Event(AUTH_SIGNED_OUT_EVENT));
     })();
   };
+
+  const searchSection =
+    renderedSection === 'list' ||
+    renderedSection === 'demos' ||
+    renderedSection === 'generator'
+      ? renderedSection
+      : null;
+  const searchButton = searchSection ? (
+    <Hint label="Поиск">
+      <Button
+        type="button"
+        variant={searchOpen ? 'secondary' : 'ghost'}
+        size="icon"
+        className="size-8"
+        aria-label="Поиск"
+        aria-pressed={searchOpen}
+        onClick={() => {
+          if (searchOpen) {
+            closeSearch();
+            return;
+          }
+
+          setSearchOpen(true);
+        }}
+        onPointerDown={(event) => {
+          event.stopPropagation();
+        }}
+      >
+        <Search className="size-4" />
+      </Button>
+    </Hint>
+  ) : null;
 
   return (
     <>
@@ -436,7 +525,7 @@ export function CatalogMenu() {
           >
             {renderedSection ? (
               <>
-                <div className="border-border flex items-center gap-2 border-b px-4 py-3">
+                <div className="border-border relative z-20 flex items-center gap-2 border-b px-4 py-3">
                   <Button
                     type="button"
                     variant="ghost"
@@ -460,13 +549,26 @@ export function CatalogMenu() {
 
                       activeSectionRef.current = null;
                       setActiveSection(null);
+                      closeSearch();
                     }}
                   >
                     назад
                   </Button>
-                  <h2 className="text-sm font-medium">
-                    {SECTION_TITLES[renderedSection]}
-                  </h2>
+                  {searchOpen && searchSection ? (
+                    <SectionSearchBox
+                      section={searchSection}
+                      query={searchQuery}
+                      filters={sectionFilters}
+                      includeSavedTexts={isOwner}
+                      onQueryChange={setSearchQuery}
+                      onClose={closeSearch}
+                      onPick={pickSearchHit}
+                    />
+                  ) : (
+                    <h2 className="min-w-0 truncate text-sm font-medium">
+                      {SECTION_TITLES[renderedSection]}
+                    </h2>
+                  )}
                   {renderedSection === 'history' ? (
                     <Hint label="Только сохранённые">
                       <Button
@@ -490,7 +592,12 @@ export function CatalogMenu() {
                     </Hint>
                   ) : null}
                   {renderedSection === 'generator' ? (
-                    <div className="ml-auto flex items-center gap-1">
+                    <div
+                      className={cn(
+                        'flex shrink-0 items-center gap-1',
+                        !(searchOpen && searchSection) && 'ml-auto'
+                      )}
+                    >
                       <Hint label="Избранные">
                         <Button
                           type="button"
@@ -527,6 +634,7 @@ export function CatalogMenu() {
                           </Button>
                         </Hint>
                       ) : null}
+                      {searchButton}
                       <Hint label="Фильтры">
                         <Button
                           type="button"
@@ -553,27 +661,35 @@ export function CatalogMenu() {
                     </div>
                   ) : null}
                   {filterableSection ? (
-                    <Hint label="Фильтры">
-                      <Button
-                        type="button"
-                        variant={filtersOpen ? 'secondary' : 'ghost'}
-                        size="icon"
-                        className="relative ml-auto size-8"
-                        aria-label="Фильтры"
-                        aria-pressed={filtersOpen}
-                        onClick={() => {
-                          setFiltersOpen((open) => !open);
-                        }}
-                      >
-                        <ListFilter className="size-4" />
-                        {sectionHasFilters ? (
-                          <span
-                            className="bg-primary absolute top-1.5 right-1.5 size-1.5 rounded-full"
-                            aria-hidden
-                          />
-                        ) : null}
-                      </Button>
-                    </Hint>
+                    <div
+                      className={cn(
+                        'flex shrink-0 items-center gap-1',
+                        !(searchOpen && searchSection) && 'ml-auto'
+                      )}
+                    >
+                      {searchButton}
+                      <Hint label="Фильтры">
+                        <Button
+                          type="button"
+                          variant={filtersOpen ? 'secondary' : 'ghost'}
+                          size="icon"
+                          className="relative size-8"
+                          aria-label="Фильтры"
+                          aria-pressed={filtersOpen}
+                          onClick={() => {
+                            setFiltersOpen((open) => !open);
+                          }}
+                        >
+                          <ListFilter className="size-4" />
+                          {sectionHasFilters ? (
+                            <span
+                              className="bg-primary absolute top-1.5 right-1.5 size-1.5 rounded-full"
+                              aria-hidden
+                            />
+                          ) : null}
+                        </Button>
+                      </Hint>
+                    </div>
                   ) : null}
                 </div>
 
@@ -590,11 +706,19 @@ export function CatalogMenu() {
                     {renderedSection === 'profile' ? (
                       <UserProfilePanel />
                     ) : renderedSection === 'list' ? (
-                      <CatalogListPanel filters={sectionFilters} />
+                      <CatalogListPanel
+                        filters={sectionFilters}
+                        openRequest={lyricOpenRequest}
+                        onOpenRequestConsumed={consumeLyricOpen}
+                      />
                     ) : renderedSection === 'favorites' ? (
                       <CatalogFavoritesPanel filters={sectionFilters} />
                     ) : renderedSection === 'demos' ? (
-                      <CatalogDemosPanel filters={sectionFilters} />
+                      <CatalogDemosPanel
+                        filters={sectionFilters}
+                        openRequest={lyricOpenRequest}
+                        onOpenRequestConsumed={consumeLyricOpen}
+                      />
                     ) : renderedSection === 'history' ? (
                       <CarouselHistoryPanel
                         likedOnly={likedOnly}

@@ -19,9 +19,16 @@ import { Spinner } from '@/shared/ui/shadcn/ui/spinner';
 
 const FILTER_QUERY_DEBOUNCE_MS = 220;
 
+export type LyricOpenRequest = {
+  token: number;
+  lyric: ILyric;
+};
+
 interface CatalogLyricsListProps {
   queryVariables: LyricsQueryVariables;
   emptyMessage: string;
+  openRequest?: LyricOpenRequest | null;
+  onOpenRequestConsumed?: () => void;
 }
 
 function lyricDateMs(lyric: ILyric) {
@@ -31,6 +38,8 @@ function lyricDateMs(lyric: ILyric) {
 export function CatalogLyricsList({
   queryVariables,
   emptyMessage,
+  openRequest = null,
+  onOpenRequestConsumed,
 }: CatalogLyricsListProps) {
   const { mode, queue } = useCarouselSession();
   const [selectedLyric, setSelectedLyric] = useState<ILyric | null>(null);
@@ -58,6 +67,16 @@ export function CatalogLyricsList({
       setQueueOnly(false);
     }
   }, [hasQueueMarks]);
+
+  useEffect(() => {
+    if (!openRequest) {
+      return;
+    }
+
+    setSelectedLyric(openRequest.lyric);
+    setDeskOpen(true);
+    onOpenRequestConsumed?.();
+  }, [onOpenRequestConsumed, openRequest]);
 
   const queueIds = useMemo(
     () => new Set(queue.map((lyric) => lyric.id)),

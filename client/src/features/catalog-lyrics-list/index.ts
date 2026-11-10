@@ -1,1 +1,4 @@
-export { CatalogLyricsList } from './ui/catalog-lyrics-list';
+export {
+  CatalogLyricsList,
+  type LyricOpenRequest,
+} from './ui/catalog-lyrics-list';
