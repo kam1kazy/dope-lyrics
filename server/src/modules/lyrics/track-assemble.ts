@@ -23,8 +23,8 @@ export type TrackFormQuotas = {
 
 export const DEFAULT_TRACK_FORM_QUOTAS: TrackFormQuotas = {
   intro: 0,
-  verse: 6,
-  hook: 2,
+  verse: 4,
+  hook: 1,
   bridge: 0,
 };
 

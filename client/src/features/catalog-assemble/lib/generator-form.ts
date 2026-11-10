@@ -6,7 +6,7 @@ export const TRACK_FORM_PRESET_QUOTAS: Record<
   TrackFormPreset,
   TrackFormQuotas
 > = {
-  HIT: { intro: 0, verse: 6, hook: 2, bridge: 0 },
+  HIT: { intro: 0, verse: 4, hook: 1, bridge: 0 },
   CANVAS: { intro: 0, verse: 8, hook: 4, bridge: 0 },
 };
 
@@ -14,6 +14,14 @@ export const DEFAULT_TRACK_FORM_QUOTAS: TrackFormQuotas =
   TRACK_FORM_PRESET_QUOTAS.HIT;
 
 const STORAGE_KEY = 'dope-lyrics.generator-form';
+
+/** Прошлый пресет «хит»: в сохранённой форме заменить на текущий. */
+const PREVIOUS_HIT_QUOTAS: TrackFormQuotas = {
+  intro: 0,
+  verse: 6,
+  hook: 2,
+  bridge: 0,
+};
 
 export const quotasEqual = (
   left: TrackFormQuotas,
@@ -69,7 +77,12 @@ export const readGeneratorForm = (): TrackFormQuotas => {
       return { ...DEFAULT_TRACK_FORM_QUOTAS };
     }
 
-    return { intro, verse, hook, bridge };
+    const stored = { intro, verse, hook, bridge };
+    if (quotasEqual(stored, PREVIOUS_HIT_QUOTAS)) {
+      return { ...DEFAULT_TRACK_FORM_QUOTAS };
+    }
+
+    return stored;
   } catch {
     return { ...DEFAULT_TRACK_FORM_QUOTAS };
   }

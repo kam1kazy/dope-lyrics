@@ -6,6 +6,24 @@
 
 ---
 
+# Чужие эталоны, не свой почерк
+
+**Статус:** в плане, код не трогаем (11.11.2026).
+
+**Описание:**
+Свои заметки — слабый эталон. В «Поправить ИИ» почерк автора не класть: ни свои фразы с `isReference`, ни DNA «как я пишу». Ориентир — только тексты из «чужие» (артист + текст), которые автор добавит сам. В карусель они не идут.
+
+Авторы: Future, Don Toliver, Travis Scott, Linkin Park, Slipknot, Kanye West, che ecru, Oxxxymiron, Скриптонит, OG Buda, MAYOT, kidd, STED.D, ATL, Markul, Pharaoh, Платина, Rocket, Boulevard Depo, Loqiemean, sidodgi bigfoot, Scarlxrd, Trippie Redd, XXXTentacion, Juice WRLD, мэйти.
+
+**Связано:** [roadmap E](./roadmap.md), [0006](./decisions/0006-reference-is-app-flag.md).
+
+**Вопросы:**
+- Имя артиста на каждом тексте или отдельный список, а тексты потом?
+- На одну правку один артист или несколько?
+- «che ecru», «kidd», «sidodgi bigfoot», «мэйти» — сверить написание, прежде чем показывать в интерфейсе.
+
+---
+
 # Описание отрывка
 
 **Статус:** решено делать, следующий change после теста рамки v2 (roadmap E, шаг 3).
