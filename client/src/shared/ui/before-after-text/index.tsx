@@ -12,6 +12,7 @@ import {
 import {
   type PointerEvent,
   type ReactNode,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -30,6 +31,8 @@ import {
 import { pairRewriteBlocks } from './pair-blocks';
 
 type Side = 'before' | 'after';
+
+export type LineMark = 'red' | 'green';
 
 type Piece = { text: string; changed: boolean };
 
@@ -52,10 +55,22 @@ const CHANGED_CLASSES: Record<Side, string> = {
   after: 'bg-yellow-400/25',
 };
 
+const MARK_CLASSES: Record<LineMark, string> = {
+  red: 'border-l-2 border-red-500 bg-red-500/15 pl-1',
+  green: 'border-l-2 border-emerald-500 bg-emerald-500/15 pl-1',
+};
+
 const DRAG_START_PX = 8;
 const MOUSE_SWIPE_ZONE_PX = 32;
 const DOTS_WIDTH_PX = 40;
 const LINES_PER_EDIT = 2;
+const HOLD_MS = 350;
+
+/** Метится непустая строка, которая не метка части. */
+export const isMarkableLine = (line: string): boolean => {
+  const trimmed = line.trim();
+  return trimmed !== '' && !/^\[.+\]$/.test(trimmed);
+};
 
 const opposite = (side: Side): Side => (side === 'after' ? 'before' : 'after');
 
@@ -166,6 +181,9 @@ function MenuButton({
  * от общего, у абзаца иконка, по ней закрепление снимается. Двойной клик
  * правит пару строк (при `onAfterChange`). Свайп влево сдвигает абзац
  * и открывает его меню: три точки, затем подсветка, правка и переключение.
+ *
+ * С `onToggleMark` — режим пометок: клик метит строку «стало» (индекс в `after`),
+ * зажатие блока показывает «было» до отпускания. Меню, правка и закрепление выключены.
  */
 export function BeforeAfterText({
   before,
@@ -173,6 +191,8 @@ export function BeforeAfterText({
   side: controlledSide,
   onAfterChange,
   actions,
+  marks,
+  onToggleMark,
 }: {
   before: string;
   after: string;
@@ -180,7 +200,11 @@ export function BeforeAfterText({
   side?: Side;
   onAfterChange?: (next: string) => void;
   actions?: ReactNode;
+  /** Ключ — индекс строки в `after.split('\n')`. */
+  marks?: ReadonlyMap<number, LineMark>;
+  onToggleMark?: (line: number) => void;
 }) {
+  const markMode = onToggleMark !== undefined;
   const [ownSide, setSide] = useState<Side>('after');
   const side = controlledSide ?? ownSide;
   const [pinned, setPinned] = useState<ReadonlyMap<number, Side>>(new Map());
@@ -191,13 +215,60 @@ export function BeforeAfterText({
   const dragOrigin = useRef<{ x: number; y: number } | null>(null);
   const dragging = useRef(false);
   const dragged = useRef(false);
+  const [peek, setPeek] = useState<number | null>(null);
+  const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const held = useRef(false);
+
+  useEffect(
+    () => () => {
+      if (holdTimer.current) {
+        clearTimeout(holdTimer.current);
+      }
+    },
+    []
+  );
 
   const blocks = useMemo(
     () => pairRewriteBlocks(before, after),
     [before, after]
   );
 
-  const shownSide = (index: number): Side => pinned.get(index) ?? side;
+  const shownSide = (index: number): Side =>
+    markMode ? (peek === index ? 'before' : side) : (pinned.get(index) ?? side);
+
+  const cancelHold = () => {
+    if (holdTimer.current) {
+      clearTimeout(holdTimer.current);
+      holdTimer.current = null;
+    }
+  };
+
+  const startHold = (event: PointerEvent<HTMLDivElement>, index: number) => {
+    cancelHold();
+    held.current = false;
+    dragOrigin.current = { x: event.clientX, y: event.clientY };
+    holdTimer.current = setTimeout(() => {
+      held.current = true;
+      setPeek(index);
+    }, HOLD_MS);
+  };
+
+  const moveHold = (event: PointerEvent<HTMLDivElement>) => {
+    const origin = dragOrigin.current;
+    if (
+      origin &&
+      Math.hypot(event.clientX - origin.x, event.clientY - origin.y) >
+        DRAG_START_PX
+    ) {
+      cancelHold();
+    }
+  };
+
+  const endHold = () => {
+    cancelHold();
+    dragOrigin.current = null;
+    setPeek(null);
+  };
 
   const pin = (index: number, next: Side) => {
     setPinned((current) => new Map(current).set(index, next));
@@ -362,80 +433,123 @@ export function BeforeAfterText({
 
         return (
           <div key={index} className="relative overflow-hidden rounded-md">
-            <div
-              className={cn(
-                'bg-muted absolute inset-y-0 right-0 flex items-center justify-center gap-0.5',
-                offset === 0 && 'pointer-events-none opacity-0'
-              )}
-              style={{ width: DOTS_WIDTH_PX }}
-            >
-              <DropdownMenu>
-                <Hint label="Меню блока">
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      type="button"
-                      size="icon"
-                      variant="ghost"
-                      className="size-7"
-                      aria-label="Меню блока"
-                      onPointerDown={(event) => {
-                        event.stopPropagation();
-                      }}
-                      onClick={(event) => {
-                        event.stopPropagation();
-                      }}
-                    >
-                      <EllipsisVertical className="size-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                </Hint>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem
-                    onSelect={() => {
-                      pin(index, opposite(shown));
-                    }}
-                  >
-                    <ArrowLeftRight className="size-4" />
-                    Показать «{SIDE_LABELS[opposite(shown)]}»
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onSelect={() => {
-                      setHighlight((on) => !on);
-                    }}
-                  >
-                    <Highlighter className="size-4" />
-                    {highlight ? 'Скрыть подсветку' : 'Показать подсветку'}
-                  </DropdownMenuItem>
-                  {onAfterChange !== undefined ? (
+            {markMode ? null : (
+              <div
+                className={cn(
+                  'bg-muted absolute inset-y-0 right-0 flex items-center justify-center gap-0.5',
+                  offset === 0 && 'pointer-events-none opacity-0'
+                )}
+                style={{ width: DOTS_WIDTH_PX }}
+              >
+                <DropdownMenu>
+                  <Hint label="Меню блока">
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="ghost"
+                        className="size-7"
+                        aria-label="Меню блока"
+                        onPointerDown={(event) => {
+                          event.stopPropagation();
+                        }}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                        }}
+                      >
+                        <EllipsisVertical className="size-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                  </Hint>
+                  <DropdownMenuContent align="end">
                     <DropdownMenuItem
                       onSelect={() => {
-                        startEdit(index, 0);
+                        pin(index, opposite(shown));
                       }}
                     >
-                      <Pencil className="size-4" />
-                      Править первые две строки
+                      <ArrowLeftRight className="size-4" />
+                      Показать «{SIDE_LABELS[opposite(shown)]}»
                     </DropdownMenuItem>
-                  ) : null}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+                    <DropdownMenuItem
+                      onSelect={() => {
+                        setHighlight((on) => !on);
+                      }}
+                    >
+                      <Highlighter className="size-4" />
+                      {highlight ? 'Скрыть подсветку' : 'Показать подсветку'}
+                    </DropdownMenuItem>
+                    {onAfterChange !== undefined ? (
+                      <DropdownMenuItem
+                        onSelect={() => {
+                          startEdit(index, 0);
+                        }}
+                      >
+                        <Pencil className="size-4" />
+                        Править первые две строки
+                      </DropdownMenuItem>
+                    ) : null}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            )}
             <div
               className={cn(
                 'group bg-background relative touch-pan-y',
+                markMode && 'select-none',
                 dragDx === null && 'transition-transform duration-200 ease-out'
               )}
-              style={{ transform: `translate3d(${offset}px, 0, 0)` }}
-              onPointerDown={onRowPointerDown}
+              style={
+                markMode
+                  ? undefined
+                  : { transform: `translate3d(${offset}px, 0, 0)` }
+              }
+              onContextMenu={(event) => {
+                if (markMode) {
+                  event.preventDefault();
+                }
+              }}
+              onPointerDown={(event) => {
+                if (markMode) {
+                  startHold(event, index);
+                  return;
+                }
+
+                onRowPointerDown(event);
+              }}
               onPointerMove={(event) => {
+                if (markMode) {
+                  moveHold(event);
+                  return;
+                }
+
                 onRowPointerMove(event, index);
               }}
               onPointerUp={() => {
+                if (markMode) {
+                  endHold();
+                  return;
+                }
+
                 onRowPointerEnd(index);
               }}
+              onPointerLeave={() => {
+                if (markMode) {
+                  endHold();
+                }
+              }}
               onPointerCancel={() => {
+                if (markMode) {
+                  endHold();
+                  return;
+                }
+
                 onRowPointerEnd(index);
               }}
               onClick={() => {
+                if (markMode) {
+                  return;
+                }
+
                 if (dragged.current) {
                   dragged.current = false;
                   return;
@@ -482,15 +596,42 @@ export function BeforeAfterText({
                     );
                   }
 
+                  const afterIndex =
+                    shown === 'after' && block.afterLine >= 0
+                      ? block.afterLine + lineIndex
+                      : null;
+                  const markable =
+                    markMode &&
+                    afterIndex !== null &&
+                    isMarkableLine(afterParagraph.split('\n')[lineIndex] ?? '');
+                  const mark =
+                    markable && afterIndex !== null
+                      ? marks?.get(afterIndex)
+                      : undefined;
+
                   return (
                     <p
                       key={lineIndex}
                       className={cn(
                         'min-h-5',
-                        onAfterChange !== undefined && 'cursor-text'
+                        !markMode &&
+                          onAfterChange !== undefined &&
+                          'cursor-text',
+                        markable && 'cursor-pointer rounded-sm',
+                        mark && MARK_CLASSES[mark]
                       )}
+                      onClick={() => {
+                        if (held.current) {
+                          held.current = false;
+                          return;
+                        }
+
+                        if (markable && afterIndex !== null) {
+                          onToggleMark?.(afterIndex);
+                        }
+                      }}
                       onDoubleClick={() => {
-                        if (onAfterChange !== undefined) {
+                        if (!markMode && onAfterChange !== undefined) {
                           startEdit(index, pairStart);
                         }
                       }}
@@ -512,7 +653,7 @@ export function BeforeAfterText({
                 })}
               </div>
               <div className="absolute top-0 right-0 flex items-center gap-0.5">
-                {pinned.has(index) && shown !== side ? (
+                {!markMode && pinned.has(index) && shown !== side ? (
                   <MenuButton
                     label={`Закреплено «${SIDE_LABELS[shown]}». Нажми, чтобы снять`}
                     active
