@@ -112,6 +112,13 @@ describe('сборка запроса', () => {
       'Строка не остаётся только потому, что она уже написана'
     );
     expect(system).toContain('не «я люблю тебя»');
+    expect(system).toContain('Герой — персонаж, не исповедь');
+    expect(system).toContain('Флекс — способ думать, не список брендов');
+    expect(system).toContain('Абсурд разрешён');
+    expect(system).toContain('Литературную метафору не придумывай');
+    expect(system).toContain('Повтор в хуке меняет оттенок');
+    expect(system).not.toContain('Чужой образ жизни не подставляй');
+    expect(system).not.toContain('Новую тему не открывай');
     expect(system).toContain('«быть / любить»');
     expect(system).not.toContain('Каждое четверостишие держит свою мысль');
     expect(system).not.toContain('Смысл строки можно сдвинуть');
