@@ -120,6 +120,7 @@ describe('сборка запроса', () => {
     expect(system).toContain('Повтор в хуке меняет оттенок');
     expect(system).not.toContain('Чужой образ жизни не подставляй');
     expect(system).not.toContain('Новую тему не открывай');
+    expect(system).not.toContain('dark trap');
     expect(system).toContain('«быть / любить»');
     expect(system).not.toContain('Каждое четверостишие держит свою мысль');
     expect(system).not.toContain('Смысл строки можно сдвинуть');
@@ -202,6 +203,7 @@ describe('сборка запроса', () => {
     });
     expect(full).toContain('Тема трека: бросил работу');
     expect(full).toContain('Творческие предпочтения автора');
+    expect(full).toContain('Отсюда персонаж, его мир и вкус трека');
     expect(full).toContain('не трогай слабое');
     expect(full).toContain(
       'Дополнительный авторский материал.\nИспользуй его как источник идей и образов, но не считай образцом качества или ограничением стиля:'
