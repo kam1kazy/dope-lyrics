@@ -2,7 +2,7 @@
 
 Продукт: [00_vision.md](./00_vision.md). Текущая задача: [tasks/current_task.md](./tasks/current_task.md).
 
-Снимок: **11 ноября 2026**. Продукт **0.11.0** — [versions.md](./versions.md). Дорожка D закрыта. **E без ИИ** закрыта. **F закрыта**: учётка по приглашению, cookie-сессия, личный каталог, профиль с подкачкой; хост защищён, CI/CD. Что ещё не делали — [roadmap](./roadmap.md).
+Снимок: **11 ноября 2026**. Продукт **0.12.0** — [versions.md](./versions.md). Дорожка D закрыта. **E без ИИ** закрыта. **F закрыта**: учётка по приглашению, cookie-сессия, личный каталог, профиль с подкачкой; хост защищён, CI/CD. Что ещё не делали — [roadmap](./roadmap.md).
 
 | Кусок | Сейчас |
 | --- | --- |
@@ -18,7 +18,7 @@
 | Auth | Mini App — `initData`; браузер/PWA — Telegram Login Widget (домен `legoblokk.ru` в BotFather). Сессия `dl_session` httpOnly, ротация при старте, CSRF на `/auth/*`. Роли `OWNER`/`ADMIN`/`USER` — [0009](./decisions/0009-user-auth-roles.md) |
 | Регистрация | По приглашению: `/invite` в боте или блок «Приглашения» в профиле (`ADMIN`/`OWNER`) |
 | Lint | `bun run fix` зелёный в `client/` и `server/` (errors и warnings) |
-| Тулчейн | Postgres **18.6** (`dope-lyrics-db` на 5433). Корень/`client`/`server` — version **0.11.0**. TS 7 — не сейчас |
-| OpenSpec | Активные: `ai-prompt-tabs` (ждёт проверки табов в браузере), `track-text-generation-settings` (код в `feat/track-text-generation-settings`, ждёт сквозной проверки в браузере). Архив: `2026-11-11-generator-line-marks`, `2026-11-11-ai-generation-base`, `2026-11-09-profile-page`, `2026-11-09-invite-only-signup`, `2026-11-09-multi-user-catalog`, `2026-09-07-lyric-energy`, `2026-09-07-catalog-stats-dashboard`, … |
+| Тулчейн | Postgres **18.6** (`dope-lyrics-db` на 5433). Корень/`client`/`server` — version **0.12.0**. TS 7 — не сейчас |
+| OpenSpec | Активных нет. Архив: `2026-11-11-track-text-generation-settings`, `2026-11-11-ai-prompt-tabs`, `2026-11-11-generator-line-marks`, `2026-11-11-ai-generation-base`, `2026-11-09-profile-page`, `2026-11-09-invite-only-signup`, `2026-11-09-multi-user-catalog`, `2026-09-07-lyric-energy`, `2026-09-07-catalog-stats-dashboard`, … |
 
-База ИИ (дорожка E, шаг 1) закрыта. Пометки строк закрыты (0.11.0). Дальше — по [roadmap E](./roadmap.md).
+База ИИ (дорожка E, шаг 1) закрыта. Пометки строк закрыты (0.11.0). Табы настроек ИИ и настройки генерации в текстах закрыты (0.12.0). Дальше — по [roadmap E](./roadmap.md).
