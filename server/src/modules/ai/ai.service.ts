@@ -4,15 +4,7 @@ import { env } from '~/config/env';
 import { prisma } from '~/infrastructure/prisma';
 import { getCurrentPrompt } from '~/modules/ai/ai-prompt.service';
 import { recordUsage } from '~/modules/ai/ai-usage.service';
-import { ARTIST_ORIENTATION } from '~/modules/ai/artist-orientation';
-import {
-  buildSelectorUser,
-  orientationFromSelection,
-  sanitizeSelectorBrief,
-  SELECTOR_FRAME_VERSION,
-  SELECTOR_SYSTEM,
-  type SelectorSectionInput,
-} from '~/modules/ai/artist-selector';
+import { rankArtistCandidates } from '~/modules/ai/artist-orientation';
 import {
   buildRewriteSystem,
   buildRewriteUser,
@@ -101,8 +93,6 @@ export const sourceTextFromSlots = async (
   };
 };
 
-const SELECTOR_MAX_TOKENS = 1024;
-
 const facetsForSection = (
   section: { songRole: string; lyricIds: number[] },
   rows: ReadonlyMap<
@@ -114,7 +104,11 @@ const facetsForSection = (
       roleProfiles: unknown;
     }
   >
-): Pick<SelectorSectionInput, 'moods' | 'energies' | 'deliveries'> => {
+): {
+  moods: string[];
+  energies: string[];
+  deliveries: string[];
+} => {
   const moods = new Set<string>();
   const energies = new Set<string>();
   const deliveries = new Set<string>();
@@ -183,62 +177,6 @@ const providerMessage = (error: unknown): string =>
     ? error.message
     : 'Не удалось получить ответ ИИ';
 
-/** Сбой или пустой выбор не роняют правку: редактор получает полный список. */
-const selectOrientation = async (
-  userId: number,
-  sections: SelectorSectionInput[]
-): Promise<string> => {
-  const startedAt = Date.now();
-
-  try {
-    const result = await completeWithModel({
-      system: SELECTOR_SYSTEM,
-      user: buildSelectorUser(sections),
-      maxTokens: SELECTOR_MAX_TOKENS,
-    });
-    await recordUsage({
-      userId,
-      kind: 'REFERENCE_SELECT',
-      model: result.model,
-      frameVersion: SELECTOR_FRAME_VERSION,
-      promptId: null,
-      tokensIn: result.tokensIn,
-      tokensOut: result.tokensOut,
-      latencyMs: Date.now() - startedAt,
-      status: 'OK',
-    });
-
-    const brief = sanitizeSelectorBrief(
-      result.text,
-      sections.map((section) => section.sectionId)
-    );
-    if (!brief) {
-      return ARTIST_ORIENTATION;
-    }
-
-    return orientationFromSelection(sections, brief) ?? ARTIST_ORIENTATION;
-  } catch (error: unknown) {
-    try {
-      await recordUsage({
-        userId,
-        kind: 'REFERENCE_SELECT',
-        model: env.AI_MODEL,
-        frameVersion: SELECTOR_FRAME_VERSION,
-        promptId: null,
-        tokensIn: 0,
-        tokensOut: 0,
-        latencyMs: Date.now() - startedAt,
-        status: 'ERROR',
-        error: providerMessage(error),
-      });
-    } catch {
-      // Расход не записался — правка всё равно идёт со запасным списком.
-    }
-
-    return ARTIST_ORIENTATION;
-  }
-};
-
 export const rewriteCollage = async (
   userId: number,
   input: RewriteCollageInput
@@ -260,19 +198,21 @@ export const rewriteCollage = async (
   const theme = input.theme?.trim() || null;
   const prompt = await getCurrentPrompt(userId);
   const rowsById = new Map(rows.map((row) => [row.id, row]));
-  const selectorInput: SelectorSectionInput[] = sections.map((section) => ({
-    sectionId: section.sectionId,
-    label: section.label,
-    text: section.text,
-    ...facetsForSection(section, rowsById),
-  }));
-  const orientation = await selectOrientation(userId, selectorInput);
   const startedAt = Date.now();
 
   try {
     const result = await completeWithModel({
-      system: buildRewriteSystem(prompt?.text ?? '', orientation),
-      user: buildRewriteUser({ theme, examples: [], sourceText }),
+      system: buildRewriteSystem(),
+      user: buildRewriteUser({
+        theme,
+        authorPrompt: prompt?.text ?? '',
+        examples: [],
+        sections: sections.map((section) => ({
+          label: section.label,
+          text: section.text,
+          ...rankArtistCandidates(facetsForSection(section, rowsById)),
+        })),
+      }),
       maxTokens: env.AI_MAX_TOKENS,
     });
     const aiText = stripModelWrapper(result.text);

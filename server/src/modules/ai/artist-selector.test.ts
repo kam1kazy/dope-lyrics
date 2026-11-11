@@ -1,6 +1,9 @@
 import { describe, expect, test } from 'bun:test';
 
-import { ARTIST_PROFILES } from '~/modules/ai/artist-orientation';
+import {
+  ARTIST_PROFILES,
+  rankArtistCandidates,
+} from '~/modules/ai/artist-orientation';
 import {
   orientationFromSelection,
   sanitizeSelectorBrief,
@@ -128,8 +131,51 @@ describe('карточки артистов', () => {
       expect(artist.techniques.length).toBeLessThanOrEqual(5);
       expect(ids.has(artist.id)).toBe(false);
       ids.add(artist.id);
+
+      for (const technique of artist.techniques) {
+        expect(technique.instruction.length).toBeGreaterThan(
+          technique.label.length
+        );
+      }
     }
 
     expect(ids.size).toBe(26);
+    expect(
+      ARTIST_PROFILES.find(
+        (artist) => artist.id === 'loqiemean'
+      )?.techniques.find((technique) => technique.id === 'high-to-slang')
+        ?.instruction
+    ).toBe(
+      'Контраст высокого литературного образа с грубой разговорной или уличной лексикой. Не объяснять контраст, а создавать его внутри строки.'
+    );
+  });
+});
+
+describe('rankArtistCandidates', () => {
+  test('по тоске и тихой подаче не отдаёт весь каталог', () => {
+    const { artists, relaxed } = rankArtistCandidates({
+      moods: ['LONGING'],
+      energies: ['QUIET'],
+      deliveries: ['TUNE'],
+    });
+    const ids = artists.map((artist) => artist.id);
+
+    expect(relaxed).toBe(false);
+    expect(artists.length).toBeGreaterThanOrEqual(3);
+    expect(artists.length).toBeLessThanOrEqual(6);
+    expect(ids).toContain('mayot');
+    expect(ids).not.toContain('slipknot');
+  });
+
+  test('без граней отдаёт несколько разных карточек', () => {
+    const { artists, relaxed } = rankArtistCandidates({
+      moods: [],
+      energies: [],
+      deliveries: [],
+    });
+
+    expect(relaxed).toBe(true);
+    expect(artists).toHaveLength(4);
+    expect(artists).not.toHaveLength(ARTIST_PROFILES.length);
   });
 });

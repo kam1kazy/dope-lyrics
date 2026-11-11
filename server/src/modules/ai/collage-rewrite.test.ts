@@ -7,7 +7,6 @@ import {
   buildSourceText,
   COLLAGE_REWRITE_FRAME,
   pickStyleExamples,
-  REWRITE_JOB,
   stripModelWrapper,
 } from '~/modules/ai/collage-rewrite';
 import type { CollageSlotStored } from '~/modules/lyrics/track-assemble';
@@ -104,13 +103,15 @@ describe('stripModelWrapper', () => {
 });
 
 describe('сборка запроса', () => {
-  test('ориентир артистов между рамкой и задачей, промпт автора его не заменяет', () => {
-    expect(buildRewriteSystem('  ')).toBe(
-      `${COLLAGE_REWRITE_FRAME}\n\n${ARTIST_ORIENTATION}\n\n${REWRITE_JOB}`
-    );
-    expect(buildRewriteSystem('жёстко')).toBe(
-      `${COLLAGE_REWRITE_FRAME}\n\n${ARTIST_ORIENTATION}\n\nПромпт автора:\nжёстко\n\n${REWRITE_JOB}`
-    );
+  test('в системе только правила редактора', () => {
+    const system = buildRewriteSystem();
+
+    expect(system).toBe(COLLAGE_REWRITE_FRAME);
+    expect(system).toContain('Сдержанно');
+    expect(system).toContain('Активно');
+    expect(system).toContain('Жёстко');
+    expect(system).not.toContain('Промпт автора');
+    expect(system).not.toContain(ARTIST_ORIENTATION);
   });
 
   test('в ориентире есть все названные артисты', () => {
@@ -163,20 +164,29 @@ describe('сборка запроса', () => {
     }
   });
 
-  test('тема и примеры попадают в запрос только когда есть', () => {
+  test('тема, предпочтения и заметки не объявлены эталоном', () => {
     const bare = buildRewriteUser({
       theme: null,
+      authorPrompt: '  ',
       examples: [],
-      sourceText: '[Хук]\nх',
+      sections: [{ label: 'Хук', text: 'х', artists: [], relaxed: false }],
     });
     expect(bare).toBe('Склейка для правки:\n[Хук]\nх');
 
     const full = buildRewriteUser({
       theme: 'бросил работу',
+      authorPrompt: 'не трогай слабое',
       examples: ['a', 'b'],
-      sourceText: '[Хук]\nх',
+      sections: [{ label: 'Хук', text: 'х', artists: [], relaxed: false }],
     });
     expect(full).toContain('Тема трека: бросил работу');
+    expect(full).toContain('Творческие предпочтения автора');
+    expect(full).toContain('не трогай слабое');
+    expect(full).toContain(
+      'Дополнительный авторский материал.\nИспользуй его как источник идей и образов, но не считай образцом качества или ограничением стиля:'
+    );
     expect(full).toContain('a\n---\nb');
+    expect(full).not.toContain('Мои эталоны');
+    expect(buildRewriteSystem()).not.toContain('не трогай слабое');
   });
 });
