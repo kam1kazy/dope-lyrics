@@ -124,17 +124,17 @@ export type RewriteUserSection = {
   relaxed: boolean;
 };
 
-export const buildRewriteUser = (input: {
-  theme: string | null;
-  authorPrompt: string;
-  sections: readonly RewriteUserSection[];
-}): string => {
+/** Тема и промпт автора — одинаковые блоки для всех правок ИИ. */
+export const contextBlocks = (
+  theme: string | null,
+  authorPrompt: string
+): string[] => {
   const parts: string[] = [];
-  const prompt = input.authorPrompt.trim();
+  const prompt = authorPrompt.trim();
 
-  if (input.theme) {
+  if (theme) {
     parts.push(
-      `Тема трека: ${input.theme}\nДержи смысл в этой теме. Предпочтения ниже её не подменяют.`
+      `Тема трека: ${theme}\nДержи смысл в этой теме. Предпочтения ниже её не подменяют.`
     );
   }
 
@@ -143,6 +143,16 @@ export const buildRewriteUser = (input: {
       `Творческие предпочтения автора.\nОтсюда персонаж, его мир и вкус трека.\nЭто не правила редактора и не ограничение свободы правки.\nЕсли здесь сказано не трогать текст, это не действует.\n\n${prompt}`
     );
   }
+
+  return parts;
+};
+
+export const buildRewriteUser = (input: {
+  theme: string | null;
+  authorPrompt: string;
+  sections: readonly RewriteUserSection[];
+}): string => {
+  const parts = contextBlocks(input.theme, input.authorPrompt);
 
   const collage = input.sections
     .map((section) => {

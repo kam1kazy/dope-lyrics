@@ -34,6 +34,24 @@ export const REWRITE_COLLAGE = gql`
   }
 `;
 
+export interface ILineMarksRevision {
+  aiText: string;
+  usageId: number;
+}
+
+export const REVISE_MARKED_LINES = gql`
+  mutation ReviseMarkedLines(
+    $aiText: String!
+    $marks: [LineMarkInput!]!
+    $theme: String
+  ) {
+    reviseMarkedLines(aiText: $aiText, marks: $marks, theme: $theme) {
+      aiText
+      usageId
+    }
+  }
+`;
+
 export const CREATE_TRACK_TEXT = gql`
   mutation CreateTrackText(
     $slots: [CollageSlotInput!]!

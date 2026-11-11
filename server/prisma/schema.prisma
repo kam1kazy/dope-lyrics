@@ -257,6 +257,7 @@ enum AiUsageKind {
   COLLAGE_REWRITE
   PROMPT_META
   REFERENCE_SELECT
+  LINE_MARKS
 }
 
 enum AiUsageStatus {

@@ -12,6 +12,7 @@
       "Bash(git push *)",
       "Bash(git pull *)",
       "Bash(git merge *)",
+      "Bash(git commit *)"
     ],
     "deny": [
       "Read(./**/.env)",
