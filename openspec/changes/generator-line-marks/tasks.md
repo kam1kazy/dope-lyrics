@@ -1,7 +1,7 @@
 ## 1. Схема Prisma
 
-- [ ] 1.1 `server/prisma/schema.prisma`: значение `LINE_MARKS` в `enum AiUsageKind`
-- [ ] 1.2 Миграция из `server/`: `bunx prisma migrate dev --create-only --name ai_usage_line_marks`, в SQL `ALTER TYPE "AiUsageKind" ADD VALUE 'LINE_MARKS';`, применить, `bun prisma generate`; папку миграции закоммитить
+- [x] 1.1 `server/prisma/schema.prisma`: значение `LINE_MARKS` в `enum AiUsageKind`
+- [x] 1.2 Миграция из `server/`: `bunx prisma migrate dev --create-only --name ai_usage_line_marks`, в SQL `ALTER TYPE "AiUsageKind" ADD VALUE 'LINE_MARKS';`, применить, `bun prisma generate`; папку миграции закоммитить
 
 ## 2. Сервер: этап «Внести правки»
 
