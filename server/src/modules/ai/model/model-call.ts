@@ -43,6 +43,13 @@ export const callModel = async <T>(
       user: input.user,
       maxTokens: input.maxTokens,
     });
+
+    if (completion.truncated) {
+      throw new AiProviderError(
+        'ИИ оборвал ответ на лимите токенов, попробуйте ещё раз'
+      );
+    }
+
     const value = parse(completion.text);
     const row = await recordUsage({
       ...usage,
