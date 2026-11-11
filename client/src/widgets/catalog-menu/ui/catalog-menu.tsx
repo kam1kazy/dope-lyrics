@@ -23,6 +23,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import { toast } from 'sonner';
 
 import type { ILyric, ILyricCollage, TrackFormQuotas } from '@/entities/lyric';
 import { AiSettingsPanel } from '@/features/ai-settings';
@@ -733,6 +734,14 @@ export function CatalogMenu() {
                         id={selectedTextId}
                         onClose={() => {
                           setSelectedTextId(null);
+                        }}
+                        onApplySettings={(generation) => {
+                          setGeneratorForm(generation.form);
+                          writeGeneratorForm(generation.form);
+                          setHideAdlibs(generation.hideAdlibs);
+                          setGeneratorFilters(generation.filters);
+                          setSelectedTextId(null);
+                          toast.success('Настройки возвращены в генератор');
                         }}
                       />
                     ) : renderedSection === 'generator' ? (
