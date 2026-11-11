@@ -12,13 +12,13 @@
 | UI | shadcn. Меню: список (фильтр «Откуда»), избранное, демки, история, сводка, генератор; внизу — блок пользователя (клик → профиль, ⋮ → «Профиль» / «Выйти»). Экран входа |
 | Фильтры | `lyrics(...)` по тегам, полкам, граням; `sources` только в списке |
 | Склейка | `assembleTrack` / collage / `glueLyrics` / `sliceLyric` |
-| ИИ | «Поправить ИИ» в генераторе (только `OWNER`), polza, рамка **2.0.0** (`server/src/modules/ai/rewrite/frame.ts`). Приёмы артистов по виду: образ, звук, игра слов. Тексты с тремя снимками и «Готово». «Настройки ИИ»: промпт с версиями, расход. Модуль — `ai/{model,prompt,artists,rewrite}`. Прогоны рамки на склейках: `bun run ai:probe --collage <id> -n 5` (ответы в `server/.ai-probe/`) |
+| ИИ | «Поправить ИИ» в генераторе (только `OWNER`), polza, рамка **2.0.0** (`server/src/modules/ai/rewrite/frame.ts`). Приёмы артистов по виду: образ, звук, игра слов. Тексты с тремя снимками и «Готово». «Настройки ИИ»: промпт с версиями, расход. «Внести правки» по пометкам строк (красный / зелёный) — ветка `feat/generator-line-marks`, этап `ai/line-marks/`. Модуль — `ai/{model,prompt,artists,rewrite,line-marks}`. Прогоны рамки на склейках: `bun run ai:probe --collage <id> -n 5` (ответы в `server/.ai-probe/`) |
 | Карусель | catalog/queue; лайки; `isUsed`; оба источника в ленте |
 | Сервер | `bun run import:apple-notes`; бот `/notes` в свой каталог, `/channel` — свой канал. Подкачка — в «Профиле»: свои каналы (у владельца ещё основной чат) читает сеанс владельца через ingest бота (`INGEST_TOKEN`, backend → `telegram-bot:4071`); дубли — по паре чат + `lyric_id` (`Lyrics.chatId`) |
 | Auth | Mini App — `initData`; браузер/PWA — Telegram Login Widget (домен `legoblokk.ru` в BotFather). Сессия `dl_session` httpOnly, ротация при старте, CSRF на `/auth/*`. Роли `OWNER`/`ADMIN`/`USER` — [0009](./decisions/0009-user-auth-roles.md) |
 | Регистрация | По приглашению: `/invite` в боте или блок «Приглашения» в профиле (`ADMIN`/`OWNER`) |
 | Lint | `bun run fix` зелёный в `client/` и `server/` (errors и warnings) |
 | Тулчейн | Postgres **18.6** (`dope-lyrics-db` на 5433). Корень/`client`/`server` — version **0.10.0**. TS 7 — не сейчас |
-| OpenSpec | Активные: `ai-prompt-tabs` (ждёт проверки табов в браузере), `track-text-generation-settings` (не начат). Архив: `2026-11-11-ai-generation-base`, `2026-11-09-profile-page`, `2026-11-09-invite-only-signup`, `2026-11-09-multi-user-catalog`, `2026-09-07-lyric-energy`, `2026-09-07-catalog-stats-dashboard`, … |
+| OpenSpec | Активные: `generator-line-marks` (код готов, ждёт проверки в браузере), `ai-prompt-tabs` (ждёт проверки табов в браузере), `track-text-generation-settings` (не начат). Архив: `2026-11-11-ai-generation-base`, `2026-11-09-profile-page`, `2026-11-09-invite-only-signup`, `2026-11-09-multi-user-catalog`, `2026-09-07-lyric-energy`, `2026-09-07-catalog-stats-dashboard`, … |
 
-База ИИ (дорожка E, шаг 1) закрыта. Дальше — пометки строк в генераторе (OpenSpec), потом по [roadmap E](./roadmap.md).
+База ИИ (дорожка E, шаг 1) закрыта. Пометки строк — код готов в `feat/generator-line-marks`, ждёт проверки автором в браузере. Дальше — по [roadmap E](./roadmap.md).
