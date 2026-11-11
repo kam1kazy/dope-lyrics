@@ -5,10 +5,10 @@
 
 ## 2. Сервер: этап «Внести правки»
 
-- [ ] 2.1 `server/src/modules/ai/line-marks/frame.ts`: `LINE_MARKS_FRAME_VERSION = '1.0.0'`, рамка правки одной строки (ядро, ударная гласная как у соседей, без затычек и быта, не смягчать, не переводить, одна строка на номер, ответ — только JSON `{"lines":[{"n","text"}]}`); без примеров из склеек
-- [ ] 2.2 `server/src/modules/ai/line-marks/request.ts`: проверка меток (индекс в `aiText.split('\n')`, строка непустая, не метка части, есть хотя бы одна красная) с ошибками по-русски; сборка user-сообщения (тема, промпт автора, строки `n | R/G/· | текст`); разбор JSON (`zod`) и сборка итогового текста — замена только красных строк, проверка «у каждой красной есть одна непустая строка без переноса»
-- [ ] 2.3 `server/src/modules/ai/line-marks/request.test.ts`: зелёные, неотмеченные и метки частей не меняются при любом ответе модели; лишние номера отброшены; нет строки для красной, пустая строка, перенос внутри, не JSON — ошибка; метка на `[Хук]` и пустой строке — ошибка; число строк прежнее
-- [ ] 2.4 `server/src/modules/ai/line-marks/line-marks.service.ts`: `reviseMarkedLines(userId, { aiText, marks, theme })` — `isAiConfigured`, проверки из 2.2, текущий промпт (`prompt/ai-prompt.service.ts`), `callModel({ kind: 'LINE_MARKS', frameVersion: LINE_MARKS_FRAME_VERSION, … }, parse)`; вернуть `{ aiText, usageId }`
+- [x] 2.1 `server/src/modules/ai/line-marks/frame.ts`: `LINE_MARKS_FRAME_VERSION = '1.0.0'`, рамка правки одной строки (ядро, ударная гласная как у соседей, без затычек и быта, не смягчать, не переводить, одна строка на номер, ответ — только JSON `{"lines":[{"n","text"}]}`); без примеров из склеек
+- [x] 2.2 `server/src/modules/ai/line-marks/request.ts`: проверка меток (индекс в `aiText.split('\n')`, строка непустая, не метка части, есть хотя бы одна красная) с ошибками по-русски; сборка user-сообщения (тема, промпт автора, строки `n | R/G/· | текст`); разбор JSON (`zod`) и сборка итогового текста — замена только красных строк, проверка «у каждой красной есть одна непустая строка без переноса»
+- [x] 2.3 `server/src/modules/ai/line-marks/request.test.ts`: зелёные, неотмеченные и метки частей не меняются при любом ответе модели; лишние номера отброшены; нет строки для красной, пустая строка, перенос внутри, не JSON — ошибка; метка на `[Хук]` и пустой строке — ошибка; число строк прежнее
+- [x] 2.4 `server/src/modules/ai/line-marks/line-marks.service.ts`: `reviseMarkedLines(userId, { aiText, marks, theme })` — `isAiConfigured`, проверки из 2.2, текущий промпт (`prompt/ai-prompt.service.ts`), `callModel({ kind: 'LINE_MARKS', frameVersion: LINE_MARKS_FRAME_VERSION, … }, parse)`; вернуть `{ aiText, usageId }`
 
 ## 3. Контракт GraphQL
 
