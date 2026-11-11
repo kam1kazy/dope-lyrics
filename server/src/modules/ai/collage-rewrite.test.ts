@@ -1,6 +1,9 @@
 import { describe, expect, test } from 'bun:test';
 
-import { ARTIST_ORIENTATION } from '~/modules/ai/artist-orientation';
+import {
+  ARTIST_ORIENTATION,
+  rankArtistCandidates,
+} from '~/modules/ai/artist-orientation';
 import {
   buildRewriteSystem,
   buildRewriteUser,
@@ -109,9 +112,25 @@ describe('сборка запроса', () => {
     expect(system).toBe(COLLAGE_REWRITE_FRAME);
     expect(system).toContain('готовый рэп-трек');
     expect(system).toContain(
-      'Строка не остаётся только потому, что она уже написана'
+      'Строка не остаётся только потому, что написана, и не уходит только потому, что странная'
     );
+    expect(system).toContain('Образ с подтекстом уже кадр');
+    expect(system).toContain(
+      'Оставить строку — не значит оставить все её слова'
+    );
+    expect(system).toContain('Не своди текст к парным двустишиям');
+    expect(system).toContain('Ради рифмы её не выбрасывай');
+    expect(system).not.toContain('читается из поступка');
     expect(system).toContain('не «я люблю тебя»');
+    expect(system).toContain('Герой — персонаж, не исповедь');
+    expect(system).toContain('Флекс — способ думать, не список брендов');
+    expect(system).toContain('Абсурд разрешён');
+    expect(system).toContain('Дежурный атрибут рэпера');
+    expect(system).toContain('Литературную метафору не придумывай');
+    expect(system).toContain('Повтор в хуке меняет оттенок');
+    expect(system).not.toContain('Чужой образ жизни не подставляй');
+    expect(system).not.toContain('Новую тему не открывай');
+    expect(system).not.toContain('dark trap');
     expect(system).toContain('«быть / любить»');
     expect(system).not.toContain('Каждое четверостишие держит свою мысль');
     expect(system).not.toContain('Смысл строки можно сдвинуть');
@@ -194,6 +213,7 @@ describe('сборка запроса', () => {
     });
     expect(full).toContain('Тема трека: бросил работу');
     expect(full).toContain('Творческие предпочтения автора');
+    expect(full).toContain('Отсюда персонаж, его мир и вкус трека');
     expect(full).toContain('не трогай слабое');
     expect(full).toContain(
       'Дополнительный авторский материал.\nИспользуй его как источник идей и образов, но не считай образцом качества или ограничением стиля:'
@@ -201,5 +221,29 @@ describe('сборка запроса', () => {
     expect(full).toContain('a\n---\nb');
     expect(full).not.toContain('Мои эталоны');
     expect(buildRewriteSystem()).not.toContain('не трогай слабое');
+  });
+
+  test('в части три приёма с подписью вида', () => {
+    const { artists, relaxed } = rankArtistCandidates({
+      moods: ['LONGING'],
+      energies: ['QUIET'],
+      deliveries: ['TUNE'],
+    });
+
+    const user = buildRewriteUser({
+      theme: null,
+      authorPrompt: '',
+      examples: [],
+      sections: [{ label: 'Хук', text: 'х', artists, relaxed }],
+    });
+    const cardLines = user.split('\n').filter((line) => line.startsWith('- '));
+
+    expect(cardLines).toHaveLength(3);
+    expect(cardLines.some((line) => line.startsWith('- образ · '))).toBe(true);
+    expect(cardLines.some((line) => line.startsWith('- звук · '))).toBe(true);
+    expect(cardLines.some((line) => line.startsWith('- игра слов · '))).toBe(
+      true
+    );
+    expect(user).toContain('приём на образ, на звук и на игру слов');
   });
 });

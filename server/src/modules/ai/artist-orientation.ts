@@ -4,10 +4,14 @@ import type {
   LyricMood,
 } from '~/modules/lyrics/lyric-facets';
 
+/** TONE — настроение и форма; в правку не уходит, остальные — по одному на часть. */
+export type TechniqueKind = 'IMAGE' | 'SOUND' | 'WORDPLAY' | 'TONE';
+
 export type ArtistTechnique = {
   id: string;
   label: string;
   instruction: string;
+  kind: TechniqueKind;
 };
 
 export type ArtistProfile = {
@@ -38,9 +42,113 @@ const profile = (
       throw new Error(`Нет инструкции приёма ${techniqueId}`);
     }
 
-    return { id: techniqueId, label, instruction };
+    return {
+      id: techniqueId,
+      label,
+      instruction,
+      kind: TECHNIQUE_KIND.get(techniqueId) ?? 'TONE',
+    };
   }),
 });
+
+export const PICKED_KINDS = ['IMAGE', 'SOUND', 'WORDPLAY'] as const;
+
+type PickedKind = (typeof PICKED_KINDS)[number];
+
+/** Вид приёма. Чего нет в списках — TONE. */
+export const TECHNIQUES_BY_KIND: Record<PickedKind, readonly string[]> = {
+  IMAGE: [
+    'paranoid-luxury',
+    'love-as-trip',
+    'color-over-everyday',
+    'night-psychedelia',
+    'atmosphere-over-story',
+    'luxury-as-nightmare',
+    'dark-carnival',
+    'cinematic-cold',
+    'claustrophobia',
+    'cold-horror',
+    'baroque-guilt',
+    'quiet-intimacy',
+    'late-night-air',
+    'raw-cold',
+    'dystopia-and-tenderness',
+    'everyday-without-moral',
+    'few-gestures',
+    'night-city',
+    'soft-night',
+    'chamber',
+    'unchewed-metaphor',
+    'pain-from-life',
+    'gothic-and-tenderness',
+    'rain-and-fatigue',
+    'insomnia-on-the-road',
+    'pretty-unreal-dark',
+    'smoke-and-unhurried',
+    'fashion-and-decay',
+    'opium-night',
+    'social-critique',
+    'mythic-images',
+    'industrial-metal',
+    'claustrophobic',
+    'image-as-story',
+    'tenderness-and-rot',
+    'sleep-and-illness',
+    'loneliness',
+    'rotting-fairytale',
+  ],
+  SOUND: [
+    'autotune-as-feeling',
+    'short-repeat',
+    'sung-line',
+    'adlib-as-rhythm',
+    'whisper-and-scream',
+    'hit-over-rhyme',
+    'melody-over-punch',
+    'odd-rhythm',
+    'dense-internal-rhyme',
+    'complex-still-musical',
+    'melodic-slang',
+    'stretched-vowel',
+    'closer-to-singing',
+    'fragment-as-style',
+    'night-trill',
+    'adlib-slang-hit',
+    'soft-melodic-trap',
+    'laid-back-flow',
+    'foreign-word-texture',
+    'surgical-flow',
+    'noise-as-meaning',
+    'melody-near-scream',
+    'rock-inside-rap',
+    'bare-melody',
+    'melody-before-text',
+  ],
+  WORDPLAY: [
+    'short-over-argument',
+    'self-irony',
+    'irony-keeps-anger',
+    'bookish-hit',
+    'liveliness-over-grammar',
+    'irony-not-confession',
+    'bookish-in-street-speech',
+    'wild-punch',
+    'rare-word',
+    'language-fragment',
+    'crooked-beauty',
+    'dark-poetry',
+    'high-to-slang',
+    'dirty-punch',
+    'short-hard-hit',
+    'addiction-and-love',
+  ],
+};
+
+const TECHNIQUE_KIND = new Map<string, TechniqueKind>(
+  PICKED_KINDS.flatMap((kind) =>
+    TECHNIQUES_BY_KIND[kind].map((id) => [id, kind] as const)
+  )
+);
 
 /** Как применить приём в строке. Подпись остаётся короткой, в редактор идёт инструкция. */
 const TECHNIQUE_INSTRUCTIONS: Record<string, string> = {
@@ -663,7 +771,7 @@ export const ARTIST_ORIENTATION = [
   ...ARTIST_PROFILES.map(artistLine),
 ].join('\n');
 
-export const CANDIDATE_LIMIT = 6;
+export const CANDIDATE_LIMIT = 3;
 export const CANDIDATE_FLOOR = 3;
 
 export type RankedCandidates = {
@@ -709,6 +817,30 @@ const spreadArtists = (count: number): ArtistProfile[] => {
   return picked;
 };
 
+/** По одному приёму образа, звука и wordplay: первый у ближайшего артиста, у кого такой есть. */
+const pickByKind = (
+  ordered: readonly ArtistProfile[]
+): readonly ArtistProfile[] => {
+  const chosen = new Map<string, ArtistTechnique[]>();
+
+  for (const kind of PICKED_KINDS) {
+    for (const artist of ordered) {
+      const technique = artist.techniques.find((item) => item.kind === kind);
+      if (!technique) {
+        continue;
+      }
+
+      chosen.set(artist.id, [...(chosen.get(artist.id) ?? []), technique]);
+      break;
+    }
+  }
+
+  return ordered.flatMap((artist) => {
+    const techniques = chosen.get(artist.id);
+    return techniques ? [{ ...artist, techniques }] : [];
+  });
+};
+
 /** Несколько ближайших карточек. Пустые грани не разворачивают весь каталог. */
 export const rankArtistCandidates = (facets: {
   moods: readonly string[];
@@ -726,18 +858,23 @@ export const rankArtistCandidates = (facets: {
   const positive = ranked.filter((item) => item.score > 0);
 
   if (positive.length === 0) {
-    return { artists: spreadArtists(4), relaxed: true };
+    const spread = spreadArtists(CANDIDATE_LIMIT);
+    const rest = ARTIST_PROFILES.filter((artist) => !spread.includes(artist));
+
+    return { artists: pickByKind([...spread, ...rest]), relaxed: true };
   }
 
-  const count =
-    positive.length >= CANDIDATE_FLOOR
-      ? Math.min(CANDIDATE_LIMIT, positive.length)
-      : CANDIDATE_FLOOR;
-
   return {
-    artists: ranked.slice(0, count).map((item) => item.artist),
+    artists: pickByKind(ranked.map((item) => item.artist)),
     relaxed: positive.length < CANDIDATE_FLOOR,
   };
+};
+
+const KIND_LABELS: Record<TechniqueKind, string> = {
+  IMAGE: 'образ',
+  SOUND: 'звук',
+  WORDPLAY: 'игра слов',
+  TONE: 'тон',
 };
 
 /** Карточки для редактора: id и инструкция, без пересказа. */
@@ -746,7 +883,10 @@ export const formatArtistCards = (artists: readonly ArtistProfile[]): string =>
     .map((artist) =>
       [
         artist.name,
-        ...artist.techniques.map((item) => `- ${item.id}: ${item.instruction}`),
+        ...artist.techniques.map(
+          (item) =>
+            `- ${KIND_LABELS[item.kind]} · ${item.id}: ${item.instruction}`
+        ),
       ].join('\n')
     )
     .join('\n\n');
