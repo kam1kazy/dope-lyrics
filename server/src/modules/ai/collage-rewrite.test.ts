@@ -109,8 +109,12 @@ describe('сборка запроса', () => {
     expect(system).toBe(COLLAGE_REWRITE_FRAME);
     expect(system).toContain('готовый рэп-трек');
     expect(system).toContain(
-      'Строка не остаётся только потому, что она уже написана'
+      'Строка не остаётся только потому, что написана, и не уходит только потому, что странная'
     );
+    expect(system).toContain('Образ с подтекстом уже кадр');
+    expect(system).toContain('Не своди текст к парным двустишиям');
+    expect(system).toContain('Ради рифмы её не выбрасывай');
+    expect(system).not.toContain('читается из поступка');
     expect(system).toContain('не «я люблю тебя»');
     expect(system).toContain('Герой — персонаж, не исповедь');
     expect(system).toContain('Флекс — способ думать, не список брендов');
