@@ -26,7 +26,13 @@ describe('рамка правки', () => {
     expect(system).toContain('Не своди текст к парным двустишиям');
     expect(system).toContain('Ради рифмы её не выбрасывай');
     expect(system).not.toContain('читается из поступка');
-    expect(system).toContain('не «я люблю тебя»');
+    expect(system).toContain('вопрос к себе не становится признанием любви');
+    expect(system).not.toContain('Кто ты');
+    expect(system).not.toContain('авторский материал');
+    expect(system).toContain('Не дописывай обстановку и бытовое действие');
+    expect(system).toContain(
+      'на одной ударной гласной в концах всех четырёх строк'
+    );
     expect(system).toContain('Герой — персонаж, не исповедь');
     expect(system).toContain('Флекс — способ думать, не список брендов');
     expect(system).toContain('Абсурд разрешён');
