@@ -7,6 +7,7 @@ import {
   getTrackText,
   listTrackTexts,
   markTrackTextDone,
+  serializeGeneration,
   updateTrackText,
 } from '~/modules/track-texts/track-texts.service';
 
@@ -96,6 +97,56 @@ describe('тексты из генератора', () => {
     expect(created.text).toBe(created.aiText);
     expect(created.theme).toBe('бросил работу');
     expect(created.finalText).toBeNull();
+  });
+
+  test('настройки генерации сохраняются и читаются, без них null', async () => {
+    const generation = JSON.stringify({
+      form: { verse: 2, hook: 1 },
+      hideAdlibs: true,
+      filters: { tags: ['грусть'] },
+    });
+    const withSettings = await createTrackText(userAId, {
+      slots: slotsFor(lyricId),
+      aiText: 'текст',
+      generation,
+    });
+
+    const stored = (await getTrackText(userAId, withSettings.id)).generation;
+
+    expect(
+      JSON.parse(serializeGeneration(withSettings.generation) ?? 'null')
+    ).toEqual(JSON.parse(generation));
+    expect(stored).toEqual(JSON.parse(generation));
+
+    const without = await createTrackText(userAId, {
+      slots: slotsFor(lyricId),
+      aiText: 'текст',
+    });
+    expect(without.generation).toBeNull();
+    expect(serializeGeneration(without.generation)).toBeNull();
+
+    await deleteTrackText(userAId, withSettings.id);
+    await deleteTrackText(userAId, without.id);
+  });
+
+  test('мусорные и слишком большие настройки отвергаются', async () => {
+    const base = { slots: slotsFor(lyricId), aiText: 'текст' };
+
+    await expect(
+      createTrackText(userAId, { ...base, generation: 'не json' })
+    ).rejects.toThrow('некорректный JSON');
+    await expect(
+      createTrackText(userAId, { ...base, generation: '[1,2]' })
+    ).rejects.toThrow('должны быть объектом');
+    await expect(
+      createTrackText(userAId, { ...base, generation: '"строка"' })
+    ).rejects.toThrow('должны быть объектом');
+    await expect(
+      createTrackText(userAId, {
+        ...base,
+        generation: JSON.stringify({ filters: 'x'.repeat(9000) }),
+      })
+    ).rejects.toThrow('слишком большие');
   });
 
   test('правка меняет рабочую версию, снимки остаются', async () => {

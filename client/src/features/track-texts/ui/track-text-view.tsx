@@ -1,7 +1,14 @@
 'use client';
 
 import { useMutation, useQuery } from '@apollo/client/react';
-import { Check, Highlighter, Save, Trash2, X } from 'lucide-react';
+import {
+  Check,
+  Highlighter,
+  Save,
+  SlidersHorizontal,
+  Trash2,
+  X,
+} from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -30,6 +37,11 @@ import {
   TRACK_TEXTS,
   UPDATE_TRACK_TEXT,
 } from '../api/queries';
+import {
+  parseTrackTextGeneration,
+  summarizeTrackTextGeneration,
+  type TrackTextGeneration,
+} from '../lib/generation';
 import { buildSeam, SEAM_STORAGE_KEY } from '../lib/seam';
 import { trackTextTitle } from '../lib/title';
 
@@ -81,9 +93,11 @@ function SeamText({
 export function TrackTextView({
   id,
   onClose,
+  onApplySettings,
 }: {
   id: number;
   onClose: () => void;
+  onApplySettings: (generation: TrackTextGeneration) => void;
 }) {
   const { data, loading, error } = useQuery<{ trackText: ITrackText }>(
     TRACK_TEXT,
@@ -136,6 +150,8 @@ export function TrackTextView({
     );
   }
 
+  const generation = parseTrackTextGeneration(row.generation);
+  const summary = generation ? summarizeTrackTextGeneration(generation) : null;
   const value = draft ?? row.text;
   const dirty = value !== row.text;
 
@@ -194,6 +210,31 @@ export function TrackTextView({
           </Button>
         </Hint>
       </div>
+
+      {generation && summary ? (
+        <div className="flex items-start gap-2">
+          <p className="text-muted-foreground min-w-0 flex-1 text-xs">
+            {summary.form} · {summary.adlibs} ·{' '}
+            {summary.filters.length > 0
+              ? summary.filters.join(' · ')
+              : 'фильтров нет'}
+          </p>
+          <Hint label="Применить в генератор">
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              className="size-8 shrink-0"
+              aria-label="Применить в генератор"
+              onClick={() => {
+                onApplySettings(generation);
+              }}
+            >
+              <SlidersHorizontal className="size-4" />
+            </Button>
+          </Hint>
+        </div>
+      ) : null}
 
       <div className="flex min-h-0 flex-1 flex-col gap-3">
         <div className="flex items-center gap-4">

@@ -12,6 +12,7 @@ export interface ITrackText extends ITrackTextItem {
   sourceText: string;
   aiText: string;
   finalText: string | null;
+  generation: string | null;
 }
 
 const TRACK_TEXT_FIELDS = `
@@ -23,6 +24,7 @@ const TRACK_TEXT_FIELDS = `
   text
   finalText
   doneAt
+  generation
 `;
 
 export const TRACK_TEXTS = gql`

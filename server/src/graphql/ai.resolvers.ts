@@ -26,6 +26,7 @@ import {
   getTrackText,
   listTrackTexts,
   markTrackTextDone,
+  serializeGeneration,
   updateTrackText,
 } from '~/modules/track-texts/track-texts.service';
 
@@ -68,6 +69,7 @@ const trackTextDto = (row: Awaited<ReturnType<typeof getTrackText>>) => ({
   text: row.text,
   finalText: row.finalText,
   doneAt: iso(row.doneAt),
+  generation: serializeGeneration(row.generation),
 });
 
 export const aiQueryResolvers = {
