@@ -115,6 +115,7 @@ describe('сборка запроса', () => {
     expect(system).toContain('Герой — персонаж, не исповедь');
     expect(system).toContain('Флекс — способ думать, не список брендов');
     expect(system).toContain('Абсурд разрешён');
+    expect(system).toContain('Дежурный атрибут рэпера');
     expect(system).toContain('Литературную метафору не придумывай');
     expect(system).toContain('Повтор в хуке меняет оттенок');
     expect(system).not.toContain('Чужой образ жизни не подставляй');
