@@ -159,11 +159,20 @@ export const aiMutationResolvers = {
     args: { text: string },
     context: GraphQLContext
   ) => suggestPromptMeta(requireAi(context).id, args.text),
-  rewriteCollage: (
+  rewriteCollage: async (
     _parent: unknown,
     args: RewriteCollageInput,
     context: GraphQLContext
-  ) => rewriteCollage(requireAi(context).id, args),
+  ) => {
+    try {
+      return await rewriteCollage(requireAi(context).id, args);
+    } catch (error: unknown) {
+      console.error('[rewriteCollage] Error:', error);
+      throw new GraphQLError(
+        error instanceof Error ? error.message : 'Ошибка при переписывании'
+      );
+    }
+  },
   reviseMarkedLines: (
     _parent: unknown,
     args: ReviseMarkedLinesInput,
