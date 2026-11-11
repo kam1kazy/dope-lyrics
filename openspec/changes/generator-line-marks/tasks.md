@@ -12,8 +12,8 @@
 
 ## 3. Контракт GraphQL
 
-- [ ] 3.1 `server/src/graphql/typeDefs.ts`: `enum LineMark { RED GREEN }`, `input LineMarkInput { line: Int!, mark: LineMark! }`, `type LineMarksRevision { aiText: String!, usageId: Int! }`, мутация `reviseMarkedLines(aiText: String!, marks: [LineMarkInput!]!, theme: String): LineMarksRevision!`
-- [ ] 3.2 `server/src/graphql/ai.resolvers.ts`: резолвер через `requireAi` (`ai:use`), вызов `reviseMarkedLines`; `bun run typecheck` и `bun test src/modules/ai` в `server/` зелёные
+- [x] 3.1 `server/src/graphql/typeDefs.ts`: `enum LineMark { RED GREEN }`, `input LineMarkInput { line: Int!, mark: LineMark! }`, `type LineMarksRevision { aiText: String!, usageId: Int! }`, мутация `reviseMarkedLines(aiText: String!, marks: [LineMarkInput!]!, theme: String): LineMarksRevision!`
+- [x] 3.2 `server/src/graphql/ai.resolvers.ts`: резолвер через `requireAi` (`ai:use`), вызов `reviseMarkedLines`; `bun run typecheck` и `bun test src/modules/ai` в `server/` зелёные
 
 ## 4. Клиент: компонент «было / стало»
 

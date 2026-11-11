@@ -373,6 +373,21 @@ export const typeDefinitions = /* GraphQL */ `
     usageId: Int!
   }
 
+  enum LineMark {
+    RED
+    GREEN
+  }
+
+  input LineMarkInput {
+    line: Int!
+    mark: LineMark!
+  }
+
+  type LineMarksRevision {
+    aiText: String!
+    usageId: Int!
+  }
+
   type TrackText {
     id: Int!
     createdAt: String!
@@ -603,6 +618,11 @@ export const typeDefinitions = /* GraphQL */ `
       filter: LyricPoolFilter
       hideAdlibs: Boolean
     ): CollageRewrite!
+    reviseMarkedLines(
+      aiText: String!
+      marks: [LineMarkInput!]!
+      theme: String
+    ): LineMarksRevision!
     createTrackText(
       slots: [CollageSlotInput!]!
       theme: String
