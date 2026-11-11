@@ -2,7 +2,11 @@ import { describe, expect, test } from 'bun:test';
 
 import {
   ARTIST_PROFILES,
+  type ArtistProfile,
+  catalogForSelector,
+  PICKED_KINDS,
   rankArtistCandidates,
+  TECHNIQUES_BY_KIND,
 } from '~/modules/ai/artist-orientation';
 import {
   orientationFromSelection,
@@ -151,6 +155,11 @@ describe('карточки артистов', () => {
   });
 });
 
+const kindsOf = (artists: readonly ArtistProfile[]): string[] =>
+  artists
+    .flatMap((artist) => artist.techniques.map((item) => item.kind))
+    .sort();
+
 describe('rankArtistCandidates', () => {
   test('по тоске и тихой подаче не отдаёт весь каталог', () => {
     const { artists, relaxed } = rankArtistCandidates({
@@ -161,8 +170,8 @@ describe('rankArtistCandidates', () => {
     const ids = artists.map((artist) => artist.id);
 
     expect(relaxed).toBe(false);
-    expect(artists.length).toBeGreaterThanOrEqual(3);
-    expect(artists.length).toBeLessThanOrEqual(6);
+    expect(kindsOf(artists)).toEqual([...PICKED_KINDS].sort());
+    expect(artists.length).toBeLessThanOrEqual(3);
     expect(ids).toContain('mayot');
     expect(ids).not.toContain('slipknot');
   });
@@ -175,7 +184,17 @@ describe('rankArtistCandidates', () => {
     });
 
     expect(relaxed).toBe(true);
-    expect(artists).toHaveLength(4);
+    expect(kindsOf(artists)).toEqual([...PICKED_KINDS].sort());
     expect(artists).not.toHaveLength(ARTIST_PROFILES.length);
+  });
+
+  test('вид приёма размечен один раз и только у живых приёмов', () => {
+    const tagged = PICKED_KINDS.flatMap((kind) => TECHNIQUES_BY_KIND[kind]);
+    const catalog = catalogForSelector();
+
+    expect(new Set(tagged).size).toBe(tagged.length);
+    for (const id of tagged) {
+      expect(catalog).toContain(`${id}:`);
+    }
   });
 });
