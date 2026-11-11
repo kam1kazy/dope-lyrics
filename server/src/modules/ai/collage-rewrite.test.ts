@@ -108,6 +108,9 @@ describe('сборка запроса', () => {
 
     expect(system).toBe(COLLAGE_REWRITE_FRAME);
     expect(system).toContain('готовый рэп-трек');
+    expect(system).toContain('Каждое четверостишие держит свою мысль');
+    expect(system).toContain('не «я люблю тебя»');
+    expect(system).not.toContain('Смысл строки можно сдвинуть');
     expect(system).toContain('Буква в букву оставь только находку');
     expect(system).toContain('Повтор буквы — протянуть и пропеть звук');
     expect(system).toContain('Заглавная внутри слова — ударение или акцент');
