@@ -1,24 +1,47 @@
 export type RewriteBlock = {
   before: string;
   after: string;
+  /** Индекс первой строки абзаца «после» в `after.split('\n')`; `-1`, если абзаца нет. */
+  afterLine: number;
 };
 
-const splitParagraphs = (text: string): string[] =>
-  text.split(/\n{2,}/).filter((paragraph) => paragraph.trim() !== '');
+type Paragraph = { text: string; line: number };
+
+const countLines = (text: string): number => text.split('\n').length - 1;
+
+const splitParagraphs = (text: string): Paragraph[] => {
+  const paragraphs: Paragraph[] = [];
+  let start = 0;
+
+  const push = (end: number) => {
+    const chunk = text.slice(start, end);
+    if (chunk.trim() !== '') {
+      paragraphs.push({ text: chunk, line: countLines(text.slice(0, start)) });
+    }
+  };
+
+  for (const match of text.matchAll(/\n{2,}/g)) {
+    push(match.index);
+    start = match.index + match[0].length;
+  }
+  push(text.length);
+
+  return paragraphs;
+};
 
 const sectionLabel = (paragraph: string): string | null =>
   /^\[([^\]]+)\]/.exec(paragraph)?.[1] ?? null;
 
 type Section = {
   label: string;
-  paragraphs: string[];
+  paragraphs: Paragraph[];
 };
 
 const sectionsOf = (text: string): Section[] => {
   const sections: Section[] = [];
 
   for (const paragraph of splitParagraphs(text)) {
-    const label = sectionLabel(paragraph);
+    const label = sectionLabel(paragraph.text);
     if (label !== null) {
       sections.push({ label, paragraphs: [paragraph] });
       continue;
@@ -41,8 +64,9 @@ const pairSection = (before: Section, after: Section): RewriteBlock[] => {
 
   for (let index = 0; index < count; index += 1) {
     blocks.push({
-      before: before.paragraphs[index] ?? '',
-      after: after.paragraphs[index] ?? '',
+      before: before.paragraphs[index]?.text ?? '',
+      after: after.paragraphs[index]?.text ?? '',
+      afterLine: after.paragraphs[index]?.line ?? -1,
     });
   }
 
@@ -58,7 +82,7 @@ export const pairRewriteBlocks = (
   const right = sectionsOf(after);
 
   if (left.length === 0 && right.length === 0) {
-    return [{ before: '', after: '' }];
+    return [{ before: '', after: '', afterLine: -1 }];
   }
 
   const count = Math.max(left.length, right.length);
