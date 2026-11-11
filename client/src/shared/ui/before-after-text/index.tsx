@@ -232,8 +232,7 @@ export function BeforeAfterText({
     [before, after]
   );
 
-  const shownSide = (index: number): Side =>
-    pinned.get(index) ?? side;
+  const shownSide = (index: number): Side => pinned.get(index) ?? side;
 
   const cancelHold = () => {
     if (holdTimer.current) {
