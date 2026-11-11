@@ -2,8 +2,7 @@ import { describe, expect, test } from 'bun:test';
 
 import {
   ARTIST_ORIENTATION,
-  ARTIST_PROFILES,
-  TECHNIQUES_PER_CARD,
+  rankArtistCandidates,
 } from '~/modules/ai/artist-orientation';
 import {
   buildRewriteSystem,
@@ -224,24 +223,27 @@ describe('сборка запроса', () => {
     expect(buildRewriteSystem()).not.toContain('не трогай слабое');
   });
 
-  test('в карточке части не больше двух приёмов', () => {
-    const artist = ARTIST_PROFILES.find(
-      (item) => item.techniques.length > TECHNIQUES_PER_CARD
-    );
-    if (!artist) {
-      throw new Error('Нет карточки с запасом приёмов');
-    }
+  test('в части три приёма с подписью вида', () => {
+    const { artists, relaxed } = rankArtistCandidates({
+      moods: ['LONGING'],
+      energies: ['QUIET'],
+      deliveries: ['TUNE'],
+    });
 
     const user = buildRewriteUser({
       theme: null,
       authorPrompt: '',
       examples: [],
-      sections: [
-        { label: 'Хук', text: 'х', artists: [artist], relaxed: false },
-      ],
+      sections: [{ label: 'Хук', text: 'х', artists, relaxed }],
     });
     const cardLines = user.split('\n').filter((line) => line.startsWith('- '));
 
-    expect(cardLines).toHaveLength(TECHNIQUES_PER_CARD);
+    expect(cardLines).toHaveLength(3);
+    expect(cardLines.some((line) => line.startsWith('- образ · '))).toBe(true);
+    expect(cardLines.some((line) => line.startsWith('- звук · '))).toBe(true);
+    expect(cardLines.some((line) => line.startsWith('- игра слов · '))).toBe(
+      true
+    );
+    expect(user).toContain('приём на образ, на звук и на игру слов');
   });
 });

@@ -9,7 +9,7 @@ import {
   splitGeneratorLines,
 } from '~/modules/lyrics/track-assemble';
 
-export const FRAME_VERSION = 12;
+export const FRAME_VERSION = 13;
 
 const QUATRAIN_LINES = 4;
 const MAX_EXAMPLE_LINES = 8;
@@ -226,7 +226,7 @@ export const buildRewriteUser = (input: {
 
       const note = section.relaxed
         ? 'Прямых совпадений мало. Ниже ближайшие карточки. Возьми один-два приёма, не все.'
-        : 'Ориентиры этой части. Возьми один-два приёма и выполни инструкцию. Чужие строки не копируй.';
+        : 'Ориентиры этой части: приём на образ, на звук и на игру слов. Возьми один-два и выполни инструкцию. Чужие строки не копируй.';
 
       return `${head}\n\n${note}\n${formatArtistCards(section.artists)}`;
     })
