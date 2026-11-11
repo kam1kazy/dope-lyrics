@@ -1,5 +1,18 @@
 {
   "permissions": {
+    "allow": [
+      "Bash(git add *)",
+      "Bash(git ls-remote *)",
+      "Bash(git fetch *)",
+      "Bash(git switch *)",
+      "Bash(git rev-list *)",
+      "Bash(bun install:*)",
+      "Bash(bun i:*)",
+      "Bash(bun add:*)",
+      "Bash(git push *)",
+      "Bash(git pull *)",
+      "Bash(git merge *)",
+    ],
     "deny": [
       "Read(./**/.env)",
       "Read(./**/.env.local)",
@@ -15,20 +28,8 @@
       "Bash(env)",
       "Bash(docker inspect:*)",
       "Bash(docker compose config:*)",
-      "Bash(npm install:*)",
-      "Bash(npm i:*)",
       "Bash(git commit --no-verify:*)",
       "Bash(git push --no-verify:*)"
-    ],
-    "allow": [
-      "Bash(git add *)",
-      "Bash(git ls-remote *)",
-      "Bash(git fetch *)",
-      "Bash(git switch *)",
-      "Bash(git rev-list *)",
-      "Bash(bun install:*)",
-      "Bash(bun i:*)",
-      "Bash(bun add:*)"
     ],
     "ask": [
       "Bash(git push origin main:*)",
