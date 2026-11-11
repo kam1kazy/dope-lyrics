@@ -18,6 +18,7 @@ const PERIODS: { key: keyof IAiUsageSummary; label: string }[] = [
 const KIND_LABELS: Record<string, string> = {
   COLLAGE_REWRITE: 'Правка склейки',
   PROMPT_META: 'Название промпта',
+  LINE_MARKS: 'Правка по пометкам',
   REFERENCE_SELECT: 'Подбор эталона',
 };
 

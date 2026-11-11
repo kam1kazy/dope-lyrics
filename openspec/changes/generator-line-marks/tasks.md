@@ -23,10 +23,10 @@
 
 ## 5. Клиент: генератор
 
-- [ ] 5.1 `client/src/features/catalog-assemble/api/ai-queries.ts`: мутация `REVISE_MARKED_LINES` и типы
-- [ ] 5.2 `client/src/features/catalog-assemble/ui/collage-rewrite-panel.tsx`: состояние `marks`; передать в `BeforeAfterText` `marks` и `onToggleMark` (цикл без метки → красная → зелёная → без метки), убрать `onAfterChange`; «Ещё раз» заменить на «Внести правки» (неактивна без красных, спиннер во время запроса); ответ заменяет `aiText`, снимает красные, оставляет зелёные; ошибка — текст у кнопок, ответ и метки прежние; «Поправить ИИ» сбрасывает метки; «Сохранить в тексты» без меток
-- [ ] 5.3 `client/src/features/ai-settings/ui/usage-tab.tsx`: подпись `LINE_MARKS` — «Правка по пометкам»
-- [ ] 5.4 `bun run typecheck` в `client/`
+- [x] 5.1 `client/src/features/catalog-assemble/api/ai-queries.ts`: мутация `REVISE_MARKED_LINES` и типы
+- [x] 5.2 `client/src/features/catalog-assemble/ui/collage-rewrite-panel.tsx`: состояние `marks`; передать в `BeforeAfterText` `marks` и `onToggleMark` (цикл без метки → красная → зелёная → без метки), убрать `onAfterChange`; «Ещё раз» заменить на «Внести правки» (неактивна без красных, спиннер во время запроса); ответ заменяет `aiText`, снимает красные, оставляет зелёные; ошибка — текст у кнопок, ответ и метки прежние; «Поправить ИИ» сбрасывает метки; «Сохранить в тексты» без меток
+- [x] 5.3 `client/src/features/ai-settings/ui/usage-tab.tsx`: подпись `LINE_MARKS` — «Правка по пометкам»
+- [x] 5.4 `bun run typecheck` в `client/`
 
 ## 6. Проверка и доки
 
