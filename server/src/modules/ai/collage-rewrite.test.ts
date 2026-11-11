@@ -1,6 +1,10 @@
 import { describe, expect, test } from 'bun:test';
 
-import { ARTIST_ORIENTATION } from '~/modules/ai/artist-orientation';
+import {
+  ARTIST_ORIENTATION,
+  ARTIST_PROFILES,
+  TECHNIQUES_PER_CARD,
+} from '~/modules/ai/artist-orientation';
 import {
   buildRewriteSystem,
   buildRewriteUser,
@@ -215,5 +219,26 @@ describe('сборка запроса', () => {
     expect(full).toContain('a\n---\nb');
     expect(full).not.toContain('Мои эталоны');
     expect(buildRewriteSystem()).not.toContain('не трогай слабое');
+  });
+
+  test('в карточке части не больше двух приёмов', () => {
+    const artist = ARTIST_PROFILES.find(
+      (item) => item.techniques.length > TECHNIQUES_PER_CARD
+    );
+    if (!artist) {
+      throw new Error('Нет карточки с запасом приёмов');
+    }
+
+    const user = buildRewriteUser({
+      theme: null,
+      authorPrompt: '',
+      examples: [],
+      sections: [
+        { label: 'Хук', text: 'х', artists: [artist], relaxed: false },
+      ],
+    });
+    const cardLines = user.split('\n').filter((line) => line.startsWith('- '));
+
+    expect(cardLines).toHaveLength(TECHNIQUES_PER_CARD);
   });
 });

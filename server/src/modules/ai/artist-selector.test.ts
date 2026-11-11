@@ -161,8 +161,7 @@ describe('rankArtistCandidates', () => {
     const ids = artists.map((artist) => artist.id);
 
     expect(relaxed).toBe(false);
-    expect(artists.length).toBeGreaterThanOrEqual(3);
-    expect(artists.length).toBeLessThanOrEqual(6);
+    expect(artists).toHaveLength(3);
     expect(ids).toContain('mayot');
     expect(ids).not.toContain('slipknot');
   });
@@ -175,7 +174,7 @@ describe('rankArtistCandidates', () => {
     });
 
     expect(relaxed).toBe(true);
-    expect(artists).toHaveLength(4);
-    expect(artists).not.toHaveLength(ARTIST_PROFILES.length);
+    expect(artists).toHaveLength(3);
+    expect(new Set(artists.map((artist) => artist.moods[0])).size).toBe(3);
   });
 });

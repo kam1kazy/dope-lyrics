@@ -663,8 +663,9 @@ export const ARTIST_ORIENTATION = [
   ...ARTIST_PROFILES.map(artistLine),
 ].join('\n');
 
-export const CANDIDATE_LIMIT = 6;
+export const CANDIDATE_LIMIT = 3;
 export const CANDIDATE_FLOOR = 3;
+export const TECHNIQUES_PER_CARD = 2;
 
 export type RankedCandidates = {
   artists: readonly ArtistProfile[];
@@ -726,7 +727,7 @@ export const rankArtistCandidates = (facets: {
   const positive = ranked.filter((item) => item.score > 0);
 
   if (positive.length === 0) {
-    return { artists: spreadArtists(4), relaxed: true };
+    return { artists: spreadArtists(CANDIDATE_LIMIT), relaxed: true };
   }
 
   const count =
@@ -746,7 +747,9 @@ export const formatArtistCards = (artists: readonly ArtistProfile[]): string =>
     .map((artist) =>
       [
         artist.name,
-        ...artist.techniques.map((item) => `- ${item.id}: ${item.instruction}`),
+        ...artist.techniques
+          .slice(0, TECHNIQUES_PER_CARD)
+          .map((item) => `- ${item.id}: ${item.instruction}`),
       ].join('\n')
     )
     .join('\n\n');
