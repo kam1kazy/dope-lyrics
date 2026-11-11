@@ -107,9 +107,15 @@ describe('сборка запроса', () => {
     const system = buildRewriteSystem();
 
     expect(system).toBe(COLLAGE_REWRITE_FRAME);
-    expect(system).toContain('Сдержанно');
-    expect(system).toContain('Активно');
-    expect(system).toContain('Жёстко');
+    expect(system).toContain('готовый рэп-трек');
+    expect(system).toContain('Буква в букву оставь только находку');
+    expect(system).toContain('Повтор буквы — протянуть и пропеть звук');
+    expect(system).toContain('Заглавная внутри слова — ударение или акцент');
+    expect(system).toContain('Не ставь их в каждую');
+    expect(system).toContain('метки частей');
+    expect(system).not.toContain('Сдержанно');
+    expect(system).not.toContain('Активно');
+    expect(system).not.toContain('Жёстко');
     expect(system).not.toContain('Промпт автора');
     expect(system).not.toContain(ARTIST_ORIENTATION);
   });
@@ -171,7 +177,7 @@ describe('сборка запроса', () => {
       examples: [],
       sections: [{ label: 'Хук', text: 'х', artists: [], relaxed: false }],
     });
-    expect(bare).toBe('Склейка для правки:\n[Хук]\nх');
+    expect(bare).toBe('Склейка, из которой собрать трек:\n[Хук]\nх');
 
     const full = buildRewriteUser({
       theme: 'бросил работу',
