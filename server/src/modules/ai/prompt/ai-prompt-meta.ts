@@ -7,7 +7,7 @@ import {
   isAiConfigured,
 } from '~/modules/ai/model/polza.client';
 
-export const PROMPT_META_FRAME_VERSION = 1;
+export const PROMPT_META_FRAME_VERSION = '0.1.0';
 
 const PROMPT_META_SYSTEM = [
   'Ты придумываешь название и описание для промпта, которым автор управляет ИИ-редактором своих текстов.',

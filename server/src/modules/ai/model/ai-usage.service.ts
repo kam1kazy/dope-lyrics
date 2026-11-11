@@ -24,7 +24,7 @@ export type RecordUsageInput = {
   userId: number;
   kind: AiUsageKind;
   model: string;
-  frameVersion: number;
+  frameVersion: string;
   promptId: number | null;
   tokensIn: number;
   tokensOut: number;

@@ -28,7 +28,7 @@ const { callModel } = await import('~/modules/ai/model/model-call');
 const input = {
   userId: 1,
   kind: 'COLLAGE_REWRITE',
-  frameVersion: 1,
+  frameVersion: '1.0.0',
   promptId: null,
   system: 's',
   user: 'u',

@@ -3,9 +3,14 @@ import { describe, expect, test } from 'bun:test';
 import {
   buildRewriteSystem,
   COLLAGE_REWRITE_FRAME,
+  FRAME_VERSION,
 } from '~/modules/ai/rewrite/frame';
 
 describe('рамка правки', () => {
+  test('версия — MAJOR.MINOR.PATCH', () => {
+    expect(FRAME_VERSION).toMatch(/^\d+\.\d+\.\d+$/);
+  });
+
   test('в системе только правила редактора', () => {
     const system = buildRewriteSystem();
 

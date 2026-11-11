@@ -12,7 +12,7 @@ import {
 export type ModelCallInput = {
   userId: number;
   kind: AiUsageKind;
-  frameVersion: number;
+  frameVersion: string;
   promptId: number | null;
   system: string;
   user: string;
