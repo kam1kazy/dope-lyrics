@@ -12,7 +12,9 @@
       "Bash(git push *)",
       "Bash(git pull *)",
       "Bash(git merge *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(sed -n '1,8p;/^\\\\*\\\\*Дальше\\\\*\\\\*/,$p' docs/tasks/current_task.md)",
+      "Bash(python3 -I -)"
     ],
     "deny": [
       "Read(./**/.env)",
