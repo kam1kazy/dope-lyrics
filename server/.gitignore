@@ -179,3 +179,6 @@ dist
 .idea
 .migrations
 bot-data
+
+# Прогоны ИИ: ответы на склейки автора
+.ai-probe/

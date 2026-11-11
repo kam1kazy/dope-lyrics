@@ -12,7 +12,7 @@
 | UI | shadcn. Меню: список (фильтр «Откуда»), избранное, демки, история, сводка, генератор; внизу — блок пользователя (клик → профиль, ⋮ → «Профиль» / «Выйти»). Экран входа |
 | Фильтры | `lyrics(...)` по тегам, полкам, граням; `sources` только в списке |
 | Склейка | `assembleTrack` / collage / `glueLyrics` / `sliceLyric` |
-| ИИ | «Поправить ИИ» в генераторе (только `OWNER`), polza, рамка **2.0.0** (`server/src/modules/ai/rewrite/frame.ts`). Приёмы артистов по виду: образ, звук, игра слов. Тексты с тремя снимками и «Готово». «Настройки ИИ»: промпт с версиями, расход. Модуль — `ai/{model,prompt,artists,rewrite}` |
+| ИИ | «Поправить ИИ» в генераторе (только `OWNER`), polza, рамка **2.0.0** (`server/src/modules/ai/rewrite/frame.ts`). Приёмы артистов по виду: образ, звук, игра слов. Тексты с тремя снимками и «Готово». «Настройки ИИ»: промпт с версиями, расход. Модуль — `ai/{model,prompt,artists,rewrite}`. Прогоны рамки на склейках: `bun run ai:probe --collage <id> -n 5` (ответы в `server/.ai-probe/`) |
 | Карусель | catalog/queue; лайки; `isUsed`; оба источника в ленте |
 | Сервер | `bun run import:apple-notes`; бот `/notes` в свой каталог, `/channel` — свой канал. Подкачка — в «Профиле»: свои каналы (у владельца ещё основной чат) читает сеанс владельца через ingest бота (`INGEST_TOKEN`, backend → `telegram-bot:4071`); дубли — по паре чат + `lyric_id` (`Lyrics.chatId`) |
 | Auth | Mini App — `initData`; браузер/PWA — Telegram Login Widget (домен `legoblokk.ru` в BotFather). Сессия `dl_session` httpOnly, ротация при старте, CSRF на `/auth/*`. Роли `OWNER`/`ADMIN`/`USER` — [0009](./decisions/0009-user-auth-roles.md) |
