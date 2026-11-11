@@ -4,7 +4,7 @@
 
 ## 1. Схема Prisma
 
-- [ ] 1.1 `server/prisma/schema.prisma`: у `TrackText` поле `generation Json?`. Миграция `bunx prisma migrate dev --name track_text_generation` из `server/`, папку миграции закоммитить вместе с кодом, `bun prisma generate`. Проверка: `bunx prisma migrate status` — «up to date», в миграции только `ADD COLUMN`
+- [x] 1.1 `server/prisma/schema.prisma`: у `TrackText` поле `generation Json?`. Миграция `bunx prisma migrate dev --name track_text_generation` из `server/`, папку миграции закоммитить вместе с кодом, `bun prisma generate`. Проверка: `bunx prisma migrate status` — «up to date», в миграции только `ADD COLUMN`
 
 ## 2. Сервер и GraphQL (контракт)
 

@@ -319,6 +319,8 @@ model TrackText {
   text       String
   finalText  String?
   doneAt     DateTime?
+  /// Снимок настроек генератора на момент сохранения: { form, hideAdlibs, filters }.
+  generation Json?
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
 
