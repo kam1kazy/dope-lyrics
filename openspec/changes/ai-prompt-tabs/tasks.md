@@ -20,6 +20,6 @@
 
 ## 4. Проверка и docs
 
-- [ ] 4.1 `bun run fix` в `client/` и `server/` (перед push; сейчас прогнаны eslint, prettier, typecheck на изменённых файлах)
+- [x] 4.1 `bun run fix` в `client/` и `server/` — зелёный в обоих пакетах, 11.11.2026
 - [ ] 4.2 Браузер: создать версию вручную, «Придумать ИИ», ошибка, пустой текст, старая версия без названия
 - [ ] 4.3 `docs/status.md`, `docs/tasks/current_task.md`
