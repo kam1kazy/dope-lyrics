@@ -6,7 +6,7 @@
 
 | Кусок | Сейчас |
 | --- | --- |
-| Код | `main` = стенд. `origin/develop` — склад — [git.md](./git.md) |
+| Код | `develop` — ствол, `main` = стенд (вливается из `develop` по слову «в прод») — [git.md](./git.md) |
 | Стенд | https://legoblokk.ru/essence, деплой на `marzban` через CI: push в `main` → `.github/workflows/deploy.yml` (образы GHCR, `scripts/deploy/deploy-prod.sh` с бэкапом БД). Хост — [006](./tasks/006_server_hardening.md): SSH по ключу, fail2ban, бэкап в 03:30 |
 | Контур | GraphQL + Next, TG и Apple Notes, карусель |
 | UI | shadcn. Меню: список (фильтр «Откуда»), избранное, демки, история, сводка, генератор; внизу — блок пользователя (клик → профиль, ⋮ → «Профиль» / «Выйти»). Экран входа |
