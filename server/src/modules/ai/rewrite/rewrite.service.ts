@@ -96,14 +96,14 @@ const parseRewrite = (text: string): string => {
   return aiText;
 };
 
-export const rewriteCollage = async (
-  userId: number,
-  input: RewriteCollageInput
-) => {
-  if (!isAiConfigured()) {
-    throw new GraphQLError('ИИ не настроен');
-  }
+export type RewritePrompt = { id: number | null; text: string };
 
+/** Запрос «Поправить ИИ» без вызова модели. Промпт можно подменить — для прогонов вне приложения. */
+export const buildRewriteRequest = async (
+  userId: number,
+  input: RewriteCollageInput,
+  promptOverride?: RewritePrompt
+) => {
   const { sourceText, sections, rows } = await sourceTextFromSlots(
     userId,
     input.slots,
@@ -114,29 +114,59 @@ export const rewriteCollage = async (
     throw new GraphQLError('В склейке нет строк');
   }
 
-  const theme = input.theme?.trim() || null;
-  const prompt = await getCurrentPrompt(userId);
+  const stored = promptOverride ? null : await getCurrentPrompt(userId);
+  const prompt: RewritePrompt = promptOverride ?? {
+    id: stored?.id ?? null,
+    text: stored?.text ?? '',
+  };
   const rowsById = new Map(rows.map((row) => [row.id, row]));
-  const { value: aiText, usageId } = await callModel(
+
+  return {
+    sourceText,
+    promptId: prompt.id,
+    system: buildRewriteSystem(),
+    user: buildRewriteUser({
+      theme: input.theme?.trim() || null,
+      authorPrompt: prompt.text,
+      sections: sections.map((section) => ({
+        label: section.label,
+        text: section.text,
+        ...rankArtistCandidates(facetsForSection(section, rowsById)),
+      })),
+    }),
+  };
+};
+
+export const rewriteCollageRequest = (
+  userId: number,
+  request: Awaited<ReturnType<typeof buildRewriteRequest>>
+) =>
+  callModel(
     {
       userId,
       kind: 'COLLAGE_REWRITE',
       frameVersion: FRAME_VERSION,
-      promptId: prompt?.id ?? null,
-      system: buildRewriteSystem(),
-      user: buildRewriteUser({
-        theme,
-        authorPrompt: prompt?.text ?? '',
-        sections: sections.map((section) => ({
-          label: section.label,
-          text: section.text,
-          ...rankArtistCandidates(facetsForSection(section, rowsById)),
-        })),
-      }),
+      promptId: request.promptId,
+      system: request.system,
+      user: request.user,
       maxTokens: env.AI_MAX_TOKENS,
     },
     parseRewrite
   );
 
-  return { sourceText, aiText, usageId };
+export const rewriteCollage = async (
+  userId: number,
+  input: RewriteCollageInput
+) => {
+  if (!isAiConfigured()) {
+    throw new GraphQLError('ИИ не настроен');
+  }
+
+  const request = await buildRewriteRequest(userId, input);
+  const { value: aiText, usageId } = await rewriteCollageRequest(
+    userId,
+    request
+  );
+
+  return { sourceText: request.sourceText, aiText, usageId };
 };
