@@ -183,7 +183,7 @@ function MenuButton({
  * и открывает его меню: три точки, затем подсветка, правка и переключение.
  *
  * С `onToggleMark` — режим пометок: клик метит строку «стало» (индекс в `after`),
- * зажатие блока показывает «было» до отпускания. Меню, правка и закрепление выключены.
+ * зажатие блока закрепляет другой вариант («было»), повторное зажатие снимает. Меню, правка и закрепление выключены.
  */
 export function BeforeAfterText({
   before,
@@ -215,7 +215,6 @@ export function BeforeAfterText({
   const dragOrigin = useRef<{ x: number; y: number } | null>(null);
   const dragging = useRef(false);
   const dragged = useRef(false);
-  const [peek, setPeek] = useState<number | null>(null);
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const held = useRef(false);
 
@@ -234,7 +233,7 @@ export function BeforeAfterText({
   );
 
   const shownSide = (index: number): Side =>
-    markMode ? (peek === index ? 'before' : side) : (pinned.get(index) ?? side);
+    pinned.get(index) ?? side;
 
   const cancelHold = () => {
     if (holdTimer.current) {
@@ -249,7 +248,7 @@ export function BeforeAfterText({
     dragOrigin.current = { x: event.clientX, y: event.clientY };
     holdTimer.current = setTimeout(() => {
       held.current = true;
-      setPeek(index);
+      togglePin(index);
     }, HOLD_MS);
   };
 
@@ -267,7 +266,6 @@ export function BeforeAfterText({
   const endHold = () => {
     cancelHold();
     dragOrigin.current = null;
-    setPeek(null);
   };
 
   const pin = (index: number, next: Side) => {
@@ -278,6 +276,19 @@ export function BeforeAfterText({
     setPinned((current) => {
       const next = new Map(current);
       next.delete(index);
+      return next;
+    });
+  };
+
+  const togglePin = (index: number) => {
+    setPinned((current) => {
+      const next = new Map(current);
+      if (next.has(index)) {
+        next.delete(index);
+      } else {
+        next.set(index, opposite(side));
+      }
+
       return next;
     });
   };
@@ -653,7 +664,7 @@ export function BeforeAfterText({
                 })}
               </div>
               <div className="absolute top-0 right-0 flex items-center gap-0.5">
-                {!markMode && pinned.has(index) && shown !== side ? (
+                {pinned.has(index) && shown !== side ? (
                   <MenuButton
                     label={`Закреплено «${SIDE_LABELS[shown]}». Нажми, чтобы снять`}
                     active
