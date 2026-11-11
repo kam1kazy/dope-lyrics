@@ -397,6 +397,7 @@ export const typeDefinitions = /* GraphQL */ `
     text: String!
     finalText: String
     doneAt: String
+    generation: String
   }
 
   enum UserRole {
@@ -629,6 +630,7 @@ export const typeDefinitions = /* GraphQL */ `
       aiText: String
       usageId: Int
       hideAdlibs: Boolean
+      generation: String
     ): TrackText!
     updateTrackText(id: Int!, text: String!): TrackText!
     markTrackTextDone(id: Int!): TrackText!

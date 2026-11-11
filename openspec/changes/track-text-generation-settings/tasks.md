@@ -8,9 +8,9 @@
 
 ## 2. Сервер и GraphQL (контракт)
 
-- [ ] 2.1 `server/src/graphql/typeDefs.ts`: у `createTrackText` необязательный аргумент `generation: String`, у типа `TrackText` поле `generation: String`. Проверка: `bun run typecheck` в `server/`
-- [ ] 2.2 `server/src/modules/track-texts/track-texts.service.ts`: в `createTrackText` принять `generation`, разобрать JSON, отвергнуть не-объект и размер больше ~8 КБ с сообщением по-русски, сохранить в колонку; в ответ вернуть строкой или `null`. Проверка: тест в `track-texts.service.test.ts` — с настройками сохраняются и читаются, без них `null`, мусор и слишком большой отвергаются, чужой текст по-прежнему не читается
-- [ ] 2.3 `server/src/graphql/ai.resolvers.ts`: проброс `generation` в сервис и в DTO текста. Проверка: `bun run ci` в `server/` зелёный
+- [x] 2.1 `server/src/graphql/typeDefs.ts`: у `createTrackText` необязательный аргумент `generation: String`, у типа `TrackText` поле `generation: String`. Проверка: `bun run typecheck` в `server/`
+- [x] 2.2 `server/src/modules/track-texts/track-texts.service.ts`: в `createTrackText` принять `generation`, разобрать JSON, отвергнуть не-объект и размер больше ~8 КБ с сообщением по-русски, сохранить в колонку; в ответ вернуть строкой или `null`. Проверка: тест в `track-texts.service.test.ts` — с настройками сохраняются и читаются, без них `null`, мусор и слишком большой отвергаются, чужой текст по-прежнему не читается
+- [x] 2.3 `server/src/graphql/ai.resolvers.ts`: проброс `generation` в сервис и в DTO текста. Проверка: `bun run ci` в `server/` зелёный
 
 ## 3. Клиент: сохранить настройки
 
