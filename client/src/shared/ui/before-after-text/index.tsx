@@ -419,7 +419,6 @@ export function BeforeAfterText({
             <div
               className={cn(
                 'group bg-background relative touch-pan-y',
-                markMode && 'select-none',
                 dragDx === null && 'transition-transform duration-200 ease-out'
               )}
               style={
@@ -428,7 +427,7 @@ export function BeforeAfterText({
                   : { transform: `translate3d(${offset}px, 0, 0)` }
               }
               onContextMenu={(event) => {
-                if (markMode) {
+                if (markMode && !window.getSelection()?.toString()) {
                   event.preventDefault();
                 }
               }}
@@ -520,6 +519,10 @@ export function BeforeAfterText({
                       onClick={() => {
                         if (held.current) {
                           held.current = false;
+                          return;
+                        }
+
+                        if (window.getSelection()?.toString()) {
                           return;
                         }
 
