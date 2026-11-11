@@ -148,6 +148,21 @@ describe('сборка запроса', () => {
     }
   });
 
+  test('у артиста не больше пяти качеств и нет альбомов', () => {
+    const lines = ARTIST_ORIENTATION.split('\n').filter((line) =>
+      line.includes(' - ')
+    );
+
+    expect(lines.length).toBeGreaterThan(0);
+    expect(ARTIST_ORIENTATION).not.toContain('Альбомы');
+
+    for (const line of lines) {
+      const qualities = line.split(' - ')[1]?.split(', ') ?? [];
+      expect(qualities.length).toBeGreaterThan(0);
+      expect(qualities.length).toBeLessThanOrEqual(5);
+    }
+  });
+
   test('тема и примеры попадают в запрос только когда есть', () => {
     const bare = buildRewriteUser({
       theme: null,
