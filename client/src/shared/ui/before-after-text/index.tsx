@@ -5,7 +5,6 @@ import {
   ArrowLeftRight,
   EllipsisVertical,
   Highlighter,
-  Pencil,
   Sparkles,
   Undo2,
 } from 'lucide-react';
@@ -36,8 +35,6 @@ export type LineMark = 'red' | 'green';
 
 type Piece = { text: string; changed: boolean };
 
-type Editing = { paragraph: number; start: number };
-
 const SIDES: Side[] = ['after', 'before'];
 
 const SIDE_LABELS: Record<Side, string> = {
@@ -63,7 +60,6 @@ const MARK_CLASSES: Record<LineMark, string> = {
 const DRAG_START_PX = 8;
 const MOUSE_SWIPE_ZONE_PX = 32;
 const DOTS_WIDTH_PX = 40;
-const LINES_PER_EDIT = 2;
 const HOLD_MS = 350;
 
 /** Метится непустая строка, которая не метка части. */
@@ -95,49 +91,6 @@ function diffLines(before: string, after: string, side: Side): Piece[][] {
   }
 
   return lines;
-}
-
-function EditBlock({
-  initial,
-  onCommit,
-  onCancel,
-}: {
-  initial: string;
-  onCommit: (value: string) => void;
-  onCancel: () => void;
-}) {
-  const [value, setValue] = useState(initial);
-
-  return (
-    <textarea
-      autoFocus
-      data-swipe-ignore
-      value={value}
-      rows={LINES_PER_EDIT}
-      className="border-input bg-background focus-visible:ring-ring/50 w-full resize-none rounded-md border px-2 py-1 text-sm outline-none focus-visible:ring-2"
-      onPointerDown={(event) => {
-        event.stopPropagation();
-      }}
-      onClick={(event) => {
-        event.stopPropagation();
-      }}
-      onChange={(event) => {
-        setValue(event.target.value);
-      }}
-      onBlur={() => {
-        onCommit(value);
-      }}
-      onKeyDown={(event) => {
-        if (event.key === 'Escape') {
-          onCancel();
-        }
-
-        if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
-          onCommit(value);
-        }
-      }}
-    />
-  );
 }
 
 function MenuButton({
@@ -178,18 +131,16 @@ function MenuButton({
 /**
  * Текст до и после правки ИИ. «Стало»/«Было» переключают общий вид.
  * Клик по абзацу закрепляет за ним другой вариант: пока он отличается
- * от общего, у абзаца иконка, по ней закрепление снимается. Двойной клик
- * правит пару строк (при `onAfterChange`). Свайп влево сдвигает абзац
- * и открывает его меню: три точки, затем подсветка, правка и переключение.
+ * от общего, у абзаца иконка, по ней закрепление снимается. Свайп влево сдвигает абзац
+ * и открывает его меню: три точки, затем подсветка и переключение.
  *
  * С `onToggleMark` — режим пометок: клик метит строку «стало» (индекс в `after`),
- * зажатие блока закрепляет другой вариант («было»), повторное зажатие снимает. Меню, правка и закрепление выключены.
+ * зажатие блока закрепляет другой вариант («было»), повторное зажатие снимает. Меню и закрепление выключены.
  */
 export function BeforeAfterText({
   before,
   after,
   side: controlledSide,
-  onAfterChange,
   actions,
   marks,
   onToggleMark,
@@ -198,7 +149,6 @@ export function BeforeAfterText({
   after: string;
   /** Если задан, вариант выбирают снаружи, а свои кнопки не рисуются. */
   side?: Side;
-  onAfterChange?: (next: string) => void;
   actions?: ReactNode;
   /** Ключ — индекс строки в `after.split('\n')`. */
   marks?: ReadonlyMap<number, LineMark>;
@@ -209,7 +159,6 @@ export function BeforeAfterText({
   const side = controlledSide ?? ownSide;
   const [pinned, setPinned] = useState<ReadonlyMap<number, Side>>(new Map());
   const [highlight, setHighlight] = useState(true);
-  const [editing, setEditing] = useState<Editing | null>(null);
   const [revealed, setRevealed] = useState<ReadonlySet<number>>(new Set());
   const [drag, setDrag] = useState<{ index: number; dx: number } | null>(null);
   const dragOrigin = useRef<{ x: number; y: number } | null>(null);
@@ -303,30 +252,6 @@ export function BeforeAfterText({
 
       return next;
     });
-  };
-
-  const startEdit = (paragraph: number, start: number) => {
-    pin(paragraph, 'after');
-    setEditing({ paragraph, start });
-  };
-
-  const commitEdit = (paragraph: number, start: number, value: string) => {
-    setEditing(null);
-    const lines = (blocks[paragraph]?.after ?? '').split('\n');
-    const nextLines = [
-      ...lines.slice(0, start),
-      ...value.split('\n'),
-      ...lines.slice(start + LINES_PER_EDIT),
-    ];
-    const next = blocks
-      .map((block, index) =>
-        index === paragraph ? nextLines.join('\n') : block.after
-      )
-      .filter((text) => text.trim() !== '')
-      .join('\n\n');
-    if (next !== after) {
-      onAfterChange?.(next);
-    }
   };
 
   const onRowPointerDown = (event: PointerEvent<HTMLDivElement>) => {
@@ -428,7 +353,6 @@ export function BeforeAfterText({
         const afterParagraph = block.after;
         const beforeParagraph = block.before;
         const lines = diffLines(beforeParagraph, afterParagraph, shown);
-        const editStart = editing?.paragraph === index ? editing.start : null;
         const open = revealed.has(index);
         const dragDx = drag?.index === index ? drag.dx : null;
         const offset =
@@ -488,16 +412,6 @@ export function BeforeAfterText({
                       <Highlighter className="size-4" />
                       {highlight ? 'Скрыть подсветку' : 'Показать подсветку'}
                     </DropdownMenuItem>
-                    {onAfterChange !== undefined ? (
-                      <DropdownMenuItem
-                        onSelect={() => {
-                          startEdit(index, 0);
-                        }}
-                      >
-                        <Pencil className="size-4" />
-                        Править первые две строки
-                      </DropdownMenuItem>
-                    ) : null}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
@@ -505,7 +419,6 @@ export function BeforeAfterText({
             <div
               className={cn(
                 'group bg-background relative touch-pan-y',
-                markMode && 'select-none',
                 dragDx === null && 'transition-transform duration-200 ease-out'
               )}
               style={
@@ -514,7 +427,7 @@ export function BeforeAfterText({
                   : { transform: `translate3d(${offset}px, 0, 0)` }
               }
               onContextMenu={(event) => {
-                if (markMode) {
+                if (markMode && !window.getSelection()?.toString()) {
                   event.preventDefault();
                 }
               }}
@@ -582,30 +495,6 @@ export function BeforeAfterText({
                 className="animate-in fade-in-0 slide-in-from-bottom-1 pr-8 text-sm duration-300"
               >
                 {lines.map((line, lineIndex) => {
-                  const pairStart = lineIndex - (lineIndex % LINES_PER_EDIT);
-
-                  if (editStart !== null && pairStart === editStart) {
-                    if (lineIndex !== editStart) {
-                      return null;
-                    }
-
-                    return (
-                      <EditBlock
-                        key={`edit-${lineIndex}`}
-                        initial={afterParagraph
-                          .split('\n')
-                          .slice(editStart, editStart + LINES_PER_EDIT)
-                          .join('\n')}
-                        onCommit={(value) => {
-                          commitEdit(index, editStart, value);
-                        }}
-                        onCancel={() => {
-                          setEditing(null);
-                        }}
-                      />
-                    );
-                  }
-
                   const afterIndex =
                     shown === 'after' && block.afterLine >= 0
                       ? block.afterLine + lineIndex
@@ -624,9 +513,6 @@ export function BeforeAfterText({
                       key={lineIndex}
                       className={cn(
                         'min-h-5',
-                        !markMode &&
-                          onAfterChange !== undefined &&
-                          'cursor-text',
                         markable && 'cursor-pointer rounded-sm',
                         mark && MARK_CLASSES[mark]
                       )}
@@ -636,13 +522,12 @@ export function BeforeAfterText({
                           return;
                         }
 
+                        if (window.getSelection()?.toString()) {
+                          return;
+                        }
+
                         if (markable && afterIndex !== null) {
                           onToggleMark?.(afterIndex);
-                        }
-                      }}
-                      onDoubleClick={() => {
-                        if (!markMode && onAfterChange !== undefined) {
-                          startEdit(index, pairStart);
                         }
                       }}
                     >
