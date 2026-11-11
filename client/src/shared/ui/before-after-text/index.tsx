@@ -35,7 +35,6 @@ export type LineMark = 'red' | 'green';
 
 type Piece = { text: string; changed: boolean };
 
-
 const SIDES: Side[] = ['after', 'before'];
 
 const SIDE_LABELS: Record<Side, string> = {
