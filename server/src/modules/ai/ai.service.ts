@@ -10,7 +10,7 @@ import {
   buildRewriteUser,
   collectRewriteSections,
   FRAME_VERSION,
-  pickStyleExamples,
+  sectionsToText,
   stripModelWrapper,
 } from '~/modules/ai/collage-rewrite';
 import {
@@ -87,9 +87,7 @@ export const sourceTextFromSlots = async (
     lyricIds,
     sections,
     rows,
-    sourceText: sections
-      .map((section) => `[${section.label}]\n${section.text}`)
-      .join('\n\n'),
+    sourceText: sectionsToText(sections),
   };
 };
 
@@ -149,29 +147,6 @@ const facetsForSection = (
   };
 };
 
-export const loadStyleExamples = async (
-  userId: number,
-  excludeIds: number[]
-): Promise<string[]> => {
-  const references = await prisma.lyrics.findMany({
-    where: {
-      userId,
-      isReference: true,
-      isHidden: false,
-      isCensored: false,
-      id: { notIn: excludeIds },
-    },
-    orderBy: { date: 'desc' },
-    take: env.AI_STYLE_EXAMPLES,
-    select: { message: { select: { text: true } } },
-  });
-
-  return pickStyleExamples(
-    references.map((row) => row.message?.text ?? ''),
-    env.AI_STYLE_EXAMPLES
-  );
-};
-
 const providerMessage = (error: unknown): string =>
   error instanceof AiProviderError
     ? error.message
@@ -206,7 +181,6 @@ export const rewriteCollage = async (
       user: buildRewriteUser({
         theme,
         authorPrompt: prompt?.text ?? '',
-        examples: [],
         sections: sections.map((section) => ({
           label: section.label,
           text: section.text,

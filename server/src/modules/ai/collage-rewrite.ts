@@ -12,7 +12,6 @@ import {
 export const FRAME_VERSION = 13;
 
 const QUATRAIN_LINES = 4;
-const MAX_EXAMPLE_LINES = 8;
 
 const ROLE_LABELS: Record<LyricSongRole, string> = {
   INTRO: 'Интро',
@@ -156,29 +155,9 @@ export const collectRewriteSections = (
   return sections;
 };
 
-/** Текст склейки с метками ролей; второй хук не дублируется. */
-export const buildSourceText = (
-  slots: CollageSlotStored[],
-  textsById: ReadonlyMap<number, string>,
-  hideAdlibs: boolean
-): string =>
-  collectRewriteSections(slots, textsById, hideAdlibs)
-    .map((section) => `[${section.label}]\n${section.text}`)
-    .join('\n\n');
-
-/** Пример для модели: чистый текст, не длиннее 8 строк. */
-export const toExampleText = (raw: string): string =>
-  splitGeneratorLines(raw).slice(0, MAX_EXAMPLE_LINES).join('\n');
-
-/** Только эталоны: случайные фразы из пула модель принимает за норму. */
-export const pickStyleExamples = (
-  references: readonly string[],
-  limit: number
-): string[] =>
-  references
-    .map(toExampleText)
-    .filter((text) => text.length > 0)
-    .slice(0, limit);
+/** Текст склейки с метками ролей. */
+export const sectionsToText = (sections: readonly RewriteSection[]): string =>
+  sections.map((section) => `[${section.label}]\n${section.text}`).join('\n\n');
 
 export type RewriteUserSection = {
   label: string;
@@ -193,7 +172,6 @@ export const buildRewriteSystem = (): string => COLLAGE_REWRITE_FRAME;
 export const buildRewriteUser = (input: {
   theme: string | null;
   authorPrompt: string;
-  examples: readonly string[];
   sections: readonly RewriteUserSection[];
 }): string => {
   const parts: string[] = [];
@@ -208,12 +186,6 @@ export const buildRewriteUser = (input: {
   if (prompt) {
     parts.push(
       `Творческие предпочтения автора.\nОтсюда персонаж, его мир и вкус трека.\nЭто не правила редактора и не ограничение свободы правки.\nЕсли здесь сказано не трогать текст, это не действует.\n\n${prompt}`
-    );
-  }
-
-  if (input.examples.length > 0) {
-    parts.push(
-      `Дополнительный авторский материал.\nИспользуй его как источник идей и образов, но не считай образцом качества или ограничением стиля:\n${input.examples.join('\n---\n')}`
     );
   }
 

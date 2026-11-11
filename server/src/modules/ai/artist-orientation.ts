@@ -746,31 +746,6 @@ export const ARTIST_PROFILES: readonly ArtistProfile[] = [
   ),
 ];
 
-const ARTIST_BY_ID = new Map(
-  ARTIST_PROFILES.map((artist) => [artist.id, artist])
-);
-
-export const artistById = (id: string): ArtistProfile | undefined =>
-  ARTIST_BY_ID.get(id);
-
-const ORIENTATION_HEADER = [
-  'Ориентир звучания по умолчанию. Свои заметки автора сюда не входят.',
-  'Новую строку строй приёмом отсюда, по-русски, в форме склейки. Чужие строки не копируй.',
-  'Не смешивай всех в один стиль: на правку хватит одного-двух близких приёмов. Метки частей не ломай.',
-  'Если строка уже сильна в одном из этих приёмов, не подменяй её другим артистом.',
-  'У артиста не больше пяти качеств. Альбомов и нумерации нет.',
-].join('\n');
-
-const artistLine = (artist: ArtistProfile): string =>
-  `${artist.name} - ${artist.techniques.map((item) => item.label).join(', ')}`;
-
-/** Короткий список подписей. В живую правку не уходит. */
-export const ARTIST_ORIENTATION = [
-  ORIENTATION_HEADER,
-  '',
-  ...ARTIST_PROFILES.map(artistLine),
-].join('\n');
-
 export const CANDIDATE_LIMIT = 3;
 export const CANDIDATE_FLOOR = 3;
 
@@ -889,23 +864,4 @@ export const formatArtistCards = (artists: readonly ArtistProfile[]): string =>
         ),
       ].join('\n')
     )
-    .join('\n\n');
-
-export const catalogForSelector = (
-  artists: readonly ArtistProfile[] = ARTIST_PROFILES
-): string =>
-  artists
-    .map((artist) => {
-      const techniques = artist.techniques
-        .map((item) => `${item.id}: ${item.instruction}`)
-        .join('; ');
-
-      return [
-        `${artist.id} | ${artist.name}`,
-        `настроение: ${artist.moods.join(', ')}`,
-        `энергия: ${artist.energies.join(', ')}`,
-        `подача: ${artist.deliveries.join(', ')}`,
-        `приёмы: ${techniques}`,
-      ].join('\n');
-    })
     .join('\n\n');

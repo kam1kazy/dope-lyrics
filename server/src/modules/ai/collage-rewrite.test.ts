@@ -1,15 +1,12 @@
 import { describe, expect, test } from 'bun:test';
 
-import {
-  ARTIST_ORIENTATION,
-  rankArtistCandidates,
-} from '~/modules/ai/artist-orientation';
+import { rankArtistCandidates } from '~/modules/ai/artist-orientation';
 import {
   buildRewriteSystem,
   buildRewriteUser,
-  buildSourceText,
   COLLAGE_REWRITE_FRAME,
-  pickStyleExamples,
+  collectRewriteSections,
+  sectionsToText,
   stripModelWrapper,
 } from '~/modules/ai/collage-rewrite';
 import type { CollageSlotStored } from '~/modules/lyrics/track-assemble';
@@ -31,7 +28,13 @@ const slotsWith = (
   { songRole: 'HOOK', parts: hook },
 ];
 
-describe('buildSourceText', () => {
+const sourceText = (
+  slots: CollageSlotStored[],
+  texts: ReadonlyMap<number, string>,
+  hideAdlibs: boolean
+): string => sectionsToText(collectRewriteSections(slots, texts, hideAdlibs));
+
+describe('текст склейки', () => {
   const texts = new Map([
     [1, 'раз\nдва #тег\nтри\nчетыре\nпять'],
     [2, 'хук (эй)\nхук два'],
@@ -43,7 +46,7 @@ describe('buildSourceText', () => {
       [{ lyricId: 2, startLine: 0, endLine: 2 }]
     );
 
-    expect(buildSourceText(slots, texts, false)).toBe(
+    expect(sourceText(slots, texts, false)).toBe(
       '[Куплет]\nраз\nдва\nтри\nчетыре\n\nпять\n\n[Хук]\nхук (эй)\nхук два'
     );
   });
@@ -51,35 +54,13 @@ describe('buildSourceText', () => {
   test('адлибы скрываются по флагу', () => {
     const slots = slotsWith([], [{ lyricId: 2, startLine: 0, endLine: 2 }]);
 
-    expect(buildSourceText(slots, texts, true)).toBe('[Хук]\nхук\nхук два');
+    expect(sourceText(slots, texts, true)).toBe('[Хук]\nхук\nхук два');
   });
 
   test('пустая склейка и удалённая фраза дают пустой текст', () => {
     const slots = slotsWith([{ lyricId: 99, startLine: 0, endLine: 2 }], []);
 
-    expect(buildSourceText(slots, texts, false)).toBe('');
-  });
-});
-
-describe('pickStyleExamples', () => {
-  test('берутся только эталоны, не больше лимита, пустые выпадают', () => {
-    const references = [
-      '',
-      ...Array.from({ length: 30 }, (_, i) => `эталон ${i}`),
-    ];
-
-    const result = pickStyleExamples(references, 25);
-
-    expect(result).toHaveLength(25);
-    expect(result[0]).toBe('эталон 0');
-  });
-
-  test('длинная фраза режется до 8 строк, хештеги чистятся', () => {
-    const long = Array.from({ length: 12 }, (_, i) => `строка ${i}`).join('\n');
-    const [example] = pickStyleExamples([`${long} #тег`], 4);
-
-    expect(example?.split('\n')).toHaveLength(8);
-    expect(example).not.toContain('#');
+    expect(sourceText(slots, texts, false)).toBe('');
   });
 });
 
@@ -143,64 +124,12 @@ describe('сборка запроса', () => {
     expect(system).not.toContain('Активно');
     expect(system).not.toContain('Жёстко');
     expect(system).not.toContain('Промпт автора');
-    expect(system).not.toContain(ARTIST_ORIENTATION);
-  });
-
-  test('в ориентире есть все названные артисты', () => {
-    const names = [
-      'Future',
-      'Don Toliver',
-      'Travis Scott',
-      'Linkin Park',
-      'Slipknot',
-      'Kanye West',
-      'Che Ecru',
-      'Oxxxymiron',
-      'Скриптонит',
-      'OG Buda',
-      'MAYOT',
-      'Kidd',
-      'STED.D',
-      'ATL',
-      'Markul',
-      'Pharaoh',
-      'Платина',
-      'Rocket',
-      'Boulevard Depo',
-      'Loqiemean',
-      'Сидоджи Дубоshit',
-      'Scarlxrd',
-      'Trippie Redd',
-      'XXXTentacion',
-      'Juice WRLD',
-      'Мэйти',
-    ];
-
-    for (const name of names) {
-      expect(ARTIST_ORIENTATION).toContain(name);
-    }
-  });
-
-  test('у артиста не больше пяти качеств и нет альбомов', () => {
-    const lines = ARTIST_ORIENTATION.split('\n').filter((line) =>
-      line.includes(' - ')
-    );
-
-    expect(lines.length).toBeGreaterThan(0);
-    expect(ARTIST_ORIENTATION).not.toContain('Альбомы');
-
-    for (const line of lines) {
-      const qualities = line.split(' - ')[1]?.split(', ') ?? [];
-      expect(qualities.length).toBeGreaterThan(0);
-      expect(qualities.length).toBeLessThanOrEqual(5);
-    }
   });
 
   test('тема, предпочтения и заметки не объявлены эталоном', () => {
     const bare = buildRewriteUser({
       theme: null,
       authorPrompt: '  ',
-      examples: [],
       sections: [{ label: 'Хук', text: 'х', artists: [], relaxed: false }],
     });
     expect(bare).toBe('Склейка, из которой собрать трек:\n[Хук]\nх');
@@ -208,17 +137,12 @@ describe('сборка запроса', () => {
     const full = buildRewriteUser({
       theme: 'бросил работу',
       authorPrompt: 'не трогай слабое',
-      examples: ['a', 'b'],
       sections: [{ label: 'Хук', text: 'х', artists: [], relaxed: false }],
     });
     expect(full).toContain('Тема трека: бросил работу');
     expect(full).toContain('Творческие предпочтения автора');
     expect(full).toContain('Отсюда персонаж, его мир и вкус трека');
     expect(full).toContain('не трогай слабое');
-    expect(full).toContain(
-      'Дополнительный авторский материал.\nИспользуй его как источник идей и образов, но не считай образцом качества или ограничением стиля:'
-    );
-    expect(full).toContain('a\n---\nb');
     expect(full).not.toContain('Мои эталоны');
     expect(buildRewriteSystem()).not.toContain('не трогай слабое');
   });
@@ -233,7 +157,6 @@ describe('сборка запроса', () => {
     const user = buildRewriteUser({
       theme: null,
       authorPrompt: '',
-      examples: [],
       sections: [{ label: 'Хук', text: 'х', artists, relaxed }],
     });
     const cardLines = user.split('\n').filter((line) => line.startsWith('- '));
