@@ -4,6 +4,7 @@ import type { RecordUsageInput } from '~/modules/ai/model/ai-usage.service';
 import { AiProviderError } from '~/modules/ai/model/polza.client';
 
 const recorded: RecordUsageInput[] = [];
+let truncated = false;
 
 void mock.module('~/modules/ai/model/ai-usage.service', () => ({
   recordUsage: (input: RecordUsageInput) => {
@@ -20,6 +21,7 @@ void mock.module('~/modules/ai/model/polza.client', () => ({
       tokensIn: 120,
       tokensOut: 40,
       model: 'test-model',
+      truncated,
     }),
 }));
 
@@ -37,6 +39,7 @@ const input = {
 
 beforeEach(() => {
   recorded.length = 0;
+  truncated = false;
 });
 
 describe('callModel', () => {
@@ -65,5 +68,14 @@ describe('callModel', () => {
       tokensOut: 40,
       error: 'ИИ вернул пустой ответ',
     });
+  });
+
+  test('ответ оборван на лимите — ошибка, токены учтены', async () => {
+    truncated = true;
+    const failing = callModel(input, (text) => text);
+
+    expect(failing).rejects.toThrow('оборвал ответ');
+    await failing.catch(() => undefined);
+    expect(recorded[0]).toMatchObject({ status: 'ERROR', tokensOut: 40 });
   });
 });

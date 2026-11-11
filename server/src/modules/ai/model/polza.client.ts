@@ -15,6 +15,8 @@ export type AiCompletionResult = {
   tokensIn: number;
   tokensOut: number;
   model: string;
+  /** Ответ оборван на лимите токенов. */
+  truncated: boolean;
 };
 
 const responseSchema = z.object({
@@ -23,6 +25,7 @@ const responseSchema = z.object({
     .array(
       z.object({
         message: z.object({ content: z.string().nullable().optional() }),
+        finish_reason: z.string().nullable().optional(),
       })
     )
     .min(1),
@@ -95,5 +98,6 @@ export const completeWithModel = async (
     tokensIn: parsed.data.usage?.prompt_tokens ?? 0,
     tokensOut: parsed.data.usage?.completion_tokens ?? 0,
     model: parsed.data.model ?? env.AI_MODEL,
+    truncated: parsed.data.choices[0]?.finish_reason === 'length',
   };
 };
