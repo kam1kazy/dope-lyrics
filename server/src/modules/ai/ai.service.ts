@@ -3,7 +3,6 @@ import { GraphQLError } from 'graphql';
 import { env } from '~/config/env';
 import { prisma } from '~/infrastructure/prisma';
 import { getCurrentPrompt } from '~/modules/ai/ai-prompt.service';
-import { recordUsage } from '~/modules/ai/ai-usage.service';
 import { rankArtistCandidates } from '~/modules/ai/artist-orientation';
 import {
   buildRewriteSystem,
@@ -13,11 +12,8 @@ import {
   sectionsToText,
   stripModelWrapper,
 } from '~/modules/ai/collage-rewrite';
-import {
-  AiProviderError,
-  completeWithModel,
-  isAiConfigured,
-} from '~/modules/ai/polza.client';
+import { callModel } from '~/modules/ai/model-call';
+import { AiProviderError, isAiConfigured } from '~/modules/ai/polza.client';
 import {
   isLyricDelivery,
   isLyricEnergy,
@@ -147,10 +143,15 @@ const facetsForSection = (
   };
 };
 
-const providerMessage = (error: unknown): string =>
-  error instanceof AiProviderError
-    ? error.message
-    : 'Не удалось получить ответ ИИ';
+const parseRewrite = (text: string): string => {
+  const aiText = stripModelWrapper(text);
+
+  if (!aiText) {
+    throw new AiProviderError('ИИ вернул пустой ответ');
+  }
+
+  return aiText;
+};
 
 export const rewriteCollage = async (
   userId: number,
@@ -173,10 +174,12 @@ export const rewriteCollage = async (
   const theme = input.theme?.trim() || null;
   const prompt = await getCurrentPrompt(userId);
   const rowsById = new Map(rows.map((row) => [row.id, row]));
-  const startedAt = Date.now();
-
-  try {
-    const result = await completeWithModel({
+  const { value: aiText, usageId } = await callModel(
+    {
+      userId,
+      kind: 'COLLAGE_REWRITE',
+      frameVersion: FRAME_VERSION,
+      promptId: prompt?.id ?? null,
       system: buildRewriteSystem(),
       user: buildRewriteUser({
         theme,
@@ -188,42 +191,9 @@ export const rewriteCollage = async (
         })),
       }),
       maxTokens: env.AI_MAX_TOKENS,
-    });
-    const aiText = stripModelWrapper(result.text);
+    },
+    parseRewrite
+  );
 
-    if (!aiText) {
-      throw new AiProviderError('ИИ вернул пустой ответ');
-    }
-
-    const usage = await recordUsage({
-      userId,
-      kind: 'COLLAGE_REWRITE',
-      model: result.model,
-      frameVersion: FRAME_VERSION,
-      promptId: prompt?.id ?? null,
-      tokensIn: result.tokensIn,
-      tokensOut: result.tokensOut,
-      latencyMs: Date.now() - startedAt,
-      status: 'OK',
-    });
-
-    return { sourceText, aiText, usageId: usage.id };
-  } catch (error: unknown) {
-    const message = providerMessage(error);
-
-    await recordUsage({
-      userId,
-      kind: 'COLLAGE_REWRITE',
-      model: env.AI_MODEL,
-      frameVersion: FRAME_VERSION,
-      promptId: prompt?.id ?? null,
-      tokensIn: 0,
-      tokensOut: 0,
-      latencyMs: Date.now() - startedAt,
-      status: 'ERROR',
-      error: message,
-    });
-
-    throw new GraphQLError(message);
-  }
+  return { sourceText, aiText, usageId };
 };

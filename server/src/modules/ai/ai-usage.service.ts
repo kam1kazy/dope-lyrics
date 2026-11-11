@@ -38,7 +38,7 @@ export const recordUsage = (input: RecordUsageInput) =>
     data: {
       ...input,
       costRub:
-        input.status === 'OK'
+        input.tokensIn + input.tokensOut > 0
           ? estimateCostRub(input.tokensIn, input.tokensOut)
           : null,
     },
