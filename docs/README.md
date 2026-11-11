@@ -27,7 +27,7 @@
 4. [Текущая задача](./tasks/current_task.md)
 5. [Состояние машины](./status.md)
 6. [Версии](./versions.md) — дневник 0.x
-7. [Ветки](./git.md) — `develop` ушла вперёд, база всё ещё `main`
+7. [Ветки](./git.md) — ствол `develop`, прод `main`
 8. [Дорожки](./roadmap.md)
 9. [Архитектура](./architecture.md)
 10. [Локальный .env](./local.md)
