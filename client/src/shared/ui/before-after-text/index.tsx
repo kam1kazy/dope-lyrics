@@ -27,6 +27,8 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/ui/shadcn/ui/dropdown-menu';
 
+import { pairRewriteBlocks } from './pair-blocks';
+
 type Side = 'before' | 'after';
 
 type Piece = { text: string; changed: boolean };
@@ -54,8 +56,6 @@ const DRAG_START_PX = 8;
 const MOUSE_SWIPE_ZONE_PX = 32;
 const DOTS_WIDTH_PX = 40;
 const LINES_PER_EDIT = 2;
-
-const splitParagraphs = (text: string) => text.split(/\n{2,}/);
 
 const opposite = (side: Side): Side => (side === 'after' ? 'before' : 'after');
 
@@ -161,7 +161,7 @@ function MenuButton({
 }
 
 /**
- * Текст до и после правки ИИ. «Стало»/«Было» переключают всё сразу.
+ * Текст до и после правки ИИ. «Стало»/«Было» переключают общий вид.
  * Клик по абзацу закрепляет за ним другой вариант: пока он отличается
  * от общего, у абзаца иконка, по ней закрепление снимается. Двойной клик
  * правит пару строк (при `onAfterChange`). Свайп влево сдвигает абзац
@@ -192,15 +192,9 @@ export function BeforeAfterText({
   const dragging = useRef(false);
   const dragged = useRef(false);
 
-  const paired =
-    splitParagraphs(before).length === splitParagraphs(after).length;
-  const afterParagraphs = useMemo(
-    () => (paired ? splitParagraphs(after) : [after]),
-    [paired, after]
-  );
-  const beforeParagraphs = useMemo(
-    () => (paired ? splitParagraphs(before) : [before]),
-    [paired, before]
+  const blocks = useMemo(
+    () => pairRewriteBlocks(before, after),
+    [before, after]
   );
 
   const shownSide = (index: number): Side => pinned.get(index) ?? side;
@@ -237,14 +231,17 @@ export function BeforeAfterText({
 
   const commitEdit = (paragraph: number, start: number, value: string) => {
     setEditing(null);
-    const lines = (afterParagraphs[paragraph] ?? '').split('\n');
+    const lines = (blocks[paragraph]?.after ?? '').split('\n');
     const nextLines = [
       ...lines.slice(0, start),
       ...value.split('\n'),
       ...lines.slice(start + LINES_PER_EDIT),
     ];
-    const next = afterParagraphs
-      .map((text, index) => (index === paragraph ? nextLines.join('\n') : text))
+    const next = blocks
+      .map((block, index) =>
+        index === paragraph ? nextLines.join('\n') : block.after
+      )
+      .filter((text) => text.trim() !== '')
       .join('\n\n');
     if (next !== after) {
       onAfterChange?.(next);
@@ -344,10 +341,11 @@ export function BeforeAfterText({
           ) : null}
         </div>
       ) : null}
-      {afterParagraphs.map((afterParagraph, index) => {
+      {blocks.map((block, index) => {
         const shown = shownSide(index);
         const PinIcon = SIDE_ICONS[shown];
-        const beforeParagraph = beforeParagraphs[index] ?? '';
+        const afterParagraph = block.after;
+        const beforeParagraph = block.before;
         const lines = diffLines(beforeParagraph, afterParagraph, shown);
         const editStart = editing?.paragraph === index ? editing.start : null;
         const open = revealed.has(index);
