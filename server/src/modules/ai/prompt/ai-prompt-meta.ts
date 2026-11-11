@@ -1,16 +1,13 @@
 import { GraphQLError } from 'graphql';
 import { z } from 'zod';
 
-import { env } from '~/config/env';
-
-import { recordUsage } from './ai-usage.service';
+import { callModel } from '~/modules/ai/model/model-call';
 import {
   AiProviderError,
-  completeWithModel,
   isAiConfigured,
-} from './polza.client';
+} from '~/modules/ai/model/polza.client';
 
-export const PROMPT_META_FRAME_VERSION = 1;
+export const PROMPT_META_FRAME_VERSION = '0.1.0';
 
 const PROMPT_META_SYSTEM = [
   'Ты придумываешь название и описание для промпта, которым автор управляет ИИ-редактором своих текстов.',
@@ -57,56 +54,18 @@ export const suggestPromptMeta = async (userId: number, text: string) => {
     throw new GraphQLError('Сначала напишите текст промпта');
   }
 
-  const startedAt = Date.now();
-  let model = env.AI_MODEL;
-  let tokensIn = 0;
-  let tokensOut = 0;
-
-  try {
-    const result = await completeWithModel({
+  const { value } = await callModel(
+    {
+      userId,
+      kind: 'PROMPT_META',
+      frameVersion: PROMPT_META_FRAME_VERSION,
+      promptId: null,
       system: PROMPT_META_SYSTEM,
       user: text,
       maxTokens: 300,
-    });
+    },
+    parsePromptMeta
+  );
 
-    model = result.model;
-    tokensIn = result.tokensIn;
-    tokensOut = result.tokensOut;
-
-    const meta = parsePromptMeta(result.text);
-
-    await recordUsage({
-      userId,
-      kind: 'PROMPT_META',
-      model,
-      frameVersion: PROMPT_META_FRAME_VERSION,
-      promptId: null,
-      tokensIn,
-      tokensOut,
-      latencyMs: Date.now() - startedAt,
-      status: 'OK',
-    });
-
-    return meta;
-  } catch (error: unknown) {
-    const message =
-      error instanceof AiProviderError
-        ? error.message
-        : 'Не удалось получить ответ ИИ';
-
-    await recordUsage({
-      userId,
-      kind: 'PROMPT_META',
-      model,
-      frameVersion: PROMPT_META_FRAME_VERSION,
-      promptId: null,
-      tokensIn,
-      tokensOut,
-      latencyMs: Date.now() - startedAt,
-      status: 'ERROR',
-      error: message,
-    });
-
-    throw new GraphQLError(message);
-  }
+  return value;
 };

@@ -1,7 +1,7 @@
 import { GraphQLError } from 'graphql';
 
 import { prisma } from '~/infrastructure/prisma';
-import { sourceTextFromSlots } from '~/modules/ai/ai.service';
+import { sourceTextFromSlots } from '~/modules/ai/rewrite/rewrite.service';
 
 const NOT_FOUND = 'Текст не найден';
 

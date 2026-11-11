@@ -1,19 +1,19 @@
 import { GraphQLError } from 'graphql';
 
-import {
-  rewriteCollage,
-  type RewriteCollageInput,
-} from '~/modules/ai/ai.service';
+import { recentUsage, usageSummary } from '~/modules/ai/model/ai-usage.service';
+import { isAiConfigured } from '~/modules/ai/model/polza.client';
 import {
   countPromptVersions,
   createPrompt,
   type CreatePromptInput,
   getCurrentPrompt,
   listPromptVersions,
-} from '~/modules/ai/ai-prompt.service';
-import { suggestPromptMeta } from '~/modules/ai/ai-prompt-meta';
-import { recentUsage, usageSummary } from '~/modules/ai/ai-usage.service';
-import { isAiConfigured } from '~/modules/ai/polza.client';
+} from '~/modules/ai/prompt/ai-prompt.service';
+import { suggestPromptMeta } from '~/modules/ai/prompt/ai-prompt-meta';
+import {
+  rewriteCollage,
+  type RewriteCollageInput,
+} from '~/modules/ai/rewrite/rewrite.service';
 import { can } from '~/modules/auth/permissions';
 import {
   createTrackText,

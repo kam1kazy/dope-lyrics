@@ -24,7 +24,7 @@ export type RecordUsageInput = {
   userId: number;
   kind: AiUsageKind;
   model: string;
-  frameVersion: number;
+  frameVersion: string;
   promptId: number | null;
   tokensIn: number;
   tokensOut: number;
@@ -38,7 +38,7 @@ export const recordUsage = (input: RecordUsageInput) =>
     data: {
       ...input,
       costRub:
-        input.status === 'OK'
+        input.tokensIn + input.tokensOut > 0
           ? estimateCostRub(input.tokensIn, input.tokensOut)
           : null,
     },
