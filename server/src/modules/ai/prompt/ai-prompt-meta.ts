@@ -1,8 +1,11 @@
 import { GraphQLError } from 'graphql';
 import { z } from 'zod';
 
-import { callModel } from './model-call';
-import { AiProviderError, isAiConfigured } from './polza.client';
+import { callModel } from '~/modules/ai/model/model-call';
+import {
+  AiProviderError,
+  isAiConfigured,
+} from '~/modules/ai/model/polza.client';
 
 export const PROMPT_META_FRAME_VERSION = 1;
 

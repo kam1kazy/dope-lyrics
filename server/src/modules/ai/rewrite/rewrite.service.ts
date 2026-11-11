@@ -2,24 +2,23 @@ import { GraphQLError } from 'graphql';
 
 import { env } from '~/config/env';
 import { prisma } from '~/infrastructure/prisma';
-import { getCurrentPrompt } from '~/modules/ai/ai-prompt.service';
-import { rankArtistCandidates } from '~/modules/ai/artist-orientation';
 import {
-  buildRewriteSystem,
+  facetsForSection,
+  rankArtistCandidates,
+} from '~/modules/ai/artists/pick';
+import { callModel } from '~/modules/ai/model/model-call';
+import {
+  AiProviderError,
+  isAiConfigured,
+} from '~/modules/ai/model/polza.client';
+import { getCurrentPrompt } from '~/modules/ai/prompt/ai-prompt.service';
+import { buildRewriteSystem, FRAME_VERSION } from '~/modules/ai/rewrite/frame';
+import {
   buildRewriteUser,
   collectRewriteSections,
-  FRAME_VERSION,
   sectionsToText,
   stripModelWrapper,
-} from '~/modules/ai/collage-rewrite';
-import { callModel } from '~/modules/ai/model-call';
-import { AiProviderError, isAiConfigured } from '~/modules/ai/polza.client';
-import {
-  isLyricDelivery,
-  isLyricEnergy,
-  isLyricMood,
-  roleProfilesFromJson,
-} from '~/modules/lyrics/lyric-facets';
+} from '~/modules/ai/rewrite/request';
 import { type LyricsListOptions } from '~/modules/lyrics/lyrics-list-filters';
 import {
   lyricIdsFromSlots,
@@ -84,62 +83,6 @@ export const sourceTextFromSlots = async (
     sections,
     rows,
     sourceText: sectionsToText(sections),
-  };
-};
-
-const facetsForSection = (
-  section: { songRole: string; lyricIds: number[] },
-  rows: ReadonlyMap<
-    number,
-    {
-      mood: string[];
-      delivery: string[];
-      energy: string | null;
-      roleProfiles: unknown;
-    }
-  >
-): {
-  moods: string[];
-  energies: string[];
-  deliveries: string[];
-} => {
-  const moods = new Set<string>();
-  const energies = new Set<string>();
-  const deliveries = new Set<string>();
-
-  for (const lyricId of section.lyricIds) {
-    const row = rows.get(lyricId);
-    if (!row) {
-      continue;
-    }
-
-    const profile = roleProfilesFromJson(row.roleProfiles).find(
-      (item) => item.songRole === section.songRole
-    );
-    const mood =
-      profile && profile.mood.length > 0
-        ? profile.mood
-        : row.mood.filter(isLyricMood);
-    const delivery =
-      profile && profile.delivery.length > 0
-        ? profile.delivery
-        : row.delivery.filter(isLyricDelivery);
-
-    for (const item of mood) {
-      moods.add(item);
-    }
-    for (const item of delivery) {
-      deliveries.add(item);
-    }
-    if (row.energy && isLyricEnergy(row.energy)) {
-      energies.add(row.energy);
-    }
-  }
-
-  return {
-    moods: [...moods],
-    energies: [...energies],
-    deliveries: [...deliveries],
   };
 };
 

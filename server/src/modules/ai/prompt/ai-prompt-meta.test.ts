@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 
-import { parsePromptMeta } from '~/modules/ai/ai-prompt-meta';
+import { parsePromptMeta } from '~/modules/ai/prompt/ai-prompt-meta';
 
 describe('parsePromptMeta', () => {
   test('чистый JSON', () => {

@@ -1,18 +1,18 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test';
 
-import type { RecordUsageInput } from '~/modules/ai/ai-usage.service';
-import { AiProviderError } from '~/modules/ai/polza.client';
+import type { RecordUsageInput } from '~/modules/ai/model/ai-usage.service';
+import { AiProviderError } from '~/modules/ai/model/polza.client';
 
 const recorded: RecordUsageInput[] = [];
 
-void mock.module('~/modules/ai/ai-usage.service', () => ({
+void mock.module('~/modules/ai/model/ai-usage.service', () => ({
   recordUsage: (input: RecordUsageInput) => {
     recorded.push(input);
     return Promise.resolve({ id: recorded.length });
   },
 }));
 
-void mock.module('~/modules/ai/polza.client', () => ({
+void mock.module('~/modules/ai/model/polza.client', () => ({
   AiProviderError,
   completeWithModel: () =>
     Promise.resolve({
@@ -23,7 +23,7 @@ void mock.module('~/modules/ai/polza.client', () => ({
     }),
 }));
 
-const { callModel } = await import('~/modules/ai/model-call');
+const { callModel } = await import('~/modules/ai/model/model-call');
 
 const input = {
   userId: 1,

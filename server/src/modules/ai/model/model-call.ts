@@ -2,13 +2,12 @@ import { GraphQLError } from 'graphql';
 
 import { env } from '~/config/env';
 import type { AiUsageKind } from '~/generated/prisma/client';
-
-import { recordUsage } from './ai-usage.service';
+import { recordUsage } from '~/modules/ai/model/ai-usage.service';
 import {
   type AiCompletionResult,
   AiProviderError,
   completeWithModel,
-} from './polza.client';
+} from '~/modules/ai/model/polza.client';
 
 export type ModelCallInput = {
   userId: number;
