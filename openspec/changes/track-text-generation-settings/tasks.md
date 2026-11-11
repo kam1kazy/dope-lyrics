@@ -14,8 +14,8 @@
 
 ## 3. Клиент: сохранить настройки
 
-- [ ] 3.1 `client/src/features/catalog-assemble/api/ai-queries.ts`: `generation` в `CREATE_TRACK_TEXT`. Проверка: `bun run typecheck` в `client/`
-- [ ] 3.2 `client/src/features/catalog-assemble/ui/collage-rewrite-panel.tsx` и `catalog-assemble-panel.tsx`: принять форму трека, сериализовать `{ form, hideAdlibs, filters }` при «Сохранить в тексты»; «Открыть как текст для правки» `generation` не передаёт. Проверка: руками в браузере — после сохранения текст в базе с настройками, после открытия из избранного без них
+- [x] 3.1 `client/src/features/catalog-assemble/api/ai-queries.ts`: `generation` в `CREATE_TRACK_TEXT`. Проверка: `bun run typecheck` в `client/`
+- [x] 3.2 `client/src/features/catalog-assemble/ui/collage-rewrite-panel.tsx` и `catalog-assemble-panel.tsx`: принять форму трека, сериализовать `{ form, hideAdlibs, filters }` при «Сохранить в тексты»; «Открыть как текст для правки» `generation` не передаёт. Проверка: руками в браузере — после сохранения текст в базе с настройками, после открытия из избранного без них
 
 ## 4. Клиент: сводка и «Применить в генератор»
 

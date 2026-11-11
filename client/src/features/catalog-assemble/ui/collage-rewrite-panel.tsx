@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import {
   assembleTrackFilterFromSection,
   type IAssembledTrackSlot,
+  type TrackFormQuotas,
 } from '@/entities/lyric';
 import type { CatalogSectionFilters } from '@/shared/lib/catalog-section-filters';
 import { formatQueryError } from '@/shared/lib/format-query-error';
@@ -56,12 +57,14 @@ function slotsToInput(slots: IAssembledTrackSlot[]) {
 
 export function CollageRewritePanel({
   slots,
+  form,
   filters,
   hideAdlibs,
   onSaved,
   onResultChange,
 }: {
   slots: IAssembledTrackSlot[];
+  form: TrackFormQuotas;
   filters: CatalogSectionFilters;
   hideAdlibs: boolean;
   onSaved: (id: number) => void;
@@ -105,6 +108,7 @@ export function CollageRewritePanel({
       aiText: string;
       usageId: number;
       hideAdlibs: boolean;
+      generation: string;
     }
   >(CREATE_TRACK_TEXT, { refetchQueries: ['TrackTexts'] });
 
@@ -190,6 +194,7 @@ export function CollageRewritePanel({
         aiText: result.aiText,
         usageId: result.usageId,
         hideAdlibs,
+        generation: JSON.stringify({ form, hideAdlibs, filters }),
       },
     }).catch(() => null);
 

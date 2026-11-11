@@ -59,6 +59,7 @@ export const CREATE_TRACK_TEXT = gql`
     $aiText: String
     $usageId: Int
     $hideAdlibs: Boolean
+    $generation: String
   ) {
     createTrackText(
       slots: $slots
@@ -66,6 +67,7 @@ export const CREATE_TRACK_TEXT = gql`
       aiText: $aiText
       usageId: $usageId
       hideAdlibs: $hideAdlibs
+      generation: $generation
     ) {
       id
     }

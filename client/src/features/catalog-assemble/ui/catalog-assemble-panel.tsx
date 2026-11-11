@@ -543,6 +543,7 @@ export function CatalogAssemblePanel({
           <CollageRewritePanel
             key={draftKey(slots)}
             slots={slots}
+            form={form}
             filters={filters}
             hideAdlibs={hideAdlibs}
             onSaved={onTextSaved}
