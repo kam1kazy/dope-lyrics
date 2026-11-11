@@ -64,13 +64,22 @@ const toQuatrains = (lines: string[]): string => {
   return stanzas.join('\n\n');
 };
 
-/** Текст склейки с метками ролей; второй хук не дублируется. */
-export const buildSourceText = (
+export type RewriteSection = {
+  index: number;
+  sectionId: string;
+  songRole: LyricSongRole;
+  label: string;
+  text: string;
+  lyricIds: number[];
+};
+
+/** Непустые части склейки; второй хук не дублируется. */
+export const collectRewriteSections = (
   slots: CollageSlotStored[],
   textsById: ReadonlyMap<number, string>,
   hideAdlibs: boolean
-): string => {
-  const blocks: string[] = [];
+): RewriteSection[] => {
+  const sections: RewriteSection[] = [];
 
   slots.forEach((slot, index) => {
     if (index === SECOND_HOOK_INDEX) {
@@ -97,11 +106,28 @@ export const buildSourceText = (
       return;
     }
 
-    blocks.push(`[${ROLE_LABELS[slot.songRole]}]\n${toQuatrains(lines)}`);
+    sections.push({
+      index,
+      sectionId: `${index}:${slot.songRole}`,
+      songRole: slot.songRole,
+      label: ROLE_LABELS[slot.songRole],
+      text: toQuatrains(lines),
+      lyricIds: slot.parts.map((part) => part.lyricId),
+    });
   });
 
-  return blocks.join('\n\n');
+  return sections;
 };
+
+/** Текст склейки с метками ролей; второй хук не дублируется. */
+export const buildSourceText = (
+  slots: CollageSlotStored[],
+  textsById: ReadonlyMap<number, string>,
+  hideAdlibs: boolean
+): string =>
+  collectRewriteSections(slots, textsById, hideAdlibs)
+    .map((section) => `[${section.label}]\n${section.text}`)
+    .join('\n\n');
 
 /** Пример для модели: чистый текст, не длиннее 8 строк. */
 export const toExampleText = (raw: string): string =>
@@ -117,12 +143,15 @@ export const pickStyleExamples = (
     .filter((text) => text.length > 0)
     .slice(0, limit);
 
-export const buildRewriteSystem = (authorPrompt: string): string => {
+export const buildRewriteSystem = (
+  authorPrompt: string,
+  orientation: string = ARTIST_ORIENTATION
+): string => {
   const prompt = authorPrompt.trim();
 
   const head = prompt
-    ? `${COLLAGE_REWRITE_FRAME}\n\n${ARTIST_ORIENTATION}\n\nПромпт автора:\n${prompt}`
-    : `${COLLAGE_REWRITE_FRAME}\n\n${ARTIST_ORIENTATION}`;
+    ? `${COLLAGE_REWRITE_FRAME}\n\n${orientation}\n\nПромпт автора:\n${prompt}`
+    : `${COLLAGE_REWRITE_FRAME}\n\n${orientation}`;
 
   return `${head}\n\n${REWRITE_JOB}`;
 };
