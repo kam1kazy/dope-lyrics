@@ -1,5 +1,3 @@
-import { AiProviderError } from '~/modules/ai/model/polza.client';
-
 /** Словари граней для модели: те же коды, что у заметок автора. */
 export const FACET_VOCABULARY = [
   'Настроение (mood): AGGRESSION — злость и давление; LONGING — тоска и нехватка; IRONY — издёвка, сказано не в лоб; TENDERNESS — тепло без брони; BRAVADO — понты, «я сверху»; ANXIETY — тревога; COLD — лёд и дистанция; EUPHORIA — кайф и подъём.',
@@ -7,26 +5,6 @@ export const FACET_VOCABULARY = [
   'Роль в треке (songRole): VERSE — куплет; HOOK — припев; BRIDGE — переход; INTRO — зачин; SCENE — картинка-момент; PUNCHLINE — финальный удар; SKETCH — набросок.',
   'Энергия (energy): WHISPER — шёпот; QUIET — тихо; EVEN — ровно; LOUD — громко; SCREAM — крик.',
 ].join('\n');
-
-/** JSON из ответа модели: срезает блок кода и текст вокруг объекта. */
-export const parseModelJson = (raw: string, message: string): unknown => {
-  const unwrapped = raw
-    .replace(/^```(?:json)?\s*/i, '')
-    .replace(/\s*```$/, '')
-    .trim();
-  const start = unwrapped.indexOf('{');
-  const end = unwrapped.lastIndexOf('}');
-
-  if (start === -1 || end <= start) {
-    throw new AiProviderError(message);
-  }
-
-  try {
-    return JSON.parse(unwrapped.slice(start, end + 1));
-  } catch {
-    throw new AiProviderError(message);
-  }
-};
 
 /** Только известные значения, без повторов. */
 export const keepKnown = <T extends string>(

@@ -2,6 +2,7 @@ import { GraphQLError } from 'graphql';
 import { z } from 'zod';
 
 import { callModel } from '~/modules/ai/model/model-call';
+import { parseModelJson } from '~/modules/ai/model/model-json';
 import {
   AiProviderError,
   isAiConfigured,
@@ -10,7 +11,6 @@ import {
   clipLines,
   FACET_VOCABULARY,
   keepKnown,
-  parseModelJson,
 } from '~/modules/ai/references/vocabulary';
 import {
   isLyricDelivery,

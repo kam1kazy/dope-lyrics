@@ -83,6 +83,16 @@ describe('applyLineMarksAnswer', () => {
     expect(result.split('\n')[2]).toBe('новая');
   });
 
+  test('текст вокруг JSON не мешает', () => {
+    const result = applyLineMarksAnswer(
+      `Вот правки:\n${answer([{ n: 2, text: 'новая' }])}\nГотово.`,
+      AI_TEXT,
+      marks([[2, 'RED']])
+    );
+
+    expect(result.split('\n')[2]).toBe('новая');
+  });
+
   test('нет строки для красной, пустая, с переносом или не JSON — ошибка', () => {
     const red = marks([
       [1, 'RED'],

@@ -22,9 +22,10 @@ const ROLE_LABELS: Record<LyricSongRole, string> = {
   SKETCH: 'Набросок',
 };
 
+/** Скобка закрывается на той же строке: незакрытая не съедает строки ниже. */
 const hideAdlibsInText = (text: string): string =>
   text
-    .replace(/\([^)]*\)/g, '')
+    .replace(/\([^)\n]*\)/g, '')
     .split(/\r?\n/)
     .map((line) => line.replace(/\s+/g, ' ').trim())
     .filter((line) => line.length > 0)
@@ -42,20 +43,32 @@ const toQuatrains = (lines: string[]): string => {
 
 export type RewriteSection = {
   index: number;
-  sectionId: string;
   songRole: LyricSongRole;
   label: string;
   text: string;
+  /** Без повторов: одна фраза может стоять в части несколькими кусками. */
   lyricIds: number[];
 };
 
-/** Непустые части склейки; второй хук не дублируется. */
+/** Непустые части склейки; второй хук не дублируется. Строки фразы режутся один раз. */
 export const collectRewriteSections = (
   slots: CollageSlotStored[],
   textsById: ReadonlyMap<number, string>,
   hideAdlibs: boolean
 ): RewriteSection[] => {
   const sections: RewriteSection[] = [];
+  const linesById = new Map<number, string[]>();
+  const linesOf = (lyricId: number): string[] => {
+    const cached = linesById.get(lyricId);
+    if (cached) {
+      return cached;
+    }
+
+    const lines = splitGeneratorLines(textsById.get(lyricId) ?? '');
+    linesById.set(lyricId, lines);
+
+    return lines;
+  };
 
   slots.forEach((slot, index) => {
     if (index === SECOND_HOOK_INDEX) {
@@ -64,12 +77,7 @@ export const collectRewriteSections = (
 
     const chunks = slot.parts
       .map((part) => {
-        const raw = textsById.get(part.lyricId);
-        if (!raw) {
-          return '';
-        }
-
-        const sliced = splitGeneratorLines(raw)
+        const sliced = linesOf(part.lyricId)
           .slice(part.startLine, part.endLine)
           .join('\n');
 
@@ -84,11 +92,10 @@ export const collectRewriteSections = (
 
     sections.push({
       index,
-      sectionId: `${index}:${slot.songRole}`,
       songRole: slot.songRole,
       label: ROLE_LABELS[slot.songRole],
       text: toQuatrains(lines),
-      lyricIds: slot.parts.map((part) => part.lyricId),
+      lyricIds: [...new Set(slot.parts.map((part) => part.lyricId))],
     });
   });
 

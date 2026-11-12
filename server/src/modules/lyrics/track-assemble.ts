@@ -100,8 +100,9 @@ const FILL_FRAME_INDEXES = [2, 1, 3, 0, 4] as const;
 /** Второй HOOK в каркасе — повтор первого; в склейку текста не дублируем. */
 export const SECOND_HOOK_INDEX = 5;
 
+/** Метка в скобках не переходит на другую строку: незакрытая `[` не съедает строки ниже. Та же логика на клиенте. */
 export const stripGeneratorMarks = (text: string): string => {
-  return text.replace(/\s*#[^\s]+/g, ' ').replace(/\[[^\]]*\]/g, ' ');
+  return text.replace(/\s*#[^\s]+/g, ' ').replace(/\[[^\]\n]*\]/g, ' ');
 };
 
 export const splitGeneratorLines = (text: string): string[] => {

@@ -1,5 +1,6 @@
 import { GraphQLError } from 'graphql';
 
+import type { Prisma } from '~/generated/prisma/client';
 import { prisma } from '~/infrastructure/prisma';
 import type { ArtistProfile } from '~/modules/ai/artists/profiles';
 
@@ -44,14 +45,42 @@ export const applyReferenceFilter = (
   });
 };
 
-/** Полка пользователя для подбора: приёмы по порядку, тексты новые сверху. */
+const POOL_SELECT = {
+  id: true,
+  name: true,
+  moods: true,
+  energies: true,
+  deliveries: true,
+  techniques: {
+    orderBy: { position: 'asc' },
+    select: { kind: true, label: true, instruction: true },
+  },
+  texts: {
+    orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+    select: {
+      id: true,
+      title: true,
+      text: true,
+      note: true,
+      mood: true,
+      delivery: true,
+      songRole: true,
+      energy: true,
+    },
+  },
+} satisfies Prisma.ArtistSelect;
+
+/** Полка пользователя для подбора: приёмы по порядку, тексты новые сверху. При фильтре из базы идут только нужные артисты. */
 export const loadArtistPool = async (
   userId: number,
   filter: ReferenceFilter | null | undefined
 ): Promise<ArtistProfile[]> => {
+  const artistIds = [...(filter?.artistIds ?? [])];
+  const textIds = [...(filter?.textIds ?? [])];
+
   if (
-    (filter?.artistIds?.length ?? 0) > REFERENCE_FILTER_LIMIT ||
-    (filter?.textIds?.length ?? 0) > REFERENCE_FILTER_LIMIT
+    artistIds.length > REFERENCE_FILTER_LIMIT ||
+    textIds.length > REFERENCE_FILTER_LIMIT
   ) {
     throw new GraphQLError(
       `Эталонов — не больше ${REFERENCE_FILTER_LIMIT} артистов и ${REFERENCE_FILTER_LIMIT} текстов`
@@ -59,37 +88,20 @@ export const loadArtistPool = async (
   }
 
   const rows = await prisma.artist.findMany({
-    where: { userId },
-    orderBy: { name: 'asc' },
-    include: {
-      techniques: { orderBy: { position: 'asc' } },
-      texts: { orderBy: [{ createdAt: 'desc' }, { id: 'desc' }] },
+    where: {
+      userId,
+      ...(isReferenceFilterActive(filter)
+        ? {
+            OR: [
+              { id: { in: artistIds } },
+              { texts: { some: { id: { in: textIds } } } },
+            ],
+          }
+        : {}),
     },
+    orderBy: { name: 'asc' },
+    select: POOL_SELECT,
   });
 
-  return applyReferenceFilter(
-    rows.map((row) => ({
-      id: row.id,
-      name: row.name,
-      moods: row.moods,
-      energies: row.energies,
-      deliveries: row.deliveries,
-      techniques: row.techniques.map((item) => ({
-        kind: item.kind,
-        label: item.label,
-        instruction: item.instruction,
-      })),
-      texts: row.texts.map((item) => ({
-        id: item.id,
-        title: item.title,
-        text: item.text,
-        note: item.note,
-        mood: item.mood,
-        delivery: item.delivery,
-        songRole: item.songRole,
-        energy: item.energy,
-      })),
-    })),
-    filter
-  );
+  return applyReferenceFilter(rows, filter);
 };

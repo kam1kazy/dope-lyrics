@@ -2,6 +2,7 @@ import { GraphQLError } from 'graphql';
 import { z } from 'zod';
 
 import { callModel } from '~/modules/ai/model/model-call';
+import { parseModelJson } from '~/modules/ai/model/model-json';
 import {
   AiProviderError,
   isAiConfigured,
@@ -23,23 +24,13 @@ const metaSchema = z.object({
   description: z.string().trim().max(300),
 });
 
+const FORMAT_ERROR = 'ИИ вернул название в неожиданном формате';
+
 export const parsePromptMeta = (raw: string) => {
-  const unwrapped = raw
-    .replace(/^```(?:json)?\s*/i, '')
-    .replace(/\s*```$/, '')
-    .trim();
-  let json: unknown;
-
-  try {
-    json = JSON.parse(unwrapped);
-  } catch {
-    throw new AiProviderError('ИИ вернул название в неожиданном формате');
-  }
-
-  const parsed = metaSchema.safeParse(json);
+  const parsed = metaSchema.safeParse(parseModelJson(raw, FORMAT_ERROR));
 
   if (!parsed.success) {
-    throw new AiProviderError('ИИ вернул название в неожиданном формате');
+    throw new AiProviderError(FORMAT_ERROR);
   }
 
   return parsed.data;

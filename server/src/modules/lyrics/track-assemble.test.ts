@@ -6,6 +6,7 @@ import {
   parseTrackFormQuotas,
   type PoolLyric,
   remapCollageSlotsAfterSplit,
+  splitGeneratorLines,
 } from '~/modules/lyrics/track-assemble';
 
 const LEGACY_END = 1_000_000;
@@ -147,6 +148,14 @@ describe('assembleSlotsFromPools', () => {
     const starts = verseParts(slots).map((part) => part.startLine);
 
     expect(starts).toEqual([...starts].sort((left, right) => left - right));
+  });
+});
+
+describe('splitGeneratorLines', () => {
+  test('хештеги и метки в скобках срезаются, незакрытая скобка не съедает строки', () => {
+    expect(
+      splitGeneratorLines('раз #тег\n[Хук] два\nтри [эй\nчетыре\n[Куплет]')
+    ).toEqual(['раз', 'два', 'три [эй', 'четыре']);
   });
 });
 

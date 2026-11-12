@@ -63,11 +63,15 @@ export const createTrackText = async (
   userId: number,
   input: CreateTrackTextInput
 ) => {
-  const { slots, sourceText } = await sourceTextFromSlots(
-    userId,
-    input.slots,
-    input.hideAdlibs === true
-  );
+  const [{ slots, sourceText }, usage] = await Promise.all([
+    sourceTextFromSlots(userId, input.slots, input.hideAdlibs === true),
+    input.usageId
+      ? prisma.aiUsage.findFirst({
+          where: { id: input.usageId, userId },
+          select: { id: true, promptId: true },
+        })
+      : null,
+  ]);
 
   if (!sourceText) {
     throw new GraphQLError('В склейке нет строк');
@@ -77,13 +81,6 @@ export const createTrackText = async (
     input.aiText === undefined || input.aiText === null
       ? sourceText
       : requireText(input.aiText, 'Ответ ИИ');
-
-  const usage = input.usageId
-    ? await prisma.aiUsage.findFirst({
-        where: { id: input.usageId, userId },
-        select: { id: true, promptId: true },
-      })
-    : null;
 
   if (input.usageId && !usage) {
     throw new GraphQLError('Запрос ИИ не найден');

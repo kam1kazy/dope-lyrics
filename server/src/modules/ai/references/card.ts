@@ -7,6 +7,7 @@ import {
   type TechniqueKind,
 } from '~/modules/ai/artists/techniques';
 import { callModel } from '~/modules/ai/model/model-call';
+import { parseModelJson } from '~/modules/ai/model/model-json';
 import {
   AiProviderError,
   isAiConfigured,
@@ -15,7 +16,6 @@ import {
   clipLines,
   FACET_VOCABULARY,
   keepKnown,
-  parseModelJson,
   stripSources,
 } from '~/modules/ai/references/vocabulary';
 import {
