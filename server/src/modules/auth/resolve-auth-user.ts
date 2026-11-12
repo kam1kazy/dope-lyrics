@@ -1,6 +1,5 @@
 import { env } from '~/config/env';
 import { verifyTelegramWebAppUserId } from '~/config/telegram-webapp';
-import { prisma } from '~/infrastructure/prisma';
 import {
   readSessionToken,
   sessionService,
@@ -13,20 +12,12 @@ export type AuthUser = SessionUser;
 export async function resolveAuthUser(
   request: Request
 ): Promise<AuthUser | null> {
+  // Владелец сессии приходит join'ом в том же запросе — повторно его не читаем
   const sessionUser = await sessionService.resolveUser(
     readSessionToken(request)
   );
   if (sessionUser) {
-    const fresh = await prisma.users.findUnique({
-      where: { id: sessionUser.id },
-      select: {
-        id: true,
-        role: true,
-        username: true,
-        telegramId: true,
-      },
-    });
-    return fresh;
+    return sessionUser;
   }
 
   const initData = request.headers.get('x-telegram-init-data') ?? '';

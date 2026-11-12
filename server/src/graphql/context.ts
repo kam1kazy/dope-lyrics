@@ -13,13 +13,18 @@ export type GraphQLContext = {
   user: AuthUser | null;
 };
 
+/** Что Elysia передаёт в yoga: пользователь уже разобран в securityPlugin. */
+export type GraphQLServerContext = {
+  authUser?: AuthUser | null;
+};
+
 export async function createContext(
-  initial?: YogaInitialContext
+  initial?: YogaInitialContext & GraphQLServerContext
 ): Promise<GraphQLContext> {
   const request = initial?.request;
-  let user: AuthUser | null = null;
+  let user: AuthUser | null = initial?.authUser ?? null;
 
-  if (request) {
+  if (initial?.authUser === undefined && request) {
     user = await resolveAuthUser(request);
   }
 

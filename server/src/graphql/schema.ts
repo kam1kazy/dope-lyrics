@@ -1,7 +1,7 @@
 import { createSchema, createYoga, type Plugin } from 'graphql-yoga';
 
 import { env, isProduction } from '../config/env';
-import { createContext } from './context';
+import { createContext, type GraphQLServerContext } from './context';
 import { maxDepthRule } from './max-depth';
 import { resolvers } from './resolvers';
 import { typeDefinitions } from './typeDefs';
@@ -19,7 +19,7 @@ const maxDepthPlugin: Plugin = {
   },
 };
 
-export const yoga = createYoga({
+export const yoga = createYoga<GraphQLServerContext>({
   schema: executableSchema,
   context: createContext,
   graphqlEndpoint: `/${graphqlPath}`,
