@@ -1,8 +1,8 @@
 ## 1. Схема и перенос карточек (Prisma)
 
-- [ ] 1.1 `server/prisma/schema.prisma`: enum `TechniqueKind`, модели `Artist`, `ArtistTechnique`, `ReferenceText`, связь `Users.artists`, значения `AiUsageKind` `ARTIST_CARD` и `REFERENCE_TAGS`
-- [ ] 1.2 Миграция `reference_shelf`: `migrate dev --create-only`, дописать вставку 26 стартовых карточек владельцам (`role = 'OWNER'`), SQL сгенерирован из `profiles.ts` + `techniques.ts`; применить на `dope-lyrics-db`
-- [ ] 1.3 Проверить на локальной базе: у владельца 26 артистов и столько же приёмов, сколько в коде; `bun prisma generate`
+- [x] 1.1 `server/prisma/schema.prisma`: enum `TechniqueKind`, модели `Artist`, `ArtistTechnique`, `ReferenceText`, связь `Users.artists`, значения `AiUsageKind` `ARTIST_CARD` и `REFERENCE_TAGS`
+- [x] 1.2 Миграция `reference_shelf`: `migrate dev --create-only`, дописать вставку 26 стартовых карточек владельцам (`role = 'OWNER'`), SQL сгенерирован из `profiles.ts` + `techniques.ts`; применить на `dope-lyrics-db`
+- [x] 1.3 Проверить на локальной базе: у владельца 26 артистов и столько же приёмов, сколько в коде; `bun prisma generate`
 
 ## 2. Подбор из базы (server)
 

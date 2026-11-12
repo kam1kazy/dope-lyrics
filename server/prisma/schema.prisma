@@ -30,6 +30,7 @@ model Users {
   aiPrompts       AiPrompt[]
   aiUsage         AiUsage[]
   trackTexts      TrackText[]
+  artists         Artist[]
   invitesCreated  Invite[]          @relation("InviteCreatedBy")
   invitesUsed     Invite[]          @relation("InviteUsedBy")
 }
@@ -258,6 +259,8 @@ enum AiUsageKind {
   PROMPT_META
   REFERENCE_SELECT
   LINE_MARKS
+  ARTIST_CARD
+  REFERENCE_TAGS
 }
 
 enum AiUsageStatus {
@@ -332,4 +335,66 @@ model TrackText {
   usage    AiUsage?  @relation(fields: [usageId], references: [id], onDelete: SetNull)
 
   @@index([userId, createdAt])
+}
+
+/// Вид приёма артиста. TONE в правку не уходит, остальные — по одному на часть.
+enum TechniqueKind {
+  IMAGE
+  SOUND
+  WORDPLAY
+  TONE
+}
+
+/// Артист полки эталонов. Грани — словари lyric-facets.ts.
+model Artist {
+  id         Int      @id @default(autoincrement())
+  name       String
+  moods      String[] @default([])
+  energies   String[] @default([])
+  deliveries String[] @default([])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  userId Int
+  owner  Users @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  techniques ArtistTechnique[]
+  texts      ReferenceText[]
+
+  @@unique([userId, name])
+}
+
+model ArtistTechnique {
+  id          Int           @id @default(autoincrement())
+  kind        TechniqueKind
+  label       String
+  instruction String
+  position    Int
+
+  artistId Int
+  artist   Artist @relation(fields: [artistId], references: [id], onDelete: Cascade)
+
+  @@index([artistId, position])
+}
+
+/// Чужой текст на полке эталонов. В карусель и каталог не идёт.
+model ReferenceText {
+  id        Int       @id @default(autoincrement())
+  title     String?
+  text      String
+  /// Пояснение автора: что нравится и почему круто.
+  note      String?
+  mood      String[]  @default([])
+  delivery  String[]  @default([])
+  songRole  String[]  @default([])
+  energy    String?
+  /// null — теги ещё не ставились или текст поменялся.
+  taggedAt  DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  artistId Int
+  artist   Artist @relation(fields: [artistId], references: [id], onDelete: Cascade)
+
+  @@index([artistId, createdAt])
 }
