@@ -24,11 +24,22 @@ import {
   DEFAULT_EXCLUDED_SHELVES,
   SHELF_FLAGS,
 } from '@/shared/lib/lyric-view/shelf-filter';
+import {
+  EMPTY_REFERENCE_FILTER,
+  type ReferenceFilter,
+} from '@/shared/lib/reference-filter';
 
 export type TrackTextGeneration = {
   form: TrackFormQuotas;
   hideAdlibs: boolean;
   filters: CatalogSectionFilters;
+  references: ReferenceFilter;
+};
+
+/** Имена эталонов для сводки: id артиста → имя, id текста → название. */
+export type ReferenceNames = {
+  artists: ReadonlyMap<number, string>;
+  texts: ReadonlyMap<number, string>;
 };
 
 const SHELF_LABELS: Record<(typeof SHELF_FLAGS)[number], string> = {
@@ -68,6 +79,23 @@ const pickCount = (value: unknown, fallback: number): number =>
   typeof value === 'number' && Number.isInteger(value) && value >= 0
     ? value
     : fallback;
+
+const pickIds = (value: unknown): number[] =>
+  Array.isArray(value)
+    ? [
+        ...new Set(
+          value.filter(
+            (item): item is number =>
+              typeof item === 'number' && Number.isInteger(item)
+          )
+        ),
+      ]
+    : [];
+
+const parseReferences = (value: unknown): ReferenceFilter =>
+  isRecord(value)
+    ? { artistIds: pickIds(value.artistIds), textIds: pickIds(value.textIds) }
+    : { ...EMPTY_REFERENCE_FILTER };
 
 const parseFilters = (value: unknown): CatalogSectionFilters => {
   const defaults = DEFAULT_GENERATOR_SECTION_FILTERS;
@@ -148,6 +176,7 @@ export const parseTrackTextGeneration = (
     },
     hideAdlibs: parsed.hideAdlibs === true,
     filters: parseFilters(parsed.filters),
+    references: parseReferences(parsed.references),
   };
 };
 
@@ -218,8 +247,30 @@ export type TrackTextGenerationSummary = {
   filters: string[];
 };
 
+const namedReferences = (
+  references: ReferenceFilter,
+  names: ReferenceNames
+): string[] => {
+  const artists = references.artistIds.flatMap((id) => {
+    const name = names.artists.get(id);
+    return name ? [name] : [];
+  });
+  const texts = references.textIds.flatMap((id) => {
+    const name = names.texts.get(id);
+    return name ? [`«${name}»`] : [];
+  });
+
+  return [
+    ...(artists.length > 0 ? [`артисты: ${artists.join(', ')}`] : []),
+    ...(texts.length > 0 ? [`тексты эталонов: ${texts.join(', ')}`] : []),
+  ];
+};
+
+const NO_NAMES: ReferenceNames = { artists: new Map(), texts: new Map() };
+
 export const summarizeTrackTextGeneration = (
-  generation: TrackTextGeneration
+  generation: TrackTextGeneration,
+  names: ReferenceNames = NO_NAMES
 ): TrackTextGenerationSummary => {
   const form = FORM_PARTS.filter(([key]) => generation.form[key] > 0)
     .map(([key, label]) => `${label} ×${generation.form[key]}`)
@@ -228,6 +279,9 @@ export const summarizeTrackTextGeneration = (
   return {
     form: form || 'пустая форма',
     adlibs: generation.hideAdlibs ? 'адлибы скрыты' : 'адлибы видны',
-    filters: activeFilters(generation.filters),
+    filters: [
+      ...activeFilters(generation.filters),
+      ...namedReferences(generation.references, names),
+    ],
   };
 };

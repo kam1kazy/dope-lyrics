@@ -43,11 +43,11 @@
 
 ## 7. Фильтры эталонов в генераторе (client)
 
-- [ ] 7.1 `shared/ui/multi-select`: мультиселект на `Popover` с группами
-- [ ] 7.2 `CatalogGeneratorPane`: блок «Эталоны» с мультиселектами «Артисты» и «Тексты»; состояние `generatorReferences` в `catalog-menu.tsx`, точка у фильтров
-- [ ] 7.3 `CollageRewritePanel`: `references` в `rewriteCollage` и в `generation` при сохранении
-- [ ] 7.4 `features/track-texts/lib/generation.ts`: поле `references`, сводка по именам, применение с отбросом удалённых; тесты в `generation.test.ts`
-- [ ] 7.5 `bun run fix` в `client/`
+- [x] 7.1 `shared/ui/multi-select`: мультиселект на `Popover` с группами
+- [x] 7.2 `CatalogGeneratorPane`: блок «Эталоны» с мультиселектами «Артисты» и «Тексты»; состояние `generatorReferences` в `catalog-menu.tsx`, точка у фильтров
+- [x] 7.3 `CollageRewritePanel`: `references` в `rewriteCollage` и в `generation` при сохранении
+- [x] 7.4 `features/track-texts/lib/generation.ts`: поле `references`, сводка по именам, применение с отбросом удалённых; тесты в `generation.test.ts`
+- [x] 7.5 `bun run fix` в `client/`
 
 ## 8. Проверка и доки
 

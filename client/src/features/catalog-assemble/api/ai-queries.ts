@@ -20,12 +20,14 @@ export const REWRITE_COLLAGE = gql`
     $theme: String
     $filter: LyricPoolFilter
     $hideAdlibs: Boolean
+    $references: ReferenceFilterInput
   ) {
     rewriteCollage(
       slots: $slots
       theme: $theme
       filter: $filter
       hideAdlibs: $hideAdlibs
+      references: $references
     ) {
       sourceText
       aiText

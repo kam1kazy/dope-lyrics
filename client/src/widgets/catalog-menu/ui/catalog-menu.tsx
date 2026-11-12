@@ -70,6 +70,11 @@ import {
   hasActiveCatalogSectionFilters,
 } from '@/shared/lib/catalog-section-filters';
 import { usePlayback } from '@/shared/lib/playback/playback-context';
+import {
+  EMPTY_REFERENCE_FILTER,
+  hasReferenceFilter,
+  type ReferenceFilter,
+} from '@/shared/lib/reference-filter';
 import { useSwipeFromLeftEdge } from '@/shared/lib/swipe/use-swipe-from-left-edge';
 import { chromeKeyClass } from '@/shared/lib/utils/chrome-key-class';
 import { cn } from '@/shared/lib/utils/cn';
@@ -150,6 +155,8 @@ export function CatalogMenu() {
   const [hideAdlibs, setHideAdlibs] = useState(false);
   const [generatorFilters, setGeneratorFilters] =
     useState<CatalogSectionFilters>(DEFAULT_GENERATOR_SECTION_FILTERS);
+  const [generatorReferences, setGeneratorReferences] =
+    useState<ReferenceFilter>(EMPTY_REFERENCE_FILTER);
   const [selectedCollage, setSelectedCollage] = useState<ILyricCollage | null>(
     null
   );
@@ -347,6 +354,7 @@ export function CatalogMenu() {
   const generatorHasSettings =
     !quotasEqual(generatorForm, DEFAULT_TRACK_FORM_QUOTAS) ||
     hideAdlibs ||
+    (isOwner && hasReferenceFilter(generatorReferences)) ||
     hasActiveCatalogSectionFilters(
       generatorFilters,
       DEFAULT_GENERATOR_SECTION_FILTERS
@@ -745,6 +753,7 @@ export function CatalogMenu() {
                           writeGeneratorForm(generation.form);
                           setHideAdlibs(generation.hideAdlibs);
                           setGeneratorFilters(generation.filters);
+                          setGeneratorReferences(generation.references);
                           setSelectedTextId(null);
                           toast.success('Настройки возвращены в генератор');
                         }}
@@ -759,6 +768,7 @@ export function CatalogMenu() {
                         form={generatorForm}
                         hideAdlibs={hideAdlibs}
                         filters={generatorFilters}
+                        references={generatorReferences}
                         selectedCollage={selectedCollage}
                         onCloseSelected={() => {
                           setSelectedCollage(null);
@@ -806,12 +816,15 @@ export function CatalogMenu() {
                           form={generatorForm}
                           hideAdlibs={hideAdlibs}
                           filters={generatorFilters}
+                          references={generatorReferences}
+                          showReferences={isOwner}
                           onFormChange={(next) => {
                             setGeneratorForm(next);
                             writeGeneratorForm(next);
                           }}
                           onHideAdlibsChange={setHideAdlibs}
                           onFiltersChange={setGeneratorFilters}
+                          onReferencesChange={setGeneratorReferences}
                         />
                       ) : (
                         <CatalogFilterPane
