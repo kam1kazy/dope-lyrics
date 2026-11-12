@@ -60,6 +60,29 @@ describe('текст склейки', () => {
     expect(sourceText(slots, texts, true)).toBe('[Хук]\nхук\nхук два');
   });
 
+  test('незакрытая скобка не съедает строки ниже', () => {
+    const broken = new Map([[3, 'раз (эй\nдва\nтри) четыре']]);
+    const slots = slotsWith([{ lyricId: 3, startLine: 0, endLine: 3 }], []);
+
+    expect(sourceText(slots, broken, true)).toBe(
+      '[Куплет]\nраз (эй\nдва\nтри) четыре'
+    );
+  });
+
+  test('одна фраза двумя кусками — id без повтора', () => {
+    const slots = slotsWith(
+      [
+        { lyricId: 1, startLine: 0, endLine: 1 },
+        { lyricId: 1, startLine: 2, endLine: 3 },
+      ],
+      []
+    );
+
+    expect(collectRewriteSections(slots, texts, false)[0]?.lyricIds).toEqual([
+      1,
+    ]);
+  });
+
   test('пустая склейка и удалённая фраза дают пустой текст', () => {
     const slots = slotsWith([{ lyricId: 99, startLine: 0, endLine: 2 }], []);
 

@@ -110,23 +110,21 @@ export const buildRewriteRequest = async (
   input: RewriteCollageInput,
   promptOverride?: RewritePrompt
 ) => {
-  const { sourceText, sections, rows } = await sourceTextFromSlots(
-    userId,
-    input.slots,
-    input.hideAdlibs === true
-  );
+  const [{ sourceText, sections, rows }, stored, pool] = await Promise.all([
+    sourceTextFromSlots(userId, input.slots, input.hideAdlibs === true),
+    promptOverride ? null : getCurrentPrompt(userId),
+    loadArtistPool(userId, input.references),
+  ]);
 
   if (!sourceText) {
     throw new GraphQLError('В склейке нет строк');
   }
 
-  const stored = promptOverride ? null : await getCurrentPrompt(userId);
   const prompt: RewritePrompt = promptOverride ?? {
     id: stored?.id ?? null,
     text: stored?.text ?? '',
   };
   const rowsById = new Map(rows.map((row) => [row.id, row]));
-  const pool = await loadArtistPool(userId, input.references);
   const picked = sections.map((section) => {
     const facets = facetsForSection(section, rowsById);
 
