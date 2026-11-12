@@ -31,9 +31,10 @@ export const splitGeneratorLines = (text: string): string[] => {
     .filter((line) => line.length > 0);
 };
 
+/** Скобка закрывается на той же строке, как на сервере: незакрытая не съедает строки ниже. */
 export const hideAdlibsInText = (text: string): string => {
   return text
-    .replace(/\([^)]*\)/g, '')
+    .replace(/\([^)\n]*\)/g, '')
     .split(/\r?\n/)
     .map((line) => line.replace(/\s+/g, ' ').trim())
     .filter((line) => line.length > 0)
