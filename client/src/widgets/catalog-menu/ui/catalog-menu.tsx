@@ -46,7 +46,7 @@ import {
   type SectionSearchHit,
 } from '@/features/catalog-search';
 import { CatalogStatsPanel } from '@/features/catalog-stats';
-import { ReferenceShelfPanel } from '@/features/reference-shelf';
+import { ArtistList, ArtistPane } from '@/features/reference-shelf';
 import { TrackTextsList, TrackTextView } from '@/features/track-texts';
 import {
   type IProfile,
@@ -146,6 +146,7 @@ export function CatalogMenu() {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [textsOpen, setTextsOpen] = useState(false);
   const [selectedTextId, setSelectedTextId] = useState<number | null>(null);
+  const [selectedArtistId, setSelectedArtistId] = useState<number | null>(null);
   const { data: profileData } = useQuery<{ profile: IProfile }>(PROFILE);
   const isOwner = profileData?.profile.role === 'OWNER';
   const [likedOnly, setLikedOnly] = useState(false);
@@ -212,6 +213,7 @@ export function CatalogMenu() {
     setActiveSection(null);
     setFiltersOpen(false);
     setHistoryOpen(false);
+    setSelectedArtistId(null);
     setLikedOnly(false);
     setSearchOpen(false);
     setSearchQuery('');
@@ -287,6 +289,7 @@ export function CatalogMenu() {
       setFiltersOpen(false);
       setHistoryOpen(false);
       setTextsOpen(false);
+      setSelectedArtistId(null);
       closeSearch();
       return;
     }
@@ -301,6 +304,7 @@ export function CatalogMenu() {
     setFiltersOpen(false);
     setHistoryOpen(false);
     setTextsOpen(false);
+    setSelectedArtistId(null);
     closeSearch();
   };
 
@@ -359,7 +363,9 @@ export function CatalogMenu() {
       generatorFilters,
       DEFAULT_GENERATOR_SECTION_FILTERS
     );
-  const sidePaneOpen = filtersOpen || historyOpen || textsOpen;
+  const artistOpen =
+    renderedSection === 'references' && selectedArtistId !== null;
+  const sidePaneOpen = filtersOpen || historyOpen || textsOpen || artistOpen;
   const visibleMenuItems = MENU_ITEMS.filter(
     (item) => (item.id !== 'ai-settings' && item.id !== 'references') || isOwner
   );
@@ -559,6 +565,11 @@ export function CatalogMenu() {
                         return;
                       }
 
+                      if (artistOpen) {
+                        setSelectedArtistId(null);
+                        return;
+                      }
+
                       activeSectionRef.current = null;
                       setActiveSection(null);
                       closeSearch();
@@ -739,7 +750,10 @@ export function CatalogMenu() {
                     ) : renderedSection === 'ai-settings' ? (
                       <AiSettingsPanel />
                     ) : renderedSection === 'references' ? (
-                      <ReferenceShelfPanel />
+                      <ArtistList
+                        selectedId={selectedArtistId}
+                        onOpen={setSelectedArtistId}
+                      />
                     ) : renderedSection === 'generator' &&
                       isOwner &&
                       selectedTextId !== null ? (
@@ -786,12 +800,28 @@ export function CatalogMenu() {
                       'max-sm:absolute max-sm:inset-0 max-sm:z-10 max-sm:transition-transform max-sm:duration-200 max-sm:ease-out',
                       'sm:shrink-0 sm:transition-[width] sm:duration-200 sm:ease-[cubic-bezier(0.32,0.72,0,1)]',
                       sidePaneOpen
-                        ? 'max-sm:translate-x-0 sm:w-80 sm:border-l'
+                        ? cn(
+                            'max-sm:translate-x-0 sm:border-l',
+                            artistOpen ? 'sm:w-96' : 'sm:w-80'
+                          )
                         : 'pointer-events-none max-sm:translate-x-full sm:w-0 sm:border-l-transparent'
                     )}
                   >
-                    <div className="flex h-0 min-h-0 w-full flex-1 flex-col overflow-y-auto sm:w-80">
-                      {renderedSection === 'generator' && textsOpen ? (
+                    <div
+                      className={cn(
+                        'flex h-0 min-h-0 w-full flex-1 flex-col overflow-y-auto',
+                        artistOpen ? 'sm:w-96' : 'sm:w-80'
+                      )}
+                    >
+                      {artistOpen && selectedArtistId !== null ? (
+                        <ArtistPane
+                          key={selectedArtistId}
+                          id={selectedArtistId}
+                          onClose={() => {
+                            setSelectedArtistId(null);
+                          }}
+                        />
+                      ) : renderedSection === 'generator' && textsOpen ? (
                         <TrackTextsList
                           selectedId={selectedTextId}
                           onSelect={setSelectedTextId}

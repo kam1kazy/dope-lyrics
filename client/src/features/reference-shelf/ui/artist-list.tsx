@@ -33,7 +33,13 @@ const textCountLabel = (count: number): string => {
   return `${count} текстов`;
 };
 
-export function ArtistList({ onOpen }: { onOpen: (id: number) => void }) {
+export function ArtistList({
+  selectedId,
+  onOpen,
+}: {
+  selectedId: number | null;
+  onOpen: (id: number) => void;
+}) {
   const { data, loading, error } = useQuery<{ artists: IArtistListItem[] }>(
     ARTISTS,
     { fetchPolicy: 'cache-and-network' }
@@ -122,7 +128,8 @@ export function ArtistList({ onOpen }: { onOpen: (id: number) => void }) {
             <Button
               key={artist.id}
               type="button"
-              variant="ghost"
+              variant={selectedId === artist.id ? 'secondary' : 'ghost'}
+              aria-pressed={selectedId === artist.id}
               className="h-auto justify-between gap-2 py-2 font-normal"
               onClick={() => {
                 onOpen(artist.id);

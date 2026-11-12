@@ -151,7 +151,7 @@ input ReferenceFilterInput { artistIds: [Int!] textIds: [Int!] }
 
 ### 8. Клиент
 
-- `features/reference-shelf/`: `api/queries.ts`, `ui/reference-shelf-panel.tsx` (два уровня в одной панели, без роутинга: `selectedArtistId` в состоянии), `ui/artist-list.tsx`, `ui/artist-card-form.tsx`, `ui/reference-text-list.tsx`, `ui/reference-text-dialog.tsx`, `ui/reference-note-dialog.tsx`.
+- `features/reference-shelf/`: `api/queries.ts`, `ui/artist-list.tsx` (основная колонка раздела), `ui/artist-pane.tsx` (третий уровень — боковая панель, как фильтры: вкладки «Тексты» и «Настройки»; `selectedArtistId` живёт в `catalog-menu.tsx`), `ui/artist-card-form.tsx`, `ui/reference-text-list.tsx`, `ui/reference-text-dialog.tsx`, `ui/reference-note-dialog.tsx`.
 - Грани и теги правятся через `FacetChipGroup` (`toggleOnClick`) из `entities/lyric`, подписи — из `shared/lib/lyric-facets.ts`.
 - Пояснение — `MessageCircle` из Lucide, закрашенное (`fill-current`) при непустом пояснении, `Hint` + `aria-label`.
 - В `catalog-menu.tsx` у пункта `references` снимается `disabled`, раздел — только `isOwner`, как «Настройки ИИ». `CatalogMenuSection` получает `'references'`.

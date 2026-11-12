@@ -51,6 +51,8 @@ import {
   TECHNIQUE_LIMIT,
 } from '../lib/card';
 
+const FIELD_HINT = 'text-muted-foreground text-[11px] leading-snug';
+
 const fieldClass =
   'border-input bg-background focus-visible:ring-ring/50 w-full rounded-md border px-3 py-2 text-sm outline-none focus-visible:ring-2';
 
@@ -297,6 +299,12 @@ export function ArtistCardFormView({
           </Hint>
         </div>
 
+        <p className="text-muted-foreground text-xs leading-relaxed">
+          Приём — то, по чему узнаётся артист. «Поправить ИИ» берёт на каждую
+          часть склейки по одному приёму на образ, звук и игру слов у ближайших
+          по настроению артистов.
+        </p>
+
         {form.techniques.length === 0 ? (
           <p className="text-muted-foreground text-xs">
             Приёмов пока нет. Без них артист не попадёт в «Поправить ИИ».
@@ -309,6 +317,9 @@ export function ArtistCardFormView({
             data-swipe-ignore
             className="border-border flex flex-col gap-2 rounded-md border p-2"
           >
+            <span className={FIELD_HINT}>
+              Вид — какую сторону строки меняет приём. «Тон» в правку не уходит.
+            </span>
             <div className="flex items-center gap-1">
               <div
                 role="radiogroup"
@@ -355,6 +366,10 @@ export function ArtistCardFormView({
                 </Button>
               </Hint>
             </div>
+            <span className={FIELD_HINT}>
+              Ярлык — короткое имя приёма, 2–5 слов. Его видит модель рядом с
+              инструкцией.
+            </span>
             <Input
               value={item.label}
               maxLength={80}
@@ -364,6 +379,10 @@ export function ArtistCardFormView({
                 patchTechnique(index, { label: event.target.value });
               }}
             />
+            <span className={FIELD_HINT}>
+              Инструкция — что сделать со строкой и чего не делать. Одна-две
+              фразы, без цитат артиста.
+            </span>
             <textarea
               value={item.instruction}
               maxLength={500}
