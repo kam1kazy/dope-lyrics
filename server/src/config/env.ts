@@ -71,6 +71,8 @@ const httpEnvSchema = z.object({
   AI_MAX_TOKENS: aiNumber(2048, true),
   AI_COST_RUB_PER_1M_IN: aiNumber(0),
   AI_COST_RUB_PER_1M_OUT: aiNumber(0),
+  /** Client Access Token с genius.com/api-clients — поиск и топ-треки. */
+  GENIUS_ACCESS_TOKEN: z.string().optional().default(''),
 });
 
 const parsedHttp = httpEnvSchema.safeParse(process.env);

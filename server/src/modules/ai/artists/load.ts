@@ -1,3 +1,5 @@
+import { GraphQLError } from 'graphql';
+
 import { prisma } from '~/infrastructure/prisma';
 import type { ArtistProfile } from '~/modules/ai/artists/profiles';
 
@@ -5,6 +7,9 @@ export type ReferenceFilter = {
   artistIds?: readonly number[] | null;
   textIds?: readonly number[] | null;
 };
+
+/** Не больше трёх артистов и трёх текстов в фильтре. */
+export const REFERENCE_FILTER_LIMIT = 3;
 
 const hasIds = (ids: readonly number[] | null | undefined): boolean =>
   (ids?.length ?? 0) > 0;
@@ -44,6 +49,15 @@ export const loadArtistPool = async (
   userId: number,
   filter: ReferenceFilter | null | undefined
 ): Promise<ArtistProfile[]> => {
+  if (
+    (filter?.artistIds?.length ?? 0) > REFERENCE_FILTER_LIMIT ||
+    (filter?.textIds?.length ?? 0) > REFERENCE_FILTER_LIMIT
+  ) {
+    throw new GraphQLError(
+      `Эталонов — не больше ${REFERENCE_FILTER_LIMIT} артистов и ${REFERENCE_FILTER_LIMIT} текстов`
+    );
+  }
+
   const rows = await prisma.artist.findMany({
     where: { userId },
     orderBy: { name: 'asc' },

@@ -37,15 +37,16 @@ const responseSchema = z.object({
     .min(1),
   usage: z
     .object({
-      prompt_tokens: z.number().optional(),
-      completion_tokens: z.number().optional(),
+      prompt_tokens: z.number().nullish(),
+      completion_tokens: z.number().nullish(),
+      /** Без поиска polza присылает `plugins: null`. */
       plugins: z
         .object({
-          web: z.object({ total_cost_rub: z.number().optional() }).optional(),
+          web: z.object({ total_cost_rub: z.number().nullish() }).nullish(),
         })
-        .optional(),
+        .nullish(),
     })
-    .optional(),
+    .nullish(),
 });
 
 export const buildCompletionBody = (params: AiCompletionParams) => ({
@@ -70,6 +71,29 @@ export const buildCompletionBody = (params: AiCompletionParams) => ({
 
 export const isAiConfigured = (): boolean =>
   Boolean(env.AI_API_KEY && env.AI_BASE_URL && env.AI_MODEL);
+
+export const parseCompletionResponse = (json: unknown): AiCompletionResult => {
+  const parsed = responseSchema.safeParse(json);
+
+  if (!parsed.success) {
+    throw new AiProviderError('ИИ вернул ответ в неожиданном формате');
+  }
+
+  const text = parsed.data.choices[0]?.message.content?.trim() ?? '';
+
+  if (!text) {
+    throw new AiProviderError('ИИ вернул пустой ответ');
+  }
+
+  return {
+    text,
+    tokensIn: parsed.data.usage?.prompt_tokens ?? 0,
+    tokensOut: parsed.data.usage?.completion_tokens ?? 0,
+    model: parsed.data.model ?? env.AI_MODEL,
+    truncated: parsed.data.choices[0]?.finish_reason === 'length',
+    searchCostRub: parsed.data.usage?.plugins?.web?.total_cost_rub ?? 0,
+  };
+};
 
 export const completeWithModel = async (
   params: AiCompletionParams
@@ -105,24 +129,5 @@ export const completeWithModel = async (
     throw new AiProviderError(`ИИ вернул ошибку ${response.status}`);
   }
 
-  const parsed = responseSchema.safeParse(await response.json());
-
-  if (!parsed.success) {
-    throw new AiProviderError('ИИ вернул ответ в неожиданном формате');
-  }
-
-  const text = parsed.data.choices[0]?.message.content?.trim() ?? '';
-
-  if (!text) {
-    throw new AiProviderError('ИИ вернул пустой ответ');
-  }
-
-  return {
-    text,
-    tokensIn: parsed.data.usage?.prompt_tokens ?? 0,
-    tokensOut: parsed.data.usage?.completion_tokens ?? 0,
-    model: parsed.data.model ?? env.AI_MODEL,
-    truncated: parsed.data.choices[0]?.finish_reason === 'length',
-    searchCostRub: parsed.data.usage?.plugins?.web?.total_cost_rub ?? 0,
-  };
+  return parseCompletionResponse(await response.json());
 };
