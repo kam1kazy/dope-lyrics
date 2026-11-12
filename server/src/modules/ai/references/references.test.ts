@@ -79,3 +79,39 @@ describe('теги эталона', () => {
     });
   });
 });
+
+describe('ссылки из поиска', () => {
+  test('срезаются из инструкций и ярлыков', () => {
+    const card = parseArtistCard(
+      JSON.stringify({
+        name: 'X',
+        techniques: [
+          {
+            kind: 'IMAGE',
+            label: 'образ',
+            instruction:
+              'Покажи эпизод; не уходи в рассуждения (https://hiphop.ru/a-b/).',
+          },
+          {
+            kind: 'SOUND',
+            label: 'напев',
+            instruction:
+              'Тяни гласные. Источник: https://ru.ruwiki.ru/wiki/Дрейк_(рэпер)',
+          },
+          {
+            kind: 'WORDPLAY',
+            label: 'вопрос',
+            instruction:
+              'Подай [образ из интервью](https://example.com/x) как вопрос. Не усложняй.',
+          },
+        ],
+      })
+    );
+
+    expect(card.techniques.map((item) => item.instruction)).toEqual([
+      'Покажи эпизод; не уходи в рассуждения.',
+      'Тяни гласные.',
+      'Подай образ из интервью как вопрос. Не усложняй.',
+    ]);
+  });
+});

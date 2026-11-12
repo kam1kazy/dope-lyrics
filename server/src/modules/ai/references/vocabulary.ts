@@ -42,3 +42,15 @@ export const keepKnown = <T extends string>(
 
 export const clipLines = (text: string, limit: number): string =>
   text.trim().split(/\r?\n/).slice(0, limit).join('\n');
+
+/** Срезает ссылки-источники, которые модель тащит из поиска: [текст](url) → текст, остальное — прочь. */
+export const stripSources = (text: string): string =>
+  text
+    .replace(/\[([^\]]+)\]\(\s*https?:\/\/[^)\s]*\s*\)/g, '$1')
+    .replace(/\(\s*\[?[^()]*?\]?\(?\s*https?:\/\/[^)\s]*\s*\)?\s*\)/g, '')
+    .replace(/(источник|источники|source)\s*:\s*/gi, '')
+    .replace(/https?:\/\/\S+/g, '')
+    .replace(/\s+([.,;:!?])/g, '$1')
+    .replace(/\s{2,}/g, ' ')
+    .replace(/[\s.]*$/, (tail) => (tail.includes('.') ? '.' : ''))
+    .trim();

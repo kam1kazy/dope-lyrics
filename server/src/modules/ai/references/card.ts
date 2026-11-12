@@ -16,6 +16,7 @@ import {
   FACET_VOCABULARY,
   keepKnown,
   parseModelJson,
+  stripSources,
 } from '~/modules/ai/references/vocabulary';
 import {
   isLyricDelivery,
@@ -24,7 +25,7 @@ import {
 } from '~/modules/lyrics/lyric-facets';
 import { getArtist } from '~/modules/references/references.service';
 
-export const ARTIST_CARD_FRAME_VERSION = '1.0.1';
+export const ARTIST_CARD_FRAME_VERSION = '1.0.2';
 
 const SAMPLE_LIMIT = 3;
 const SAMPLE_LINES = 16;
@@ -42,6 +43,7 @@ const ARTIST_CARD_SYSTEM = [
   `- techniques — от 3 до ${TECHNIQUE_LIMIT} приёмов, по которым узнаётся артист. kind: IMAGE — образ, SOUND — звук и подача голоса, WORDPLAY — игра слов, TONE — тон и форма. Хотя бы по одному IMAGE, SOUND и WORDPLAY.`,
   '- label — ярлык приёма, 2–5 слов по-русски, строчными.',
   '- instruction — одна-две короткие фразы по-русски: что сделать со строкой, и чего не делать. Повелительно, без имени артиста и без цитат его строк.',
+  '- Без ссылок и источников в полях JSON: ни URL, ни «Источник:».',
   '- Не выдумывай: если про артиста мало данных, бери то, что видно в его текстах.',
   '',
   FACET_VOCABULARY,
@@ -49,8 +51,11 @@ const ARTIST_CARD_SYSTEM = [
 
 const techniqueSchema = z.object({
   kind: z.string(),
-  label: z.string().trim().min(1).max(80),
-  instruction: z.string().trim().min(1).max(500),
+  label: z.string().transform(stripSources).pipe(z.string().min(1).max(80)),
+  instruction: z
+    .string()
+    .transform(stripSources)
+    .pipe(z.string().min(1).max(500)),
 });
 
 const cardSchema = z.object({
