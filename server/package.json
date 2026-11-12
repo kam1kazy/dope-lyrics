@@ -14,6 +14,7 @@
     "seed": "prisma db seed",
     "import:apple-notes": "bun ./prisma/script/import-apple-notes.ts",
     "ai:probe": "bun ./prisma/script/ai-probe.ts",
+    "reference:tracks": "bun ./prisma/script/reference-shelf-tracks.ts",
     "bot": "bun src/mtcute/index.ts",
     "bot:admin": "BOT_TYPE=admin bun src/mtcute/index.ts",
     "devBot": "concurrently \"bun dev\" \"bun bot:admin\"",
