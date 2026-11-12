@@ -16,7 +16,9 @@
       "Bash(sed -n '1,8p;/^\\\\*\\\\*Дальше\\\\*\\\\*/,$p' docs/tasks/current_task.md)",
       "Bash(python3 -I -)",
       "Bash(python3 -)",
-      "Bash(git *)"
+      "Bash(git *)",
+      "/openspec:*",
+      "/opsx:*"
     ],
     "deny": [
       "Read(./**/.env)",
