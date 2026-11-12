@@ -13,6 +13,12 @@ export type AiCompletionParams = {
 };
 
 const WEB_SEARCH_RESULTS = 5;
+const ERROR_BODY_PREVIEW = 500;
+
+const statusMessage = (status: number): string =>
+  status === 429
+    ? 'ИИ перегружен, попробуйте через минуту'
+    : `ИИ вернул ошибку ${status}`;
 
 export type AiCompletionResult = {
   text: string;
@@ -126,8 +132,21 @@ export const completeWithModel = async (
   }
 
   if (!response.ok) {
-    throw new AiProviderError(`ИИ вернул ошибку ${response.status}`);
+    const body = await response.text().catch(() => '');
+    console.error(
+      `[polza] ${response.status}`,
+      body.slice(0, ERROR_BODY_PREVIEW)
+    );
+    throw new AiProviderError(statusMessage(response.status));
   }
 
-  return parseCompletionResponse(await response.json());
+  let json: unknown;
+
+  try {
+    json = await response.json();
+  } catch {
+    throw new AiProviderError('ИИ вернул ответ в неожиданном формате');
+  }
+
+  return parseCompletionResponse(json);
 };
