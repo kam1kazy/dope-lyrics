@@ -6,10 +6,10 @@
 
 ## 2. Подбор из базы (server)
 
-- [ ] 2.1 `server/src/modules/ai/artists/`: типы `ArtistProfile`/`ArtistTechnique` без slug, удалить `ARTIST_PROFILES` и инструкции из `techniques.ts`, оставить `PICKED_KINDS` и `TechniqueKind`
-- [ ] 2.2 `pick.ts`: `rankArtistCandidates(artists, facets)` по переданному списку; `pickReferenceTexts` (оценка по роли, настроению, энергии, подаче; переиспользование; лимит 3)
-- [ ] 2.3 Тесты `pick.test.ts` на фикстурах: три вида на часть, разброс при пустых гранях, выбор текста по тегам, один текст один раз, лимит 3, артист без текстов
-- [ ] 2.4 `modules/ai/artists/load.ts`: загрузка артистов пользователя с приёмами и текстами и разбор фильтра `references` (пул, тексты артиста, чужие id отброшены); тест на разбор фильтра
+- [x] 2.1 `server/src/modules/ai/artists/`: типы `ArtistProfile`/`ArtistTechnique` без slug, удалить `ARTIST_PROFILES` и инструкции из `techniques.ts`, оставить `PICKED_KINDS` и `TechniqueKind`
+- [x] 2.2 `pick.ts`: `rankArtistCandidates(artists, facets)` по переданному списку; `pickReferenceTexts` (оценка по роли, настроению, энергии, подаче; переиспользование; лимит 3)
+- [x] 2.3 Тесты `pick.test.ts` на фикстурах: три вида на часть, разброс при пустых гранях, выбор текста по тегам, один текст один раз, лимит 3, артист без текстов
+- [x] 2.4 `modules/ai/artists/load.ts`: загрузка артистов пользователя с приёмами и текстами и разбор фильтра `references` (пул, тексты артиста, чужие id отброшены); тест на разбор фильтра
 
 ## 3. Эталоны в запросе «Поправить ИИ» (server)
 
