@@ -90,14 +90,16 @@ export const rankArtistCandidates = (
   pool: readonly ArtistProfile[],
   facets: SectionFacets
 ): RankedCandidates => {
-  const ranked = pool.map((artist) => ({
-    artist,
-    score: scoreArtist(artist, facets),
-  })).sort(
-    (left, right) =>
-      right.score - left.score ||
-      left.artist.name.localeCompare(right.artist.name, 'ru')
-  );
+  const ranked = pool
+    .map((artist) => ({
+      artist,
+      score: scoreArtist(artist, facets),
+    }))
+    .sort(
+      (left, right) =>
+        right.score - left.score ||
+        left.artist.name.localeCompare(right.artist.name, 'ru')
+    );
   const positive = ranked.filter((item) => item.score > 0);
 
   if (positive.length === 0) {

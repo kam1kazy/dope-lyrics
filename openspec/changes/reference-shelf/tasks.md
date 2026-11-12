@@ -26,10 +26,10 @@
 
 ## 5. ИИ полки (server)
 
-- [ ] 5.1 `model/polza.client.ts` и `model/model-call.ts`: необязательный `webSearch: { query }` → `plugins: [{ id: 'web', ... }]`; тест на тело запроса
-- [ ] 5.2 `ai/references/card.ts`: черновик карточки (поиск, тексты артиста, разбор с отбрасыванием неизвестного); тесты разбора
-- [ ] 5.3 `ai/references/tags.ts`: теги текста; тесты разбора; мутации `draftArtistCard`, `tagReferenceText`
-- [ ] 5.4 `bun run fix` и `bun test` в `server/`
+- [x] 5.1 `model/polza.client.ts` и `model/model-call.ts`: необязательный `webSearch: { query }` → `plugins: [{ id: 'web', ... }]`; тест на тело запроса
+- [x] 5.2 `ai/references/card.ts`: черновик карточки (поиск, тексты артиста, разбор с отбрасыванием неизвестного); тесты разбора
+- [x] 5.3 `ai/references/tags.ts`: теги текста; тесты разбора; мутации `draftArtistCard`, `tagReferenceText`
+- [x] 5.4 `bun run fix` и `bun test` в `server/`
 
 ## 6. Экран «Эталоны» (client)
 

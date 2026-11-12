@@ -79,7 +79,9 @@ describe('полка эталонов', () => {
   test('чужого артиста не видно и не поменять', async () => {
     const [artist] = await listArtists(userAId);
 
-    await expect(getArtist(userBId, artist!.id)).rejects.toThrow('Артист не найден');
+    await expect(getArtist(userBId, artist!.id)).rejects.toThrow(
+      'Артист не найден'
+    );
     await expect(updateArtist(userBId, artist!.id, card('x'))).rejects.toThrow(
       'Артист не найден'
     );
@@ -102,9 +104,9 @@ describe('полка эталонов', () => {
     const shorter = await updateArtist(userAId, artist.id, card('MAYOT', 1));
     expect(shorter.techniques).toHaveLength(1);
 
-    await expect(updateArtist(userAId, artist.id, card('MAYOT', 6))).rejects.toThrow(
-      'не больше 5 приёмов'
-    );
+    await expect(
+      updateArtist(userAId, artist.id, card('MAYOT', 6))
+    ).rejects.toThrow('не больше 5 приёмов');
     await expect(
       updateArtist(userAId, artist.id, { ...card('MAYOT'), moods: ['SAD'] })
     ).rejects.toThrow('Неизвестное значение для поля «настроение»');

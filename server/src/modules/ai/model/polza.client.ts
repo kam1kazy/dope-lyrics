@@ -8,7 +8,11 @@ export type AiCompletionParams = {
   system: string;
   user: string;
   maxTokens: number;
+  /** Поиск polza в интернете перед ответом; запрос задаём сами, иначе ищет по всему сообщению. */
+  webSearch?: { query: string };
 };
+
+const WEB_SEARCH_RESULTS = 5;
 
 export type AiCompletionResult = {
   text: string;
@@ -37,6 +41,26 @@ const responseSchema = z.object({
     .optional(),
 });
 
+export const buildCompletionBody = (params: AiCompletionParams) => ({
+  model: env.AI_MODEL,
+  max_tokens: params.maxTokens,
+  messages: [
+    { role: 'system', content: params.system },
+    { role: 'user', content: params.user },
+  ],
+  ...(params.webSearch
+    ? {
+        plugins: [
+          {
+            id: 'web',
+            search_prompt: params.webSearch.query,
+            max_results: WEB_SEARCH_RESULTS,
+          },
+        ],
+      }
+    : {}),
+});
+
 export const isAiConfigured = (): boolean =>
   Boolean(env.AI_API_KEY && env.AI_BASE_URL && env.AI_MODEL);
 
@@ -58,14 +82,7 @@ export const completeWithModel = async (
           'Content-Type': 'application/json',
           Authorization: `Bearer ${env.AI_API_KEY}`,
         },
-        body: JSON.stringify({
-          model: env.AI_MODEL,
-          max_tokens: params.maxTokens,
-          messages: [
-            { role: 'system', content: params.system },
-            { role: 'user', content: params.user },
-          ],
-        }),
+        body: JSON.stringify(buildCompletionBody(params)),
         signal: AbortSignal.timeout(env.AI_TIMEOUT_MS),
       }
     );

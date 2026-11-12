@@ -1,4 +1,6 @@
 import { requireAi } from '~/graphql/ai.resolvers';
+import { draftArtistCard } from '~/modules/ai/references/card';
+import { tagReferenceText } from '~/modules/ai/references/tags';
 import {
   type ArtistInput,
   createArtist,
@@ -59,11 +61,8 @@ const artistDto = (row: Awaited<ReturnType<typeof getArtist>>) => ({
 });
 
 export const referenceQueryResolvers = {
-  artists: async (
-    _parent: unknown,
-    _args: unknown,
-    context: GraphQLContext
-  ) => (await listArtists(requireAi(context).id)).map(artistDto),
+  artists: async (_parent: unknown, _args: unknown, context: GraphQLContext) =>
+    (await listArtists(requireAi(context).id)).map(artistDto),
   artist: async (
     _parent: unknown,
     args: { id: number },
@@ -106,4 +105,14 @@ export const referenceMutationResolvers = {
     args: { id: number },
     context: GraphQLContext
   ) => deleteReferenceText(requireAi(context).id, args.id),
+  draftArtistCard: (
+    _parent: unknown,
+    args: { id: number; name: string },
+    context: GraphQLContext
+  ) => draftArtistCard(requireAi(context).id, args.id, args.name),
+  tagReferenceText: async (
+    _parent: unknown,
+    args: { id: number },
+    context: GraphQLContext
+  ) => referenceTextDto(await tagReferenceText(requireAi(context).id, args.id)),
 };

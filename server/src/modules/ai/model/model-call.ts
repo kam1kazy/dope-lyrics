@@ -17,6 +17,7 @@ export type ModelCallInput = {
   system: string;
   user: string;
   maxTokens: number;
+  webSearch?: { query: string };
 };
 
 /**
@@ -42,6 +43,7 @@ export const callModel = async <T>(
       system: input.system,
       user: input.user,
       maxTokens: input.maxTokens,
+      webSearch: input.webSearch,
     });
 
     if (completion.truncated) {

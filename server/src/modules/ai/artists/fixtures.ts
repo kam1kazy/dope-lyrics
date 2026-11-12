@@ -48,7 +48,11 @@ export const TEST_SHELF: readonly ArtistProfile[] = [
   artist(
     2,
     'MAYOT',
-    { moods: ['LONGING', 'TENDERNESS'], energies: ['QUIET'], deliveries: ['TUNE'] },
+    {
+      moods: ['LONGING', 'TENDERNESS'],
+      energies: ['QUIET'],
+      deliveries: ['TUNE'],
+    },
     [
       technique('SOUND', 'мелодичный сленг'),
       technique('WORDPLAY', 'игра на созвучии'),

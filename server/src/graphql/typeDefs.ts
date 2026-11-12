@@ -724,7 +724,11 @@ export const typeDefinitions = /* GraphQL */ `
     updateArtist(id: Int!, input: ArtistInput!): Artist!
     deleteArtist(id: Int!): Boolean!
     draftArtistCard(id: Int!, name: String!): ArtistCardDraft!
-    createReferenceText(artistId: Int!, title: String, text: String!): ReferenceText!
+    createReferenceText(
+      artistId: Int!
+      title: String
+      text: String!
+    ): ReferenceText!
     updateReferenceText(id: Int!, input: ReferenceTextInput!): ReferenceText!
     deleteReferenceText(id: Int!): Boolean!
     tagReferenceText(id: Int!): ReferenceText!

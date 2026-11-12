@@ -2,11 +2,11 @@ import { GraphQLError } from 'graphql';
 
 import { env } from '~/config/env';
 import { aiMutationResolvers, aiQueryResolvers } from '~/graphql/ai.resolvers';
+import { applyIngestSource, fetchIngestSources } from '~/graphql/ingest-client';
 import {
   referenceMutationResolvers,
   referenceQueryResolvers,
 } from '~/graphql/references.resolvers';
-import { applyIngestSource, fetchIngestSources } from '~/graphql/ingest-client';
 import { can } from '~/modules/auth/permissions';
 import { roleProfilesFromJson } from '~/modules/lyrics/lyric-facets';
 import { lyricsService } from '~/modules/lyrics/lyrics.service';

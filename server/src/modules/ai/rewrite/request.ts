@@ -116,7 +116,9 @@ export const formatArtistCards = (
       const number = referenceNumbers.get(artist.id);
 
       return [
-        number === undefined ? artist.name : `${artist.name} · эталон ${number}`,
+        number === undefined
+          ? artist.name
+          : `${artist.name} · эталон ${number}`,
         ...artist.techniques.map(
           (item) =>
             `- ${KIND_LABELS[item.kind]} · ${item.label}: ${item.instruction}`
