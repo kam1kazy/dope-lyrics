@@ -4,6 +4,7 @@ import {
   azlyricsArtistCandidates,
   azlyricsCompact,
   normalizeKey,
+  siteArtistSlug,
   trackSlug,
   txtsongArtistCandidates,
 } from '~/modules/references/slug-translit';
