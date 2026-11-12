@@ -75,3 +75,41 @@ describe('настройки генерации текста', () => {
     expect(generation?.filters.selectedTags).toEqual([]);
   });
 });
+
+describe('эталоны в настройках текста', () => {
+  test('старый текст без эталонов — пустой фильтр', () => {
+    expect(parseTrackTextGeneration('{}')?.references).toEqual({
+      artistIds: [],
+      textIds: [],
+    });
+  });
+
+  test('id читаются без мусора и повторов', () => {
+    const generation = parseTrackTextGeneration(
+      JSON.stringify({
+        references: { artistIds: [1, 1, 'x', 2.5, 3], textIds: 'нет' },
+      })
+    );
+
+    expect(generation?.references).toEqual({ artistIds: [1, 3], textIds: [] });
+  });
+
+  test('в сводке имена, удалённые с полки пропадают', () => {
+    const generation = parseTrackTextGeneration(
+      JSON.stringify({ references: { artistIds: [1, 2], textIds: [7] } })
+    );
+
+    expect(generation).not.toBeNull();
+    if (!generation) {
+      return;
+    }
+
+    expect(
+      summarizeTrackTextGeneration(generation, {
+        artists: new Map([[1, 'Future']]),
+        texts: new Map([[7, 'Mask Off']]),
+      }).filters
+    ).toEqual(['артисты: Future', 'тексты эталонов: «Mask Off»']);
+    expect(summarizeTrackTextGeneration(generation).filters).toEqual([]);
+  });
+});

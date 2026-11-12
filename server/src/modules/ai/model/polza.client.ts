@@ -8,7 +8,11 @@ export type AiCompletionParams = {
   system: string;
   user: string;
   maxTokens: number;
+  /** Поиск polza в интернете перед ответом; запрос задаём сами, иначе ищет по всему сообщению. */
+  webSearch?: { query: string };
 };
+
+const WEB_SEARCH_RESULTS = 5;
 
 export type AiCompletionResult = {
   text: string;
@@ -17,6 +21,8 @@ export type AiCompletionResult = {
   model: string;
   /** Ответ оборван на лимите токенов. */
   truncated: boolean;
+  /** Стоимость поиска в интернете по данным polza; 0 — поиска не было. */
+  searchCostRub: number;
 };
 
 const responseSchema = z.object({
@@ -33,8 +39,33 @@ const responseSchema = z.object({
     .object({
       prompt_tokens: z.number().optional(),
       completion_tokens: z.number().optional(),
+      plugins: z
+        .object({
+          web: z.object({ total_cost_rub: z.number().optional() }).optional(),
+        })
+        .optional(),
     })
     .optional(),
+});
+
+export const buildCompletionBody = (params: AiCompletionParams) => ({
+  model: env.AI_MODEL,
+  max_tokens: params.maxTokens,
+  messages: [
+    { role: 'system', content: params.system },
+    { role: 'user', content: params.user },
+  ],
+  ...(params.webSearch
+    ? {
+        plugins: [
+          {
+            id: 'web',
+            search_prompt: params.webSearch.query,
+            max_results: WEB_SEARCH_RESULTS,
+          },
+        ],
+      }
+    : {}),
 });
 
 export const isAiConfigured = (): boolean =>
@@ -58,14 +89,7 @@ export const completeWithModel = async (
           'Content-Type': 'application/json',
           Authorization: `Bearer ${env.AI_API_KEY}`,
         },
-        body: JSON.stringify({
-          model: env.AI_MODEL,
-          max_tokens: params.maxTokens,
-          messages: [
-            { role: 'system', content: params.system },
-            { role: 'user', content: params.user },
-          ],
-        }),
+        body: JSON.stringify(buildCompletionBody(params)),
         signal: AbortSignal.timeout(env.AI_TIMEOUT_MS),
       }
     );
@@ -99,5 +123,6 @@ export const completeWithModel = async (
     tokensOut: parsed.data.usage?.completion_tokens ?? 0,
     model: parsed.data.model ?? env.AI_MODEL,
     truncated: parsed.data.choices[0]?.finish_reason === 'length',
+    searchCostRub: parsed.data.usage?.plugins?.web?.total_cost_rub ?? 0,
   };
 };

@@ -19,6 +19,7 @@ import {
   UNLIKE_COLLAGE,
 } from '@/entities/lyric';
 import type { CatalogSectionFilters } from '@/shared/lib/catalog-section-filters';
+import type { ReferenceFilter } from '@/shared/lib/reference-filter';
 import { useRetainedState } from '@/shared/lib/retained-state';
 import { ErrorText } from '@/shared/ui/error-text';
 import { Hint } from '@/shared/ui/hint';
@@ -105,6 +106,7 @@ export function CatalogAssemblePanel({
   form,
   hideAdlibs,
   filters,
+  references,
   selectedCollage,
   onCloseSelected,
   aiEnabled,
@@ -113,6 +115,7 @@ export function CatalogAssemblePanel({
   form: TrackFormQuotas;
   hideAdlibs: boolean;
   filters: CatalogSectionFilters;
+  references: ReferenceFilter;
   selectedCollage: ILyricCollage | null;
   onCloseSelected: () => void;
   aiEnabled: boolean;
@@ -545,6 +548,7 @@ export function CatalogAssemblePanel({
             slots={slots}
             form={form}
             filters={filters}
+            references={references}
             hideAdlibs={hideAdlibs}
             onSaved={onTextSaved}
             onResultChange={setRewriteActive}

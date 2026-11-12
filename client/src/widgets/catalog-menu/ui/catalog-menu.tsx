@@ -46,6 +46,7 @@ import {
   type SectionSearchHit,
 } from '@/features/catalog-search';
 import { CatalogStatsPanel } from '@/features/catalog-stats';
+import { ArtistList, ArtistPane } from '@/features/reference-shelf';
 import { TrackTextsList, TrackTextView } from '@/features/track-texts';
 import {
   type IProfile,
@@ -69,6 +70,11 @@ import {
   hasActiveCatalogSectionFilters,
 } from '@/shared/lib/catalog-section-filters';
 import { usePlayback } from '@/shared/lib/playback/playback-context';
+import {
+  EMPTY_REFERENCE_FILTER,
+  hasReferenceFilter,
+  type ReferenceFilter,
+} from '@/shared/lib/reference-filter';
 import { useSwipeFromLeftEdge } from '@/shared/lib/swipe/use-swipe-from-left-edge';
 import { chromeKeyClass } from '@/shared/lib/utils/chrome-key-class';
 import { cn } from '@/shared/lib/utils/cn';
@@ -82,11 +88,11 @@ type CatalogSection = CatalogMenuSection;
 
 type FilterableSection = Exclude<
   CatalogSection,
-  'profile' | 'generator' | 'history' | 'ai-settings'
+  'profile' | 'generator' | 'history' | 'references' | 'ai-settings'
 >;
 
 type MenuItem = {
-  id: CatalogSection | 'references';
+  id: CatalogSection;
   label: string;
   icon: typeof Bookmark;
   disabled?: boolean;
@@ -98,7 +104,7 @@ const MENU_ITEMS: MenuItem[] = [
   { id: 'demos', label: 'Тексты из демок', icon: AudioLines },
   { id: 'history', label: 'История', icon: History },
   { id: 'stats', label: 'Сводка', icon: ChartColumn },
-  { id: 'references', label: 'Эталоны', icon: Sparkles, disabled: true },
+  { id: 'references', label: 'Эталоны', icon: Sparkles },
   { id: 'generator', label: 'Генератор', icon: Shuffle },
   { id: 'ai-settings', label: 'Настройки ИИ', icon: Bot },
 ];
@@ -111,6 +117,7 @@ const SECTION_TITLES: Record<CatalogSection, string> = {
   history: 'История карусели',
   stats: 'Сводка',
   generator: 'Генератор',
+  references: 'Эталоны',
   'ai-settings': 'Настройки ИИ',
 };
 
@@ -139,6 +146,7 @@ export function CatalogMenu() {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [textsOpen, setTextsOpen] = useState(false);
   const [selectedTextId, setSelectedTextId] = useState<number | null>(null);
+  const [selectedArtistId, setSelectedArtistId] = useState<number | null>(null);
   const { data: profileData } = useQuery<{ profile: IProfile }>(PROFILE);
   const isOwner = profileData?.profile.role === 'OWNER';
   const [likedOnly, setLikedOnly] = useState(false);
@@ -148,6 +156,8 @@ export function CatalogMenu() {
   const [hideAdlibs, setHideAdlibs] = useState(false);
   const [generatorFilters, setGeneratorFilters] =
     useState<CatalogSectionFilters>(DEFAULT_GENERATOR_SECTION_FILTERS);
+  const [generatorReferences, setGeneratorReferences] =
+    useState<ReferenceFilter>(EMPTY_REFERENCE_FILTER);
   const [selectedCollage, setSelectedCollage] = useState<ILyricCollage | null>(
     null
   );
@@ -203,6 +213,7 @@ export function CatalogMenu() {
     setActiveSection(null);
     setFiltersOpen(false);
     setHistoryOpen(false);
+    setSelectedArtistId(null);
     setLikedOnly(false);
     setSearchOpen(false);
     setSearchQuery('');
@@ -278,6 +289,7 @@ export function CatalogMenu() {
       setFiltersOpen(false);
       setHistoryOpen(false);
       setTextsOpen(false);
+      setSelectedArtistId(null);
       closeSearch();
       return;
     }
@@ -292,6 +304,7 @@ export function CatalogMenu() {
     setFiltersOpen(false);
     setHistoryOpen(false);
     setTextsOpen(false);
+    setSelectedArtistId(null);
     closeSearch();
   };
 
@@ -325,6 +338,7 @@ export function CatalogMenu() {
     renderedSection !== 'profile' &&
     renderedSection !== 'generator' &&
     renderedSection !== 'history' &&
+    renderedSection !== 'references' &&
     renderedSection !== 'ai-settings'
       ? renderedSection
       : null;
@@ -344,13 +358,16 @@ export function CatalogMenu() {
   const generatorHasSettings =
     !quotasEqual(generatorForm, DEFAULT_TRACK_FORM_QUOTAS) ||
     hideAdlibs ||
+    (isOwner && hasReferenceFilter(generatorReferences)) ||
     hasActiveCatalogSectionFilters(
       generatorFilters,
       DEFAULT_GENERATOR_SECTION_FILTERS
     );
-  const sidePaneOpen = filtersOpen || historyOpen || textsOpen;
+  const artistOpen =
+    renderedSection === 'references' && selectedArtistId !== null;
+  const sidePaneOpen = filtersOpen || historyOpen || textsOpen || artistOpen;
   const visibleMenuItems = MENU_ITEMS.filter(
-    (item) => item.id !== 'ai-settings' || isOwner
+    (item) => (item.id !== 'ai-settings' && item.id !== 'references') || isOwner
   );
 
   const handleLogout = () => {
@@ -491,7 +508,7 @@ export function CatalogMenu() {
                     disabled={disabled}
                     aria-pressed={isActive}
                     onClick={() => {
-                      if (disabled || id === 'references') {
+                      if (disabled) {
                         return;
                       }
 
@@ -545,6 +562,11 @@ export function CatalogMenu() {
 
                       if (textsOpen) {
                         setTextsOpen(false);
+                        return;
+                      }
+
+                      if (artistOpen) {
+                        setSelectedArtistId(null);
                         return;
                       }
 
@@ -727,6 +749,11 @@ export function CatalogMenu() {
                       />
                     ) : renderedSection === 'ai-settings' ? (
                       <AiSettingsPanel />
+                    ) : renderedSection === 'references' ? (
+                      <ArtistList
+                        selectedId={selectedArtistId}
+                        onOpen={setSelectedArtistId}
+                      />
                     ) : renderedSection === 'generator' &&
                       isOwner &&
                       selectedTextId !== null ? (
@@ -740,6 +767,7 @@ export function CatalogMenu() {
                           writeGeneratorForm(generation.form);
                           setHideAdlibs(generation.hideAdlibs);
                           setGeneratorFilters(generation.filters);
+                          setGeneratorReferences(generation.references);
                           setSelectedTextId(null);
                           toast.success('Настройки возвращены в генератор');
                         }}
@@ -754,6 +782,7 @@ export function CatalogMenu() {
                         form={generatorForm}
                         hideAdlibs={hideAdlibs}
                         filters={generatorFilters}
+                        references={generatorReferences}
                         selectedCollage={selectedCollage}
                         onCloseSelected={() => {
                           setSelectedCollage(null);
@@ -771,12 +800,28 @@ export function CatalogMenu() {
                       'max-sm:absolute max-sm:inset-0 max-sm:z-10 max-sm:transition-transform max-sm:duration-200 max-sm:ease-out',
                       'sm:shrink-0 sm:transition-[width] sm:duration-200 sm:ease-[cubic-bezier(0.32,0.72,0,1)]',
                       sidePaneOpen
-                        ? 'max-sm:translate-x-0 sm:w-80 sm:border-l'
+                        ? cn(
+                            'max-sm:translate-x-0 sm:border-l',
+                            artistOpen ? 'sm:w-96' : 'sm:w-80'
+                          )
                         : 'pointer-events-none max-sm:translate-x-full sm:w-0 sm:border-l-transparent'
                     )}
                   >
-                    <div className="flex h-0 min-h-0 w-full flex-1 flex-col overflow-y-auto sm:w-80">
-                      {renderedSection === 'generator' && textsOpen ? (
+                    <div
+                      className={cn(
+                        'flex h-0 min-h-0 w-full flex-1 flex-col overflow-y-auto',
+                        artistOpen ? 'sm:w-96' : 'sm:w-80'
+                      )}
+                    >
+                      {artistOpen && selectedArtistId !== null ? (
+                        <ArtistPane
+                          key={selectedArtistId}
+                          id={selectedArtistId}
+                          onClose={() => {
+                            setSelectedArtistId(null);
+                          }}
+                        />
+                      ) : renderedSection === 'generator' && textsOpen ? (
                         <TrackTextsList
                           selectedId={selectedTextId}
                           onSelect={setSelectedTextId}
@@ -801,12 +846,15 @@ export function CatalogMenu() {
                           form={generatorForm}
                           hideAdlibs={hideAdlibs}
                           filters={generatorFilters}
+                          references={generatorReferences}
+                          showReferences={isOwner}
                           onFormChange={(next) => {
                             setGeneratorForm(next);
                             writeGeneratorForm(next);
                           }}
                           onHideAdlibsChange={setHideAdlibs}
                           onFiltersChange={setGeneratorFilters}
+                          onReferencesChange={setGeneratorReferences}
                         />
                       ) : (
                         <CatalogFilterPane

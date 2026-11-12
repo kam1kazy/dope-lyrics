@@ -12,7 +12,9 @@ import {
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
+import { useReferenceOptions } from '@/features/reference-shelf';
 import { formatRuDateTime } from '@/shared/lib/format-datetime';
+import { keepLiveReferences } from '@/shared/lib/reference-filter';
 import { useRetainedState } from '@/shared/lib/retained-state';
 import { cn } from '@/shared/lib/utils/cn';
 import { BeforeAfterText } from '@/shared/ui/before-after-text';
@@ -127,6 +129,7 @@ export function TrackTextView({
   };
   const [tab, setTab] = useState<SnapshotTab>('final');
   const [seamOn, setSeamOn] = useState(false);
+  const shelf = useReferenceOptions(true);
 
   useEffect(() => {
     setTab('final');
@@ -151,7 +154,9 @@ export function TrackTextView({
   }
 
   const generation = parseTrackTextGeneration(row.generation);
-  const summary = generation ? summarizeTrackTextGeneration(generation) : null;
+  const summary = generation
+    ? summarizeTrackTextGeneration(generation, shelf.names)
+    : null;
   const value = draft ?? row.text;
   const dirty = value !== row.text;
 
@@ -227,7 +232,12 @@ export function TrackTextView({
               className="size-8 shrink-0"
               aria-label="Применить в генератор"
               onClick={() => {
-                onApplySettings(generation);
+                onApplySettings({
+                  ...generation,
+                  references: shelf.loaded
+                    ? keepLiveReferences(generation.references, shelf.live)
+                    : generation.references,
+                });
               }}
             >
               <SlidersHorizontal className="size-4" />

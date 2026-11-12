@@ -4,11 +4,14 @@ import { useEffect, useState } from 'react';
 
 import type { TrackFormPreset, TrackFormQuotas } from '@/entities/lyric';
 import { CatalogFilterPane } from '@/features/catalog-filters';
+import { useReferenceOptions } from '@/features/reference-shelf';
 import {
   type CatalogSectionFilters,
   DEFAULT_GENERATOR_SECTION_FILTERS,
 } from '@/shared/lib/catalog-section-filters';
+import type { ReferenceFilter } from '@/shared/lib/reference-filter';
 import { cn } from '@/shared/lib/utils/cn';
+import { MultiSelect } from '@/shared/ui/multi-select';
 import { Button } from '@/shared/ui/shadcn/ui/button';
 import { Label } from '@/shared/ui/shadcn/ui/label';
 
@@ -86,20 +89,64 @@ function ParagraphField({
   );
 }
 
+function ReferenceFilterFields({
+  value,
+  onChange,
+}: {
+  value: ReferenceFilter;
+  onChange: (next: ReferenceFilter) => void;
+}) {
+  const { artistGroups, textGroups } = useReferenceOptions(true);
+
+  return (
+    <div className="flex flex-col gap-2">
+      <MultiSelect
+        label="Эталоны · артисты"
+        allLabel="Вся полка"
+        emptyText="На полке нет артистов"
+        groups={artistGroups}
+        value={value.artistIds}
+        onChange={(artistIds) => {
+          onChange({ ...value, artistIds });
+        }}
+      />
+      <MultiSelect
+        label="Эталоны · тексты"
+        allLabel="Любые тексты"
+        emptyText="На полке нет текстов"
+        groups={textGroups}
+        value={value.textIds}
+        onChange={(textIds) => {
+          onChange({ ...value, textIds });
+        }}
+      />
+      <p className="text-muted-foreground text-xs leading-relaxed">
+        Для «Поправить ИИ»: выбранные — только они.
+      </p>
+    </div>
+  );
+}
+
 export function CatalogGeneratorPane({
   form,
   hideAdlibs,
   filters,
+  references,
+  showReferences,
   onFormChange,
   onHideAdlibsChange,
   onFiltersChange,
+  onReferencesChange,
 }: {
   form: TrackFormQuotas;
   hideAdlibs: boolean;
   filters: CatalogSectionFilters;
+  references: ReferenceFilter;
+  showReferences: boolean;
   onFormChange: (form: TrackFormQuotas) => void;
   onHideAdlibsChange: (hide: boolean) => void;
   onFiltersChange: (filters: CatalogSectionFilters) => void;
+  onReferencesChange: (references: ReferenceFilter) => void;
 }) {
   const [moreOpen, setMoreOpen] = useState(false);
   const selectedPreset = matchingTrackFormPreset(form);
@@ -236,6 +283,13 @@ export function CatalogGeneratorPane({
           <p className="text-muted-foreground text-xs leading-relaxed">
             Прячет текст в круглых скобках.
           </p>
+
+          {showReferences ? (
+            <ReferenceFilterFields
+              value={references}
+              onChange={onReferencesChange}
+            />
+          ) : null}
         </>
       }
     />

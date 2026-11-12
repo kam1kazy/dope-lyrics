@@ -388,6 +388,83 @@ export const typeDefinitions = /* GraphQL */ `
     usageId: Int!
   }
 
+  enum TechniqueKind {
+    IMAGE
+    SOUND
+    WORDPLAY
+    TONE
+  }
+
+  type ArtistTechnique {
+    id: Int!
+    kind: TechniqueKind!
+    label: String!
+    instruction: String!
+  }
+
+  type ReferenceText {
+    id: Int!
+    artistId: Int!
+    title: String
+    text: String!
+    note: String
+    mood: [String!]!
+    delivery: [String!]!
+    songRole: [String!]!
+    energy: String
+    tagged: Boolean!
+    createdAt: String!
+  }
+
+  type Artist {
+    id: Int!
+    name: String!
+    moods: [String!]!
+    energies: [String!]!
+    deliveries: [String!]!
+    techniques: [ArtistTechnique!]!
+    texts: [ReferenceText!]!
+    textCount: Int!
+  }
+
+  type ArtistTechniqueDraft {
+    kind: TechniqueKind!
+    label: String!
+    instruction: String!
+  }
+
+  type ArtistCardDraft {
+    name: String!
+    moods: [String!]!
+    energies: [String!]!
+    deliveries: [String!]!
+    techniques: [ArtistTechniqueDraft!]!
+  }
+
+  input ArtistTechniqueInput {
+    kind: TechniqueKind!
+    label: String!
+    instruction: String!
+  }
+
+  input ArtistInput {
+    name: String!
+    moods: [String!]!
+    energies: [String!]!
+    deliveries: [String!]!
+    techniques: [ArtistTechniqueInput!]!
+  }
+
+  input ReferenceTextInput {
+    title: String
+    text: String
+    note: String
+    mood: [String!]
+    delivery: [String!]
+    songRole: [String!]
+    energy: String
+  }
+
   type TrackText {
     id: Int!
     createdAt: String!
@@ -445,6 +522,11 @@ export const typeDefinitions = /* GraphQL */ `
   type CreatedInvite {
     code: String!
     expiresAt: String!
+  }
+
+  input ReferenceFilterInput {
+    artistIds: [Int!]
+    textIds: [Int!]
   }
 
   input LyricPoolFilter {
@@ -543,6 +625,8 @@ export const typeDefinitions = /* GraphQL */ `
     aiUsageRecent: [AiUsageItem!]!
     trackTexts: [TrackText!]!
     trackText(id: Int!): TrackText!
+    artists: [Artist!]!
+    artist(id: Int!): Artist!
     lyricIds(
       tags: [String!]
       keyword: String
@@ -618,6 +702,7 @@ export const typeDefinitions = /* GraphQL */ `
       theme: String
       filter: LyricPoolFilter
       hideAdlibs: Boolean
+      references: ReferenceFilterInput
     ): CollageRewrite!
     reviseMarkedLines(
       aiText: String!
@@ -635,6 +720,18 @@ export const typeDefinitions = /* GraphQL */ `
     updateTrackText(id: Int!, text: String!): TrackText!
     markTrackTextDone(id: Int!): TrackText!
     deleteTrackText(id: Int!): Int!
+    createArtist(name: String!): Artist!
+    updateArtist(id: Int!, input: ArtistInput!): Artist!
+    deleteArtist(id: Int!): Boolean!
+    draftArtistCard(id: Int!, name: String!): ArtistCardDraft!
+    createReferenceText(
+      artistId: Int!
+      title: String
+      text: String!
+    ): ReferenceText!
+    updateReferenceText(id: Int!, input: ReferenceTextInput!): ReferenceText!
+    deleteReferenceText(id: Int!): Boolean!
+    tagReferenceText(id: Int!): ReferenceText!
     glueLyrics(slots: [CollageSlotInput!]!, hideOriginals: Boolean!): Lyric!
     saveCarouselHistory(
       lyricIds: [Int!]!

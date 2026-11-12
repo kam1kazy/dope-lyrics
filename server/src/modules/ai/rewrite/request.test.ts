@@ -1,6 +1,10 @@
 import { describe, expect, test } from 'bun:test';
 
-import { rankArtistCandidates } from '~/modules/ai/artists/pick';
+import { sample, TEST_SHELF } from '~/modules/ai/artists/fixtures';
+import {
+  assignReferenceTexts,
+  rankArtistCandidates,
+} from '~/modules/ai/artists/pick';
 import { buildRewriteSystem } from '~/modules/ai/rewrite/frame';
 import {
   buildRewriteUser,
@@ -108,7 +112,7 @@ describe('сборка запроса', () => {
   });
 
   test('в части три приёма с подписью вида', () => {
-    const { artists, relaxed } = rankArtistCandidates({
+    const { artists } = rankArtistCandidates(TEST_SHELF, {
       moods: ['LONGING'],
       energies: ['QUIET'],
       deliveries: ['TUNE'],
@@ -117,7 +121,7 @@ describe('сборка запроса', () => {
     const user = buildRewriteUser({
       theme: null,
       authorPrompt: '',
-      sections: [{ label: 'Хук', text: 'х', artists, relaxed }],
+      sections: [{ label: 'Хук', text: 'х', artists, relaxed: false }],
     });
     const cardLines = user.split('\n').filter((line) => line.startsWith('- '));
 
@@ -128,5 +132,76 @@ describe('сборка запроса', () => {
       true
     );
     expect(user).toContain('приём на образ, на звук и на игру слов');
+  });
+});
+
+describe('эталоны в запросе', () => {
+  const future = {
+    ...TEST_SHELF[0]!,
+    texts: [
+      {
+        ...sample(7, { title: 'Mask Off', note: 'холодная тяга без нытья' }),
+        text: Array.from({ length: 30 }, (_, i) => `строка ${i + 1}`).join(
+          '\n'
+        ),
+      },
+    ],
+  };
+
+  test('блок эталона с пояснением, подпись у артиста, обрезка по строкам', () => {
+    const { references, bySection } = assignReferenceTexts([
+      {
+        songRole: 'HOOK',
+        facets: { moods: [], energies: [], deliveries: [] },
+        artists: [future],
+      },
+    ]);
+    const user = buildRewriteUser({
+      theme: null,
+      authorPrompt: '',
+      sections: [
+        {
+          label: 'Хук',
+          text: 'х',
+          artists: [future],
+          relaxed: false,
+          referenceNumbers: bySection[0],
+        },
+      ],
+      references,
+    });
+
+    expect(user).toContain('Эталон 1 · Future — «Mask Off»');
+    expect(user).toContain('Чем нравится автору: холодная тяга без нытья');
+    expect(user).toContain('Future · эталон 1');
+    expect(user).toContain('строка 24\n…');
+    expect(user).not.toContain('строка 25');
+    expect(user.indexOf('Эталоны —')).toBeLessThan(user.indexOf('Склейка'));
+    expect(buildRewriteSystem()).not.toContain('Mask Off');
+  });
+
+  test('без эталонов блока нет', () => {
+    const user = buildRewriteUser({
+      theme: null,
+      authorPrompt: '',
+      sections: [{ label: 'Хук', text: 'х', artists: [], relaxed: false }],
+      references: [],
+    });
+
+    expect(user).not.toContain('Эталоны');
+  });
+
+  test('приём подписан ярлыком', () => {
+    const user = buildRewriteUser({
+      theme: null,
+      authorPrompt: '',
+      sections: [
+        { label: 'Хук', text: 'х', artists: [TEST_SHELF[0]!], relaxed: false },
+      ],
+    });
+
+    expect(user).toContain(
+      '- звук · автотюн как чувство: инструкция: автотюн как чувство'
+    );
   });
 });

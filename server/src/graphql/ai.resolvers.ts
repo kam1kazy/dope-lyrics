@@ -32,7 +32,7 @@ import {
 
 import type { GraphQLContext } from './context';
 
-const requireAi = (context: GraphQLContext) => {
+export const requireAi = (context: GraphQLContext) => {
   if (!can(context.user, 'ai:use')) {
     throw new GraphQLError('Нет доступа');
   }

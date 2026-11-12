@@ -12,6 +12,7 @@ import {
 } from '@/entities/lyric';
 import type { CatalogSectionFilters } from '@/shared/lib/catalog-section-filters';
 import { formatQueryError } from '@/shared/lib/format-query-error';
+import type { ReferenceFilter } from '@/shared/lib/reference-filter';
 import { useRetainedState } from '@/shared/lib/retained-state';
 import { BeforeAfterText, type LineMark } from '@/shared/ui/before-after-text';
 import { Hint } from '@/shared/ui/hint';
@@ -59,6 +60,7 @@ export function CollageRewritePanel({
   slots,
   form,
   filters,
+  references,
   hideAdlibs,
   onSaved,
   onResultChange,
@@ -66,6 +68,7 @@ export function CollageRewritePanel({
   slots: IAssembledTrackSlot[];
   form: TrackFormQuotas;
   filters: CatalogSectionFilters;
+  references: ReferenceFilter;
   hideAdlibs: boolean;
   onSaved: (id: number) => void;
   onResultChange: (active: boolean) => void;
@@ -90,6 +93,7 @@ export function CollageRewritePanel({
       theme: string | null;
       filter: ReturnType<typeof assembleTrackFilterFromSection>;
       hideAdlibs: boolean;
+      references: ReferenceFilter;
     }
   >(REWRITE_COLLAGE, { refetchQueries: ['AiSettings'] });
   const [revise, { loading: revising, error: reviseError }] = useMutation<
@@ -131,6 +135,7 @@ export function CollageRewritePanel({
         theme: trimmedTheme,
         filter: assembleTrackFilterFromSection(filters),
         hideAdlibs,
+        references,
       },
     }).catch(() => null);
 
@@ -194,7 +199,7 @@ export function CollageRewritePanel({
         aiText: result.aiText,
         usageId: result.usageId,
         hideAdlibs,
-        generation: JSON.stringify({ form, hideAdlibs, filters }),
+        generation: JSON.stringify({ form, hideAdlibs, filters, references }),
       },
     }).catch(() => null);
 

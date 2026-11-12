@@ -1,11 +1,9 @@
-import {
-  ARTIST_PROFILES,
-  type ArtistProfile,
+import type {
+  ArtistProfile,
+  ArtistTechnique,
+  ReferenceSample,
 } from '~/modules/ai/artists/profiles';
-import {
-  type ArtistTechnique,
-  PICKED_KINDS,
-} from '~/modules/ai/artists/techniques';
+import { PICKED_KINDS } from '~/modules/ai/artists/techniques';
 import {
   isLyricDelivery,
   isLyricEnergy,
@@ -15,6 +13,14 @@ import {
 
 export const CANDIDATE_LIMIT = 3;
 export const CANDIDATE_FLOOR = 3;
+/** Текстов-эталонов на один запрос. */
+export const REFERENCE_TEXT_LIMIT = 3;
+
+export type SectionFacets = {
+  moods: readonly string[];
+  energies: readonly string[];
+  deliveries: readonly string[];
+};
 
 export type RankedCandidates = {
   artists: readonly ArtistProfile[];
@@ -27,24 +33,20 @@ const overlaps = (left: readonly string[], right: readonly string[]): number =>
     0
   );
 
-const scoreArtist = (
-  artist: ArtistProfile,
-  facets: {
-    moods: readonly string[];
-    energies: readonly string[];
-    deliveries: readonly string[];
-  }
-): number =>
+const scoreArtist = (artist: ArtistProfile, facets: SectionFacets): number =>
   overlaps(artist.moods, facets.moods) * 2 +
   overlaps(artist.energies, facets.energies) +
   overlaps(artist.deliveries, facets.deliveries);
 
-const spreadArtists = (count: number): ArtistProfile[] => {
+const spreadArtists = (
+  artists: readonly ArtistProfile[],
+  count: number
+): ArtistProfile[] => {
   const picked: ArtistProfile[] = [];
   const seen = new Set<string>();
 
-  for (const artist of ARTIST_PROFILES) {
-    const key = artist.moods[0] ?? artist.id;
+  for (const artist of artists) {
+    const key = artist.moods[0] ?? `#${artist.id}`;
     if (seen.has(key)) {
       continue;
     }
@@ -63,7 +65,7 @@ const spreadArtists = (count: number): ArtistProfile[] => {
 const pickByKind = (
   ordered: readonly ArtistProfile[]
 ): readonly ArtistProfile[] => {
-  const chosen = new Map<string, ArtistTechnique[]>();
+  const chosen = new Map<number, ArtistTechnique[]>();
 
   for (const kind of PICKED_KINDS) {
     for (const artist of ordered) {
@@ -83,25 +85,26 @@ const pickByKind = (
   });
 };
 
-/** Несколько ближайших карточек. Пустые грани не разворачивают весь каталог. */
-export const rankArtistCandidates = (facets: {
-  moods: readonly string[];
-  energies: readonly string[];
-  deliveries: readonly string[];
-}): RankedCandidates => {
-  const ranked = ARTIST_PROFILES.map((artist) => ({
-    artist,
-    score: scoreArtist(artist, facets),
-  })).sort(
-    (left, right) =>
-      right.score - left.score ||
-      left.artist.name.localeCompare(right.artist.name, 'ru')
-  );
+/** Несколько ближайших карточек из переданной полки. Пустые грани не разворачивают всю полку. */
+export const rankArtistCandidates = (
+  pool: readonly ArtistProfile[],
+  facets: SectionFacets
+): RankedCandidates => {
+  const ranked = pool
+    .map((artist) => ({
+      artist,
+      score: scoreArtist(artist, facets),
+    }))
+    .sort(
+      (left, right) =>
+        right.score - left.score ||
+        left.artist.name.localeCompare(right.artist.name, 'ru')
+    );
   const positive = ranked.filter((item) => item.score > 0);
 
   if (positive.length === 0) {
-    const spread = spreadArtists(CANDIDATE_LIMIT);
-    const rest = ARTIST_PROFILES.filter((artist) => !spread.includes(artist));
+    const spread = spreadArtists(pool, CANDIDATE_LIMIT);
+    const rest = pool.filter((artist) => !spread.includes(artist));
 
     return { artists: pickByKind([...spread, ...rest]), relaxed: true };
   }
@@ -110,6 +113,93 @@ export const rankArtistCandidates = (facets: {
     artists: pickByKind(ranked.map((item) => item.artist)),
     relaxed: positive.length < CANDIDATE_FLOOR,
   };
+};
+
+const scoreSample = (
+  sample: ReferenceSample,
+  songRole: string,
+  facets: SectionFacets
+): number =>
+  (sample.songRole.includes(songRole) ? 2 : 0) +
+  overlaps(sample.mood, facets.moods) * 2 +
+  (sample.energy && facets.energies.includes(sample.energy) ? 1 : 0) +
+  overlaps(sample.delivery, facets.deliveries);
+
+/** Лучший по тегам текст; при равенстве — первый (тексты идут новые сверху). */
+const bestSample = (
+  samples: readonly ReferenceSample[],
+  songRole: string,
+  facets: SectionFacets
+): ReferenceSample | null => {
+  let best: ReferenceSample | null = null;
+  let bestScore = -1;
+
+  for (const sample of samples) {
+    const score = scoreSample(sample, songRole, facets);
+    if (score > bestScore) {
+      best = sample;
+      bestScore = score;
+    }
+  }
+
+  return best;
+};
+
+export type PickedReference = {
+  number: number;
+  artistName: string;
+  sample: ReferenceSample;
+};
+
+export type ReferenceAssignment = {
+  references: PickedReference[];
+  /** По части: id артиста → номер эталона. */
+  bySection: ReadonlyMap<number, number>[];
+};
+
+/**
+ * Каждому подобранному артисту части — его ближайший по тегам текст.
+ * Один текст идёт один раз; после лимита новые тексты не добавляются,
+ * но уже выбранный текст артиста переиспользуется.
+ */
+export const assignReferenceTexts = (
+  sections: readonly {
+    songRole: string;
+    facets: SectionFacets;
+    artists: readonly ArtistProfile[];
+  }[],
+  limit = REFERENCE_TEXT_LIMIT
+): ReferenceAssignment => {
+  const references: PickedReference[] = [];
+  const numberById = new Map<number, number>();
+
+  const bySection = sections.map((section) => {
+    const numbers = new Map<number, number>();
+
+    for (const artist of section.artists) {
+      const available =
+        references.length < limit
+          ? artist.texts
+          : artist.texts.filter((sample) => numberById.has(sample.id));
+      const sample = bestSample(available, section.songRole, section.facets);
+      if (!sample) {
+        continue;
+      }
+
+      let number = numberById.get(sample.id);
+      if (number === undefined) {
+        number = references.length + 1;
+        numberById.set(sample.id, number);
+        references.push({ number, artistName: artist.name, sample });
+      }
+
+      numbers.set(artist.id, number);
+    }
+
+    return numbers;
+  });
+
+  return { references, bySection };
 };
 
 /** Грани части для подбора: профиль роли важнее общих граней фразы. */

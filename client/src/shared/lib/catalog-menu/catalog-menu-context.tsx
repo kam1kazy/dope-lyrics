@@ -17,6 +17,7 @@ export type CatalogMenuSection =
   | 'stats'
   | 'generator'
   | 'history'
+  | 'references'
   | 'ai-settings';
 
 interface CatalogMenuContextValue {
