@@ -47,6 +47,40 @@ describe('rankArtistCandidates', () => {
     expect(artists).not.toHaveLength(TEST_SHELF.length);
   });
 
+  test('полные карточки не забирают все виды у одного артиста', () => {
+    const full = (id: number, name: string): ArtistProfile => ({
+      id,
+      name,
+      moods: ['LONGING'],
+      energies: [],
+      deliveries: [],
+      techniques: PICKED_KINDS.map((kind) => ({
+        kind,
+        label: `${name} ${kind}`,
+        instruction: 'сделай',
+      })),
+      texts: [],
+    });
+    const { artists } = rankArtistCandidates(
+      [full(1, 'A'), full(2, 'B'), full(3, 'C')],
+      facets
+    );
+
+    expect(artists.map((artist) => artist.name)).toEqual(['A', 'B', 'C']);
+    expect(artists.every((artist) => artist.techniques.length === 1)).toBe(
+      true
+    );
+  });
+
+  test('далёкий по граням артист не занимает вид ради разнообразия', () => {
+    const { artists } = rankArtistCandidates(TEST_SHELF, facets);
+
+    expect(artists.map((artist) => artist.name).sort()).toEqual([
+      'Future',
+      'MAYOT',
+    ]);
+  });
+
   test('берёт только переданный пул', () => {
     const pool = TEST_SHELF.filter((artist) => artist.name === 'Slipknot');
     const { artists } = rankArtistCandidates(pool, facets);
