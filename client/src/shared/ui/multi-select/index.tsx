@@ -20,13 +20,14 @@ export type MultiSelectGroup = {
 
 const SEARCH_FROM = 8;
 
-/** Мультиселект с группами. Пустой выбор — «все». */
+/** Мультиселект с группами. Пустой выбор — «все». `max` — после него новые пункты не выбираются. */
 export function MultiSelect({
   label,
   allLabel,
   emptyText,
   groups,
   value,
+  max,
   onChange,
 }: {
   label: string;
@@ -34,6 +35,7 @@ export function MultiSelect({
   emptyText: string;
   groups: MultiSelectGroup[];
   value: readonly number[];
+  max?: number;
   onChange: (next: number[]) => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -42,6 +44,7 @@ export function MultiSelect({
   const selectedLabels = options
     .filter((option) => value.includes(option.value))
     .map((option) => option.label);
+  const full = max !== undefined && value.length >= max;
   const needle = query.trim().toLowerCase();
   const visibleGroups = groups
     .map((group) => ({
@@ -149,6 +152,7 @@ export function MultiSelect({
                 ) : null}
                 {group.options.map((option) => {
                   const checked = value.includes(option.value);
+                  const locked = full && !checked;
 
                   return (
                     <button
@@ -156,7 +160,8 @@ export function MultiSelect({
                       type="button"
                       role="checkbox"
                       aria-checked={checked}
-                      className="hover:bg-accent flex items-center gap-2 rounded px-2 py-1.5 text-left text-sm"
+                      disabled={locked}
+                      className="hover:bg-accent flex items-center gap-2 rounded px-2 py-1.5 text-left text-sm disabled:pointer-events-none disabled:opacity-50"
                       onClick={() => {
                         toggle(option.value);
                       }}

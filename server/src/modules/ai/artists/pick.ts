@@ -61,22 +61,33 @@ const spreadArtists = (
   return picked;
 };
 
-/** По одному приёму образа, звука и wordplay: первый у ближайшего артиста, у кого такой есть. */
+/**
+ * По одному приёму образа, звука и wordplay. Каждый вид — ещё не занятому артисту
+ * из первых `near`, чтобы набралось до трёх артистов; иначе ближайшему, у кого вид есть.
+ */
 const pickByKind = (
-  ordered: readonly ArtistProfile[]
+  ordered: readonly ArtistProfile[],
+  near: number
 ): readonly ArtistProfile[] => {
   const chosen = new Map<number, ArtistTechnique[]>();
 
   for (const kind of PICKED_KINDS) {
-    for (const artist of ordered) {
+    const options = ordered.flatMap((artist, index) => {
       const technique = artist.techniques.find((item) => item.kind === kind);
-      if (!technique) {
-        continue;
-      }
-
-      chosen.set(artist.id, [...(chosen.get(artist.id) ?? []), technique]);
-      break;
+      return technique ? [{ artist, technique, index }] : [];
+    });
+    const option =
+      options.find(
+        (item) => item.index < near && !chosen.has(item.artist.id)
+      ) ?? options[0];
+    if (!option) {
+      continue;
     }
+
+    chosen.set(option.artist.id, [
+      ...(chosen.get(option.artist.id) ?? []),
+      option.technique,
+    ]);
   }
 
   return ordered.flatMap((artist) => {
@@ -106,11 +117,17 @@ export const rankArtistCandidates = (
     const spread = spreadArtists(pool, CANDIDATE_LIMIT);
     const rest = pool.filter((artist) => !spread.includes(artist));
 
-    return { artists: pickByKind([...spread, ...rest]), relaxed: true };
+    return {
+      artists: pickByKind([...spread, ...rest], spread.length),
+      relaxed: true,
+    };
   }
 
   return {
-    artists: pickByKind(ranked.map((item) => item.artist)),
+    artists: pickByKind(
+      ranked.map((item) => item.artist),
+      positive.length
+    ),
     relaxed: positive.length < CANDIDATE_FLOOR,
   };
 };
