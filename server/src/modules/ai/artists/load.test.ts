@@ -1,7 +1,10 @@
 import { describe, expect, test } from 'bun:test';
 
 import { sample, TEST_SHELF } from '~/modules/ai/artists/fixtures';
-import { applyReferenceFilter } from '~/modules/ai/artists/load';
+import {
+  applyReferenceFilter,
+  loadArtistPool,
+} from '~/modules/ai/artists/load';
 
 const shelf = TEST_SHELF.map((artist) => ({
   ...artist,
@@ -41,5 +44,16 @@ describe('applyReferenceFilter', () => {
 
   test('неизвестные id — пустой пул, а не вся полка', () => {
     expect(applyReferenceFilter(shelf, { artistIds: [999] })).toEqual([]);
+  });
+});
+
+describe('loadArtistPool', () => {
+  test('больше трёх артистов или текстов — ошибка', async () => {
+    await expect(
+      loadArtistPool(1, { artistIds: [1, 2, 3, 4] })
+    ).rejects.toThrow('не больше 3 артистов');
+    await expect(loadArtistPool(1, { textIds: [1, 2, 3, 4] })).rejects.toThrow(
+      'не больше 3 артистов'
+    );
   });
 });
