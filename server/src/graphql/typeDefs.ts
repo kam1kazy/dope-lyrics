@@ -447,6 +447,11 @@ export const typeDefinitions = /* GraphQL */ `
     expiresAt: String!
   }
 
+  input ReferenceFilterInput {
+    artistIds: [Int!]
+    textIds: [Int!]
+  }
+
   input LyricPoolFilter {
     tags: [String!]
     keyword: String
@@ -618,6 +623,7 @@ export const typeDefinitions = /* GraphQL */ `
       theme: String
       filter: LyricPoolFilter
       hideAdlibs: Boolean
+      references: ReferenceFilterInput
     ): CollageRewrite!
     reviseMarkedLines(
       aiText: String!

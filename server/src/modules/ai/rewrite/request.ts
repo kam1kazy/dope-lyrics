@@ -1,3 +1,4 @@
+import type { PickedReference } from '~/modules/ai/artists/pick';
 import type { ArtistProfile } from '~/modules/ai/artists/profiles';
 import type { TechniqueKind } from '~/modules/ai/artists/techniques';
 import type { LyricSongRole } from '~/modules/lyrics/lyric-facets';
@@ -8,6 +9,8 @@ import {
 } from '~/modules/lyrics/track-assemble';
 
 const QUATRAIN_LINES = 4;
+/** Строк эталона в запросе правки. */
+export const REFERENCE_TEXT_LINES = 24;
 
 const ROLE_LABELS: Record<LyricSongRole, string> = {
   INTRO: 'Интро',
@@ -103,25 +106,57 @@ const KIND_LABELS: Record<TechniqueKind, string> = {
   TONE: 'тон',
 };
 
-/** Карточки для редактора: id и инструкция, без пересказа. */
-export const formatArtistCards = (artists: readonly ArtistProfile[]): string =>
+/** Карточки для редактора: ярлык и инструкция, без пересказа. У артиста с текстом — номер эталона. */
+export const formatArtistCards = (
+  artists: readonly ArtistProfile[],
+  referenceNumbers: ReadonlyMap<number, number> = new Map()
+): string =>
   artists
-    .map((artist) =>
-      [
-        artist.name,
+    .map((artist) => {
+      const number = referenceNumbers.get(artist.id);
+
+      return [
+        number === undefined ? artist.name : `${artist.name} · эталон ${number}`,
         ...artist.techniques.map(
           (item) =>
-            `- ${KIND_LABELS[item.kind]} · ${item.id}: ${item.instruction}`
+            `- ${KIND_LABELS[item.kind]} · ${item.label}: ${item.instruction}`
         ),
-      ].join('\n')
-    )
+      ].join('\n');
+    })
     .join('\n\n');
+
+const clipLines = (text: string, limit: number): string => {
+  const lines = text.trim().split(/\r?\n/);
+
+  return lines.length > limit
+    ? [...lines.slice(0, limit), '…'].join('\n')
+    : lines.join('\n');
+};
+
+/** Тексты-эталоны с пояснением автора. */
+export const formatReferences = (
+  references: readonly PickedReference[]
+): string =>
+  [
+    'Эталоны — тексты артистов, которые любит автор. Смотри, как сделаны подача, звук и образ. Строки не копируй и не пересказывай.',
+    ...references.map(({ number, artistName, sample }) => {
+      const title = sample.title?.trim();
+      const note = sample.note?.trim();
+
+      return [
+        `Эталон ${number} · ${artistName}${title ? ` — «${title}»` : ''}`,
+        clipLines(sample.text, REFERENCE_TEXT_LINES),
+        ...(note ? [`Чем нравится автору: ${note}`] : []),
+      ].join('\n');
+    }),
+  ].join('\n\n');
 
 export type RewriteUserSection = {
   label: string;
   text: string;
   artists: readonly ArtistProfile[];
   relaxed: boolean;
+  referenceNumbers?: ReadonlyMap<number, number>;
 };
 
 /** Тема и промпт автора — одинаковые блоки для всех правок ИИ. */
@@ -151,8 +186,13 @@ export const buildRewriteUser = (input: {
   theme: string | null;
   authorPrompt: string;
   sections: readonly RewriteUserSection[];
+  references?: readonly PickedReference[];
 }): string => {
   const parts = contextBlocks(input.theme, input.authorPrompt);
+
+  if (input.references && input.references.length > 0) {
+    parts.push(formatReferences(input.references));
+  }
 
   const collage = input.sections
     .map((section) => {
@@ -165,7 +205,7 @@ export const buildRewriteUser = (input: {
         ? 'Прямых совпадений мало. Ниже ближайшие карточки. Возьми один-два приёма, не все.'
         : 'Ориентиры этой части: приём на образ, на звук и на игру слов. Возьми один-два и выполни инструкцию. Чужие строки не копируй.';
 
-      return `${head}\n\n${note}\n${formatArtistCards(section.artists)}`;
+      return `${head}\n\n${note}\n${formatArtistCards(section.artists, section.referenceNumbers)}`;
     })
     .join('\n\n');
 

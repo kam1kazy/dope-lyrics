@@ -13,10 +13,10 @@
 
 ## 3. Эталоны в запросе «Поправить ИИ» (server)
 
-- [ ] 3.1 `rewrite/request.ts`: блок эталонов перед склейкой, подпись `Артист · эталон N`, ярлык вместо slug, обрезка до 24 строк; тесты в `request.test.ts`
-- [ ] 3.2 `rewrite/rewrite.service.ts`: артисты из базы, фильтр `references`; `FRAME_VERSION` → `2.1.0` в `frame.ts`
-- [ ] 3.3 `prisma/script/ai-probe.ts`: работает с артистами из базы (флаги `--artists`, `--texts` для фильтра)
-- [ ] 3.4 GraphQL: `input ReferenceFilterInput`, аргумент `references` у `rewriteCollage` (`typeDefs.ts`, `ai.resolvers.ts`)
+- [x] 3.1 `rewrite/request.ts`: блок эталонов перед склейкой, подпись `Артист · эталон N`, ярлык вместо slug, обрезка до 24 строк; тесты в `request.test.ts`
+- [x] 3.2 `rewrite/rewrite.service.ts`: артисты из базы, фильтр `references`; `FRAME_VERSION` → `2.1.0` в `frame.ts`
+- [x] 3.3 `prisma/script/ai-probe.ts`: работает с артистами из базы (флаги `--artists`, `--texts` для фильтра)
+- [x] 3.4 GraphQL: `input ReferenceFilterInput`, аргумент `references` у `rewriteCollage` (`typeDefs.ts`, `ai.resolvers.ts`)
 
 ## 4. Полка: сервис и GraphQL (server)
 

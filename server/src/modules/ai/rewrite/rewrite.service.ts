@@ -3,6 +3,11 @@ import { GraphQLError } from 'graphql';
 import { env } from '~/config/env';
 import { prisma } from '~/infrastructure/prisma';
 import {
+  loadArtistPool,
+  type ReferenceFilter,
+} from '~/modules/ai/artists/load';
+import {
+  assignReferenceTexts,
   facetsForSection,
   rankArtistCandidates,
 } from '~/modules/ai/artists/pick';
@@ -52,6 +57,7 @@ export type RewriteCollageInput = {
   theme?: string | null;
   filter?: RewriteFilter | null;
   hideAdlibs?: boolean | null;
+  references?: ReferenceFilter | null;
 };
 
 export const sourceTextFromSlots = async (
@@ -120,6 +126,23 @@ export const buildRewriteRequest = async (
     text: stored?.text ?? '',
   };
   const rowsById = new Map(rows.map((row) => [row.id, row]));
+  const pool = await loadArtistPool(userId, input.references);
+  const picked = sections.map((section) => {
+    const facets = facetsForSection(section, rowsById);
+
+    return {
+      section,
+      facets,
+      ...rankArtistCandidates(pool, facets),
+    };
+  });
+  const { references, bySection } = assignReferenceTexts(
+    picked.map((item) => ({
+      songRole: item.section.songRole,
+      facets: item.facets,
+      artists: item.artists,
+    }))
+  );
 
   return {
     sourceText,
@@ -128,11 +151,14 @@ export const buildRewriteRequest = async (
     user: buildRewriteUser({
       theme: input.theme?.trim() || null,
       authorPrompt: prompt.text,
-      sections: sections.map((section) => ({
-        label: section.label,
-        text: section.text,
-        ...rankArtistCandidates(facetsForSection(section, rowsById)),
+      sections: picked.map((item, index) => ({
+        label: item.section.label,
+        text: item.section.text,
+        artists: item.artists,
+        relaxed: item.relaxed,
+        referenceNumbers: bySection[index],
       })),
+      references,
     }),
   };
 };

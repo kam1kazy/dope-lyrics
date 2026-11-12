@@ -16,12 +16,15 @@ const OUT_DIR = path.resolve(__dirname, '../../.ai-probe');
 const USAGE = [
   'Прогон «Поправить ИИ» на лайкнутых склейках тем же запросом, что в приложении.',
   '',
-  'bun run ai:probe --collage 7 --collage 8 -n 5 [--prompt файл.txt] [--theme "…"] [--label rc1] [--hide-adlibs]',
+  'bun run ai:probe --collage 7 --collage 8 -n 5 [--prompt файл.txt] [--theme "…"] [--label rc1] [--hide-adlibs] [--artist 3] [--text 12] [--dry]',
   '',
   '  --collage   id склейки из истории генератора, можно несколько',
   '  -n          прогонов на склейку (по умолчанию 5)',
   '  --prompt    файл с промптом вместо текущего из «Настроек ИИ»; пустой файл — без промпта',
   '  --label     метка файлов ответа (по умолчанию версия рамки)',
+  '  --artist    id артиста с полки эталонов — фильтр «Артисты», можно несколько',
+  '  --text      id текста с полки эталонов — фильтр «Тексты», можно несколько',
+  '  --dry       только записать запрос, модель не вызывать',
   '',
   'Ответы — в server/.ai-probe/<склейка>/. Вызовы пишутся в расход как обычные.',
 ].join('\n');
@@ -34,17 +37,24 @@ const { values } = parseArgs({
     theme: { type: 'string' },
     label: { type: 'string' },
     'hide-adlibs': { type: 'boolean', default: false },
+    artist: { type: 'string', multiple: true },
+    text: { type: 'string', multiple: true },
+    dry: { type: 'boolean', default: false },
     help: { type: 'boolean', short: 'h', default: false },
   },
 });
 
 const collageIds = (values.collage ?? []).map(Number);
 const runs = Number(values.n);
+const artistIds = (values.artist ?? []).map(Number);
+const textIds = (values.text ?? []).map(Number);
 
 if (
   values.help ||
   collageIds.length === 0 ||
-  collageIds.some((id) => !Number.isInteger(id)) ||
+  [...collageIds, ...artistIds, ...textIds].some(
+    (id) => !Number.isInteger(id)
+  ) ||
   !Number.isInteger(runs) ||
   runs < 1
 ) {
@@ -52,7 +62,7 @@ if (
   process.exit(values.help ? 0 : 1);
 }
 
-if (!isAiConfigured()) {
+if (!values.dry && !isAiConfigured()) {
   console.error('ИИ не настроен: нет ключа, адреса или модели в env сервера');
   process.exit(1);
 }
@@ -77,6 +87,7 @@ for (const collageId of collageIds) {
       slots: collage.slots,
       theme: values.theme ?? null,
       hideAdlibs: values['hide-adlibs'],
+      references: { artistIds, textIds },
     },
     promptOverride
   );
@@ -87,6 +98,11 @@ for (const collageId of collageIds) {
     path.join(dir, `${label}.request.txt`),
     `FRAME ${FRAME_VERSION}\n\n=== SYSTEM\n${request.system}\n\n=== USER\n${request.user}\n`
   );
+
+  if (values.dry) {
+    console.log(`склейка ${collageId}: запрос рамки ${FRAME_VERSION} → ${dir}`);
+    continue;
+  }
 
   const results = await Promise.allSettled(
     Array.from({ length: runs }, async (_, index) => {
