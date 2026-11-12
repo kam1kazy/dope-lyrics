@@ -13,7 +13,36 @@ type RateBucket = {
   resetAt: number;
 };
 
-const rateBuckets = new Map<string, RateBucket>();
+type RateBuckets = Map<string, RateBucket> & { sweepAt?: number };
+
+const rateBuckets: RateBuckets = new Map();
+
+/** Ведро по ключу за окно; протухшие ведра сметаем раз в окно, чтобы Map не рос по IP бесконечно. */
+export const takeRateBucket = (
+  buckets: RateBuckets,
+  key: string,
+  windowMs: number,
+  now = Date.now()
+): RateBucket => {
+  if (now >= (buckets.sweepAt ?? 0)) {
+    buckets.sweepAt = now + windowMs;
+    for (const [bucketKey, bucket] of buckets) {
+      if (now >= bucket.resetAt) {
+        buckets.delete(bucketKey);
+      }
+    }
+  }
+
+  let bucket = buckets.get(key);
+
+  if (!bucket || now >= bucket.resetAt) {
+    bucket = { count: 0, resetAt: now + windowMs };
+    buckets.set(key, bucket);
+  }
+
+  bucket.count += 1;
+  return bucket;
+};
 
 // X-Real-IP ставит nginx из $remote_addr; начало X-Forwarded-For клиент подделывает сам
 export const clientIp = (request: Request): string => {
@@ -44,26 +73,12 @@ const requestPath = (request: Request): string => {
 };
 
 export const securityPlugin = new Elysia({ name: 'security' })
+  // Единственное место, где читается сессия: дальше authUser уходит в контекст yoga
   .derive({ as: 'global' }, async ({ request }) => {
     const path = requestPath(request);
     const method = request.method.toUpperCase();
 
-    if (
-      method === 'OPTIONS' ||
-      path === '/health' ||
-      path.startsWith('/auth/')
-    ) {
-      return { authUser: null as AuthUser | null };
-    }
-
-    const host = request.headers.get('host') ?? '';
-    const isLocalHost = /^(localhost|127\.0\.0\.1)(:\d+)?$/i.test(host);
-
-    if (!isProduction && isLocalHost) {
-      return { authUser: null as AuthUser | null };
-    }
-
-    if (!path.startsWith('/graphql')) {
+    if (method === 'OPTIONS' || !path.startsWith('/graphql')) {
       return { authUser: null as AuthUser | null };
     }
 
@@ -140,16 +155,11 @@ export const securityPlugin = new Elysia({ name: 'security' })
       }
     }
 
-    const now = Date.now();
-    const ip = clientIp(request);
-    let bucket = rateBuckets.get(ip);
-
-    if (!bucket || now >= bucket.resetAt) {
-      bucket = { count: 0, resetAt: now + env.RATE_LIMIT_WINDOW_MS };
-      rateBuckets.set(ip, bucket);
-    }
-
-    bucket.count += 1;
+    const bucket = takeRateBucket(
+      rateBuckets,
+      clientIp(request),
+      env.RATE_LIMIT_WINDOW_MS
+    );
     set.headers['x-ratelimit-limit'] = String(env.RATE_LIMIT_MAX);
     set.headers['x-ratelimit-remaining'] = String(
       Math.max(0, env.RATE_LIMIT_MAX - bucket.count)
