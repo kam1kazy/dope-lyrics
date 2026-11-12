@@ -20,9 +20,9 @@
 
 ## 4. Полка: сервис и GraphQL (server)
 
-- [ ] 4.1 `modules/references/references.service.ts`: CRUD артистов и текстов по `userId`, проверка граней и видов, лимит пяти приёмов, «Такой артист уже есть», сброс тегов при смене текста
-- [ ] 4.2 Тесты сервиса: изоляция по пользователю, повтор имени, лимит приёмов, сброс тегов, каскадное удаление
-- [ ] 4.3 GraphQL-контракт полки: типы `Artist`, `ArtistTechnique`, `ReferenceText`, `ArtistCardDraft`, запросы `artists`, `artist`, мутации из design; всё под `requireAi`
+- [x] 4.1 `modules/references/references.service.ts`: CRUD артистов и текстов по `userId`, проверка граней и видов, лимит пяти приёмов, «Такой артист уже есть», сброс тегов при смене текста
+- [x] 4.2 Тесты сервиса: изоляция по пользователю, повтор имени, лимит приёмов, сброс тегов, каскадное удаление
+- [x] 4.3 GraphQL-контракт полки: типы `Artist`, `ArtistTechnique`, `ReferenceText`, `ArtistCardDraft`, запросы `artists`, `artist`, мутации из design; всё под `requireAi`
 
 ## 5. ИИ полки (server)
 

@@ -115,7 +115,7 @@ export type RoleProfilesMap = Partial<
   Record<LyricSongRole, { mood: LyricMood[]; delivery: LyricDelivery[] }>
 >;
 
-const parseFacet = <T extends string>(
+export const parseFacet = <T extends string>(
   value: string | null | undefined,
   isValid: (candidate: string) => candidate is T,
   label: string
@@ -135,7 +135,7 @@ const parseFacet = <T extends string>(
   return value;
 };
 
-const parseFacetList = <T extends string>(
+export const parseFacetList = <T extends string>(
   value: readonly string[] | null | undefined,
   isValid: (candidate: string) => candidate is T,
   label: string
