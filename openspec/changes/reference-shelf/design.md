@@ -111,11 +111,11 @@ SQL-миграция вставляет артистов и приёмы для 
 
 ### 5. Поиск в интернете в клиенте polza
 
-У `completeWithModel` и `callModel` появляется необязательный параметр `webSearch?: { query: string }`. Если он есть, в тело запроса добавляется `plugins: [{ id: 'web', search_prompt: query, max_results: 5 }]`. `search_prompt` задаём сами: по умолчанию polza искала бы по всему сообщению с инструкциями. Ответ разбирается как обычно, `annotations` игнорируем.
+У `completeWithModel` и `callModel` появляется необязательный параметр `webSearch?: { query: string }`. Если он есть, в тело запроса добавляется `plugins: [{ id: 'web', search_prompt: query, max_results: 5 }]`. `search_prompt` задаём сами: по умолчанию polza искала бы по всему сообщению с инструкциями. Ответ разбирается как обычно, `annotations` игнорируем. Цена поиска не входит в токены: polza отдаёт её в `usage.plugins.web.total_cost_rub`, она прибавляется к `costRub` вызова.
 
 ### 6. Этапы ИИ полки — своя папка `ai/references/`
 
-- `card.ts` — черновик карточки: system просит JSON `{name, moods, energies, deliveries, techniques: [{kind, label, instruction}]}`, до пяти приёмов, словари перечислены в system. В user — имя и до трёх текстов артиста (по 16 строк). Поиск — `«<имя>» рэп артист стиль подача тексты`. Разбор: zod + отбрасывание неизвестных граней и видов, обрезка до пяти приёмов. Вид `ARTIST_CARD`, версия `ARTIST_CARD_FRAME_VERSION = '1.0.0'`, `maxTokens` 1500.
+- `card.ts` — черновик карточки: system просит JSON `{name, moods, energies, deliveries, techniques: [{kind, label, instruction}]}`, до пяти приёмов, словари перечислены в system. В user — имя и до трёх текстов артиста (по 16 строк). Поиск — `«<имя>» рэп артист стиль подача тексты`. Разбор: zod + отбрасывание неизвестных граней и видов, обрезка до пяти приёмов. Вид `ARTIST_CARD`, версия `ARTIST_CARD_FRAME_VERSION = '1.0.1'` (1.0.1 — имя брать из результатов поиска: без этого модель оставляла написание автора), `maxTokens` 1500.
 - `tags.ts` — теги текста: JSON `{mood, delivery, songRole, energy}` из словарей, без поиска. Вид `REFERENCE_TAGS`, `REFERENCE_TAGS_FRAME_VERSION = '1.0.0'`, `maxTokens` 300. Текст в запросе — до 60 строк.
 
 ### 7. Модуль `modules/references/` и GraphQL

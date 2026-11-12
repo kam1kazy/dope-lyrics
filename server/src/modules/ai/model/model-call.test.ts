@@ -22,6 +22,7 @@ void mock.module('~/modules/ai/model/polza.client', () => ({
       tokensOut: 40,
       model: 'test-model',
       truncated,
+      searchCostRub: 0,
     }),
 }));
 

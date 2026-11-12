@@ -31,16 +31,30 @@ export type RecordUsageInput = {
   latencyMs: number;
   status: AiUsageStatus;
   error?: string;
+  /** Поиск в интернете: провайдер называет цену сам, она добавляется к оценке по токенам. */
+  searchCostRub?: number;
 };
 
-export const recordUsage = (input: RecordUsageInput) =>
+export const usageCostRub = (
+  tokensIn: number,
+  tokensOut: number,
+  searchCostRub = 0
+): number | null => {
+  const tokens =
+    tokensIn + tokensOut > 0 ? estimateCostRub(tokensIn, tokensOut) : null;
+
+  if (searchCostRub <= 0) {
+    return tokens;
+  }
+
+  return (tokens ?? 0) + searchCostRub;
+};
+
+export const recordUsage = ({ searchCostRub, ...input }: RecordUsageInput) =>
   prisma.aiUsage.create({
     data: {
       ...input,
-      costRub:
-        input.tokensIn + input.tokensOut > 0
-          ? estimateCostRub(input.tokensIn, input.tokensOut)
-          : null,
+      costRub: usageCostRub(input.tokensIn, input.tokensOut, searchCostRub),
     },
   });
 

@@ -24,7 +24,7 @@ import {
 } from '~/modules/lyrics/lyric-facets';
 import { getArtist } from '~/modules/references/references.service';
 
-export const ARTIST_CARD_FRAME_VERSION = '1.0.0';
+export const ARTIST_CARD_FRAME_VERSION = '1.0.1';
 
 const SAMPLE_LIMIT = 3;
 const SAMPLE_LINES = 16;
@@ -37,7 +37,7 @@ const ARTIST_CARD_SYSTEM = [
   'Верни только JSON:',
   '{"name": "...", "moods": [...], "energies": [...], "deliveries": [...], "techniques": [{"kind": "...", "label": "...", "instruction": "..."}]}',
   '',
-  '- name — имя так, как оно записано на стриминговых площадках: регистр, точки, латиница или кириллица как у артиста.',
+  '- name — имя так, как оно записано на стриминговых площадках (Яндекс Музыка, Spotify, Apple Music): регистр, точки, латиница или кириллица. Бери написание из результатов поиска, а не как его ввёл автор.',
   '- moods — 1–3 кода настроения, energies — 1–2 кода энергии, deliveries — 1–3 кода подачи. Только коды из словаря ниже.',
   `- techniques — от 3 до ${TECHNIQUE_LIMIT} приёмов, по которым узнаётся артист. kind: IMAGE — образ, SOUND — звук и подача голоса, WORDPLAY — игра слов, TONE — тон и форма. Хотя бы по одному IMAGE, SOUND и WORDPLAY.`,
   '- label — ярлык приёма, 2–5 слов по-русски, строчными.',

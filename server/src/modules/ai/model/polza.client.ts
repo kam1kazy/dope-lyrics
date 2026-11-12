@@ -21,6 +21,8 @@ export type AiCompletionResult = {
   model: string;
   /** Ответ оборван на лимите токенов. */
   truncated: boolean;
+  /** Стоимость поиска в интернете по данным polza; 0 — поиска не было. */
+  searchCostRub: number;
 };
 
 const responseSchema = z.object({
@@ -37,6 +39,11 @@ const responseSchema = z.object({
     .object({
       prompt_tokens: z.number().optional(),
       completion_tokens: z.number().optional(),
+      plugins: z
+        .object({
+          web: z.object({ total_cost_rub: z.number().optional() }).optional(),
+        })
+        .optional(),
     })
     .optional(),
 });
@@ -116,5 +123,6 @@ export const completeWithModel = async (
     tokensOut: parsed.data.usage?.completion_tokens ?? 0,
     model: parsed.data.model ?? env.AI_MODEL,
     truncated: parsed.data.choices[0]?.finish_reason === 'length',
+    searchCostRub: parsed.data.usage?.plugins?.web?.total_cost_rub ?? 0,
   };
 };
