@@ -1,19 +1,23 @@
 import { GraphQLError } from 'graphql';
 
 import {
-  rewriteCollage,
-  type RewriteCollageInput,
-} from '~/modules/ai/ai.service';
+  reviseMarkedLines,
+  type ReviseMarkedLinesInput,
+} from '~/modules/ai/line-marks/line-marks.service';
+import { recentUsage, usageSummary } from '~/modules/ai/model/ai-usage.service';
+import { isAiConfigured } from '~/modules/ai/model/polza.client';
 import {
   countPromptVersions,
   createPrompt,
   type CreatePromptInput,
   getCurrentPrompt,
   listPromptVersions,
-} from '~/modules/ai/ai-prompt.service';
-import { suggestPromptMeta } from '~/modules/ai/ai-prompt-meta';
-import { recentUsage, usageSummary } from '~/modules/ai/ai-usage.service';
-import { isAiConfigured } from '~/modules/ai/polza.client';
+} from '~/modules/ai/prompt/ai-prompt.service';
+import { suggestPromptMeta } from '~/modules/ai/prompt/ai-prompt-meta';
+import {
+  rewriteCollage,
+  type RewriteCollageInput,
+} from '~/modules/ai/rewrite/rewrite.service';
 import { can } from '~/modules/auth/permissions';
 import {
   createTrackText,
@@ -22,12 +26,13 @@ import {
   getTrackText,
   listTrackTexts,
   markTrackTextDone,
+  serializeGeneration,
   updateTrackText,
 } from '~/modules/track-texts/track-texts.service';
 
 import type { GraphQLContext } from './context';
 
-const requireAi = (context: GraphQLContext) => {
+export const requireAi = (context: GraphQLContext) => {
   if (!can(context.user, 'ai:use')) {
     throw new GraphQLError('Нет доступа');
   }
@@ -64,6 +69,7 @@ const trackTextDto = (row: Awaited<ReturnType<typeof getTrackText>>) => ({
   text: row.text,
   finalText: row.finalText,
   doneAt: iso(row.doneAt),
+  generation: serializeGeneration(row.generation),
 });
 
 export const aiQueryResolvers = {
@@ -155,11 +161,25 @@ export const aiMutationResolvers = {
     args: { text: string },
     context: GraphQLContext
   ) => suggestPromptMeta(requireAi(context).id, args.text),
-  rewriteCollage: (
+  rewriteCollage: async (
     _parent: unknown,
     args: RewriteCollageInput,
     context: GraphQLContext
-  ) => rewriteCollage(requireAi(context).id, args),
+  ) => {
+    try {
+      return await rewriteCollage(requireAi(context).id, args);
+    } catch (error: unknown) {
+      console.error('[rewriteCollage] Error:', error);
+      throw new GraphQLError(
+        error instanceof Error ? error.message : 'Ошибка при переписывании'
+      );
+    }
+  },
+  reviseMarkedLines: (
+    _parent: unknown,
+    args: ReviseMarkedLinesInput,
+    context: GraphQLContext
+  ) => reviseMarkedLines(requireAi(context).id, args),
   createTrackText: async (
     _parent: unknown,
     args: CreateTrackTextInput,

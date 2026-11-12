@@ -1,28 +1,44 @@
-# Задача = ветка
+# Задача = ветка, ствол = develop
 
-Любая задача — в своей ветке. В `main` её не писать. Закрытие — `git merge --no-ff` (всегда merge-коммит). Fast-forward и squash для задачи не использовать.
+`develop` — рабочий ствол. `main` — прод: push в `main` выкатывает стенд через CI.
+
+Любая задача — в своей ветке от актуального `develop`. В `develop` и `main` руками не писать. Закрытие — `git merge --no-ff` в `develop` (всегда merge-коммит). Fast-forward и squash для задачи не использовать.
 
 Обсуждаем задачу — до кода проверить ветки (`git branch`, при необходимости `-a`):
 
 - Есть ветка этой задачи — перейти на неё.
 - Задача ложится в уже открытую (тот же change, тот же кусок) — продолжить там, новую не плодить.
-- Подходящей нет, и задача уже понятна — создать от актуального `main`: `feat/…`, `fix/…`, для правил и доков `docs/…`.
+- Подходящей нет, и задача уже понятна — создать от актуального `develop`: `feat/…`, `fix/…`, `refactor/…`, для правил и доков `docs/…`.
 - Пока только прикидываем и слаг не ясен — ветку не плодить, сказать, что её нет.
 
 Чужие незакоммиченные правки в ветку задачи не тащить.
-Upstream = `origin/<имя-ветки>`, не `origin/main`. Перед push: `git status -sb` и `@{upstream}`.
+Upstream = `origin/<имя-ветки>`, не `origin/develop` и не `origin/main`. Перед push: `git status -sb` и `@{upstream}`.
 
-Слияние в `main` — только по явной просьбе. Просьба слить ветку включает push самой ветки до merge: она должна быть на remote, не только локально. `main` на remote этим не пушить.
+## Слить задачу в develop
+
+Только по просьбе. Просьба включает push ветки задачи до merge и push `develop` после: push `develop` ничего не выкатывает.
 
 ```bash
 git status -sb
 git push -u origin HEAD
-git checkout main
-git merge --no-ff <ветка> -m "Merge branch '<ветка>' into main"
+git checkout develop
+git pull --ff-only origin develop
+git merge --no-ff <ветка> -m "Merge branch '<ветка>' into develop"
+git push origin develop
 ```
 
-Перед push проверить, что `@{upstream}` — `origin/<имя-ветки>`, не `origin/main`. Если на ветке есть незапушенные коммиты, запушить их тоже.
 `git merge` без `--no-ff` запрещён: история потеряет точку, когда задачу влили.
+
+## В прод
+
+`develop` → `main` — только когда автор сам сказал «в прод» после локальной проверки. «Слей ветку» этого не включает.
+
+```bash
+git checkout main
+git pull --ff-only origin main
+git merge --no-ff develop -m "Merge branch 'develop' into main"
+git push origin main
+```
 
 ## Шаг — отдельный коммит
 
@@ -33,4 +49,4 @@ git merge --no-ff <ветка> -m "Merge branch '<ветка>' into main"
 - В коммит только файлы этого шага. `.env`, сессии `server/bot-data/`, ключи, дампы чата — не класть.
 - Subject — одна фраза по-русски про этот шаг.
 
-Коммит шага не разрешает ни push, ни merge. Push ветки задачи — когда её просят слить (до merge) или когда push попросили отдельно. Push `main` — только отдельная просьба.
+Коммит шага не разрешает ни push, ни merge. Push ветки задачи — когда её просят слить или когда push попросили отдельно.

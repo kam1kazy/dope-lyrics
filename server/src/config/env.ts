@@ -69,7 +69,6 @@ const httpEnvSchema = z.object({
   AI_MODEL: z.string().optional().default(''),
   AI_TIMEOUT_MS: aiNumber(60_000, true),
   AI_MAX_TOKENS: aiNumber(2048, true),
-  AI_STYLE_EXAMPLES: aiNumber(25, true),
   AI_COST_RUB_PER_1M_IN: aiNumber(0),
   AI_COST_RUB_PER_1M_OUT: aiNumber(0),
 });

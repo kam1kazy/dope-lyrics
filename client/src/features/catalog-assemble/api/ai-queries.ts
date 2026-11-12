@@ -20,14 +20,34 @@ export const REWRITE_COLLAGE = gql`
     $theme: String
     $filter: LyricPoolFilter
     $hideAdlibs: Boolean
+    $references: ReferenceFilterInput
   ) {
     rewriteCollage(
       slots: $slots
       theme: $theme
       filter: $filter
       hideAdlibs: $hideAdlibs
+      references: $references
     ) {
       sourceText
+      aiText
+      usageId
+    }
+  }
+`;
+
+export interface ILineMarksRevision {
+  aiText: string;
+  usageId: number;
+}
+
+export const REVISE_MARKED_LINES = gql`
+  mutation ReviseMarkedLines(
+    $aiText: String!
+    $marks: [LineMarkInput!]!
+    $theme: String
+  ) {
+    reviseMarkedLines(aiText: $aiText, marks: $marks, theme: $theme) {
       aiText
       usageId
     }
@@ -41,6 +61,7 @@ export const CREATE_TRACK_TEXT = gql`
     $aiText: String
     $usageId: Int
     $hideAdlibs: Boolean
+    $generation: String
   ) {
     createTrackText(
       slots: $slots
@@ -48,6 +69,7 @@ export const CREATE_TRACK_TEXT = gql`
       aiText: $aiText
       usageId: $usageId
       hideAdlibs: $hideAdlibs
+      generation: $generation
     ) {
       id
     }

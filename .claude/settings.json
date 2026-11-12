@@ -1,5 +1,23 @@
 {
   "permissions": {
+    "allow": [
+      "Bash(git add *)",
+      "Bash(git ls-remote *)",
+      "Bash(git fetch *)",
+      "Bash(git switch *)",
+      "Bash(git rev-list *)",
+      "Bash(bun install:*)",
+      "Bash(bun i:*)",
+      "Bash(bun add:*)",
+      "Bash(git push *)",
+      "Bash(git pull *)",
+      "Bash(git merge *)",
+      "Bash(git commit *)",
+      "Bash(sed -n '1,8p;/^\\\\*\\\\*Дальше\\\\*\\\\*/,$p' docs/tasks/current_task.md)",
+      "Bash(python3 -I -)",
+      "Bash(python3 -)",
+      "Bash(git *)"
+    ],
     "deny": [
       "Read(./**/.env)",
       "Read(./**/.env.local)",
@@ -14,28 +32,12 @@
       "Bash(printenv:*)",
       "Bash(env)",
       "Bash(docker inspect:*)",
-      "Bash(docker compose config:*)",
-      "Bash(npm install:*)",
-      "Bash(npm i:*)",
-      "Bash(git commit --no-verify:*)",
-      "Bash(git push --no-verify:*)"
-    ],
-    "allow": [
-      "Bash(git add *)",
-      "Bash(git ls-remote *)",
-      "Bash(git fetch *)",
-      "Bash(git switch *)",
-      "Bash(git rev-list *)",
-      "Bash(bun install:*)",
-      "Bash(bun i:*)",
-      "Bash(bun add:*)"
+      "Bash(docker compose config:*)"
     ],
     "ask": [
       "Bash(git push origin main:*)",
       "Bash(git push origin HEAD:main:*)",
       "Bash(git push * main)",
-      "Bash(git checkout:*)",
-      "Bash(git rebase:*)",
       "Bash(git reset --hard:*)",
       "Bash(git config:*)",
       "Bash(gh pr create:*)"

@@ -1,9 +1,11 @@
 import { GraphQLError } from 'graphql';
 
+import type { Prisma } from '~/generated/prisma/client';
 import { prisma } from '~/infrastructure/prisma';
-import { sourceTextFromSlots } from '~/modules/ai/ai.service';
+import { sourceTextFromSlots } from '~/modules/ai/rewrite/rewrite.service';
 
 const NOT_FOUND = 'Текст не найден';
+const MAX_GENERATION_BYTES = 8 * 1024;
 
 export type CreateTrackTextInput = {
   slots: unknown;
@@ -12,7 +14,32 @@ export type CreateTrackTextInput = {
   aiText?: string | null;
   usageId?: number | null;
   hideAdlibs?: boolean | null;
+  /** JSON-объект с настройками генератора; сервер его не интерпретирует. */
+  generation?: string | null;
 };
+
+const parseGeneration = (raw: string): Prisma.InputJsonValue => {
+  if (Buffer.byteLength(raw) > MAX_GENERATION_BYTES) {
+    throw new GraphQLError('Настройки генерации слишком большие');
+  }
+
+  let parsed: Prisma.InputJsonValue;
+
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    throw new GraphQLError('Настройки генерации: некорректный JSON');
+  }
+
+  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+    throw new GraphQLError('Настройки генерации должны быть объектом');
+  }
+
+  return parsed;
+};
+
+export const serializeGeneration = (value: Prisma.JsonValue | null) =>
+  value === null ? null : JSON.stringify(value);
 
 const requireText = (value: string, label: string): string => {
   if (value.trim().length === 0) {
@@ -72,6 +99,9 @@ export const createTrackText = async (
       text: aiText,
       usageId: usage?.id ?? null,
       promptId: usage?.promptId ?? null,
+      generation: input.generation
+        ? parseGeneration(input.generation)
+        : undefined,
     },
   });
 };

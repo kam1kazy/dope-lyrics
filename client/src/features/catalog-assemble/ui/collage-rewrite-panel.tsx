@@ -1,18 +1,20 @@
 'use client';
 
 import { useMutation, useQuery } from '@apollo/client/react';
-import { FilePlus, RotateCw, Sparkles } from 'lucide-react';
+import { FilePlus, PenLine, Sparkles } from 'lucide-react';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
 
 import {
   assembleTrackFilterFromSection,
   type IAssembledTrackSlot,
+  type TrackFormQuotas,
 } from '@/entities/lyric';
 import type { CatalogSectionFilters } from '@/shared/lib/catalog-section-filters';
 import { formatQueryError } from '@/shared/lib/format-query-error';
+import type { ReferenceFilter } from '@/shared/lib/reference-filter';
 import { useRetainedState } from '@/shared/lib/retained-state';
-import { BeforeAfterText } from '@/shared/ui/before-after-text';
+import { BeforeAfterText, type LineMark } from '@/shared/ui/before-after-text';
 import { Hint } from '@/shared/ui/hint';
 import { Button } from '@/shared/ui/shadcn/ui/button';
 import { Input } from '@/shared/ui/shadcn/ui/input';
@@ -22,8 +24,26 @@ import {
   AI_STATUS,
   CREATE_TRACK_TEXT,
   type ICollageRewrite,
+  type ILineMarksRevision,
+  REVISE_MARKED_LINES,
   REWRITE_COLLAGE,
 } from '../api/ai-queries';
+
+const NEXT_MARK: Record<'none' | LineMark, LineMark | null> = {
+  none: 'red',
+  red: 'green',
+  green: null,
+};
+
+const MARK_INPUT: Record<LineMark, 'RED' | 'GREEN'> = {
+  red: 'RED',
+  green: 'GREEN',
+};
+
+const withoutRed = (
+  marks: ReadonlyMap<number, LineMark>
+): ReadonlyMap<number, LineMark> =>
+  new Map([...marks].filter(([, mark]) => mark === 'green'));
 
 function slotsToInput(slots: IAssembledTrackSlot[]) {
   return slots.map((slot) => ({
@@ -38,13 +58,17 @@ function slotsToInput(slots: IAssembledTrackSlot[]) {
 
 export function CollageRewritePanel({
   slots,
+  form,
   filters,
+  references,
   hideAdlibs,
   onSaved,
   onResultChange,
 }: {
   slots: IAssembledTrackSlot[];
+  form: TrackFormQuotas;
   filters: CatalogSectionFilters;
+  references: ReferenceFilter;
   hideAdlibs: boolean;
   onSaved: (id: number) => void;
   onResultChange: (active: boolean) => void;
@@ -54,6 +78,10 @@ export function CollageRewritePanel({
   const [result, setResult] = useRetainedState<ICollageRewrite | null>(
     `rewrite-result:${storeKey}`,
     null
+  );
+  const [marks, setMarks] = useRetainedState<ReadonlyMap<number, LineMark>>(
+    `rewrite-marks:${storeKey}`,
+    new Map()
   );
   const { data: status } = useQuery<{ aiStatus: { enabled: boolean } }>(
     AI_STATUS
@@ -65,8 +93,17 @@ export function CollageRewritePanel({
       theme: string | null;
       filter: ReturnType<typeof assembleTrackFilterFromSection>;
       hideAdlibs: boolean;
+      references: ReferenceFilter;
     }
   >(REWRITE_COLLAGE, { refetchQueries: ['AiSettings'] });
+  const [revise, { loading: revising, error: reviseError }] = useMutation<
+    { reviseMarkedLines: ILineMarksRevision },
+    {
+      aiText: string;
+      marks: { line: number; mark: 'RED' | 'GREEN' }[];
+      theme: string | null;
+    }
+  >(REVISE_MARKED_LINES, { refetchQueries: ['AiSettings'] });
   const [createText, { loading: saving, error: saveError }] = useMutation<
     { createTrackText: { id: number } },
     {
@@ -75,6 +112,7 @@ export function CollageRewritePanel({
       aiText: string;
       usageId: number;
       hideAdlibs: boolean;
+      generation: string;
     }
   >(CREATE_TRACK_TEXT, { refetchQueries: ['TrackTexts'] });
 
@@ -97,12 +135,56 @@ export function CollageRewritePanel({
         theme: trimmedTheme,
         filter: assembleTrackFilterFromSection(filters),
         hideAdlibs,
+        references,
       },
     }).catch(() => null);
 
     if (response?.data) {
       setResult(response.data.rewriteCollage);
+      setMarks(new Map());
     }
+  };
+
+  const hasRed = [...marks.values()].includes('red');
+  const busy = rewriting || revising || saving;
+
+  const toggleMark = (line: number) => {
+    setMarks((current) => {
+      const next = new Map(current);
+      const mark = NEXT_MARK[current.get(line) ?? 'none'];
+      if (mark) {
+        next.set(line, mark);
+      } else {
+        next.delete(line);
+      }
+
+      return next;
+    });
+  };
+
+  const handleRevise = async () => {
+    if (!result || !hasRed) {
+      return;
+    }
+
+    const response = await revise({
+      variables: {
+        aiText: result.aiText,
+        marks: [...marks].map(([line, mark]) => ({
+          line,
+          mark: MARK_INPUT[mark],
+        })),
+        theme: trimmedTheme,
+      },
+    }).catch(() => null);
+
+    const revision = response?.data?.reviseMarkedLines;
+    if (!revision) {
+      return;
+    }
+
+    setResult({ ...result, ...revision });
+    setMarks(withoutRed);
   };
 
   const handleSave = async () => {
@@ -117,6 +199,7 @@ export function CollageRewritePanel({
         aiText: result.aiText,
         usageId: result.usageId,
         hideAdlibs,
+        generation: JSON.stringify({ form, hideAdlibs, filters, references }),
       },
     }).catch(() => null);
 
@@ -126,11 +209,12 @@ export function CollageRewritePanel({
     }
 
     setResult(null);
+    setMarks(new Map());
     toast.success('Текст сохранён');
     onSaved(id);
   };
 
-  const error = rewriteError ?? saveError;
+  const error = rewriteError ?? reviseError ?? saveError;
 
   return (
     <div className="flex flex-col gap-2" data-swipe-ignore>
@@ -150,7 +234,7 @@ export function CollageRewritePanel({
             variant="outline"
             className="size-8 shrink-0"
             aria-label="Поправить ИИ"
-            disabled={!enabled || !hasLines || rewriting}
+            disabled={!enabled || !hasLines || busy}
             onClick={() => {
               void handleRewrite();
             }}
@@ -175,27 +259,32 @@ export function CollageRewritePanel({
             key={result.usageId}
             before={result.sourceText}
             after={result.aiText}
-            onAfterChange={(aiText) => {
-              setResult({ ...result, aiText });
-            }}
+            marks={marks}
+            onToggleMark={toggleMark}
             actions={
               <>
-                <Hint label="Ещё раз">
+                <Hint
+                  label={
+                    hasRed
+                      ? 'Внести правки: переписать красные строки'
+                      : 'Внести правки: отметьте красным строки, которые переделать'
+                  }
+                >
                   <Button
                     type="button"
                     size="icon"
                     variant="ghost"
                     className="size-8"
-                    aria-label="Ещё раз"
-                    disabled={rewriting || saving}
+                    aria-label="Внести правки"
+                    disabled={!hasRed || busy}
                     onClick={() => {
-                      void handleRewrite();
+                      void handleRevise();
                     }}
                   >
-                    {rewriting ? (
+                    {revising ? (
                       <Spinner className="size-4" />
                     ) : (
-                      <RotateCw className="size-4" />
+                      <PenLine className="size-4" />
                     )}
                   </Button>
                 </Hint>
@@ -206,7 +295,7 @@ export function CollageRewritePanel({
                     variant="ghost"
                     className="size-8"
                     aria-label="Сохранить в тексты"
-                    disabled={rewriting || saving}
+                    disabled={busy}
                     onClick={() => {
                       void handleSave();
                     }}

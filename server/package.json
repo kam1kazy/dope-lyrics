@@ -1,6 +1,6 @@
 {
   "name": "dope-lyrics-server",
-  "version": "0.9.0",
+  "version": "0.13.0",
   "license": "MIT",
   "module": "src/index.js",
   "type": "module",
@@ -13,6 +13,7 @@
     "migrate": "prisma migrate deploy",
     "seed": "prisma db seed",
     "import:apple-notes": "bun ./prisma/script/import-apple-notes.ts",
+    "ai:probe": "bun ./prisma/script/ai-probe.ts",
     "bot": "bun src/mtcute/index.ts",
     "bot:admin": "BOT_TYPE=admin bun src/mtcute/index.ts",
     "devBot": "concurrently \"bun dev\" \"bun bot:admin\"",
