@@ -19,6 +19,8 @@ const KIND_LABELS: Record<string, string> = {
   COLLAGE_REWRITE: 'Правка склейки',
   PROMPT_META: 'Название промпта',
   LINE_MARKS: 'Правка по пометкам',
+  ARTIST_CARD: 'Карточка артиста',
+  REFERENCE_TAGS: 'Теги эталона',
   REFERENCE_SELECT: 'Подбор эталона',
 };
 

@@ -46,6 +46,7 @@ import {
   type SectionSearchHit,
 } from '@/features/catalog-search';
 import { CatalogStatsPanel } from '@/features/catalog-stats';
+import { ReferenceShelfPanel } from '@/features/reference-shelf';
 import { TrackTextsList, TrackTextView } from '@/features/track-texts';
 import {
   type IProfile,
@@ -82,11 +83,11 @@ type CatalogSection = CatalogMenuSection;
 
 type FilterableSection = Exclude<
   CatalogSection,
-  'profile' | 'generator' | 'history' | 'ai-settings'
+  'profile' | 'generator' | 'history' | 'references' | 'ai-settings'
 >;
 
 type MenuItem = {
-  id: CatalogSection | 'references';
+  id: CatalogSection;
   label: string;
   icon: typeof Bookmark;
   disabled?: boolean;
@@ -98,7 +99,7 @@ const MENU_ITEMS: MenuItem[] = [
   { id: 'demos', label: 'Тексты из демок', icon: AudioLines },
   { id: 'history', label: 'История', icon: History },
   { id: 'stats', label: 'Сводка', icon: ChartColumn },
-  { id: 'references', label: 'Эталоны', icon: Sparkles, disabled: true },
+  { id: 'references', label: 'Эталоны', icon: Sparkles },
   { id: 'generator', label: 'Генератор', icon: Shuffle },
   { id: 'ai-settings', label: 'Настройки ИИ', icon: Bot },
 ];
@@ -111,6 +112,7 @@ const SECTION_TITLES: Record<CatalogSection, string> = {
   history: 'История карусели',
   stats: 'Сводка',
   generator: 'Генератор',
+  references: 'Эталоны',
   'ai-settings': 'Настройки ИИ',
 };
 
@@ -325,6 +327,7 @@ export function CatalogMenu() {
     renderedSection !== 'profile' &&
     renderedSection !== 'generator' &&
     renderedSection !== 'history' &&
+    renderedSection !== 'references' &&
     renderedSection !== 'ai-settings'
       ? renderedSection
       : null;
@@ -350,7 +353,7 @@ export function CatalogMenu() {
     );
   const sidePaneOpen = filtersOpen || historyOpen || textsOpen;
   const visibleMenuItems = MENU_ITEMS.filter(
-    (item) => item.id !== 'ai-settings' || isOwner
+    (item) => (item.id !== 'ai-settings' && item.id !== 'references') || isOwner
   );
 
   const handleLogout = () => {
@@ -491,7 +494,7 @@ export function CatalogMenu() {
                     disabled={disabled}
                     aria-pressed={isActive}
                     onClick={() => {
-                      if (disabled || id === 'references') {
+                      if (disabled) {
                         return;
                       }
 
@@ -727,6 +730,8 @@ export function CatalogMenu() {
                       />
                     ) : renderedSection === 'ai-settings' ? (
                       <AiSettingsPanel />
+                    ) : renderedSection === 'references' ? (
+                      <ReferenceShelfPanel />
                     ) : renderedSection === 'generator' &&
                       isOwner &&
                       selectedTextId !== null ? (
