@@ -24,14 +24,25 @@ const cleanLyricsBody = (raw: string): string =>
     .replace(/\s*```$/, '')
     .trim();
 
+const MIN_LYRICS_LINES = 8;
+
+/** Модель вместо текста пишет отказ или отчёт о поиске — это не песня. */
+const REPLY_NOT_LYRICS =
+  /не могу (привести|предоставить|воспроизвести|показать|процитировать)|авторск(ое|им|ого) прав|защищ[её]нн\S* авторск|текст (песни )?(\S+ )*не найден|в (предоставленных )?результатах поиска|могу (кратко )?переска|I can(no|')t (provide|share|reproduce)|copyright/i;
+
 export const parseLyricsWebReply = (raw: string): string => {
   const text = cleanLyricsBody(raw);
 
-  if (!text || text.toUpperCase() === NOT_FOUND) {
+  if (!text || text.toUpperCase().startsWith(NOT_FOUND)) {
     throw new AiProviderError(NOT_FOUND);
   }
 
-  if (text.length < 40) {
+  if (REPLY_NOT_LYRICS.test(text)) {
+    throw new AiProviderError('Вместо текста — отказ или пересказ');
+  }
+
+  const lines = text.split('\n').filter((line) => line.trim()).length;
+  if (lines < MIN_LYRICS_LINES) {
     throw new AiProviderError('Слишком короткий ответ');
   }
 
