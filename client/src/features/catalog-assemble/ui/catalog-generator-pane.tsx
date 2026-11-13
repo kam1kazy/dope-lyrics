@@ -1,136 +1,17 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-
-import type { TrackFormPreset, TrackFormQuotas } from '@/entities/lyric';
+import type { TrackFormQuotas } from '@/entities/lyric';
 import { CatalogFilterPane } from '@/features/catalog-filters';
-import { useReferenceOptions } from '@/features/reference-shelf';
 import {
   type CatalogSectionFilters,
   DEFAULT_GENERATOR_SECTION_FILTERS,
 } from '@/shared/lib/catalog-section-filters';
-import {
-  REFERENCE_FILTER_LIMIT,
-  type ReferenceFilter,
-} from '@/shared/lib/reference-filter';
+import type { ReferenceFilter } from '@/shared/lib/reference-filter';
 import { cn } from '@/shared/lib/utils/cn';
-import { MultiSelect } from '@/shared/ui/multi-select';
-import { Button } from '@/shared/ui/shadcn/ui/button';
 import { Label } from '@/shared/ui/shadcn/ui/label';
 
-import {
-  matchingTrackFormPreset,
-  TRACK_FORM_PRESET_QUOTAS,
-  TRACK_FORM_PRESETS,
-} from '../lib/generator-form';
-import { TRACK_FORM_PRESET_LABELS } from '../lib/generator-text';
-
-function ParagraphField({
-  id,
-  label,
-  value,
-  onChange,
-}: {
-  id: string;
-  label: string;
-  value: number;
-  onChange: (value: number) => void;
-}) {
-  const [draft, setDraft] = useState(String(value));
-
-  useEffect(() => {
-    setDraft(String(value));
-  }, [value]);
-
-  return (
-    <div className="flex items-center justify-between gap-3">
-      <Label htmlFor={id} className="text-sm font-normal">
-        {label}
-      </Label>
-      <input
-        id={id}
-        type="number"
-        min={0}
-        step={1}
-        inputMode="numeric"
-        value={draft}
-        aria-label={label}
-        className={cn(
-          'border-input bg-background h-8 w-16 rounded-md border px-2 text-right text-sm tabular-nums',
-          'focus-visible:ring-ring focus-visible:ring-2 focus-visible:outline-none'
-        )}
-        onChange={(event) => {
-          const next = event.target.value;
-          setDraft(next);
-          if (next === '') {
-            return;
-          }
-
-          const parsed = Number(next);
-          if (Number.isInteger(parsed) && parsed >= 0) {
-            onChange(parsed);
-          }
-        }}
-        onBlur={() => {
-          if (draft === '') {
-            onChange(0);
-            setDraft('0');
-            return;
-          }
-
-          const parsed = Number(draft);
-          if (!Number.isInteger(parsed) || parsed < 0) {
-            setDraft(String(value));
-            return;
-          }
-
-          onChange(parsed);
-          setDraft(String(parsed));
-        }}
-      />
-    </div>
-  );
-}
-
-function ReferenceFilterFields({
-  value,
-  onChange,
-}: {
-  value: ReferenceFilter;
-  onChange: (next: ReferenceFilter) => void;
-}) {
-  const { artistGroups, textGroups } = useReferenceOptions(true);
-
-  return (
-    <div className="flex flex-col gap-2">
-      <MultiSelect
-        label={`Эталоны · артисты, до ${REFERENCE_FILTER_LIMIT}`}
-        allLabel="Вся полка"
-        emptyText="На полке нет артистов"
-        groups={artistGroups}
-        value={value.artistIds}
-        max={REFERENCE_FILTER_LIMIT}
-        onChange={(artistIds) => {
-          onChange({ ...value, artistIds });
-        }}
-      />
-      <MultiSelect
-        label={`Эталоны · тексты, до ${REFERENCE_FILTER_LIMIT}`}
-        allLabel="Любые тексты"
-        emptyText="На полке нет текстов"
-        groups={textGroups}
-        value={value.textIds}
-        max={REFERENCE_FILTER_LIMIT}
-        onChange={(textIds) => {
-          onChange({ ...value, textIds });
-        }}
-      />
-      <p className="text-muted-foreground text-xs leading-relaxed">
-        Для «Поправить ИИ»: выбранные — только они.
-      </p>
-    </div>
-  );
-}
+import { ReferenceFilterFields } from './reference-filter-fields';
+import { TrackFormFields } from './track-form-fields';
 
 export function CatalogGeneratorPane({
   form,
@@ -153,13 +34,6 @@ export function CatalogGeneratorPane({
   onFiltersChange: (filters: CatalogSectionFilters) => void;
   onReferencesChange: (references: ReferenceFilter) => void;
 }) {
-  const [moreOpen, setMoreOpen] = useState(false);
-  const selectedPreset = matchingTrackFormPreset(form);
-
-  const setField = (key: keyof TrackFormQuotas, value: number) => {
-    onFormChange({ ...form, [key]: value });
-  };
-
   return (
     <CatalogFilterPane
       sectionId="generator"
@@ -170,93 +44,7 @@ export function CatalogGeneratorPane({
       defaults={DEFAULT_GENERATOR_SECTION_FILTERS}
       header={
         <>
-          <div className="flex flex-col gap-2">
-            <Label className="text-muted-foreground text-xs font-normal">
-              Форма
-            </Label>
-            <div
-              role="radiogroup"
-              aria-label="Форма трека"
-              className="bg-muted grid grid-cols-2 rounded-lg p-1"
-            >
-              {TRACK_FORM_PRESETS.map((value: TrackFormPreset) => {
-                const selected = selectedPreset === value;
-
-                return (
-                  <Button
-                    key={value}
-                    type="button"
-                    role="radio"
-                    size="sm"
-                    variant="ghost"
-                    aria-checked={selected}
-                    className={cn(
-                      'h-8 w-full rounded-md',
-                      selected
-                        ? 'bg-background text-foreground shadow-sm'
-                        : 'text-muted-foreground'
-                    )}
-                    onClick={() => {
-                      onFormChange({ ...TRACK_FORM_PRESET_QUOTAS[value] });
-                    }}
-                  >
-                    {TRACK_FORM_PRESET_LABELS[value]}
-                  </Button>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <ParagraphField
-              id="form-verse"
-              label="Куплет"
-              value={form.verse}
-              onChange={(value) => {
-                setField('verse', value);
-              }}
-            />
-            <ParagraphField
-              id="form-hook"
-              label="Хук"
-              value={form.hook}
-              onChange={(value) => {
-                setField('hook', value);
-              }}
-            />
-            {moreOpen ? (
-              <>
-                <ParagraphField
-                  id="form-intro"
-                  label="Интро"
-                  value={form.intro}
-                  onChange={(value) => {
-                    setField('intro', value);
-                  }}
-                />
-                <ParagraphField
-                  id="form-bridge"
-                  label="Бридж"
-                  value={form.bridge}
-                  onChange={(value) => {
-                    setField('bridge', value);
-                  }}
-                />
-              </>
-            ) : null}
-            <button
-              type="button"
-              className="text-muted-foreground hover:text-foreground w-fit text-xs font-normal"
-              onClick={() => {
-                setMoreOpen((open) => !open);
-              }}
-            >
-              {moreOpen ? 'Скрыть' : 'Показать ещё'}
-            </button>
-            <p className="text-muted-foreground text-xs leading-relaxed">
-              Абзац = 4 строки.
-            </p>
-          </div>
+          <TrackFormFields form={form} onFormChange={onFormChange} />
 
           <div className="flex items-center justify-between gap-3">
             <Label htmlFor="hide-adlibs" className="text-sm font-normal">
@@ -292,6 +80,7 @@ export function CatalogGeneratorPane({
           {showReferences ? (
             <ReferenceFilterFields
               value={references}
+              hint="Для «Поправить ИИ»: выбранные — только они."
               onChange={onReferencesChange}
             />
           ) : null}

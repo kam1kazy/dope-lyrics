@@ -135,7 +135,8 @@ export const rankArtistCandidates = (
   };
 };
 
-const scoreSample = (
+/** Близость текста к граням; роль — бонус, пустая роль его не даёт. */
+export const scoreSample = (
   sample: ReferenceSample,
   songRole: string,
   facets: SectionFacets

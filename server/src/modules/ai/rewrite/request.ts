@@ -15,7 +15,7 @@ const QUATRAIN_LINES = 4;
 /** Строк эталона в запросе правки. */
 export const REFERENCE_TEXT_LINES = 24;
 
-const ROLE_LABELS: Record<LyricSongRole, string> = {
+export const ROLE_LABELS: Record<LyricSongRole, string> = {
   INTRO: 'Интро',
   VERSE: 'Куплет',
   HOOK: 'Хук',

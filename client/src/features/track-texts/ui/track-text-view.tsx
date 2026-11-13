@@ -40,7 +40,9 @@ import {
   UPDATE_TRACK_TEXT,
 } from '../api/queries';
 import {
+  parseScratchGeneration,
   parseTrackTextGeneration,
+  summarizeScratchGeneration,
   summarizeTrackTextGeneration,
   type TrackTextGeneration,
 } from '../lib/generation';
@@ -157,6 +159,19 @@ export function TrackTextView({
   const summary = generation
     ? summarizeTrackTextGeneration(generation, shelf.names)
     : null;
+  /** Текст «С нуля»: склейки нет, весь ответ от модели — жёлтому не с чем сравнивать. */
+  const scratch = row.sourceText === '';
+  const scratchGeneration = parseScratchGeneration(row.generation);
+  const scratchSummary = scratchGeneration
+    ? summarizeScratchGeneration(
+        scratchGeneration,
+        shelf.loaded ? shelf.live.textIds : null
+      )
+    : null;
+  const seamSource = scratch ? row.aiText : row.sourceText;
+  const tabs = (Object.keys(TAB_LABELS) as SnapshotTab[]).filter(
+    (key) => !scratch || key !== 'source'
+  );
   const value = draft ?? row.text;
   const dirty = value !== row.text;
 
@@ -246,9 +261,22 @@ export function TrackTextView({
         </div>
       ) : null}
 
+      {scratchSummary ? (
+        <p className="text-muted-foreground text-xs">
+          С нуля · {scratchSummary.form} ·{' '}
+          {scratchSummary.facets.length > 0
+            ? scratchSummary.facets.join(' · ')
+            : 'граней нет'}{' '}
+          ·{' '}
+          {scratchSummary.references.length > 0
+            ? `эталоны: ${scratchSummary.references.join(', ')}`
+            : 'без эталонов'}
+        </p>
+      ) : null}
+
       <div className="flex min-h-0 flex-1 flex-col gap-3">
         <div className="flex items-center gap-4">
-          {(Object.keys(TAB_LABELS) as SnapshotTab[]).map((key) => (
+          {tabs.map((key) => (
             <Button
               key={key}
               type="button"
@@ -348,7 +376,7 @@ export function TrackTextView({
           seamOn ? (
             <div className="min-h-0 flex-1 overflow-y-auto">
               <SeamText
-                source={row.sourceText}
+                source={seamSource}
                 ai={row.aiText}
                 final={value}
                 enabled
@@ -366,7 +394,7 @@ export function TrackTextView({
           )
         ) : (
           <BeforeAfterText
-            before={row.sourceText}
+            before={seamSource}
             after={row.aiText}
             side={tab === 'source' ? 'before' : 'after'}
           />
@@ -382,8 +410,9 @@ export function TrackTextView({
           <DialogHeader>
             <DialogTitle>Удалить текст?</DialogTitle>
             <DialogDescription>
-              Рабочая версия и все снимки («Из моих», «ИИ», «Финал») пропадут
-              насовсем.
+              {scratch
+                ? 'Рабочая версия и снимки «ИИ» и «Финал» пропадут насовсем.'
+                : 'Рабочая версия и все снимки («Из моих», «ИИ», «Финал») пропадут насовсем.'}
             </DialogDescription>
           </DialogHeader>
           {deleteError ? (

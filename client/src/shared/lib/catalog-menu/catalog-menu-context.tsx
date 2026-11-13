@@ -16,6 +16,7 @@ export type CatalogMenuSection =
   | 'demos'
   | 'stats'
   | 'generator'
+  | 'from-scratch'
   | 'history'
   | 'references'
   | 'ai-settings';

@@ -57,7 +57,7 @@ export const parseTrackFormQuotas = (raw: unknown): TrackFormQuotas => {
   };
 };
 
-const paragraphsForRole = (
+export const paragraphsForRole = (
   quotas: TrackFormQuotas,
   role: TrackFrameRole
 ): number => {
@@ -96,7 +96,7 @@ const TAKE_PREFERRED_CHANCE = 0.7;
 const LEGACY_END_LINE = 1_000_000;
 
 /** Сначала обязательные слоты, потом опциональные — чтобы интро не съело пул. */
-const FILL_FRAME_INDEXES = [2, 1, 3, 0, 4] as const;
+export const FILL_FRAME_INDEXES = [2, 1, 3, 0, 4] as const;
 /** Второй HOOK в каркасе — повтор первого; в склейку текста не дублируем. */
 export const SECOND_HOOK_INDEX = 5;
 

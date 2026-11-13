@@ -103,6 +103,48 @@ export const createTrackText = async (
   });
 };
 
+export type CreateScratchTrackTextInput = {
+  theme: string;
+  aiText: string;
+  usageId?: number | null;
+  generation?: string | null;
+};
+
+/** Текст «С нуля»: склейки нет, снимок «Из моих» пустой. */
+export const createScratchTrackText = async (
+  userId: number,
+  input: CreateScratchTrackTextInput
+) => {
+  const theme = requireText(input.theme, 'Тема').trim();
+  const aiText = requireText(input.aiText, 'Ответ ИИ');
+  const usage = input.usageId
+    ? await prisma.aiUsage.findFirst({
+        where: { id: input.usageId, userId },
+        select: { id: true, promptId: true },
+      })
+    : null;
+
+  if (input.usageId && !usage) {
+    throw new GraphQLError('Запрос ИИ не найден');
+  }
+
+  return prisma.trackText.create({
+    data: {
+      userId,
+      theme,
+      slots: [],
+      sourceText: '',
+      aiText,
+      text: aiText,
+      usageId: usage?.id ?? null,
+      promptId: usage?.promptId ?? null,
+      generation: input.generation
+        ? parseGeneration(input.generation)
+        : undefined,
+    },
+  });
+};
+
 export const listTrackTexts = (userId: number) =>
   prisma.trackText.findMany({
     where: { userId },

@@ -18,6 +18,9 @@ import {
   LYRIC_SONG_ROLES,
   LYRIC_SOURCE_LABELS,
   LYRIC_SOURCES,
+  type LyricDelivery,
+  type LyricEnergy,
+  type LyricMood,
 } from '@/shared/lib/lyric-facets';
 import { SORT_MODES } from '@/shared/lib/lyric-view/lyric-view-context';
 import {
@@ -34,6 +37,27 @@ export type TrackTextGeneration = {
   hideAdlibs: boolean;
   filters: CatalogSectionFilters;
   references: ReferenceFilter;
+};
+
+export type ScratchFacets = {
+  moods: LyricMood[];
+  deliveries: LyricDelivery[];
+  energies: LyricEnergy[];
+};
+
+export type ScratchPickedReference = {
+  textId: number;
+  artistName: string;
+  title: string | null;
+};
+
+/** Настройки текста «С нуля»: в генератор не возвращаются. */
+export type ScratchTextGeneration = {
+  kind: 'scratch';
+  form: TrackFormQuotas;
+  facets: ScratchFacets;
+  references: ReferenceFilter;
+  picked: ScratchPickedReference[];
 };
 
 /** Имена эталонов для сводки: id артиста → имя, id текста → название. */
@@ -144,39 +168,86 @@ const parseFilters = (value: unknown): CatalogSectionFilters => {
   };
 };
 
-/** `null` — настроек нет: поле пустое или не объект. Недостающие поля берутся по умолчанию. */
-export const parseTrackTextGeneration = (
+const parseForm = (value: unknown): TrackFormQuotas => {
+  const form = isRecord(value) ? value : {};
+  const defaults = DEFAULT_TRACK_FORM_QUOTAS;
+
+  return {
+    intro: pickCount(form.intro, defaults.intro),
+    verse: pickCount(form.verse, defaults.verse),
+    hook: pickCount(form.hook, defaults.hook),
+    bridge: pickCount(form.bridge, defaults.bridge),
+  };
+};
+
+const parseJsonRecord = (
   raw: string | null
-): TrackTextGeneration | null => {
+): Record<string, unknown> | null => {
   if (raw === null) {
     return null;
   }
 
-  let parsed: unknown;
-
   try {
-    parsed = JSON.parse(raw);
+    const parsed: unknown = JSON.parse(raw);
+    return isRecord(parsed) ? parsed : null;
   } catch {
     return null;
   }
+};
 
-  if (!isRecord(parsed)) {
+/** `null` — настроек нет: поле пустое или не объект. Недостающие поля берутся по умолчанию. Текст «С нуля» — тоже `null`. */
+export const parseTrackTextGeneration = (
+  raw: string | null
+): TrackTextGeneration | null => {
+  const parsed = parseJsonRecord(raw);
+  if (!parsed || parsed.kind === 'scratch') {
     return null;
   }
 
-  const form = isRecord(parsed.form) ? parsed.form : {};
-  const defaults = DEFAULT_TRACK_FORM_QUOTAS;
-
   return {
-    form: {
-      intro: pickCount(form.intro, defaults.intro),
-      verse: pickCount(form.verse, defaults.verse),
-      hook: pickCount(form.hook, defaults.hook),
-      bridge: pickCount(form.bridge, defaults.bridge),
-    },
+    form: parseForm(parsed.form),
     hideAdlibs: parsed.hideAdlibs === true,
     filters: parseFilters(parsed.filters),
     references: parseReferences(parsed.references),
+  };
+};
+
+const parsePicked = (value: unknown): ScratchPickedReference[] =>
+  Array.isArray(value)
+    ? value.filter(isRecord).flatMap((item) =>
+        typeof item.textId === 'number' && typeof item.artistName === 'string'
+          ? [
+              {
+                textId: item.textId,
+                artistName: item.artistName,
+                title: typeof item.title === 'string' ? item.title : null,
+              },
+            ]
+          : []
+      )
+    : [];
+
+/** Настройки текста «С нуля»; `null` — у текста другие настройки или их нет. */
+export const parseScratchGeneration = (
+  raw: string | null
+): ScratchTextGeneration | null => {
+  const parsed = parseJsonRecord(raw);
+  if (!parsed || parsed.kind !== 'scratch') {
+    return null;
+  }
+
+  const facets = isRecord(parsed.facets) ? parsed.facets : {};
+
+  return {
+    kind: 'scratch',
+    form: parseForm(parsed.form),
+    facets: {
+      moods: pickMany(facets.moods, LYRIC_MOODS),
+      deliveries: pickMany(facets.deliveries, LYRIC_DELIVERIES),
+      energies: pickMany(facets.energies, LYRIC_ENERGIES),
+    },
+    references: parseReferences(parsed.references),
+    picked: parsePicked(parsed.picked),
   };
 };
 
@@ -268,16 +339,41 @@ const namedReferences = (
 
 const NO_NAMES: ReferenceNames = { artists: new Map(), texts: new Map() };
 
+const formSummary = (form: TrackFormQuotas): string =>
+  FORM_PARTS.filter(([key]) => form[key] > 0)
+    .map(([key, label]) => `${label} ×${form[key]}`)
+    .join(', ') || 'пустая форма';
+
+export type ScratchGenerationSummary = {
+  form: string;
+  facets: string[];
+  references: string[];
+};
+
+/** Сводка «С нуля»: эталоны запроса без удалённых с полки; `liveTextIds = null` — полка не загружена, показать все. */
+export const summarizeScratchGeneration = (
+  generation: ScratchTextGeneration,
+  liveTextIds: ReadonlySet<number> | null = null
+): ScratchGenerationSummary => ({
+  form: formSummary(generation.form),
+  facets: [
+    ...labelled('настроение', generation.facets.moods, LYRIC_MOOD_LABELS),
+    ...labelled('подача', generation.facets.deliveries, LYRIC_DELIVERY_LABELS),
+    ...labelled('энергия', generation.facets.energies, LYRIC_ENERGY_LABELS),
+  ],
+  references: generation.picked
+    .filter((item) => liveTextIds === null || liveTextIds.has(item.textId))
+    .map((item) =>
+      item.title ? `${item.artistName} «${item.title}»` : item.artistName
+    ),
+});
+
 export const summarizeTrackTextGeneration = (
   generation: TrackTextGeneration,
   names: ReferenceNames = NO_NAMES
 ): TrackTextGenerationSummary => {
-  const form = FORM_PARTS.filter(([key]) => generation.form[key] > 0)
-    .map(([key, label]) => `${label} ×${generation.form[key]}`)
-    .join(', ');
-
   return {
-    form: form || 'пустая форма',
+    form: formSummary(generation.form),
     adlibs: generation.hideAdlibs ? 'адлибы скрыты' : 'адлибы видны',
     filters: [
       ...activeFilters(generation.filters),

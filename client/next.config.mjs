@@ -20,6 +20,10 @@ function readDeployAtFile() {
 
 /** @type {import('next').NextConfig} */
 const NextConfig = {
+  experimental: {
+    // Прокси /graphql рвёт ответ через 30 с, а вызов модели идёт дольше.
+    proxyTimeout: 120_000,
+  },
   ...(basePath ? { basePath } : {}),
   turbopack: {
     root: import.meta.dirname,
