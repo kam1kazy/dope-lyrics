@@ -12,11 +12,11 @@
 
 ## 3. Рамка и запрос (server)
 
-- [ ] 3.1 `server/src/modules/ai/scratch/frame.ts`: `SCRATCH_FRAME_VERSION = '1.0.0'`, рамка Explore из design (черновик), `buildScratchSystem()`
-- [ ] 3.2 `scratch/request.ts`: `formatScratchForm(quotas)` по `TRACK_FRAME` (пропуск нулевых квот, второй хук — «тот же», подписи как `ROLE_LABELS`); вводная к эталонам и `formatScratchReferences` (отрывок, пояснение при наличии); `buildScratchUser({ theme, authorPrompt, references, form })` через `contextBlocks` из `rewrite/request.ts`
-- [ ] 3.3 `scratch/request.test.ts`: в запросе тема, портрет, эталоны, форма «Хит» и «Холст»; без эталонов блока нет; пустой портрет не даёт блока
-- [ ] 3.4 `scratch/scratch.service.ts`: `buildScratchRequest(userId, input, promptOverride?)` (пустая тема → «Тема не может быть пустой», `keepKnown` для граней, `parseTrackFormQuotas`, `loadArtistPool`, `getCurrentPrompt`); `writeFromScratch(userId, input)` через `callModel` с `kind: 'SCRATCH'`, `SCRATCH_FRAME_VERSION`, `env.AI_MAX_TOKENS`, разбор `stripModelWrapper`, пустой ответ — ошибка; возвращает `aiText`, `usageId`, `references`
-- [ ] 3.5 `scratch/scratch.service.test.ts` с подменой `polza.client`: один вызов на запрос, в user нет текста фраз каталога, запись `AiUsage` с видом `SCRATCH` и при ошибке провайдера
+- [x] 3.1 `server/src/modules/ai/scratch/frame.ts`: `SCRATCH_FRAME_VERSION = '1.0.0'`, рамка Explore из design (черновик), `buildScratchSystem()`
+- [x] 3.2 `scratch/request.ts`: `formatScratchForm(quotas)` по `TRACK_FRAME` (пропуск нулевых квот, второй хук — «тот же», подписи как `ROLE_LABELS`); вводная к эталонам и `formatScratchReferences` (отрывок, пояснение при наличии); `buildScratchUser({ theme, authorPrompt, references, form })` через `contextBlocks` из `rewrite/request.ts`
+- [x] 3.3 `scratch/request.test.ts`: в запросе тема, портрет, эталоны, форма «Хит» и «Холст»; без эталонов блока нет; пустой портрет не даёт блока
+- [x] 3.4 `scratch/scratch.service.ts`: `buildScratchRequest(userId, input, promptOverride?)` (пустая тема → «Тема не может быть пустой», `keepKnown` для граней, `parseTrackFormQuotas`, `loadArtistPool`, `getCurrentPrompt`); `writeFromScratch(userId, input)` через `callModel` с `kind: 'SCRATCH'`, `SCRATCH_FRAME_VERSION`, `env.AI_MAX_TOKENS`, разбор `stripModelWrapper`, пустой ответ — ошибка; возвращает `aiText`, `usageId`, `references`
+- [x] 3.5 `scratch/scratch.service.test.ts` с подменой `polza.client`: один вызов на запрос, в user нет текста фраз каталога, запись `AiUsage` с видом `SCRATCH` и при ошибке провайдера
 
 ## 4. Тексты и GraphQL-контракт (server)
 

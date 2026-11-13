@@ -57,7 +57,7 @@ export const parseTrackFormQuotas = (raw: unknown): TrackFormQuotas => {
   };
 };
 
-const paragraphsForRole = (
+export const paragraphsForRole = (
   quotas: TrackFormQuotas,
   role: TrackFrameRole
 ): number => {
