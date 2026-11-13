@@ -1,15 +1,24 @@
 import { gql } from '@apollo/client';
 
-export interface IScratchReference {
+export interface IScratchSource {
   textId: number;
   artistName: string;
   title: string | null;
 }
 
+export interface IScratchCloseLine {
+  /** Номер строки ответа без пустых строк и меток частей, с нуля. */
+  line: number;
+  sourceLine: string;
+  artistName: string;
+}
+
 export interface IScratchResult {
   aiText: string;
   usageId: number;
-  references: IScratchReference[];
+  sources: IScratchSource[];
+  collage: string;
+  close: IScratchCloseLine[];
 }
 
 export const WRITE_FROM_SCRATCH = gql`
@@ -27,10 +36,16 @@ export const WRITE_FROM_SCRATCH = gql`
     ) {
       aiText
       usageId
-      references {
+      sources {
         textId
         artistName
         title
+      }
+      collage
+      close {
+        line
+        sourceLine
+        artistName
       }
     }
   }

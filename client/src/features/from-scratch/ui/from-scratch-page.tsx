@@ -163,7 +163,7 @@ export function FromScratchPage({
           }}
         />
         <p className="text-muted-foreground text-xs leading-relaxed">
-          Грани подбирают эталоны. Без граней — случайные тексты с полки.
+          Грани подбирают строки полки для склейки. Без граней — случайные куски.
         </p>
       </div>
 
@@ -173,7 +173,7 @@ export function FromScratchPage({
 
       <ReferenceFilterFields
         value={references}
-        hint="Выбранные тексты идут всегда, выбранные артисты — только их тексты."
+        hint="Выбранные тексты дают хотя бы по куску склейки, выбранные артисты — только их тексты."
         onChange={onReferencesChange}
       />
 

@@ -64,5 +64,5 @@
 - [x] 9.9 `scratch/scratch.service.ts`: `buildScratchRequest` собирает склейку, `writeFromScratch` возвращает `aiText`, `usageId`, `sources`, `collage`, `close`; тесты сервиса — один вызов, вид `SCRATCH`, в запросе нет фраз каталога, пустая полка — ошибка без вызова
 - [x] 9.10 GraphQL-контракт: `ScratchSource`, `ScratchCloseLine`, `ScratchResult { aiText, usageId, sources, collage, close }` вместо `ScratchReference` / `references` в `server/src/graphql/typeDefs.ts`; резолвер в `server/src/graphql/ai.resolvers.ts`; тест доступа остаётся зелёным
 - [ ] 9.11 Прогон рамки чатом: `--dry` на тему 21 и две темы автора, ответы пишет агент, счётчики из design; итог — в `docs/research/from-scratch.md`
-- [ ] 9.12 `client/src/features/from-scratch/`: запрос под новый ответ; под ответом источники и кнопка-иконка «Склейка» с `Hint` (свёрнута по умолчанию); подсветка близких строк с исходной строкой и артистом по наведению; `picked` из `sources`
+- [x] 9.12 `client/src/features/from-scratch/`: запрос под новый ответ; под ответом источники и кнопка-иконка «Склейка» с `Hint` (свёрнута по умолчанию); подсветка близких строк с исходной строкой и артистом по наведению; `picked` из `sources`
 - [ ] 9.13 `bun run fix` в `server/` и `client/`, тесты зелёные; каждая законченная задача — свой коммит в `feat/from-scratch`

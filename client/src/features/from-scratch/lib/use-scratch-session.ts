@@ -62,7 +62,7 @@ export function useScratchSession(onSaved: (id: number) => void) {
       form: answer.request.form,
       facets: answer.request.facets,
       references: answer.request.references,
-      picked: answer.references.map(({ textId, artistName, title }) => ({
+      picked: answer.sources.map(({ textId, artistName, title }) => ({
         textId,
         artistName,
         title,
