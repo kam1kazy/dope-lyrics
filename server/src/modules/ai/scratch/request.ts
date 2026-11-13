@@ -1,5 +1,5 @@
 import { contextBlocks, ROLE_LABELS } from '~/modules/ai/rewrite/request';
-import { type ScratchPick, scratchExcerpt } from '~/modules/ai/scratch/pick';
+import { scratchExcerpt, type ScratchPick } from '~/modules/ai/scratch/pick';
 import {
   paragraphsForRole,
   SECOND_HOOK_INDEX,

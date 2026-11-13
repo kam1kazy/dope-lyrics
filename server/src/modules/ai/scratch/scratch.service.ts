@@ -1,11 +1,11 @@
 import { GraphQLError } from 'graphql';
 
 import { env } from '~/config/env';
-import type { SectionFacets } from '~/modules/ai/artists/pick';
 import {
   loadArtistPool,
   type ReferenceFilter,
 } from '~/modules/ai/artists/load';
+import type { SectionFacets } from '~/modules/ai/artists/pick';
 import type { ArtistProfile } from '~/modules/ai/artists/profiles';
 import { callModel } from '~/modules/ai/model/model-call';
 import {
