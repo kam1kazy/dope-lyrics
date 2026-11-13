@@ -42,12 +42,15 @@ const INTERJECTIONS = new Set([
   'р',
   'ра',
   'йо',
+  'окей',
+  'ok',
+  'okay',
 ]);
 
 /** Звонок, сообщения, сеть, экран — то, что эталон тащит в трек как затычку. */
 export const hasLink = (text: string): boolean => LINK.test(text);
 
-/** Строка без слов: пустая после скобок, метка части или одни междометия. */
+/** Строка без слов: пустая после скобок, метка части или одни междометия любой длины. */
 const isFiller = (line: string): boolean => {
   const trimmed = line.trim();
   if (/^\[[^\]]*\]$/.test(trimmed)) {
@@ -57,10 +60,6 @@ const isFiller = (line: string): boolean => {
   const bare = trimmed.replace(/\([^)]*\)/g, '').trim();
   if (!bare) {
     return true;
-  }
-
-  if (bare.split(/\s+/).length > 3) {
-    return false;
   }
 
   return bare
@@ -91,6 +90,10 @@ export type ScratchPick = {
   artistName: string;
   sample: ReferenceSample;
 };
+
+/** Совместный трек лежит у каждого артиста — один и тот же текст. */
+const textKey = (sample: ReferenceSample): string =>
+  scratchExcerpt(sample.text).toLowerCase().replace(/\s+/g, ' ');
 
 const shuffle = <T>(items: readonly T[], random: () => number): T[] =>
   items
@@ -128,6 +131,7 @@ export const pickScratchReferences = (
     .filter((entry) => chosenIds.has(entry.sample.id))
     .slice(0, limit);
   const usedArtists = new Set(picked.map((entry) => entry.artistId));
+  const usedTexts = new Set(picked.map((entry) => textKey(entry.sample)));
   const allowLink = hasLink(options.theme);
 
   const groups = new Map<number, ScratchPick[]>();
@@ -149,11 +153,13 @@ export const pickScratchReferences = (
       if (picked.length >= limit) {
         return picked;
       }
-      if (usedArtists.has(entry.artistId)) {
+      const key = textKey(entry.sample);
+      if (usedArtists.has(entry.artistId) || usedTexts.has(key)) {
         continue;
       }
 
       usedArtists.add(entry.artistId);
+      usedTexts.add(key);
       picked.push(entry);
     }
   }

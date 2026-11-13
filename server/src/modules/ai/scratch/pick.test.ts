@@ -44,6 +44,14 @@ describe('scratchExcerpt', () => {
     ).toBe('Spotlight, uh, moonlight, uh\nYeah\nвторая');
   });
 
+  test('длинная строка из одних междометий — тоже заглушка', () => {
+    expect(
+      scratchExcerpt(
+        'Skrrt-skrrt, skrrt-skrrt, skrrt-skrrt, skrrt-skrrt\nLawzy'
+      )
+    ).toBe('Lawzy');
+  });
+
   test('режет по лимиту строк', () => {
     expect(scratchExcerpt('a1\na2\na3\na4', 2)).toBe('a1\na2');
   });
@@ -85,10 +93,7 @@ describe('pickScratchReferences', () => {
       random: first,
     });
 
-    expect(picked.map((item) => item.artistName)).toEqual([
-      'Платина',
-      'MAYOT',
-    ]);
+    expect(picked.map((item) => item.artistName)).toEqual(['Платина', 'MAYOT']);
   });
 
   test('текст со связью не берётся, если её нет в теме', () => {
@@ -130,9 +135,7 @@ describe('pickScratchReferences', () => {
       random: first,
     });
 
-    expect(picked.map((item) => item.sample.id).slice(0, 2)).toEqual([
-      11, 12,
-    ]);
+    expect(picked.map((item) => item.sample.id).slice(0, 2)).toEqual([11, 12]);
     expect(picked.filter((item) => item.artistId === 1)).toHaveLength(2);
   });
 
@@ -152,6 +155,28 @@ describe('pickScratchReferences', () => {
     });
 
     expect(picked.map((item) => item.artistName)).toEqual(['B', 'D', 'C']);
+  });
+
+  test('один текст у двух артистов идёт один раз', () => {
+    const shelf = [
+      artist(1, 'Pharaoh', [
+        text(1, 'Эй, 5 минут назад', { mood: ['BRAVADO'] }),
+      ]),
+      artist(2, 'Boulevard Depo', [
+        text(2, 'Эй,  5 минут назад', { mood: ['BRAVADO'] }),
+      ]),
+      artist(3, 'Платина', [text(3, 'Сан Ларан', { mood: ['BRAVADO'] })]),
+    ];
+    const picked = pickScratchReferences(shelf, {
+      facets: BRAVADO,
+      theme: 'тема',
+      random: first,
+    });
+
+    expect(picked.map((item) => item.artistName)).toEqual([
+      'Pharaoh',
+      'Платина',
+    ]);
   });
 
   test('артист без текстов не занимает место', () => {
