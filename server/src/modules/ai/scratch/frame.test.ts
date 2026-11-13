@@ -25,4 +25,14 @@ describe('рамка «С нуля»', () => {
     expect(system).not.toContain('Строку, которую оставляешь дословно');
     expect(system).toContain('Хук склейки — тоже черновик');
   });
+
+  test('перевод чужой строки — дословная, ядро не переводить — снято', () => {
+    const system = buildScratchSystem();
+
+    expect(system).toContain('Перевод и калька чужой строки — та же дословная');
+    expect(system).toContain('С английского бери одно слово');
+    expect(system).toContain('отсылки чужого трека — не ядро');
+    expect(system).toContain('как устроен удар');
+    expect(system).not.toContain('Ядро не переводи');
+  });
 });

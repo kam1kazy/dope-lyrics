@@ -4,6 +4,7 @@ import { sample } from '~/modules/ai/artists/fixtures';
 import type { ArtistProfile } from '~/modules/ai/artists/profiles';
 import type { RecordUsageInput } from '~/modules/ai/model/ai-usage.service';
 import { AiProviderError } from '~/modules/ai/model/polza.client';
+import { SCRATCH_FRAME_VERSION } from '~/modules/ai/scratch/frame';
 
 const recorded: RecordUsageInput[] = [];
 let calls = 0;
@@ -131,7 +132,7 @@ describe('callScratch', () => {
     expect(recorded[0]).toMatchObject({
       kind: 'SCRATCH',
       status: 'OK',
-      frameVersion: '2.0.0',
+      frameVersion: SCRATCH_FRAME_VERSION,
       promptId: 5,
     });
   });
