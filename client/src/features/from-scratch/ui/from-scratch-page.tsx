@@ -163,7 +163,8 @@ export function FromScratchPage({
           }}
         />
         <p className="text-muted-foreground text-xs leading-relaxed">
-          Грани подбирают строки полки для склейки. Без граней — случайные куски.
+          Грани подбирают строки полки для склейки. Без граней — случайные
+          куски.
         </p>
       </div>
 
