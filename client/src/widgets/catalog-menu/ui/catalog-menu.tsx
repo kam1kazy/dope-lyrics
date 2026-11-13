@@ -15,6 +15,7 @@ import {
   Search,
   Shuffle,
   Sparkles,
+  WandSparkles,
 } from 'lucide-react';
 import {
   useCallback,
@@ -46,6 +47,7 @@ import {
   type SectionSearchHit,
 } from '@/features/catalog-search';
 import { CatalogStatsPanel } from '@/features/catalog-stats';
+import { FromScratchPage } from '@/features/from-scratch';
 import { ArtistList, ArtistPane } from '@/features/reference-shelf';
 import { TrackTextsList, TrackTextView } from '@/features/track-texts';
 import {
@@ -88,7 +90,12 @@ type CatalogSection = CatalogMenuSection;
 
 type FilterableSection = Exclude<
   CatalogSection,
-  'profile' | 'generator' | 'history' | 'references' | 'ai-settings'
+  | 'profile'
+  | 'generator'
+  | 'from-scratch'
+  | 'history'
+  | 'references'
+  | 'ai-settings'
 >;
 
 type MenuItem = {
@@ -106,6 +113,7 @@ const MENU_ITEMS: MenuItem[] = [
   { id: 'stats', label: 'Сводка', icon: ChartColumn },
   { id: 'references', label: 'Эталоны', icon: Sparkles },
   { id: 'generator', label: 'Генератор', icon: Shuffle },
+  { id: 'from-scratch', label: 'С нуля', icon: WandSparkles },
   { id: 'ai-settings', label: 'Настройки ИИ', icon: Bot },
 ];
 
@@ -117,6 +125,7 @@ const SECTION_TITLES: Record<CatalogSection, string> = {
   history: 'История карусели',
   stats: 'Сводка',
   generator: 'Генератор',
+  'from-scratch': 'С нуля',
   references: 'Эталоны',
   'ai-settings': 'Настройки ИИ',
 };
@@ -158,6 +167,9 @@ export function CatalogMenu() {
     useState<CatalogSectionFilters>(DEFAULT_GENERATOR_SECTION_FILTERS);
   const [generatorReferences, setGeneratorReferences] =
     useState<ReferenceFilter>(EMPTY_REFERENCE_FILTER);
+  const [scratchReferences, setScratchReferences] = useState<ReferenceFilter>(
+    EMPTY_REFERENCE_FILTER
+  );
   const [selectedCollage, setSelectedCollage] = useState<ILyricCollage | null>(
     null
   );
@@ -337,6 +349,7 @@ export function CatalogMenu() {
     renderedSection &&
     renderedSection !== 'profile' &&
     renderedSection !== 'generator' &&
+    renderedSection !== 'from-scratch' &&
     renderedSection !== 'history' &&
     renderedSection !== 'references' &&
     renderedSection !== 'ai-settings'
@@ -367,7 +380,11 @@ export function CatalogMenu() {
     renderedSection === 'references' && selectedArtistId !== null;
   const sidePaneOpen = filtersOpen || historyOpen || textsOpen || artistOpen;
   const visibleMenuItems = MENU_ITEMS.filter(
-    (item) => (item.id !== 'ai-settings' && item.id !== 'references') || isOwner
+    (item) =>
+      (item.id !== 'ai-settings' &&
+        item.id !== 'references' &&
+        item.id !== 'from-scratch') ||
+      isOwner
   );
 
   const handleLogout = () => {
@@ -746,6 +763,21 @@ export function CatalogMenu() {
                       <CarouselHistoryPanel
                         likedOnly={likedOnly}
                         onPlay={closeMenu}
+                      />
+                    ) : renderedSection === 'from-scratch' && isOwner ? (
+                      <FromScratchPage
+                        form={generatorForm}
+                        references={scratchReferences}
+                        onFormChange={(next) => {
+                          setGeneratorForm(next);
+                          writeGeneratorForm(next);
+                        }}
+                        onReferencesChange={setScratchReferences}
+                        onSaved={(id) => {
+                          selectSection('generator');
+                          setSelectedTextId(id);
+                          setTextsOpen(true);
+                        }}
                       />
                     ) : renderedSection === 'ai-settings' ? (
                       <AiSettingsPanel />

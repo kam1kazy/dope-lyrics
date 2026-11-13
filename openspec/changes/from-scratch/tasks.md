@@ -33,10 +33,10 @@
 
 ## 6. Страница «С нуля» (client)
 
-- [ ] 6.1 `client/src/features/catalog-assemble/ui/catalog-generator-pane.tsx`: вынести форму трека (пресеты + `ParagraphField`) и `ReferenceFilterFields` в экспортируемые компоненты фичи, вид генератора не меняется; экспорт через `features/catalog-assemble/index.ts`
-- [ ] 6.2 `client/src/features/from-scratch/api/queries.ts`: `WRITE_FROM_SCRATCH`, `CREATE_SCRATCH_TRACK_TEXT` и типы ответа
-- [ ] 6.3 `client/src/features/from-scratch/ui/from-scratch-page.tsx`: тема (обязательна), три `MultiSelect` граней по `shared/lib/lyric-facets`, форма через `readGeneratorForm` / `writeGeneratorForm`, фильтры эталонов, «Написать» (недоступна без темы и без ИИ, с пояснением), ответ с метками, эталоны под ответом, «Ещё раз», «Сохранить в тексты» с `generation = { kind: 'scratch', form, facets, references, picked }`; ошибки по-русски, тема не теряется
-- [ ] 6.4 `client/src/widgets/catalog-menu/ui/catalog-menu.tsx`: секция `'from-scratch'`, пункт «С нуля» под «Генератором» только у владельца, своё состояние фильтров эталонов; после сохранения — переход к тексту или тост, как в генераторе
+- [x] 6.1 `client/src/features/catalog-assemble/ui/catalog-generator-pane.tsx`: вынести форму трека (пресеты + `ParagraphField`) и `ReferenceFilterFields` в экспортируемые компоненты фичи, вид генератора не меняется; экспорт через `features/catalog-assemble/index.ts`
+- [x] 6.2 `client/src/features/from-scratch/api/queries.ts`: `WRITE_FROM_SCRATCH`, `CREATE_SCRATCH_TRACK_TEXT` и типы ответа
+- [x] 6.3 `client/src/features/from-scratch/ui/from-scratch-page.tsx`: тема (обязательна), три `MultiSelect` граней по `shared/lib/lyric-facets`, форма через `readGeneratorForm` / `writeGeneratorForm`, фильтры эталонов, «Написать» (недоступна без темы и без ИИ, с пояснением), ответ с метками, эталоны под ответом, «Ещё раз», «Сохранить в тексты» с `generation = { kind: 'scratch', form, facets, references, picked }`; ошибки по-русски, тема не теряется
+- [x] 6.4 `client/src/widgets/catalog-menu/ui/catalog-menu.tsx`: секция `'from-scratch'`, пункт «С нуля» под «Генератором» только у владельца, своё состояние фильтров эталонов; после сохранения — переход к тексту или тост, как в генераторе
 
 ## 7. Тексты «С нуля» на клиенте
 
