@@ -1,7 +1,9 @@
 import { describe, expect, test } from 'bun:test';
 
 import {
+  parseScratchGeneration,
   parseTrackTextGeneration,
+  summarizeScratchGeneration,
   summarizeTrackTextGeneration,
 } from './generation';
 
@@ -111,5 +113,59 @@ describe('эталоны в настройках текста', () => {
       }).filters
     ).toEqual(['артисты: Future', 'тексты эталонов: «Mask Off»']);
     expect(summarizeTrackTextGeneration(generation).filters).toEqual([]);
+  });
+});
+
+describe('настройки текста «С нуля»', () => {
+  const raw = JSON.stringify({
+    kind: 'scratch',
+    form: { intro: 0, verse: 4, hook: 1, bridge: 0 },
+    facets: { moods: ['EUPHORIA', 'NOPE'], deliveries: [], energies: [] },
+    references: { artistIds: [], textIds: [] },
+    picked: [
+      { textId: 7, artistName: 'SLAVA MARLOW', title: 'БЕЗ АТТЕСТАТА' },
+      { textId: 9, artistName: 'Pharaoh', title: null },
+    ],
+  });
+
+  test('в генератор не возвращаются', () => {
+    expect(parseTrackTextGeneration(raw)).toBeNull();
+  });
+
+  test('сводка: форма, грани, эталоны запроса', () => {
+    const generation = parseScratchGeneration(raw);
+    expect(generation).not.toBeNull();
+    if (!generation) {
+      return;
+    }
+
+    const summary = summarizeScratchGeneration(generation);
+    expect(summary.form).toBe('куплет ×4, хук ×1');
+    expect(summary.facets).toEqual(['настроение: эйфория']);
+    expect(summary.references).toEqual([
+      'SLAVA MARLOW «БЕЗ АТТЕСТАТА»',
+      'Pharaoh',
+    ]);
+  });
+
+  test('удалённый с полки эталон не показывается', () => {
+    const generation = parseScratchGeneration(raw);
+    if (!generation) {
+      throw new Error('нет настроек');
+    }
+
+    expect(
+      summarizeScratchGeneration(generation, new Set([9])).references
+    ).toEqual(['Pharaoh']);
+  });
+
+  test('без граней — пустой список, обычные настройки — не «С нуля»', () => {
+    const generation = parseScratchGeneration('{"kind":"scratch"}');
+    expect(generation?.facets).toEqual({
+      moods: [],
+      deliveries: [],
+      energies: [],
+    });
+    expect(parseScratchGeneration('{"form":{}}')).toBeNull();
   });
 });

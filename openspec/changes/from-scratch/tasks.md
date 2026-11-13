@@ -40,9 +40,9 @@
 
 ## 7. Тексты «С нуля» на клиенте
 
-- [ ] 7.1 `client/src/features/track-texts/lib/generation.ts`: разбор `kind: 'scratch'` в отдельный тип, сводка (форма, грани или «граней нет», эталоны без удалённых); тесты в `generation.test.ts`
-- [ ] 7.2 `client/src/features/track-texts/ui/track-text-view.tsx`: у текста «С нуля» нет вкладки «Из моих» и «Применить в генератор», шов без жёлтого (`lib/seam.ts` с пустым источником); сводка «С нуля»
-- [ ] 7.3 `client/src/features/ai-settings/ui/usage-tab.tsx`: подпись `SCRATCH` — «С нуля»
+- [x] 7.1 `client/src/features/track-texts/lib/generation.ts`: разбор `kind: 'scratch'` в отдельный тип, сводка (форма, грани или «граней нет», эталоны без удалённых); тесты в `generation.test.ts`
+- [x] 7.2 `client/src/features/track-texts/ui/track-text-view.tsx`: у текста «С нуля» нет вкладки «Из моих» и «Применить в генератор», шов без жёлтого (`lib/seam.ts` с пустым источником); сводка «С нуля»
+- [x] 7.3 `client/src/features/ai-settings/ui/usage-tab.tsx`: подпись `SCRATCH` — «С нуля»
 
 ## 8. Проверка и доки
 

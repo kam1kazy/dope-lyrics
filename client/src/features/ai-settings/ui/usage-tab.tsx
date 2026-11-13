@@ -22,6 +22,7 @@ const KIND_LABELS: Record<string, string> = {
   ARTIST_CARD: 'Карточка артиста',
   REFERENCE_TAGS: 'Теги эталона',
   REFERENCE_SELECT: 'Подбор эталона',
+  SCRATCH: 'С нуля',
 };
 
 function UsagePeriod({
