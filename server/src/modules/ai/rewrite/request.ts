@@ -1,6 +1,9 @@
 import type { PickedReference } from '~/modules/ai/artists/pick';
 import type { ArtistProfile } from '~/modules/ai/artists/profiles';
-import type { TechniqueKind } from '~/modules/ai/artists/techniques';
+import {
+  PICKED_KINDS,
+  type TechniqueKind,
+} from '~/modules/ai/artists/techniques';
 import type { LyricSongRole } from '~/modules/lyrics/lyric-facets';
 import {
   type CollageSlotStored,
@@ -191,6 +194,26 @@ export const contextBlocks = (
   return parts;
 };
 
+const KIND_TARGETS: Record<TechniqueKind, string> = {
+  IMAGE: 'на образ',
+  SOUND: 'на звук',
+  WORDPLAY: 'на игру слов',
+  TONE: 'на тон',
+};
+
+/** «на образ, на звук и на игру слов» — по видам, что реально лежат под частью. */
+const kindsNote = (artists: readonly ArtistProfile[]): string => {
+  const present = PICKED_KINDS.filter((kind) =>
+    artists.some((artist) =>
+      artist.techniques.some((item) => item.kind === kind)
+    )
+  ).map((kind) => KIND_TARGETS[kind]);
+
+  return present.length > 1
+    ? `${present.slice(0, -1).join(', ')} и ${present[present.length - 1]}`
+    : (present[0] ?? '');
+};
+
 export const buildRewriteUser = (input: {
   theme: string | null;
   authorPrompt: string;
@@ -212,7 +235,7 @@ export const buildRewriteUser = (input: {
 
       const note = section.relaxed
         ? 'Прямых совпадений мало. Ниже ближайшие карточки. Возьми один-два приёма, не все.'
-        : 'Ориентиры этой части: приём на образ, на звук и на игру слов. Возьми один-два и выполни инструкцию. Чужие строки не копируй.';
+        : `Ориентиры этой части: приём ${kindsNote(section.artists)}. Возьми один-два и выполни инструкцию. Чужие строки не копируй.`;
 
       return `${head}\n\n${note}\n${formatArtistCards(section.artists, section.referenceNumbers)}`;
     })
