@@ -20,9 +20,9 @@
 
 ## 4. Тексты и GraphQL-контракт (server)
 
-- [ ] 4.1 `server/src/modules/track-texts/track-texts.service.ts`: `createScratchTrackText(userId, { theme, aiText, usageId, generation })` — `slots = []`, `sourceText = ''`, проверка темы, ответа и `usageId` владельца; тест: создание, открытие, правка, «Готово», удаление такого текста
-- [ ] 4.2 GraphQL-контракт: `input ScratchFacetsInput`, типы `ScratchReference`, `ScratchResult`, мутации `writeFromScratch(theme, form, facets, references)` и `createScratchTrackText(theme, aiText, usageId, generation)` в `server/src/graphql/typeDefs.ts`; резолверы под `requireAi` в `server/src/graphql/ai.resolvers.ts` (и в резолверах текстов — там, где `createTrackText`)
-- [ ] 4.3 Тест резолвера: пользователь не `OWNER` получает ошибку по-русски на обе мутации
+- [x] 4.1 `server/src/modules/track-texts/track-texts.service.ts`: `createScratchTrackText(userId, { theme, aiText, usageId, generation })` — `slots = []`, `sourceText = ''`, проверка темы, ответа и `usageId` владельца; тест: создание, открытие, правка, «Готово», удаление такого текста
+- [x] 4.2 GraphQL-контракт: `input ScratchFacetsInput`, типы `ScratchReference`, `ScratchResult`, мутации `writeFromScratch(theme, form, facets, references)` и `createScratchTrackText(theme, aiText, usageId, generation)` в `server/src/graphql/typeDefs.ts`; резолверы под `requireAi` в `server/src/graphql/ai.resolvers.ts` (и в резолверах текстов — там, где `createTrackText`)
+- [x] 4.3 Тест резолвера: пользователь не `OWNER` получает ошибку по-русски на обе мутации
 
 ## 5. Прогоны (server, без polza)
 

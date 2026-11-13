@@ -388,6 +388,24 @@ export const typeDefinitions = /* GraphQL */ `
     usageId: Int!
   }
 
+  input ScratchFacetsInput {
+    moods: [LyricMood!]
+    deliveries: [LyricDelivery!]
+    energies: [LyricEnergy!]
+  }
+
+  type ScratchReference {
+    textId: Int!
+    artistName: String!
+    title: String
+  }
+
+  type ScratchResult {
+    aiText: String!
+    usageId: Int!
+    references: [ScratchReference!]!
+  }
+
   enum TechniqueKind {
     IMAGE
     SOUND
@@ -715,6 +733,18 @@ export const typeDefinitions = /* GraphQL */ `
       aiText: String
       usageId: Int
       hideAdlibs: Boolean
+      generation: String
+    ): TrackText!
+    writeFromScratch(
+      theme: String!
+      form: TrackFormQuotas!
+      facets: ScratchFacetsInput
+      references: ReferenceFilterInput
+    ): ScratchResult!
+    createScratchTrackText(
+      theme: String!
+      aiText: String!
+      usageId: Int
       generation: String
     ): TrackText!
     updateTrackText(id: Int!, text: String!): TrackText!

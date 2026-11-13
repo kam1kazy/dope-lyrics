@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
 
 import { prisma } from '~/infrastructure/prisma';
 import {
+  createScratchTrackText,
   createTrackText,
   deleteTrackText,
   getTrackText,
@@ -189,5 +190,62 @@ describe('тексты из генератора', () => {
     await expect(deleteTrackText(userBId, textId)).rejects.toThrow();
     expect(await deleteTrackText(userAId, textId)).toBe(textId);
     await expect(getTrackText(userAId, textId)).rejects.toThrow();
+  });
+});
+
+describe('тексты «С нуля»', () => {
+  test('без склейки: «Из моих» пустой, правка, «Готово» и удаление как обычно', async () => {
+    const created = await createScratchTrackText(userAId, {
+      theme: '  пьяная Москва ',
+      aiText: '[Куплет]\nстрока',
+      generation: JSON.stringify({ kind: 'scratch' }),
+    });
+
+    expect(created.theme).toBe('пьяная Москва');
+    expect(created.slots).toEqual([]);
+    expect(created.sourceText).toBe('');
+    expect(created.text).toBe('[Куплет]\nстрока');
+    expect(serializeGeneration(created.generation)).toBe('{"kind":"scratch"}');
+
+    const opened = await getTrackText(userAId, created.id);
+    expect(opened.aiText).toBe('[Куплет]\nстрока');
+
+    await updateTrackText(userAId, created.id, 'правка');
+    const done = await markTrackTextDone(userAId, created.id);
+    expect(done.finalText).toBe('правка');
+    expect(done.aiText).toBe('[Куплет]\nстрока');
+
+    expect(await deleteTrackText(userAId, created.id)).toBe(created.id);
+  });
+
+  test('пустая тема и пустой ответ отвергаются', async () => {
+    await expect(
+      createScratchTrackText(userAId, { theme: ' ', aiText: 'текст' })
+    ).rejects.toThrow('Тема');
+    await expect(
+      createScratchTrackText(userAId, { theme: 'тема', aiText: '  ' })
+    ).rejects.toThrow('Ответ ИИ');
+  });
+
+  test('чужой запрос ИИ не привязывается', async () => {
+    const usage = await prisma.aiUsage.create({
+      data: {
+        userId: userAId,
+        kind: 'SCRATCH',
+        model: 'test',
+        frameVersion: '1.0.0',
+        latencyMs: 1,
+        status: 'OK',
+      },
+    });
+
+    await expect(
+      createScratchTrackText(userBId, {
+        theme: 'тема',
+        aiText: 'текст',
+        usageId: usage.id,
+      })
+    ).rejects.toThrow('Запрос ИИ не найден');
+    await prisma.aiUsage.delete({ where: { id: usage.id } });
   });
 });

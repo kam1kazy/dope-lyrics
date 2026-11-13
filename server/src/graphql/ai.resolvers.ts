@@ -18,8 +18,14 @@ import {
   rewriteCollage,
   type RewriteCollageInput,
 } from '~/modules/ai/rewrite/rewrite.service';
+import {
+  type ScratchInput,
+  writeFromScratch,
+} from '~/modules/ai/scratch/scratch.service';
 import { can } from '~/modules/auth/permissions';
 import {
+  createScratchTrackText,
+  type CreateScratchTrackTextInput,
   createTrackText,
   type CreateTrackTextInput,
   deleteTrackText,
@@ -187,6 +193,29 @@ export const aiMutationResolvers = {
   ) => {
     const user = requireAi(context);
     return trackTextDto(await createTrackText(user.id, args));
+  },
+  writeFromScratch: async (
+    _parent: unknown,
+    args: ScratchInput,
+    context: GraphQLContext
+  ) => {
+    const user = requireAi(context);
+    try {
+      return await writeFromScratch(user.id, args);
+    } catch (error: unknown) {
+      console.error('[writeFromScratch] Error:', error);
+      throw new GraphQLError(
+        error instanceof Error ? error.message : 'Не удалось написать трек'
+      );
+    }
+  },
+  createScratchTrackText: async (
+    _parent: unknown,
+    args: CreateScratchTrackTextInput,
+    context: GraphQLContext
+  ) => {
+    const user = requireAi(context);
+    return trackTextDto(await createScratchTrackText(user.id, args));
   },
   updateTrackText: async (
     _parent: unknown,
