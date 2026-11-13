@@ -71,6 +71,7 @@ export const callModel = async <T>(
       tokensIn: completion?.tokensIn ?? 0,
       tokensOut: completion?.tokensOut ?? 0,
       searchCostRub: completion?.searchCostRub ?? 0,
+      providerCostRub: completion?.costRub ?? null,
       latencyMs: Date.now() - startedAt,
       status: 'ERROR',
       error: message,
@@ -85,6 +86,7 @@ export const callModel = async <T>(
     tokensIn: completion.tokensIn,
     tokensOut: completion.tokensOut,
     searchCostRub: completion.searchCostRub,
+    providerCostRub: completion.costRub,
     latencyMs: Date.now() - startedAt,
     status: 'OK',
   });

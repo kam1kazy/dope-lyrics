@@ -29,6 +29,8 @@ export type AiCompletionResult = {
   truncated: boolean;
   /** Стоимость поиска в интернете по данным polza; 0 — поиска не было. */
   searchCostRub: number;
+  /** Полная цена вызова по данным polza; null — провайдер её не прислал. */
+  costRub: number | null;
 };
 
 const responseSchema = z.object({
@@ -45,6 +47,7 @@ const responseSchema = z.object({
     .object({
       prompt_tokens: z.number().nullish(),
       completion_tokens: z.number().nullish(),
+      cost_rub: z.number().nullish(),
       /** Без поиска polza присылает `plugins: null`. */
       plugins: z
         .object({
@@ -98,6 +101,7 @@ export const parseCompletionResponse = (json: unknown): AiCompletionResult => {
     model: parsed.data.model ?? env.AI_MODEL,
     truncated: parsed.data.choices[0]?.finish_reason === 'length',
     searchCostRub: parsed.data.usage?.plugins?.web?.total_cost_rub ?? 0,
+    costRub: parsed.data.usage?.cost_rub ?? null,
   };
 };
 

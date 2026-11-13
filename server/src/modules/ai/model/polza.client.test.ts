@@ -54,7 +54,17 @@ describe('ответ polza', () => {
     ).toBe(0.5);
   });
 
+  test('цена вызова берётся из usage.cost_rub', () => {
+    expect(
+      parseCompletionResponse(reply({ prompt_tokens: 1, cost_rub: 1.67 }))
+        .costRub
+    ).toBe(1.67);
+  });
+
   test('usage: null тоже не ломает разбор', () => {
-    expect(parseCompletionResponse(reply(null)).tokensIn).toBe(0);
+    const result = parseCompletionResponse(reply(null));
+
+    expect(result.tokensIn).toBe(0);
+    expect(result.costRub).toBeNull();
   });
 });
