@@ -227,7 +227,33 @@ Change `from-scratch`, ветка `feat/from-scratch`. Решения — в [de
 - Rocket («Bound Thug», «Мысли») — в пяти склейках из шести. Кусок «Bound thug Bound thug» ×4 проходит `isFiller`: повтор одной строки — тоже заглушка.
 - Пояснений (`ReferenceText.note`) у текстов полки нет — 0 из 352. Подобрать по смыслу текста не по чему, только по словам самого куска.
 
-### Что из этого пробовать в «Поправить ИИ»
+### Ответ из одного текста: перевод вместо пересборки. 14.11
+
+Автор принёс ответ «С нуля» из интерфейса (вероятно, вызов 39 или 40, рамка 2.0.0; склейка в `AiUsage` не хранится). Сверка со всей полкой и руками с Travis Scott «TELEKINESIS»:
+
+| Строка ответа | Источник | Как взята |
+| --- | --- | --- |
+| Trust me, я снова хочу тебя — insane | I still wanna be with you, trust me, I know that's insane | перевод |
+| Fuck on you, lames сосут свой fame | I'd rather fuck on you than fuck on lames · all because my fame | перевод + ядро |
+| Berlin, моя moldae, на зубах MDMA | I did some shit in Berlin, my moldae | ядро + своё |
+| Мы оба никто, и workin' for me, yeah | We both ain't shit and it's workin' for me | перевод (поймано) |
+| Future трубит сквозь дым | I can see the future · To the trumpets | два ядра + своё |
+| Future уже внутри | I can see the future | ядро + своё |
+| Glory, вечная жизнь | live in glory in eternal lastin' life | перевод |
+| Руль забери, я застыл | Won't you take the wheel? And I recline and I sit still | перевод |
+| Turn up — Он входит без стука | Might as well turn up now, He gon' pop up unannounced | перевод |
+| Трубы — кайфу капут | To the trumpets | ядро + своё |
+| Future просвечивает насквозь | I can see through ya | перевод |
+| Storm и troopers шагают в мой сон | Ridin' with the storm and some troopers | калька + своё |
+| Stupid shit оставляет ожог | this shit is stupid | ядро + своё |
+| Luke-uh, skywalk — и меня занесло | Sky walkin' 'round like I'm Luke-uh | калька + своё |
+
+Чужих по смыслу — 14 из 14, все из одного текста и в его порядке: 7 переводов, 2 кальки с добавкой, 5 — ядро с парой своих слов. `findCloseLines` пометил одну. Три дыры:
+
+- **Рамка.** «Ядро не переводи» модель читает как «ядро оставь по-английски, остальное переведи». Правила «перевод строки — тоже дословно» нет.
+- **Проверка.** Сравнение по словам не видит перевода с английского. Нужна другая проверка: хотя бы английские слова ответа, совпавшие с одной строкой источника, или сверка моделью.
+- **Склейка.** Если весь ответ из одного текста, склейка, скорее всего, шла через фильтр «Тексты» или «Артисты»: там лимит «кусок на текст» снят. Автора не спрашивали.
+
 
 Там склейка уже даёт позу автора, поэтому правила 2 и 6 не нужны. Кандидаты, которые стоит прогнать и на склейках 7 и 8:
 
