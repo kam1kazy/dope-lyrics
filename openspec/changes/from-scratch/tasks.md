@@ -1,6 +1,6 @@
 ## 1. Схема (Prisma)
 
-- [ ] 1.1 `server/prisma/schema.prisma`: значение `SCRATCH` в `enum AiUsageKind`; миграция `ai_usage_scratch` (`migrate dev --create-only`, только `ALTER TYPE … ADD VALUE`), применить на `dope-lyrics-db`, `bun prisma generate`
+- [x] 1.1 `server/prisma/schema.prisma`: значение `SCRATCH` в `enum AiUsageKind`; миграция `ai_usage_scratch` (`migrate dev --create-only`, только `ALTER TYPE … ADD VALUE`), применить на `dope-lyrics-db`, `bun prisma generate`
 
 ## 2. Подбор эталонов (server)
 

@@ -261,6 +261,7 @@ enum AiUsageKind {
   LINE_MARKS
   ARTIST_CARD
   REFERENCE_TAGS
+  SCRATCH
 }
 
 enum AiUsageStatus {
