@@ -11,6 +11,10 @@ import {
   facetsForSection,
   rankArtistCandidates,
 } from '~/modules/ai/artists/pick';
+import {
+  HOOK_PICKED_KINDS,
+  PICKED_KINDS,
+} from '~/modules/ai/artists/techniques';
 import { callModel } from '~/modules/ai/model/model-call';
 import {
   AiProviderError,
@@ -131,7 +135,11 @@ export const buildRewriteRequest = async (
     return {
       section,
       facets,
-      ...rankArtistCandidates(pool, facets),
+      ...rankArtistCandidates(
+        pool,
+        facets,
+        section.songRole === 'HOOK' ? HOOK_PICKED_KINDS : PICKED_KINDS
+      ),
     };
   });
   const { references, bySection } = assignReferenceTexts(

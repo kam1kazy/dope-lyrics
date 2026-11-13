@@ -6,7 +6,10 @@ import {
   rankArtistCandidates,
 } from '~/modules/ai/artists/pick';
 import type { ArtistProfile } from '~/modules/ai/artists/profiles';
-import { PICKED_KINDS } from '~/modules/ai/artists/techniques';
+import {
+  HOOK_PICKED_KINDS,
+  PICKED_KINDS,
+} from '~/modules/ai/artists/techniques';
 
 const kindsOf = (artists: readonly ArtistProfile[]): string[] =>
   artists
@@ -86,6 +89,16 @@ describe('rankArtistCandidates', () => {
     const { artists } = rankArtistCandidates(pool, facets);
 
     expect(artists.map((artist) => artist.name)).toEqual(['Slipknot']);
+  });
+
+  test('под хук без игры слов: только образ и звук', () => {
+    const { artists } = rankArtistCandidates(
+      TEST_SHELF,
+      facets,
+      HOOK_PICKED_KINDS
+    );
+
+    expect(kindsOf(artists)).toEqual([...HOOK_PICKED_KINDS].sort());
   });
 
   test('пустой пул — без карточек', () => {

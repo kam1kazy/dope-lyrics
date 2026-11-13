@@ -5,6 +5,7 @@ import {
   assignReferenceTexts,
   rankArtistCandidates,
 } from '~/modules/ai/artists/pick';
+import { HOOK_PICKED_KINDS } from '~/modules/ai/artists/techniques';
 import { buildRewriteSystem } from '~/modules/ai/rewrite/frame';
 import {
   buildRewriteUser,
@@ -155,6 +156,23 @@ describe('сборка запроса', () => {
       true
     );
     expect(user).toContain('приём на образ, на звук и на игру слов');
+  });
+
+  test('подпись части называет только те виды, что под ней лежат', () => {
+    const { artists } = rankArtistCandidates(
+      TEST_SHELF,
+      { moods: ['LONGING'], energies: ['QUIET'], deliveries: ['TUNE'] },
+      HOOK_PICKED_KINDS
+    );
+
+    const user = buildRewriteUser({
+      theme: null,
+      authorPrompt: '',
+      sections: [{ label: 'Хук', text: 'х', artists, relaxed: false }],
+    });
+
+    expect(user).toContain('приём на образ и на звук.');
+    expect(user).not.toContain('- игра слов · ');
   });
 });
 
