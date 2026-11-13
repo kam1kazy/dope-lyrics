@@ -28,25 +28,25 @@
 
 - [x] 5.1 `server/prisma/script/scratch-probe.ts` и скрипт `ai:scratch` в `server/package.json`: `--themes`, `--pick`, `--dry`, `--prompt`, `--no-references`, `--artist`, `--text`, `--label`, `-n`; вывод в `server/.ai-probe/scratch/`; без `--dry` / `--pick` вызывает polza — только по слову автора
 - [x] 5.2 `server/.ai-probe/scratch/themes.json` (вне git): шесть тем из куплетов автора с гранями прогона 13.11
-- [ ] 5.3 Прогон подбора `--pick -n 3`: таблица эталонов по темам автору на пометку «годится / мимо»; итог и вывод по критерию из design — в `docs/research/from-scratch.md`
-- [ ] 5.4 Прогон рамки чатом: `--dry` на шесть тем × (с эталонами / без) × (с портретом / без), ответы пишет агент; счётчики из design; правки рамки — только по повторяющейся поломке, с подъёмом версии; итог — в `docs/research/from-scratch.md`
+- [ ] 5.3 Прогон подбора `--pick -n 3`: таблица эталонов по темам автору на пометку «годится / мимо»; итог и вывод по критерию из design — в `docs/research/from-scratch.md` (таблица готова 13.11, ждёт пометок автора)
+- [ ] 5.4 Прогон рамки чатом: `--dry` на шесть тем × (с эталонами / без) × (с портретом / без), ответы пишет агент; счётчики из design; правки рамки — только по повторяющейся поломке, с подъёмом версии; итог — в `docs/research/from-scratch.md` (13.11: запросы `--dry` на 6 тем × 4 варианта, чатом 2 ответа — рамка выполнима; «с эталонами / без» показывает только модель — прогон на polza по слову автора)
 
 ## 6. Страница «С нуля» (client)
 
 - [x] 6.1 `client/src/features/catalog-assemble/ui/catalog-generator-pane.tsx`: вынести форму трека (пресеты + `ParagraphField`) и `ReferenceFilterFields` в экспортируемые компоненты фичи, вид генератора не меняется; экспорт через `features/catalog-assemble/index.ts`
 - [x] 6.2 `client/src/features/from-scratch/api/queries.ts`: `WRITE_FROM_SCRATCH`, `CREATE_SCRATCH_TRACK_TEXT` и типы ответа
-- [x] 6.3 `client/src/features/from-scratch/ui/from-scratch-page.tsx`: тема (обязательна), три `MultiSelect` граней по `shared/lib/lyric-facets`, форма через `readGeneratorForm` / `writeGeneratorForm`, фильтры эталонов, «Написать» (недоступна без темы и без ИИ, с пояснением), ответ с метками, эталоны под ответом, «Ещё раз», «Сохранить в тексты» с `generation = { kind: 'scratch', form, facets, references, picked }`; ошибки по-русски, тема не теряется
+- [x] 6.3 `client/src/features/from-scratch/ui/from-scratch-page.tsx`: тема (обязательна), чипсы граней по `shared/lib/lyric-facets` (`MultiSelect` — только числовые id), форма через `readGeneratorForm` / `writeGeneratorForm`, фильтры эталонов, «Написать» (недоступна без темы и без ИИ, с пояснением), ответ с метками, эталоны под ответом, «Ещё раз», «Сохранить в тексты» с `generation = { kind: 'scratch', form, facets, references, picked }`; ошибки по-русски, тема не теряется
 - [x] 6.4 `client/src/widgets/catalog-menu/ui/catalog-menu.tsx`: секция `'from-scratch'`, пункт «С нуля» под «Генератором» только у владельца, своё состояние фильтров эталонов; после сохранения — переход к тексту или тост, как в генераторе
 
 ## 7. Тексты «С нуля» на клиенте
 
 - [x] 7.1 `client/src/features/track-texts/lib/generation.ts`: разбор `kind: 'scratch'` в отдельный тип, сводка (форма, грани или «граней нет», эталоны без удалённых); тесты в `generation.test.ts`
-- [x] 7.2 `client/src/features/track-texts/ui/track-text-view.tsx`: у текста «С нуля» нет вкладки «Из моих» и «Применить в генератор», шов без жёлтого (`lib/seam.ts` с пустым источником); сводка «С нуля»
+- [x] 7.2 `client/src/features/track-texts/ui/track-text-view.tsx`: у текста «С нуля» нет вкладки «Из моих» и «Применить в генератор», шов без жёлтого (источником шва и вкладки «ИИ» идёт сам ответ ИИ); сводка «С нуля»
 - [x] 7.3 `client/src/features/ai-settings/ui/usage-tab.tsx`: подпись `SCRATCH` — «С нуля»
 
 ## 8. Проверка и доки
 
 - [x] 8.1 `bun run fix` в `server/` и `client/`, тесты сервера зелёные
 - [ ] 8.2 Автор проверяет страницу в браузере на polza: «Написать», «Ещё раз», «Сохранить в тексты», текст в «Текстах», запись «С нуля» в «Расходах»
-- [ ] 8.3 `docs/ideas.md`: у карточки «Генерация «С нуля»» статус «в работе», ссылка на change `from-scratch`, закрытые вопросы (подбор, портрет, `sourceText`); `docs/journal.md`: «эталон даёт форму, тема — мир; подбор по миру приносит гаджеты» с цифрами прогона подбора
-- [ ] 8.4 Каждая законченная группа — свой коммит в `feat/from-scratch`, subject по-русски
+- [x] 8.3 `docs/ideas.md`: у карточки «Генерация «С нуля»» статус «в работе», ссылка на change `from-scratch`, закрытые вопросы (подбор, портрет, `sourceText`); `docs/journal.md`: «эталон даёт форму, тема — мир; подбор по миру приносит гаджеты» с цифрами прогона подбора
+- [x] 8.4 Каждая законченная группа — свой коммит в `feat/from-scratch`, subject по-русски
