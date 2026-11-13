@@ -33,6 +33,8 @@ export type RecordUsageInput = {
   error?: string;
   /** Поиск в интернете: провайдер называет цену сам, она добавляется к оценке по токенам. */
   searchCostRub?: number;
+  /** Цена из ответа провайдера. Есть — оценка по токенам и поиску не нужна. */
+  providerCostRub?: number | null;
 };
 
 export const usageCostRub = (
@@ -50,11 +52,17 @@ export const usageCostRub = (
   return (tokens ?? 0) + searchCostRub;
 };
 
-export const recordUsage = ({ searchCostRub, ...input }: RecordUsageInput) =>
+export const recordUsage = ({
+  searchCostRub,
+  providerCostRub,
+  ...input
+}: RecordUsageInput) =>
   prisma.aiUsage.create({
     data: {
       ...input,
-      costRub: usageCostRub(input.tokensIn, input.tokensOut, searchCostRub),
+      costRub:
+        providerCostRub ??
+        usageCostRub(input.tokensIn, input.tokensOut, searchCostRub),
     },
   });
 

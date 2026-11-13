@@ -28,6 +28,7 @@ void mock.module('~/modules/ai/model/polza.client', () => ({
       model: 'test-model',
       truncated,
       searchCostRub: 0,
+      costRub: 1.67,
     }),
 }));
 
@@ -58,6 +59,7 @@ describe('callModel', () => {
       status: 'OK',
       tokensIn: 120,
       tokensOut: 40,
+      providerCostRub: 1.67,
     });
   });
 
