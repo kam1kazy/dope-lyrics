@@ -71,6 +71,7 @@ export function MultiSelect({
     <div className="flex flex-col gap-1.5">
       <span className="text-muted-foreground text-xs font-normal">{label}</span>
       <Popover
+        modal
         open={open}
         onOpenChange={(next) => {
           setOpen(next);
