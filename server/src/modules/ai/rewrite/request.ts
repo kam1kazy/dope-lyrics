@@ -1,6 +1,9 @@
 import type { PickedReference } from '~/modules/ai/artists/pick';
 import type { ArtistProfile } from '~/modules/ai/artists/profiles';
-import type { TechniqueKind } from '~/modules/ai/artists/techniques';
+import {
+  PICKED_KINDS,
+  type TechniqueKind,
+} from '~/modules/ai/artists/techniques';
 import type { LyricSongRole } from '~/modules/lyrics/lyric-facets';
 import {
   type CollageSlotStored,
@@ -22,9 +25,10 @@ const ROLE_LABELS: Record<LyricSongRole, string> = {
   SKETCH: 'Набросок',
 };
 
+/** Скобка закрывается на той же строке: незакрытая не съедает строки ниже. */
 const hideAdlibsInText = (text: string): string =>
   text
-    .replace(/\([^)]*\)/g, '')
+    .replace(/\([^)\n]*\)/g, '')
     .split(/\r?\n/)
     .map((line) => line.replace(/\s+/g, ' ').trim())
     .filter((line) => line.length > 0)
@@ -42,20 +46,32 @@ const toQuatrains = (lines: string[]): string => {
 
 export type RewriteSection = {
   index: number;
-  sectionId: string;
   songRole: LyricSongRole;
   label: string;
   text: string;
+  /** Без повторов: одна фраза может стоять в части несколькими кусками. */
   lyricIds: number[];
 };
 
-/** Непустые части склейки; второй хук не дублируется. */
+/** Непустые части склейки; второй хук не дублируется. Строки фразы режутся один раз. */
 export const collectRewriteSections = (
   slots: CollageSlotStored[],
   textsById: ReadonlyMap<number, string>,
   hideAdlibs: boolean
 ): RewriteSection[] => {
   const sections: RewriteSection[] = [];
+  const linesById = new Map<number, string[]>();
+  const linesOf = (lyricId: number): string[] => {
+    const cached = linesById.get(lyricId);
+    if (cached) {
+      return cached;
+    }
+
+    const lines = splitGeneratorLines(textsById.get(lyricId) ?? '');
+    linesById.set(lyricId, lines);
+
+    return lines;
+  };
 
   slots.forEach((slot, index) => {
     if (index === SECOND_HOOK_INDEX) {
@@ -64,12 +80,7 @@ export const collectRewriteSections = (
 
     const chunks = slot.parts
       .map((part) => {
-        const raw = textsById.get(part.lyricId);
-        if (!raw) {
-          return '';
-        }
-
-        const sliced = splitGeneratorLines(raw)
+        const sliced = linesOf(part.lyricId)
           .slice(part.startLine, part.endLine)
           .join('\n');
 
@@ -84,11 +95,10 @@ export const collectRewriteSections = (
 
     sections.push({
       index,
-      sectionId: `${index}:${slot.songRole}`,
       songRole: slot.songRole,
       label: ROLE_LABELS[slot.songRole],
       text: toQuatrains(lines),
-      lyricIds: slot.parts.map((part) => part.lyricId),
+      lyricIds: [...new Set(slot.parts.map((part) => part.lyricId))],
     });
   });
 
@@ -184,6 +194,26 @@ export const contextBlocks = (
   return parts;
 };
 
+const KIND_TARGETS: Record<TechniqueKind, string> = {
+  IMAGE: 'на образ',
+  SOUND: 'на звук',
+  WORDPLAY: 'на игру слов',
+  TONE: 'на тон',
+};
+
+/** «на образ, на звук и на игру слов» — по видам, что реально лежат под частью. */
+const kindsNote = (artists: readonly ArtistProfile[]): string => {
+  const present = PICKED_KINDS.filter((kind) =>
+    artists.some((artist) =>
+      artist.techniques.some((item) => item.kind === kind)
+    )
+  ).map((kind) => KIND_TARGETS[kind]);
+
+  return present.length > 1
+    ? `${present.slice(0, -1).join(', ')} и ${present[present.length - 1]}`
+    : (present[0] ?? '');
+};
+
 export const buildRewriteUser = (input: {
   theme: string | null;
   authorPrompt: string;
@@ -205,7 +235,7 @@ export const buildRewriteUser = (input: {
 
       const note = section.relaxed
         ? 'Прямых совпадений мало. Ниже ближайшие карточки. Возьми один-два приёма, не все.'
-        : 'Ориентиры этой части: приём на образ, на звук и на игру слов. Возьми один-два и выполни инструкцию. Чужие строки не копируй.';
+        : `Ориентиры этой части: приём ${kindsNote(section.artists)}. Возьми один-два и выполни инструкцию. Чужие строки не копируй.`;
 
       return `${head}\n\n${note}\n${formatArtistCards(section.artists, section.referenceNumbers)}`;
     })

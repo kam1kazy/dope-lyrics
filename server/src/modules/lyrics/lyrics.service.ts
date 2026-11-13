@@ -1,5 +1,6 @@
 import { GraphQLError } from 'graphql';
 
+import { Prisma } from '~/generated/prisma/client';
 import { lyricInclude } from '~/graphql/lyric-include';
 import { prisma } from '~/infrastructure/prisma';
 import {
@@ -47,6 +48,7 @@ import { createLyricData } from '~/modules/lyrics/persist/create-lyric-data';
 import { shuffleIds, toShuffleSeed } from '~/modules/lyrics/shuffle-ids';
 import {
   assembleSlotsFromPools,
+  type CollageSlotStored,
   lyricIdsFromSlots,
   parseCollageSlotsInput,
   parseTrackFormQuotas,
@@ -58,6 +60,27 @@ import {
 
 const INSERT_CONCURRENCY = 8;
 const NOT_FOUND = 'Не найдено';
+const RECORD_NOT_FOUND_CODE = 'P2025';
+
+type SlotLyric = Prisma.LyricsGetPayload<{ include: typeof lyricInclude }>;
+
+const isRecordNotFound = (error: unknown): boolean =>
+  error instanceof Prisma.PrismaClientKnownRequestError &&
+  error.code === RECORD_NOT_FOUND_CODE;
+
+const attachSlotLyrics = (
+  slots: CollageSlotStored[],
+  byId: Map<number, SlotLyric>
+) =>
+  slots.map((slot) => ({
+    songRole: slot.songRole,
+    parts: slot.parts.map((part) => ({
+      lyricId: part.lyricId,
+      startLine: part.startLine,
+      endLine: part.endLine,
+      lyric: byId.get(part.lyricId) ?? null,
+    })),
+  }));
 
 export class LyricsService {
   private readonly prisma = prisma;
@@ -503,12 +526,22 @@ export class LyricsService {
       where: { userId },
       orderBy: { createdAt: 'desc' },
     });
-
-    return Promise.all(
-      rows.map((row) =>
-        this.hydrateCollage(userId, row.id, row.createdAt, row.slots)
-      )
+    const parsed = rows.map((row) => ({
+      id: row.id,
+      createdAt: row.createdAt,
+      slots: slotsFromJson(row.slots),
+    }));
+    // Одна выборка фраз на все склейки, а не по запросу на каждую
+    const byId = await this.loadSlotLyrics(
+      userId,
+      parsed.flatMap((row) => lyricIdsFromSlots(row.slots))
     );
+
+    return parsed.map((row) => ({
+      id: row.id,
+      createdAt: row.createdAt.toISOString(),
+      slots: attachSlotLyrics(row.slots, byId),
+    }));
   }
 
   async listCarouselHistories(userId: number) {
@@ -548,17 +581,10 @@ export class LyricsService {
       },
     });
 
+    // Новейший снимок вытеснение не трогает (pickIdsToEvict бережёт overflow новых)
     await this.evictCarouselHistories(userId);
 
-    const saved = await this.prisma.carouselHistory.findFirst({
-      where: { id: row.id, userId },
-    });
-
-    if (!saved) {
-      throw new Error(NOT_FOUND);
-    }
-
-    return this.hydrateCarouselHistory(saved);
+    return this.hydrateCarouselHistory(row);
   }
 
   async likeCarouselHistory(userId: number, id: number) {
@@ -672,32 +698,25 @@ export class LyricsService {
     };
   }
 
-  private async hydrateSlots(
-    userId: number,
-    slots: ReturnType<typeof slotsFromJson>
-  ) {
-    const lyricIds = lyricIdsFromSlots(slots);
+  private async hydrateSlots(userId: number, slots: CollageSlotStored[]) {
+    const byId = await this.loadSlotLyrics(userId, lyricIdsFromSlots(slots));
 
-    const lyrics =
-      lyricIds.length === 0
-        ? []
-        : await this.prisma.lyrics.findMany({
-            where: { id: { in: lyricIds }, userId },
-            include: lyricInclude,
-          });
-    const byId = new Map(lyrics.map((row) => [row.id, row]));
+    return { slots: attachSlotLyrics(slots, byId) };
+  }
 
-    return {
-      slots: slots.map((slot) => ({
-        songRole: slot.songRole,
-        parts: slot.parts.map((part) => ({
-          lyricId: part.lyricId,
-          startLine: part.startLine,
-          endLine: part.endLine,
-          lyric: byId.get(part.lyricId) ?? null,
-        })),
-      })),
-    };
+  private async loadSlotLyrics(userId: number, lyricIds: number[]) {
+    const uniqueIds = [...new Set(lyricIds)];
+
+    if (uniqueIds.length === 0) {
+      return new Map<number, SlotLyric>();
+    }
+
+    const lyrics = await this.prisma.lyrics.findMany({
+      where: { id: { in: uniqueIds }, userId },
+      include: lyricInclude,
+    });
+
+    return new Map(lyrics.map((row) => [row.id, row]));
   }
 
   private async requireOwnedLyric(userId: number, id: number) {
@@ -711,6 +730,27 @@ export class LyricsService {
     }
 
     return row;
+  }
+
+  /** Один запрос вместо updateMany + findUniqueOrThrow; чужая запись → «Не найдено». */
+  private async updateOwnedLyric(
+    userId: number,
+    id: number,
+    data: Prisma.LyricsUpdateInput
+  ) {
+    try {
+      return await this.prisma.lyrics.update({
+        where: { id, userId },
+        data,
+        include: lyricInclude,
+      });
+    } catch (error: unknown) {
+      if (isRecordNotFound(error)) {
+        throw new Error(NOT_FOUND, { cause: error });
+      }
+
+      throw error;
+    }
   }
 
   async updateFlags(
@@ -762,19 +802,7 @@ export class LyricsService {
       return this.requireOwnedLyric(userId, id);
     }
 
-    const result = await this.prisma.lyrics.updateMany({
-      where: { id, userId },
-      data,
-    });
-
-    if (result.count === 0) {
-      throw new Error(NOT_FOUND);
-    }
-
-    return this.prisma.lyrics.findUniqueOrThrow({
-      where: { id },
-      include: lyricInclude,
-    });
+    return this.updateOwnedLyric(userId, id, data);
   }
 
   async updateProfile(
@@ -826,19 +854,7 @@ export class LyricsService {
       return this.requireOwnedLyric(userId, id);
     }
 
-    const result = await this.prisma.lyrics.updateMany({
-      where: { id, userId },
-      data,
-    });
-
-    if (result.count === 0) {
-      throw new Error(NOT_FOUND);
-    }
-
-    return this.prisma.lyrics.findUniqueOrThrow({
-      where: { id },
-      include: lyricInclude,
-    });
+    return this.updateOwnedLyric(userId, id, data);
   }
 
   async updateLyricText(userId: number, id: number, text: string) {
@@ -1168,57 +1184,24 @@ export class LyricsService {
 
   async clearCatalog(userId: number) {
     try {
-      await this.prisma.lyricCollage.deleteMany({ where: { userId } });
-      await this.prisma.carouselHistory.deleteMany({ where: { userId } });
+      // Одна транзакция по связям, без выборок id: либо всё, либо ничего
+      const byLyricOwner = { lyric: { userId } };
+      const byMessageOwner = { message: byLyricOwner };
 
-      const lyrics = await this.prisma.lyrics.findMany({
-        where: { userId },
-        select: { id: true },
-      });
-      const lyricIds = lyrics.map((row) => row.id);
-
-      if (lyricIds.length > 0) {
-        const messages = await this.prisma.message.findMany({
-          where: { lyricId: { in: lyricIds } },
-          select: { id: true },
-        });
-        const messageIds = messages.map((row) => row.id);
-
-        if (messageIds.length > 0) {
-          const reactions = await this.prisma.reactions.findMany({
-            where: { messageId: { in: messageIds } },
-            select: { id: true },
-          });
-          const reactionIds = reactions.map((row) => row.id);
-
-          if (reactionIds.length > 0) {
-            await this.prisma.emoji.deleteMany({
-              where: { reactionId: { in: reactionIds } },
-            });
-          }
-
-          await this.prisma.reactions.deleteMany({
-            where: { messageId: { in: messageIds } },
-          });
-          await this.prisma.hashtags.deleteMany({
-            where: { messageId: { in: messageIds } },
-          });
-          await this.prisma.message.deleteMany({
-            where: { id: { in: messageIds } },
-          });
-        }
-
-        await this.prisma.userLyric.deleteMany({
-          where: { lyricId: { in: lyricIds } },
-        });
-        await this.prisma.chat.deleteMany({
-          where: { lyricId: { in: lyricIds } },
-        });
-        await this.prisma.media.deleteMany({
-          where: { lyricId: { in: lyricIds } },
-        });
-        await this.prisma.lyrics.deleteMany({ where: { userId } });
-      }
+      await this.prisma.$transaction([
+        this.prisma.lyricCollage.deleteMany({ where: { userId } }),
+        this.prisma.carouselHistory.deleteMany({ where: { userId } }),
+        this.prisma.emoji.deleteMany({
+          where: { reaction: byMessageOwner },
+        }),
+        this.prisma.reactions.deleteMany({ where: byMessageOwner }),
+        this.prisma.hashtags.deleteMany({ where: byMessageOwner }),
+        this.prisma.message.deleteMany({ where: byLyricOwner }),
+        this.prisma.userLyric.deleteMany({ where: { lyrics: { userId } } }),
+        this.prisma.chat.deleteMany({ where: byLyricOwner }),
+        this.prisma.media.deleteMany({ where: byLyricOwner }),
+        this.prisma.lyrics.deleteMany({ where: { userId } }),
+      ]);
 
       console.log(`PRISMA: 🗑 Каталог пользователя ${userId} очищен`);
     } catch (error) {

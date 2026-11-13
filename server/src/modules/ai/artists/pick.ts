@@ -3,7 +3,7 @@ import type {
   ArtistTechnique,
   ReferenceSample,
 } from '~/modules/ai/artists/profiles';
-import { PICKED_KINDS } from '~/modules/ai/artists/techniques';
+import { PICKED_KINDS, type PickedKind } from '~/modules/ai/artists/techniques';
 import {
   isLyricDelivery,
   isLyricEnergy,
@@ -62,16 +62,17 @@ const spreadArtists = (
 };
 
 /**
- * По одному приёму образа, звука и wordplay. Каждый вид — ещё не занятому артисту
+ * По одному приёму каждого вида из `kinds`. Каждый вид — ещё не занятому артисту
  * из первых `near`, чтобы набралось до трёх артистов; иначе ближайшему, у кого вид есть.
  */
 const pickByKind = (
   ordered: readonly ArtistProfile[],
-  near: number
+  near: number,
+  kinds: readonly PickedKind[]
 ): readonly ArtistProfile[] => {
   const chosen = new Map<number, ArtistTechnique[]>();
 
-  for (const kind of PICKED_KINDS) {
+  for (const kind of kinds) {
     const options = ordered.flatMap((artist, index) => {
       const technique = artist.techniques.find((item) => item.kind === kind);
       return technique ? [{ artist, technique, index }] : [];
@@ -99,7 +100,8 @@ const pickByKind = (
 /** Несколько ближайших карточек из переданной полки. Пустые грани не разворачивают всю полку. */
 export const rankArtistCandidates = (
   pool: readonly ArtistProfile[],
-  facets: SectionFacets
+  facets: SectionFacets,
+  kinds: readonly PickedKind[] = PICKED_KINDS
 ): RankedCandidates => {
   const ranked = pool
     .map((artist) => ({
@@ -118,7 +120,7 @@ export const rankArtistCandidates = (
     const rest = pool.filter((artist) => !spread.includes(artist));
 
     return {
-      artists: pickByKind([...spread, ...rest], spread.length),
+      artists: pickByKind([...spread, ...rest], spread.length, kinds),
       relaxed: true,
     };
   }
@@ -126,7 +128,8 @@ export const rankArtistCandidates = (
   return {
     artists: pickByKind(
       ranked.map((item) => item.artist),
-      positive.length
+      positive.length,
+      kinds
     ),
     relaxed: positive.length < CANDIDATE_FLOOR,
   };

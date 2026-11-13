@@ -15,6 +15,12 @@ describe('parsePromptMeta', () => {
     ).toEqual({ name: 'А', description: 'Б' });
   });
 
+  test('текст вокруг JSON не мешает', () => {
+    expect(
+      parsePromptMeta('Держи:\n{"name":"А","description":"Б"}\nГотово')
+    ).toEqual({ name: 'А', description: 'Б' });
+  });
+
   test('не JSON и пустое название — ошибка', () => {
     expect(() => parsePromptMeta('Вот название')).toThrow();
     expect(() => parsePromptMeta('{"name":"","description":"Б"}')).toThrow();

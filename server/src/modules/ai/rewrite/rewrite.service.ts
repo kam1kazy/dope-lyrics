@@ -11,6 +11,10 @@ import {
   facetsForSection,
   rankArtistCandidates,
 } from '~/modules/ai/artists/pick';
+import {
+  HOOK_PICKED_KINDS,
+  PICKED_KINDS,
+} from '~/modules/ai/artists/techniques';
 import { callModel } from '~/modules/ai/model/model-call';
 import {
   AiProviderError,
@@ -110,30 +114,32 @@ export const buildRewriteRequest = async (
   input: RewriteCollageInput,
   promptOverride?: RewritePrompt
 ) => {
-  const { sourceText, sections, rows } = await sourceTextFromSlots(
-    userId,
-    input.slots,
-    input.hideAdlibs === true
-  );
+  const [{ sourceText, sections, rows }, stored, pool] = await Promise.all([
+    sourceTextFromSlots(userId, input.slots, input.hideAdlibs === true),
+    promptOverride ? null : getCurrentPrompt(userId),
+    loadArtistPool(userId, input.references),
+  ]);
 
   if (!sourceText) {
     throw new GraphQLError('В склейке нет строк');
   }
 
-  const stored = promptOverride ? null : await getCurrentPrompt(userId);
   const prompt: RewritePrompt = promptOverride ?? {
     id: stored?.id ?? null,
     text: stored?.text ?? '',
   };
   const rowsById = new Map(rows.map((row) => [row.id, row]));
-  const pool = await loadArtistPool(userId, input.references);
   const picked = sections.map((section) => {
     const facets = facetsForSection(section, rowsById);
 
     return {
       section,
       facets,
-      ...rankArtistCandidates(pool, facets),
+      ...rankArtistCandidates(
+        pool,
+        facets,
+        section.songRole === 'HOOK' ? HOOK_PICKED_KINDS : PICKED_KINDS
+      ),
     };
   });
   const { references, bySection } = assignReferenceTexts(

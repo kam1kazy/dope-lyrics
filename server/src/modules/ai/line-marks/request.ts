@@ -1,6 +1,7 @@
 import { GraphQLError } from 'graphql';
 import { z } from 'zod';
 
+import { parseModelJson } from '~/modules/ai/model/model-json';
 import { AiProviderError } from '~/modules/ai/model/polza.client';
 import { contextBlocks } from '~/modules/ai/rewrite/request';
 
@@ -70,12 +71,7 @@ const answerSchema = z.object({
   lines: z.array(z.object({ n: z.number().int(), text: z.string() })),
 });
 
-const unfence = (raw: string): string =>
-  raw
-    .trim()
-    .replace(/^```(?:json)?\s*/i, '')
-    .replace(/\s*```$/, '')
-    .trim();
+const FORMAT_ERROR = 'ИИ вернул правки в неожиданном формате';
 
 /**
  * Новый ответ: красные строки — из ответа модели, остальные — прежние буква в букву.
@@ -86,18 +82,10 @@ export const applyLineMarksAnswer = (
   aiText: string,
   marks: ReadonlyMap<number, LineMark>
 ): string => {
-  let json: unknown;
-
-  try {
-    json = JSON.parse(unfence(raw));
-  } catch {
-    throw new AiProviderError('ИИ вернул правки в неожиданном формате');
-  }
-
-  const parsed = answerSchema.safeParse(json);
+  const parsed = answerSchema.safeParse(parseModelJson(raw, FORMAT_ERROR));
 
   if (!parsed.success) {
-    throw new AiProviderError('ИИ вернул правки в неожиданном формате');
+    throw new AiProviderError(FORMAT_ERROR);
   }
 
   const replies = new Map(

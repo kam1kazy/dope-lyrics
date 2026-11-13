@@ -20,8 +20,9 @@ const EMPTY_SLOT_LABEL: Record<LyricSongRole, string> = {
 const QUATRAIN_LINES = 4;
 const PREVIEW_LINES = 2;
 
+/** Метка в скобках не переходит на другую строку, как на сервере: индексы строк в слотах должны совпадать. */
 export const stripGeneratorMarks = (text: string): string => {
-  return text.replace(/\s*#[^\s]+/g, ' ').replace(/\[[^\]]*\]/g, ' ');
+  return text.replace(/\s*#[^\s]+/g, ' ').replace(/\[[^\]\n]*\]/g, ' ');
 };
 
 export const splitGeneratorLines = (text: string): string[] => {
@@ -31,9 +32,10 @@ export const splitGeneratorLines = (text: string): string[] => {
     .filter((line) => line.length > 0);
 };
 
+/** Скобка закрывается на той же строке, как на сервере: незакрытая не съедает строки ниже. */
 export const hideAdlibsInText = (text: string): string => {
   return text
-    .replace(/\([^)]*\)/g, '')
+    .replace(/\([^)\n]*\)/g, '')
     .split(/\r?\n/)
     .map((line) => line.replace(/\s+/g, ' ').trim())
     .filter((line) => line.length > 0)

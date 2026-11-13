@@ -1,7 +1,7 @@
 import { Elysia, t } from 'elysia';
 
 import { env } from '~/config/env';
-import { clientIp } from '~/config/security';
+import { clientIp, takeRateBucket } from '~/config/security';
 import {
   type TelegramLoginPayload,
   verifyTelegramLoginUserId,
@@ -21,17 +21,11 @@ const INVITE_ONLY_ERROR = 'Доступ по приглашению';
 const authRateBuckets = new Map<string, { count: number; resetAt: number }>();
 
 const consumeAuthRate = (request: Request): boolean => {
-  const now = Date.now();
-  const ip = clientIp(request);
-  let bucket = authRateBuckets.get(ip);
-  if (!bucket || now >= bucket.resetAt) {
-    bucket = {
-      count: 0,
-      resetAt: now + env.AUTH_RATE_LIMIT_WINDOW_MS,
-    };
-    authRateBuckets.set(ip, bucket);
-  }
-  bucket.count += 1;
+  const bucket = takeRateBucket(
+    authRateBuckets,
+    clientIp(request),
+    env.AUTH_RATE_LIMIT_WINDOW_MS
+  );
   return bucket.count <= env.AUTH_RATE_LIMIT_MAX;
 };
 

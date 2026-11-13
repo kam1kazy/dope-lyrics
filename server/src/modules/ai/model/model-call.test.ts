@@ -5,9 +5,14 @@ import { AiProviderError } from '~/modules/ai/model/polza.client';
 
 const recorded: RecordUsageInput[] = [];
 let truncated = false;
+let okRecordFails = false;
 
 void mock.module('~/modules/ai/model/ai-usage.service', () => ({
   recordUsage: (input: RecordUsageInput) => {
+    if (okRecordFails && input.status === 'OK') {
+      return Promise.reject(new Error('база недоступна'));
+    }
+
     recorded.push(input);
     return Promise.resolve({ id: recorded.length });
   },
@@ -41,6 +46,7 @@ const input = {
 beforeEach(() => {
   recorded.length = 0;
   truncated = false;
+  okRecordFails = false;
 });
 
 describe('callModel', () => {
@@ -78,5 +84,14 @@ describe('callModel', () => {
     expect(failing).rejects.toThrow('оборвал ответ');
     await failing.catch(() => undefined);
     expect(recorded[0]).toMatchObject({ status: 'ERROR', tokensOut: 40 });
+  });
+
+  test('учёт успеха упал — ошибка базы не пишется как ошибка модели', async () => {
+    okRecordFails = true;
+
+    await expect(callModel(input, (text) => text)).rejects.toThrow(
+      'база недоступна'
+    );
+    expect(recorded).toHaveLength(0);
   });
 });

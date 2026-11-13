@@ -23,6 +23,7 @@ export type ModelCallInput = {
 /**
  * Вызов модели с записью в AiUsage на успех и на ошибку.
  * Если модель ответила, а `parse` бросил, потраченные токены всё равно учитываются.
+ * Ошибка самой записи OK не маскируется под ошибку модели: уходит как есть.
  */
 export const callModel = async <T>(
   input: ModelCallInput,
@@ -30,6 +31,7 @@ export const callModel = async <T>(
 ): Promise<{ value: T; usageId: number }> => {
   const startedAt = Date.now();
   let completion: AiCompletionResult | null = null;
+  let value: T;
 
   const usage = {
     userId: input.userId,
@@ -52,23 +54,16 @@ export const callModel = async <T>(
       );
     }
 
-    const value = parse(completion.text);
-    const row = await recordUsage({
-      ...usage,
-      model: completion.model,
-      tokensIn: completion.tokensIn,
-      tokensOut: completion.tokensOut,
-      searchCostRub: completion.searchCostRub,
-      latencyMs: Date.now() - startedAt,
-      status: 'OK',
-    });
-
-    return { value, usageId: row.id };
+    value = parse(completion.text);
   } catch (error: unknown) {
-    const message =
-      error instanceof AiProviderError
-        ? error.message
-        : 'Не удалось получить ответ ИИ';
+    const expected =
+      error instanceof AiProviderError || error instanceof GraphQLError;
+
+    if (!expected) {
+      console.error(`[ai:${input.kind}]`, error);
+    }
+
+    const message = expected ? error.message : 'Не удалось получить ответ ИИ';
 
     await recordUsage({
       ...usage,
@@ -83,4 +78,16 @@ export const callModel = async <T>(
 
     throw new GraphQLError(message);
   }
+
+  const row = await recordUsage({
+    ...usage,
+    model: completion.model,
+    tokensIn: completion.tokensIn,
+    tokensOut: completion.tokensOut,
+    searchCostRub: completion.searchCostRub,
+    latencyMs: Date.now() - startedAt,
+    status: 'OK',
+  });
+
+  return { value, usageId: row.id };
 };

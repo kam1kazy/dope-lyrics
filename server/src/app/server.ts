@@ -44,7 +44,9 @@ export function createApp() {
     app.use(swagger());
   }
 
-  app.all(`/${graphqlPath}`, ({ request }) => yoga.fetch(request));
+  app.all(`/${graphqlPath}`, ({ request, authUser }) =>
+    yoga.fetch(request, { authUser })
+  );
 
   return app;
 }
