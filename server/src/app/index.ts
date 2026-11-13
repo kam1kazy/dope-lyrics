@@ -8,6 +8,14 @@ import { sessionService } from '~/modules/auth/session.service';
 import { createApp } from './server';
 
 const SESSION_CLEANUP_INTERVAL_MS = 24 * 60 * 60 * 1000;
+const IDLE_TIMEOUT_MARGIN_S = 30;
+const BUN_MAX_IDLE_TIMEOUT_S = 255;
+
+/** Bun по умолчанию рвёт молчащее соединение через 10 с, а модель отвечает дольше. */
+const idleTimeout = Math.min(
+  BUN_MAX_IDLE_TIMEOUT_S,
+  Math.ceil(env.AI_TIMEOUT_MS / 1000) + IDLE_TIMEOUT_MARGIN_S
+);
 
 const cleanupSessions = () => {
   sessionService.cleanupExpired().catch((error: unknown) => {
@@ -20,6 +28,7 @@ const app = createApp();
 const server = app.listen({
   port: env.PORT,
   hostname: '0.0.0.0',
+  idleTimeout,
 });
 
 console.log(
