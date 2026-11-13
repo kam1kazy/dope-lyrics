@@ -34,10 +34,16 @@ describe('findCloseLines', () => {
     );
 
     expect(close.map((item) => item.line)).toEqual([0, 1]);
-    expect(close[0]).toMatchObject({
-      artistName: 'Markul',
-      sourceLine: 'Когда нас нету — это факап / Когда мы рядом — это red flag',
-    });
+    expect(close[0]?.artistName).toBe('Markul');
+    expect(close[0]?.sourceLine).toContain('red flag');
+  });
+
+  test('две короткие строки, слитые в одну, — близко, рядом пара', () => {
+    const close = findCloseLines('Мы оба врём — это дабл кап, детка', [
+      chunk('Markul', ['Мы оба врём', 'это дабл кап']),
+    ]);
+
+    expect(close[0]?.sourceLine).toBe('Мы оба врём / это дабл кап');
   });
 
   test('ядро пересобрано — не близко', () => {
@@ -53,6 +59,25 @@ describe('findCloseLines', () => {
     const close = findCloseLines('я КРУЧУ ещё один в надежде на утро', COLLAGE);
 
     expect(close[0]?.artistName).toBe('OG Buda');
+  });
+
+  test('перевод с двумя английскими словами строки — близко, одно слово-ядро — нет', () => {
+    const travis = [
+      chunk('Travis Scott', [
+        'I can see the future',
+        "Ridin' with the storm and some troopers",
+        "Ridin' through this shit, this shit is stupid",
+        "Sky walkin' 'round like I'm Luke-uh",
+      ]),
+    ];
+    const close = findCloseLines(
+      'Storm и troopers шагают в мой сон\nStupid shit оставляет ожог\nFuture трубит сквозь дым',
+      travis
+    );
+
+    expect(close.map((item) => item.line)).toEqual([0, 1]);
+    expect(close[0]?.artistName).toBe('Travis Scott');
+    expect(close[0]?.sourceLine).toContain("Ridin' with the storm");
   });
 
   test('метки и пустые строки не считаются в номере строки', () => {

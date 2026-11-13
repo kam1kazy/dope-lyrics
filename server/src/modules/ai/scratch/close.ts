@@ -6,6 +6,38 @@ const RUN_WORDS = 4;
 const SHARE = 0.6;
 /** Общих значимых слов, не меньше. */
 const MIN_COMMON = 3;
+/** Общих английских слов — строка переведена с сохранением ядер. Одно слово — разрешённое ядро. */
+const MIN_COMMON_ENGLISH = 2;
+
+const ENGLISH_FILLER = new Set([
+  'the',
+  'and',
+  'you',
+  'your',
+  'that',
+  'me',
+  'my',
+  'in',
+  'on',
+  'to',
+  'of',
+  'it',
+  'is',
+  'be',
+  'do',
+  'so',
+  'we',
+  'no',
+  'for',
+  'uh',
+  'ah',
+  'oh',
+  'ay',
+  'ayy',
+  'yeah',
+  'ya',
+  'ye',
+]);
 
 const STOP_WORDS = new Set([
   'это',
@@ -82,14 +114,29 @@ const sharesRun = (
   return false;
 };
 
+const english = (words: readonly string[]): Set<string> =>
+  new Set(
+    words.filter(
+      (word) =>
+        word.length >= 2 && /^[a-z']+$/.test(word) && !ENGLISH_FILLER.has(word)
+    )
+  );
+
+const commonCount = (left: Set<string>, right: Set<string>): number =>
+  [...left].filter((word) => right.has(word)).length;
+
 const isClose = (answer: readonly string[], source: readonly string[]) => {
   if (sharesRun(answer, source)) {
     return true;
   }
 
+  if (commonCount(english(answer), english(source)) >= MIN_COMMON_ENGLISH) {
+    return true;
+  }
+
   const left = meaningful(answer);
   const right = meaningful(source);
-  const common = [...left].filter((word) => right.has(word)).length;
+  const common = commonCount(left, right);
   const shorter = Math.min(left.size, right.size);
 
   return common >= MIN_COMMON && common / shorter >= SHARE;
@@ -113,22 +160,20 @@ export const findCloseLines = (
   answer: string,
   chunks: readonly ScratchChunk[]
 ): CloseLine[] => {
-  const sources = chunks.flatMap((chunk) =>
-    chunk.lines.flatMap((line, index) => {
-      const next = chunk.lines[index + 1];
-      const single = { text: line, words: tokens(line), chunk };
-      return next === undefined
-        ? [single]
-        : [
-            single,
-            {
-              text: `${line} / ${next}`,
-              words: tokens(`${line} ${next}`),
-              chunk,
-            },
-          ];
+  const singles = chunks.flatMap((chunk) =>
+    chunk.lines.map((line) => ({ text: line, words: tokens(line), chunk }))
+  );
+  const pairs = chunks.flatMap((chunk) =>
+    chunk.lines.slice(1).map((next, index) => {
+      const line = chunk.lines[index] ?? '';
+      return {
+        text: `${line} / ${next}`,
+        words: tokens(`${line} ${next}`),
+        chunk,
+      };
     })
   );
+  const sources = [...singles, ...pairs];
 
   return answer
     .split(/\r?\n/)
