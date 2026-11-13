@@ -47,7 +47,11 @@ import {
   type SectionSearchHit,
 } from '@/features/catalog-search';
 import { CatalogStatsPanel } from '@/features/catalog-stats';
-import { FromScratchPage } from '@/features/from-scratch';
+import {
+  FromScratchPage,
+  ScratchResultPane,
+  useScratchSession,
+} from '@/features/from-scratch';
 import { ArtistList, ArtistPane } from '@/features/reference-shelf';
 import { TrackTextsList, TrackTextView } from '@/features/track-texts';
 import {
@@ -170,6 +174,11 @@ export function CatalogMenu() {
   const [scratchReferences, setScratchReferences] = useState<ReferenceFilter>(
     EMPTY_REFERENCE_FILTER
   );
+  const scratchSession = useScratchSession((id) => {
+    selectSection('generator');
+    setSelectedTextId(id);
+    setTextsOpen(true);
+  });
   const [selectedCollage, setSelectedCollage] = useState<ILyricCollage | null>(
     null
   );
@@ -378,7 +387,10 @@ export function CatalogMenu() {
     );
   const artistOpen =
     renderedSection === 'references' && selectedArtistId !== null;
-  const sidePaneOpen = filtersOpen || historyOpen || textsOpen || artistOpen;
+  const scratchOpen =
+    renderedSection === 'from-scratch' && scratchSession.paneOpen;
+  const sidePaneOpen =
+    filtersOpen || historyOpen || textsOpen || artistOpen || scratchOpen;
   const visibleMenuItems = MENU_ITEMS.filter(
     (item) =>
       (item.id !== 'ai-settings' &&
@@ -587,6 +599,11 @@ export function CatalogMenu() {
                         return;
                       }
 
+                      if (scratchOpen) {
+                        scratchSession.closePane();
+                        return;
+                      }
+
                       activeSectionRef.current = null;
                       setActiveSection(null);
                       closeSearch();
@@ -773,11 +790,7 @@ export function CatalogMenu() {
                           writeGeneratorForm(next);
                         }}
                         onReferencesChange={setScratchReferences}
-                        onSaved={(id) => {
-                          selectSection('generator');
-                          setSelectedTextId(id);
-                          setTextsOpen(true);
-                        }}
+                        session={scratchSession}
                       />
                     ) : renderedSection === 'ai-settings' ? (
                       <AiSettingsPanel />
@@ -853,6 +866,8 @@ export function CatalogMenu() {
                             setSelectedArtistId(null);
                           }}
                         />
+                      ) : scratchOpen ? (
+                        <ScratchResultPane session={scratchSession} />
                       ) : renderedSection === 'generator' && textsOpen ? (
                         <TrackTextsList
                           selectedId={selectedTextId}

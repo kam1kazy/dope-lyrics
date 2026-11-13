@@ -1,8 +1,7 @@
 'use client';
 
-import { useMutation, useQuery } from '@apollo/client/react';
-import { FilePlus, RefreshCw, Sparkles } from 'lucide-react';
-import { toast } from 'sonner';
+import { useQuery } from '@apollo/client/react';
+import { Sparkles } from 'lucide-react';
 
 import type { TrackFormQuotas } from '@/entities/lyric';
 import {
@@ -10,7 +9,6 @@ import {
   ReferenceFilterFields,
   TrackFormFields,
 } from '@/features/catalog-assemble';
-import type { ScratchTextGeneration } from '@/features/track-texts';
 import { formatQueryError } from '@/shared/lib/format-query-error';
 import {
   LYRIC_DELIVERIES,
@@ -29,23 +27,11 @@ import { Label } from '@/shared/ui/shadcn/ui/label';
 import { Spinner } from '@/shared/ui/shadcn/ui/spinner';
 
 import {
-  CREATE_SCRATCH_TRACK_TEXT,
-  type IScratchResult,
-  WRITE_FROM_SCRATCH,
-} from '../api/queries';
-
-type ScratchFacets = ScratchTextGeneration['facets'];
+  type ScratchFacets,
+  type ScratchSession,
+} from '../lib/use-scratch-session';
 
 const EMPTY_FACETS: ScratchFacets = { moods: [], deliveries: [], energies: [] };
-
-type ScratchRequest = {
-  theme: string;
-  form: TrackFormQuotas;
-  facets: ScratchFacets;
-  references: ReferenceFilter;
-};
-
-type ScratchAnswer = IScratchResult & { request: ScratchRequest };
 
 function FacetChips<T extends string>({
   label,
@@ -94,92 +80,33 @@ function FacetChips<T extends string>({
   );
 }
 
-const referenceLabel = (item: IScratchResult['references'][number]) =>
-  item.title ? `${item.artistName} «${item.title}»` : item.artistName;
-
 export function FromScratchPage({
   form,
   references,
   onFormChange,
   onReferencesChange,
-  onSaved,
+  session,
 }: {
   form: TrackFormQuotas;
   references: ReferenceFilter;
   onFormChange: (form: TrackFormQuotas) => void;
   onReferencesChange: (references: ReferenceFilter) => void;
-  onSaved: (id: number) => void;
+  session: ScratchSession;
 }) {
   const [theme, setTheme] = useRetainedState('scratch-theme', '');
   const [facets, setFacets] = useRetainedState<ScratchFacets>(
     'scratch-facets',
     EMPTY_FACETS
   );
-  const [answer, setAnswer] = useRetainedState<ScratchAnswer | null>(
-    'scratch-answer',
-    null
-  );
   const { data: status } = useQuery<{ aiStatus: { enabled: boolean } }>(
     AI_STATUS
   );
-  const [write, { loading: writing, error: writeError }] = useMutation<
-    { writeFromScratch: IScratchResult },
-    ScratchRequest
-  >(WRITE_FROM_SCRATCH, { refetchQueries: ['AiSettings'] });
-  const [createText, { loading: saving, error: saveError }] = useMutation<
-    { createScratchTrackText: { id: number } },
-    { theme: string; aiText: string; usageId: number; generation: string }
-  >(CREATE_SCRATCH_TRACK_TEXT, { refetchQueries: ['TrackTexts'] });
+  const { answer, writing, saving, error } = session;
 
   const enabled = status?.aiStatus.enabled === true;
   const trimmedTheme = theme.trim();
   const busy = writing || saving;
 
-  const handleWrite = async (request: ScratchRequest) => {
-    const response = await write({ variables: request }).catch(() => null);
-    const result = response?.data?.writeFromScratch;
-
-    if (result) {
-      setAnswer({ ...result, request });
-    }
-  };
-
-  const handleSave = async () => {
-    if (!answer) {
-      return;
-    }
-
-    const generation = {
-      kind: 'scratch',
-      form: answer.request.form,
-      facets: answer.request.facets,
-      references: answer.request.references,
-      picked: answer.references.map(({ textId, artistName, title }) => ({
-        textId,
-        artistName,
-        title,
-      })),
-    } satisfies ScratchTextGeneration;
-    const response = await createText({
-      variables: {
-        theme: answer.request.theme,
-        aiText: answer.aiText,
-        usageId: answer.usageId,
-        generation: JSON.stringify(generation),
-      },
-    }).catch(() => null);
-
-    const id = response?.data?.createScratchTrackText.id;
-    if (id === undefined) {
-      return;
-    }
-
-    setAnswer(null);
-    toast.success('Текст сохранён');
-    onSaved(id);
-  };
-
-  const error = writeError ?? saveError;
   const writeHint = !enabled
     ? 'ИИ не настроен'
     : trimmedTheme
@@ -261,7 +188,7 @@ export function FromScratchPage({
               aria-label="Написать"
               disabled={!enabled || !trimmedTheme || busy}
               onClick={() => {
-                void handleWrite({
+                void session.write({
                   theme: trimmedTheme,
                   form,
                   facets,
@@ -284,57 +211,6 @@ export function FromScratchPage({
 
       {error ? (
         <p className="text-destructive text-xs">{formatQueryError(error)}</p>
-      ) : null}
-
-      {answer ? (
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center gap-1">
-            <p className="text-muted-foreground min-w-0 flex-1 text-xs">
-              {answer.references.length > 0
-                ? `Эталоны: ${answer.references.map(referenceLabel).join(', ')}`
-                : 'Без эталонов'}
-            </p>
-            <Hint label="Ещё раз">
-              <Button
-                type="button"
-                size="icon"
-                variant="ghost"
-                className="size-8"
-                aria-label="Ещё раз"
-                disabled={!enabled || busy}
-                onClick={() => {
-                  void handleWrite(answer.request);
-                }}
-              >
-                {writing ? (
-                  <Spinner className="size-4" />
-                ) : (
-                  <RefreshCw className="size-4" />
-                )}
-              </Button>
-            </Hint>
-            <Hint label="Сохранить в тексты">
-              <Button
-                type="button"
-                size="icon"
-                variant="ghost"
-                className="size-8"
-                aria-label="Сохранить в тексты"
-                disabled={busy}
-                onClick={() => {
-                  void handleSave();
-                }}
-              >
-                {saving ? (
-                  <Spinner className="size-4" />
-                ) : (
-                  <FilePlus className="size-4" />
-                )}
-              </Button>
-            </Hint>
-          </div>
-          <p className="text-sm whitespace-pre-wrap">{answer.aiText}</p>
-        </div>
       ) : null}
     </div>
   );
