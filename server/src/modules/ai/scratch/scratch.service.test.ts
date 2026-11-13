@@ -127,7 +127,7 @@ describe('callScratch', () => {
     expect(recorded[0]).toMatchObject({
       kind: 'SCRATCH',
       status: 'OK',
-      frameVersion: '1.0.0',
+      frameVersion: '2.0.0',
       promptId: 5,
     });
   });
