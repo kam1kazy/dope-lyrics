@@ -24,7 +24,7 @@ const OUT_DIR = path.resolve(__dirname, '../../.ai-probe/scratch');
 const USAGE = [
   'Прогон «С нуля» тем же запросом, что в приложении.',
   '',
-  'bun run ai:scratch --themes themes.json [--pick | --dry] [-n 3] [--only t1] [--prompt файл.txt] [--artist 3] [--text 12] [--label rc1]',
+  'bun run ai:scratch --themes themes.json [--pick | --dry] [-n 3] [--only t1] [--prompt файл.txt] [--artist 3] [--text 12] [--label rc1] [--seed 1] [--system файл.txt]',
   '',
   '  --themes         JSON: [{ "id": "t1", "theme": "…", "facets": { "moods": [...], "deliveries": [...], "energies": [...] }, "form"?: {...} }]',
   '  --only           id темы из файла, можно несколько',
@@ -34,6 +34,8 @@ const USAGE = [
   '  --prompt         файл с промптом вместо текущего; пустой файл — без портрета',
   '  --artist/--text  фильтр «Артисты» / «Тексты», можно несколько',
   '  --label          метка файлов (по умолчанию версия рамки)',
+  '  --seed           зерно подбора: прогон i берёт seed + i, одна склейка для разных вариантов',
+  '  --system         файл с системной частью вместо рамки — проверить правило до правки кода',
   '',
   'Без --pick и --dry зовёт polza — только по слову автора. Файлы — в server/.ai-probe/scratch/<тема>/.',
 ].join('\n');
@@ -49,6 +51,8 @@ const { values } = parseArgs({
     artist: { type: 'string', multiple: true },
     text: { type: 'string', multiple: true },
     label: { type: 'string' },
+    seed: { type: 'string' },
+    system: { type: 'string' },
     help: { type: 'boolean', short: 'h', default: false },
   },
 });
@@ -100,7 +104,22 @@ const readThemes = (file: string): ProbeTheme[] => {
   });
 };
 
+/** mulberry32: одинаковое зерно — одинаковая склейка. */
+const seeded = (seed: number) => {
+  let state = seed >>> 0;
+  return () => {
+    state = (state + 0x6d2b79f5) >>> 0;
+    let next = Math.imul(state ^ (state >>> 15), 1 | state);
+    next = (next + Math.imul(next ^ (next >>> 7), 61 | next)) ^ next;
+    return ((next ^ (next >>> 14)) >>> 0) / 4294967296;
+  };
+};
+
 const runs = Number(values.n);
+const seed = values.seed === undefined ? undefined : Number(values.seed);
+const system = values.system
+  ? fs.readFileSync(values.system, 'utf8')
+  : undefined;
 const artistIds = (values.artist ?? []).map(Number);
 const textIds = (values.text ?? []).map(Number);
 
@@ -109,6 +128,7 @@ if (
   !values.themes ||
   [...artistIds, ...textIds].some((id) => !Number.isInteger(id)) ||
   !Number.isInteger(runs) ||
+  (seed !== undefined && !Number.isInteger(seed)) ||
   runs < 1
 ) {
   console.log(USAGE);
@@ -155,7 +175,10 @@ for (const item of themes) {
   if (values.pick) {
     const report: string[] = [`=== ${item.id}: ${item.theme}`];
     for (let run = 1; run <= runs; run += 1) {
-      const request = await buildScratchRequest(owner.id, input, options);
+      const request = await buildScratchRequest(owner.id, input, {
+        ...options,
+        random: seed === undefined ? undefined : seeded(seed + run - 1),
+      });
       report.push(`  прогон ${run}`);
       for (const part of request.parts.slice(0, SECOND_HOOK_INDEX)) {
         if (part.chunks.length === 0) {
@@ -180,7 +203,14 @@ for (const item of themes) {
     sources
       .map(({ artistName, title }) => `${artistName} — «${title ?? '—'}»`)
       .join('; ');
-  const request = await buildScratchRequest(owner.id, input, options);
+  const requestFor = async (index: number) => {
+    const built = await buildScratchRequest(owner.id, input, {
+      ...options,
+      random: seed === undefined ? undefined : seeded(seed + index),
+    });
+    return system === undefined ? built : { ...built, system };
+  };
+  const request = await requestFor(0);
   fs.writeFileSync(
     path.join(dir, `${label}.request.txt`),
     `FRAME ${SCRATCH_FRAME_VERSION}\nИСТОЧНИКИ ${sourcesLine(request.sources)}\n\n=== SYSTEM\n${request.system}\n\n=== USER\n${request.user}\n`
@@ -193,10 +223,7 @@ for (const item of themes) {
 
   const results = await Promise.allSettled(
     Array.from({ length: runs }, async (_, index) => {
-      const fresh =
-        index === 0
-          ? request
-          : await buildScratchRequest(owner.id, input, options);
+      const fresh = index === 0 ? request : await requestFor(index);
       const { value } = await callScratch(owner.id, fresh);
       const close = findCloseLines(value, fresh.chunks)
         .map(
