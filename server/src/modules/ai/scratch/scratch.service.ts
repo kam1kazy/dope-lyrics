@@ -2,6 +2,7 @@ import { GraphQLError } from 'graphql';
 
 import { env } from '~/config/env';
 import {
+  isReferenceFilterActive,
   loadArtistPool,
   type ReferenceFilter,
 } from '~/modules/ai/artists/load';
@@ -16,14 +17,17 @@ import { getCurrentPrompt } from '~/modules/ai/prompt/ai-prompt.service';
 import { keepKnown } from '~/modules/ai/references/vocabulary';
 import { stripModelWrapper } from '~/modules/ai/rewrite/request';
 import type { RewritePrompt } from '~/modules/ai/rewrite/rewrite.service';
+import { findCloseLines } from '~/modules/ai/scratch/close';
 import {
   buildScratchSystem,
   SCRATCH_FRAME_VERSION,
 } from '~/modules/ai/scratch/frame';
-import { pickScratchReferences } from '~/modules/ai/scratch/pick';
+import { pickScratchCollage } from '~/modules/ai/scratch/pick';
 import {
   buildScratchUser,
-  formatScratchForm,
+  collageChunks,
+  collageSources,
+  collageText,
 } from '~/modules/ai/scratch/request';
 import {
   isLyricDelivery,
@@ -48,7 +52,6 @@ export type ScratchInput = {
 export type ScratchOptions = {
   /** Промпт вместо текущего из «Настроек ИИ» — для прогонов. */
   prompt?: RewritePrompt;
-  noReferences?: boolean;
   random?: () => number;
 };
 
@@ -68,39 +71,41 @@ const parseFacets = (input: ScratchFacetsInput | null | undefined) =>
     energies: keepKnown(input?.energies ?? undefined, isLyricEnergy),
   }) satisfies SectionFacets;
 
-/** Запрос «С нуля» из готовой полки и промпта, без базы и модели. */
+/** Склейка из полки и запрос «С нуля», без базы и модели. */
 export const assembleScratchRequest = (
   input: ScratchInput,
   pool: readonly ArtistProfile[],
   prompt: RewritePrompt,
-  options: Pick<ScratchOptions, 'noReferences' | 'random'> = {}
+  options: Pick<ScratchOptions, 'random'> = {}
 ) => {
   const theme = requireScratchTheme(input.theme);
-  const form = formatScratchForm(parseTrackFormQuotas(input.form));
-  if (form.length === 0) {
+  const quotas = parseTrackFormQuotas(input.form);
+  if (Object.values(quotas).every((count) => count === 0)) {
     throw new GraphQLError('В форме трека нет частей');
   }
 
-  const references = options.noReferences
-    ? []
-    : pickScratchReferences(pool, {
-        facets: parseFacets(input.facets),
-        theme,
-        chosenTextIds: input.references?.textIds ?? [],
-        random: options.random,
-      });
+  const parts = pickScratchCollage(pool, {
+    facets: parseFacets(input.facets),
+    theme,
+    quotas,
+    chosenTextIds: input.references?.textIds ?? [],
+    filtered: isReferenceFilterActive(input.references),
+    random: options.random,
+  });
+  const chunks = collageChunks(parts);
+  if (chunks.length === 0) {
+    throw new GraphQLError('На полке нет текстов для склейки');
+  }
 
   return {
     theme,
     promptId: prompt.id,
-    references,
+    parts,
+    chunks,
+    sources: collageSources(parts),
+    collage: collageText(parts),
     system: buildScratchSystem(),
-    user: buildScratchUser({
-      theme,
-      authorPrompt: prompt.text,
-      references,
-      form,
-    }),
+    user: buildScratchUser({ theme, authorPrompt: prompt.text, parts }),
   };
 };
 
@@ -113,7 +118,7 @@ export const buildScratchRequest = async (
 ): Promise<ScratchRequest> => {
   requireScratchTheme(input.theme);
   const [pool, stored] = await Promise.all([
-    options.noReferences ? [] : loadArtistPool(userId, input.references),
+    loadArtistPool(userId, input.references),
     options.prompt ? null : getCurrentPrompt(userId),
   ]);
 
@@ -160,10 +165,8 @@ export const writeFromScratch = async (userId: number, input: ScratchInput) => {
   return {
     aiText,
     usageId,
-    references: request.references.map(({ artistName, sample }) => ({
-      textId: sample.id,
-      artistName,
-      title: sample.title,
-    })),
+    sources: request.sources,
+    collage: request.collage,
+    close: findCloseLines(aiText, request.chunks),
   };
 };

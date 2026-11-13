@@ -4,8 +4,9 @@ import { parseArgs } from 'util';
 
 import { prisma } from '~/infrastructure/prisma';
 import { isAiConfigured } from '~/modules/ai/model/polza.client';
+import { findCloseLines } from '~/modules/ai/scratch/close';
 import { SCRATCH_FRAME_VERSION } from '~/modules/ai/scratch/frame';
-import { hasLink, scratchExcerpt } from '~/modules/ai/scratch/pick';
+import { hasLink } from '~/modules/ai/scratch/pick';
 import {
   buildScratchRequest,
   callScratch,
@@ -14,6 +15,7 @@ import {
 } from '~/modules/ai/scratch/scratch.service';
 import {
   DEFAULT_TRACK_FORM_QUOTAS,
+  SECOND_HOOK_INDEX,
   type TrackFormQuotas,
 } from '~/modules/lyrics/track-assemble';
 
@@ -22,15 +24,14 @@ const OUT_DIR = path.resolve(__dirname, '../../.ai-probe/scratch');
 const USAGE = [
   'Прогон «С нуля» тем же запросом, что в приложении.',
   '',
-  'bun run ai:scratch --themes themes.json [--pick | --dry] [-n 3] [--only t1] [--prompt файл.txt] [--no-references] [--artist 3] [--text 12] [--label rc1]',
+  'bun run ai:scratch --themes themes.json [--pick | --dry] [-n 3] [--only t1] [--prompt файл.txt] [--artist 3] [--text 12] [--label rc1]',
   '',
   '  --themes         JSON: [{ "id": "t1", "theme": "…", "facets": { "moods": [...], "deliveries": [...], "energies": [...] }, "form"?: {...} }]',
   '  --only           id темы из файла, можно несколько',
-  '  --pick           только подбор эталонов, модель не вызывать',
+  '  --pick           только склейка из полки, модель не вызывать',
   '  --dry            только записать запрос, модель не вызывать',
   '  -n               прогонов на тему (по умолчанию 3)',
   '  --prompt         файл с промптом вместо текущего; пустой файл — без портрета',
-  '  --no-references  без эталонов',
   '  --artist/--text  фильтр «Артисты» / «Тексты», можно несколько',
   '  --label          метка файлов (по умолчанию версия рамки)',
   '',
@@ -45,7 +46,6 @@ const { values } = parseArgs({
     dry: { type: 'boolean', default: false },
     n: { type: 'string', short: 'n', default: '3' },
     prompt: { type: 'string' },
-    'no-references': { type: 'boolean', default: false },
     artist: { type: 'string', multiple: true },
     text: { type: 'string', multiple: true },
     label: { type: 'string' },
@@ -136,7 +136,6 @@ const themes = readThemes(values.themes).filter(
   (item) => only.size === 0 || only.has(item.id)
 );
 const options: ScratchOptions = {
-  noReferences: values['no-references'],
   prompt: values.prompt
     ? { id: null, text: fs.readFileSync(values.prompt, 'utf8') }
     : undefined,
@@ -158,12 +157,18 @@ for (const item of themes) {
     for (let run = 1; run <= runs; run += 1) {
       const request = await buildScratchRequest(owner.id, input, options);
       report.push(`  прогон ${run}`);
-      for (const { artistName, sample } of request.references) {
-        const excerpt = scratchExcerpt(sample.text);
-        report.push(
-          `    ${artistName} — «${sample.title ?? '—'}» [${sample.mood.join('+')}/${sample.delivery.join('+')}/${sample.energy ?? '—'}]${hasLink(excerpt) ? ' · СВЯЗЬ' : ''}`,
-          `      ${excerpt.split('\n').slice(0, 2).join(' / ')}`
-        );
+      for (const part of request.parts.slice(0, SECOND_HOOK_INDEX)) {
+        if (part.chunks.length === 0) {
+          continue;
+        }
+        report.push(`    [${part.role}]`);
+        for (const chunk of part.chunks) {
+          const body = chunk.lines.join('\n');
+          report.push(
+            `      ${chunk.artistName} — «${chunk.title ?? '—'}»${hasLink(body) ? ' · СВЯЗЬ' : ''}`,
+            ...chunk.lines.map((line) => `        ${line}`)
+          );
+        }
       }
     }
     fs.writeFileSync(path.join(dir, `${label}.pick.txt`), report.join('\n'));
@@ -171,13 +176,14 @@ for (const item of themes) {
     continue;
   }
 
+  const sourcesLine = (sources: typeof request.sources) =>
+    sources
+      .map(({ artistName, title }) => `${artistName} — «${title ?? '—'}»`)
+      .join('; ');
   const request = await buildScratchRequest(owner.id, input, options);
-  const head = request.references
-    .map(({ artistName, sample }) => `${artistName} — «${sample.title ?? '—'}»`)
-    .join('; ');
   fs.writeFileSync(
     path.join(dir, `${label}.request.txt`),
-    `FRAME ${SCRATCH_FRAME_VERSION}\nЭТАЛОНЫ ${head || '—'}\n\n=== SYSTEM\n${request.system}\n\n=== USER\n${request.user}\n`
+    `FRAME ${SCRATCH_FRAME_VERSION}\nИСТОЧНИКИ ${sourcesLine(request.sources)}\n\n=== SYSTEM\n${request.system}\n\n=== USER\n${request.user}\n`
   );
 
   if (values.dry) {
@@ -192,14 +198,14 @@ for (const item of themes) {
           ? request
           : await buildScratchRequest(owner.id, input, options);
       const { value } = await callScratch(owner.id, fresh);
-      const refs = fresh.references
+      const close = findCloseLines(value, fresh.chunks)
         .map(
-          ({ artistName, sample }) => `${artistName} — «${sample.title ?? '—'}»`
+          (item) => `  ${item.line}: ${item.artistName} — ${item.sourceLine}`
         )
-        .join('; ');
+        .join('\n');
       fs.writeFileSync(
         path.join(dir, `${label}-${index + 1}.txt`),
-        `ЭТАЛОНЫ ${refs || '—'}\n\n${value}\n`
+        `ИСТОЧНИКИ ${sourcesLine(fresh.sources)}\nБЛИЗКО\n${close || '  —'}\n\n${value}\n\n=== СКЛЕЙКА\n${fresh.collage}\n`
       );
     })
   );

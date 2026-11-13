@@ -1,74 +1,75 @@
-import { contextBlocks, ROLE_LABELS } from '~/modules/ai/rewrite/request';
-import { scratchExcerpt, type ScratchPick } from '~/modules/ai/scratch/pick';
 import {
-  paragraphsForRole,
-  SECOND_HOOK_INDEX,
-  TRACK_FRAME,
-  type TrackFormQuotas,
-} from '~/modules/lyrics/track-assemble';
+  buildRewriteUser,
+  type RewriteUserSection,
+  ROLE_LABELS,
+} from '~/modules/ai/rewrite/request';
+import type {
+  ScratchChunk,
+  ScratchCollagePart,
+} from '~/modules/ai/scratch/pick';
+import { SECOND_HOOK_INDEX } from '~/modules/lyrics/track-assemble';
 
-const PARAGRAPH_LINES = 4;
+/** Части с кусками, без второго хука — как склейка в «Поправить ИИ». */
+const filledParts = (parts: readonly ScratchCollagePart[]) =>
+  parts.filter(
+    (part, index) => index !== SECOND_HOOK_INDEX && part.chunks.length > 0
+  );
 
-const linesWord = (count: number): string => {
-  const tens = count % 100;
-  const ones = count % 10;
-  if (ones === 1 && tens !== 11) {
-    return 'строка';
-  }
-  if (ones >= 2 && ones <= 4 && (tens < 12 || tens > 14)) {
-    return 'строки';
-  }
+export const collageChunks = (
+  parts: readonly ScratchCollagePart[]
+): ScratchChunk[] => filledParts(parts).flatMap((part) => part.chunks);
 
-  return 'строк';
+/** Кусок — строфа; карточек артистов и эталонов под частью нет. */
+export const collageSections = (
+  parts: readonly ScratchCollagePart[]
+): RewriteUserSection[] =>
+  filledParts(parts).map((part) => ({
+    label: ROLE_LABELS[part.role],
+    text: part.chunks.map((chunk) => chunk.lines.join('\n')).join('\n\n'),
+    artists: [],
+    relaxed: false,
+  }));
+
+export const collageText = (parts: readonly ScratchCollagePart[]): string =>
+  collageSections(parts)
+    .map((section) => `[${section.label}]\n${section.text}`)
+    .join('\n\n');
+
+export type ScratchSource = {
+  textId: number;
+  artistName: string;
+  title: string | null;
 };
 
-/** Части формы по каркасу трека; пустые пропущены, второй хук — тот же. */
-export const formatScratchForm = (quotas: TrackFormQuotas): string[] =>
-  TRACK_FRAME.flatMap((role, index) => {
-    const paragraphs = paragraphsForRole(quotas, role);
-    if (paragraphs === 0) {
+/** Тексты склейки по разу, в порядке появления. */
+export const collageSources = (
+  parts: readonly ScratchCollagePart[]
+): ScratchSource[] => {
+  const seen = new Set<number>();
+
+  return collageChunks(parts).flatMap((chunk) => {
+    if (seen.has(chunk.textId)) {
       return [];
     }
 
-    const label = `[${ROLE_LABELS[role]}]`;
-    if (index === SECOND_HOOK_INDEX) {
-      return [`${label} тот же хук`];
-    }
-
-    const lines = paragraphs * PARAGRAPH_LINES;
-    return [`${label} ${lines} ${linesWord(lines)}`];
+    seen.add(chunk.textId);
+    return [
+      {
+        textId: chunk.textId,
+        artistName: chunk.artistName,
+        title: chunk.title,
+      },
+    ];
   });
-
-export const formatScratchReferences = (
-  references: readonly ScratchPick[]
-): string =>
-  [
-    'Эталоны — тексты артистов, которые любит автор. Смотри, как сделаны строка, строфа, хук и звук. Мир и строки не бери.',
-    ...references.map(({ artistName, sample }, index) => {
-      const title = sample.title?.trim();
-      const note = sample.note?.trim();
-
-      return [
-        `Эталон ${index + 1} · ${artistName}${title ? ` — «${title}»` : ''}`,
-        scratchExcerpt(sample.text),
-        ...(note ? [`Чем нравится автору: ${note}`] : []),
-      ].join('\n');
-    }),
-  ].join('\n\n');
+};
 
 export const buildScratchUser = (input: {
   theme: string;
   authorPrompt: string;
-  references: readonly ScratchPick[];
-  form: readonly string[];
-}): string => {
-  const parts = contextBlocks(input.theme, input.authorPrompt);
-
-  if (input.references.length > 0) {
-    parts.push(formatScratchReferences(input.references));
-  }
-
-  parts.push(`Форма трека:\n${input.form.join('\n')}`);
-
-  return parts.join('\n\n');
-};
+  parts: readonly ScratchCollagePart[];
+}): string =>
+  buildRewriteUser({
+    theme: input.theme,
+    authorPrompt: input.authorPrompt,
+    sections: collageSections(input.parts),
+  });

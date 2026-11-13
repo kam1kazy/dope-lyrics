@@ -394,16 +394,26 @@ export const typeDefinitions = /* GraphQL */ `
     energies: [LyricEnergy!]
   }
 
-  type ScratchReference {
+  type ScratchSource {
     textId: Int!
     artistName: String!
     title: String
   }
 
+  type ScratchCloseLine {
+    "Номер строки ответа без пустых строк и меток частей, с нуля."
+    line: Int!
+    sourceLine: String!
+    artistName: String!
+  }
+
   type ScratchResult {
     aiText: String!
     usageId: Int!
-    references: [ScratchReference!]!
+    sources: [ScratchSource!]!
+    "Склейка из полки с метками частей — только для показа."
+    collage: String!
+    close: [ScratchCloseLine!]!
   }
 
   enum TechniqueKind {

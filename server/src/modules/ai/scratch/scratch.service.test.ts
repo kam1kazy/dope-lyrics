@@ -51,7 +51,10 @@ const pool: ArtistProfile[] = [
     deliveries: [],
     techniques: [{ kind: 'IMAGE', label: 'флекс', instruction: 'приём' }],
     texts: [
-      { ...sample(11, { mood: ['BRAVADO'] }), text: 'Бэнтли, Бенз и Бумер' },
+      {
+        ...sample(11, { mood: ['BRAVADO'] }),
+        text: 'Бэнтли, Бенз и Бумер\nвторая\nтретья\nчетвёртая',
+      },
     ],
   },
 ];
@@ -81,7 +84,7 @@ describe('assembleScratchRequest', () => {
     ).toThrow('В форме трека нет частей');
   });
 
-  test('эталон в запросе, приёмов артиста нет, чужие грани отброшены', () => {
+  test('склейка из полки в запросе, приёмов артиста нет, чужие грани отброшены', () => {
     const request = assembleScratchRequest(
       {
         theme: 'остаюсь тру',
@@ -92,22 +95,23 @@ describe('assembleScratchRequest', () => {
       prompt
     );
 
-    expect(request.references.map((item) => item.sample.id)).toEqual([11]);
-    expect(request.user).toContain('Бэнтли, Бенз и Бумер');
+    expect(request.sources).toEqual([
+      { textId: 11, artistName: 'Платина', title: null },
+    ]);
+    expect(request.collage).toContain('Бэнтли, Бенз и Бумер');
+    expect(request.user).toContain('Склейка, из которой собрать трек:');
     expect(request.user).not.toContain('флекс');
+    expect(request.system).toContain(
+      'Дословно из склейки не оставляй ни одной'
+    );
     expect(request.promptId).toBe(5);
   });
 
-  test('без эталонов — пустой список', () => {
-    const request = assembleScratchRequest(
-      { theme: 'тема', form: HIT },
-      pool,
-      prompt,
-      { noReferences: true }
-    );
-
-    expect(request.references).toEqual([]);
-    expect(request.user).not.toContain('Эталон');
+  test('пустая полка — ошибка без вызова модели', () => {
+    expect(() =>
+      assembleScratchRequest({ theme: 'тема', form: HIT }, [], prompt)
+    ).toThrow('На полке нет текстов для склейки');
+    expect(calls).toBe(0);
   });
 });
 
