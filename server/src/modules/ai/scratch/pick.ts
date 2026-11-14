@@ -83,6 +83,8 @@ const CHUNK_LINES = 4;
 const CHUNK_MIN_LINES = 3;
 /** Кусков от одного артиста на склейку при автоподборе. */
 export const SCRATCH_ARTIST_CHUNKS = 2;
+/** Кусков от одного текста на склейку при фильтре: без потолка склейка выходит «из одного трека». */
+export const SCRATCH_FILTERED_TEXT_CHUNKS = 3;
 
 /** Абзацы по пустым строкам, длинные — по четыре строки; хвост короче трёх строк — к предыдущему куску. */
 export const splitIntoChunks = (text: string): string[][] =>
@@ -138,7 +140,7 @@ const scoreRole = (role: TrackFrameRole): string =>
 /**
  * Склейка по форме из кусков полки. Хук набирается первым — из текстов с ролью хука.
  * Куски части — из разных текстов; при автоподборе один текст даёт один кусок на склейку,
- * артист — не больше двух. Кусок со связью не берётся, если её нет в теме.
+ * артист — не больше двух. При фильтре лимит на артиста снят, а текст даёт не больше трёх кусков. Кусок со связью не берётся, если её нет в теме.
  * Выбранные тексты дают хотя бы по куску, и со связью тоже.
  */
 export const pickScratchCollage = (
@@ -148,7 +150,7 @@ export const pickScratchCollage = (
     theme: string;
     quotas: TrackFormQuotas;
     chosenTextIds?: readonly number[];
-    /** Пул ограничен фильтром: лимиты на текст и артиста по всей склейке сняты. */
+    /** Пул ограничен фильтром: лимит на артиста снят, текст даёт до `SCRATCH_FILTERED_TEXT_CHUNKS` кусков. */
     filtered?: boolean;
     random?: () => number;
   }
@@ -171,7 +173,7 @@ export const pickScratchCollage = (
     chunks: [],
   }));
   const usedChunks = new Set<string>();
-  const usedTexts = new Set<number>();
+  const textChunks = new Map<number, number>();
   const artistChunks = new Map<number, number>();
 
   const room = (index: number): boolean =>
@@ -187,7 +189,7 @@ export const pickScratchCollage = (
       lines,
     });
     usedChunks.add(chunkKey(lines));
-    usedTexts.add(text.sample.id);
+    textChunks.set(text.sample.id, (textChunks.get(text.sample.id) ?? 0) + 1);
     artistChunks.set(text.artistId, (artistChunks.get(text.artistId) ?? 0) + 1);
   };
 
@@ -197,6 +199,10 @@ export const pickScratchCollage = (
         !usedChunks.has(chunkKey(lines)) &&
         (!strict || allowLink || !hasLink(lines.join('\n')))
     );
+
+  const textFull = (text: ShelfText): boolean =>
+    (textChunks.get(text.sample.id) ?? 0) >=
+    (filtered ? SCRATCH_FILTERED_TEXT_CHUNKS : 1);
 
   const inPart = (index: number, text: ShelfText): boolean =>
     parts[index]?.chunks.some((chunk) => chunk.textId === text.sample.id) ??
@@ -234,9 +240,9 @@ export const pickScratchCollage = (
       }
       if (
         inPart(index, text) ||
+        textFull(text) ||
         (!filtered &&
-          (usedTexts.has(text.sample.id) ||
-            (artistChunks.get(text.artistId) ?? 0) >= SCRATCH_ARTIST_CHUNKS))
+          (artistChunks.get(text.artistId) ?? 0) >= SCRATCH_ARTIST_CHUNKS)
       ) {
         continue;
       }

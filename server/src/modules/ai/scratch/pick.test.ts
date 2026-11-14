@@ -8,6 +8,7 @@ import type {
 import {
   hasLink,
   pickScratchCollage,
+  SCRATCH_FILTERED_TEXT_CHUNKS,
   splitIntoChunks,
 } from '~/modules/ai/scratch/pick';
 
@@ -140,6 +141,33 @@ describe('pickScratchCollage', () => {
 
     expect(count(auto)).toBe(2);
     expect(count(filtered)).toBe(9);
+  });
+
+  test('при фильтре текст даёт не больше трёх кусков', () => {
+    const long = [
+      artist(1, 'Kidd', [
+        text(
+          1,
+          Array.from({ length: 6 }, (_, index) => stanza(`k${index}`)).join(
+            '\n\n'
+          )
+        ),
+      ]),
+    ];
+    const parts = pickScratchCollage(long, {
+      facets: NO_FACETS,
+      theme: 'тема',
+      quotas: HIT,
+      chosenTextIds: [1],
+      filtered: true,
+      random: first,
+    });
+    const total = parts
+      .slice(0, 5)
+      .reduce((sum, part) => sum + part.chunks.length, 0);
+
+    expect(splitIntoChunks(long[0]?.texts[0]?.text ?? '')).toHaveLength(6);
+    expect(total).toBe(SCRATCH_FILTERED_TEXT_CHUNKS);
   });
 
   test('хук — из текста с ролью хука', () => {
