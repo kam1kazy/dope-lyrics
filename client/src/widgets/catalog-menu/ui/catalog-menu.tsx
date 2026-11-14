@@ -53,7 +53,12 @@ import {
   useScratchSession,
 } from '@/features/from-scratch';
 import { ArtistList, ArtistPane } from '@/features/reference-shelf';
-import { TrackTextsList, TrackTextView } from '@/features/track-texts';
+import {
+  parseFilters,
+  parseReferences,
+  TrackTextsList,
+  TrackTextView,
+} from '@/features/track-texts';
 import {
   type IProfile,
   PROFILE,
@@ -75,6 +80,7 @@ import {
   DEFAULT_LIST_SECTION_FILTERS,
   hasActiveCatalogSectionFilters,
 } from '@/shared/lib/catalog-section-filters';
+import { usePersistedState } from '@/shared/lib/persisted-state';
 import { usePlayback } from '@/shared/lib/playback/playback-context';
 import {
   EMPTY_REFERENCE_FILTER,
@@ -166,14 +172,29 @@ export function CatalogMenu() {
   const [generatorForm, setGeneratorForm] = useState<TrackFormQuotas>(
     DEFAULT_TRACK_FORM_QUOTAS
   );
-  const [hideAdlibs, setHideAdlibs] = useState(false);
-  const [generatorFilters, setGeneratorFilters] =
-    useState<CatalogSectionFilters>(DEFAULT_GENERATOR_SECTION_FILTERS);
-  const [generatorReferences, setGeneratorReferences] =
-    useState<ReferenceFilter>(EMPTY_REFERENCE_FILTER);
-  const [scratchReferences, setScratchReferences] = useState<ReferenceFilter>(
-    EMPTY_REFERENCE_FILTER
+  const [hideAdlibs, setHideAdlibs] = usePersistedState(
+    'dope-lyrics.generator-hide-adlibs',
+    false,
+    (stored) => stored === true
   );
+  const [generatorFilters, setGeneratorFilters] =
+    usePersistedState<CatalogSectionFilters>(
+      'dope-lyrics.generator-filters',
+      DEFAULT_GENERATOR_SECTION_FILTERS,
+      parseFilters
+    );
+  const [generatorReferences, setGeneratorReferences] =
+    usePersistedState<ReferenceFilter>(
+      'dope-lyrics.generator-references',
+      EMPTY_REFERENCE_FILTER,
+      parseReferences
+    );
+  const [scratchReferences, setScratchReferences] =
+    usePersistedState<ReferenceFilter>(
+      'dope-lyrics.scratch-references',
+      EMPTY_REFERENCE_FILTER,
+      parseReferences
+    );
   const scratchSession = useScratchSession((id) => {
     selectSection('generator');
     setSelectedTextId(id);

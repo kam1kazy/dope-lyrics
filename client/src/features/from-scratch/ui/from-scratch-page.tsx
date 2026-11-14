@@ -9,6 +9,7 @@ import {
   ReferenceFilterFields,
   TrackFormFields,
 } from '@/features/catalog-assemble';
+import { parseFacets } from '@/features/track-texts';
 import { formatQueryError } from '@/shared/lib/format-query-error';
 import {
   LYRIC_DELIVERIES,
@@ -18,8 +19,8 @@ import {
   LYRIC_MOOD_LABELS,
   LYRIC_MOODS,
 } from '@/shared/lib/lyric-facets';
+import { usePersistedState } from '@/shared/lib/persisted-state';
 import type { ReferenceFilter } from '@/shared/lib/reference-filter';
-import { useRetainedState } from '@/shared/lib/retained-state';
 import { cn } from '@/shared/lib/utils/cn';
 import { Hint } from '@/shared/ui/hint';
 import { Button } from '@/shared/ui/shadcn/ui/button';
@@ -93,10 +94,15 @@ export function FromScratchPage({
   onReferencesChange: (references: ReferenceFilter) => void;
   session: ScratchSession;
 }) {
-  const [theme, setTheme] = useRetainedState('scratch-theme', '');
-  const [facets, setFacets] = useRetainedState<ScratchFacets>(
-    'scratch-facets',
-    EMPTY_FACETS
+  const [theme, setTheme] = usePersistedState(
+    'dope-lyrics.scratch-theme',
+    '',
+    (stored) => (typeof stored === 'string' ? stored : '')
+  );
+  const [facets, setFacets] = usePersistedState<ScratchFacets>(
+    'dope-lyrics.scratch-facets',
+    EMPTY_FACETS,
+    parseFacets
   );
   const { data: status } = useQuery<{ aiStatus: { enabled: boolean } }>(
     AI_STATUS

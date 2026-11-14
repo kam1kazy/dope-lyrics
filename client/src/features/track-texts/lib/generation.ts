@@ -116,12 +116,12 @@ const pickIds = (value: unknown): number[] =>
       ]
     : [];
 
-const parseReferences = (value: unknown): ReferenceFilter =>
+export const parseReferences = (value: unknown): ReferenceFilter =>
   isRecord(value)
     ? { artistIds: pickIds(value.artistIds), textIds: pickIds(value.textIds) }
     : { ...EMPTY_REFERENCE_FILTER };
 
-const parseFilters = (value: unknown): CatalogSectionFilters => {
+export const parseFilters = (value: unknown): CatalogSectionFilters => {
   const defaults = DEFAULT_GENERATOR_SECTION_FILTERS;
 
   if (!isRecord(value)) {
@@ -227,6 +227,16 @@ const parsePicked = (value: unknown): ScratchPickedReference[] =>
       )
     : [];
 
+export const parseFacets = (value: unknown): ScratchFacets => {
+  const facets = isRecord(value) ? value : {};
+
+  return {
+    moods: pickMany(facets.moods, LYRIC_MOODS),
+    deliveries: pickMany(facets.deliveries, LYRIC_DELIVERIES),
+    energies: pickMany(facets.energies, LYRIC_ENERGIES),
+  };
+};
+
 /** Настройки текста «С нуля»; `null` — у текста другие настройки или их нет. */
 export const parseScratchGeneration = (
   raw: string | null
@@ -236,16 +246,10 @@ export const parseScratchGeneration = (
     return null;
   }
 
-  const facets = isRecord(parsed.facets) ? parsed.facets : {};
-
   return {
     kind: 'scratch',
     form: parseForm(parsed.form),
-    facets: {
-      moods: pickMany(facets.moods, LYRIC_MOODS),
-      deliveries: pickMany(facets.deliveries, LYRIC_DELIVERIES),
-      energies: pickMany(facets.energies, LYRIC_ENERGIES),
-    },
+    facets: parseFacets(parsed.facets),
     references: parseReferences(parsed.references),
     picked: parsePicked(parsed.picked),
   };
