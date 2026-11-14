@@ -9,7 +9,12 @@ import {
   ReferenceFilterFields,
   TrackFormFields,
 } from '@/features/catalog-assemble';
-import { parseFacets } from '@/features/track-texts';
+import {
+  parseFacets,
+  SCRATCH_MODE_LABELS,
+  SCRATCH_MODES,
+  type ScratchMode,
+} from '@/features/track-texts';
 import { formatQueryError } from '@/shared/lib/format-query-error';
 import {
   LYRIC_DELIVERIES,
@@ -33,6 +38,13 @@ import {
 } from '../lib/use-scratch-session';
 
 const EMPTY_FACETS: ScratchFacets = { moods: [], deliveries: [], energies: [] };
+
+const SCRATCH_MODE_HINTS: Record<ScratchMode, string> = {
+  ANCHORS:
+    'Из склейки берутся самые жирные строки с заменой пары слов, вокруг — свои. Близость к кумирам проверять руками.',
+  SHELF:
+    'Склейка — только полка приёмов и слов: чужих строк в ответе нет, удара меньше.',
+};
 
 function FacetChips<T extends string>({
   label,
@@ -99,6 +111,11 @@ export function FromScratchPage({
     '',
     (stored) => (typeof stored === 'string' ? stored : '')
   );
+  const [mode, setMode] = usePersistedState<ScratchMode>(
+    'dope-lyrics.scratch-mode',
+    'ANCHORS',
+    (stored) => SCRATCH_MODES.find((item) => item === stored) ?? 'ANCHORS'
+  );
   const [facets, setFacets] = usePersistedState<ScratchFacets>(
     'dope-lyrics.scratch-facets',
     EMPTY_FACETS,
@@ -138,6 +155,36 @@ export function FromScratchPage({
             setTheme(event.target.value);
           }}
         />
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <Label className="text-muted-foreground text-xs font-normal">
+          Рамка
+        </Label>
+        <div className="flex flex-wrap gap-1.5">
+          {SCRATCH_MODES.map((value) => {
+            const on = mode === value;
+
+            return (
+              <Button
+                key={value}
+                type="button"
+                size="sm"
+                variant={on ? 'secondary' : 'outline'}
+                className={cn('h-7 px-2.5 text-xs', on && 'border-transparent')}
+                aria-pressed={on}
+                onClick={() => {
+                  setMode(value);
+                }}
+              >
+                {SCRATCH_MODE_LABELS[value]}
+              </Button>
+            );
+          })}
+        </div>
+        <p className="text-muted-foreground text-xs leading-relaxed">
+          {SCRATCH_MODE_HINTS[mode]}
+        </p>
       </div>
 
       <div className="flex flex-col gap-3">
@@ -197,6 +244,7 @@ export function FromScratchPage({
               onClick={() => {
                 void session.write({
                   theme: trimmedTheme,
+                  mode,
                   form,
                   facets,
                   references,

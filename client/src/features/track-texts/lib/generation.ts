@@ -51,9 +51,22 @@ export type ScratchPickedReference = {
   title: string | null;
 };
 
-/** Настройки текста «С нуля»: в генератор не возвращаются. */
+export const SCRATCH_MODES = ['ANCHORS', 'SHELF'] as const;
+
+export type ScratchMode = (typeof SCRATCH_MODES)[number];
+
+export const SCRATCH_MODE_LABELS: Record<ScratchMode, string> = {
+  ANCHORS: 'Якоря',
+  SHELF: 'Приёмы',
+};
+
+export const parseScratchMode = (value: unknown): ScratchMode | null =>
+  SCRATCH_MODES.find((mode) => mode === value) ?? null;
+
+/** Настройки текста «С нуля»: в генератор не возвращаются. `mode = null` — текст до режимов. */
 export type ScratchTextGeneration = {
   kind: 'scratch';
+  mode: ScratchMode | null;
   form: TrackFormQuotas;
   facets: ScratchFacets;
   references: ReferenceFilter;
@@ -248,6 +261,7 @@ export const parseScratchGeneration = (
 
   return {
     kind: 'scratch',
+    mode: parseScratchMode(parsed.mode),
     form: parseForm(parsed.form),
     facets: parseFacets(parsed.facets),
     references: parseReferences(parsed.references),
@@ -349,6 +363,7 @@ const formSummary = (form: TrackFormQuotas): string =>
     .join(', ') || 'пустая форма';
 
 export type ScratchGenerationSummary = {
+  mode: string | null;
   form: string;
   facets: string[];
   references: string[];
@@ -359,6 +374,9 @@ export const summarizeScratchGeneration = (
   generation: ScratchTextGeneration,
   liveTextIds: ReadonlySet<number> | null = null
 ): ScratchGenerationSummary => ({
+  mode: generation.mode
+    ? SCRATCH_MODE_LABELS[generation.mode].toLowerCase()
+    : null,
   form: formSummary(generation.form),
   facets: [
     ...labelled('настроение', generation.facets.moods, LYRIC_MOOD_LABELS),

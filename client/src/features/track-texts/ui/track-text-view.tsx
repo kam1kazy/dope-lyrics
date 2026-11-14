@@ -263,7 +263,8 @@ export function TrackTextView({
 
       {scratchSummary ? (
         <p className="text-muted-foreground text-xs">
-          С нуля · {scratchSummary.form} ·{' '}
+          С нуля{scratchSummary.mode ? ` · ${scratchSummary.mode}` : ''} ·{' '}
+          {scratchSummary.form} ·{' '}
           {scratchSummary.facets.length > 0
             ? scratchSummary.facets.join(' · ')
             : 'граней нет'}{' '}

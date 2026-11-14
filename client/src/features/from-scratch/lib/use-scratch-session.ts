@@ -5,7 +5,10 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 
 import type { TrackFormQuotas } from '@/entities/lyric';
-import type { ScratchTextGeneration } from '@/features/track-texts';
+import type {
+  ScratchMode,
+  ScratchTextGeneration,
+} from '@/features/track-texts';
 import type { ReferenceFilter } from '@/shared/lib/reference-filter';
 import { useRetainedState } from '@/shared/lib/retained-state';
 
@@ -19,6 +22,7 @@ export type ScratchFacets = ScratchTextGeneration['facets'];
 
 export type ScratchRequest = {
   theme: string;
+  mode: ScratchMode;
   form: TrackFormQuotas;
   facets: ScratchFacets;
   references: ReferenceFilter;
@@ -59,6 +63,7 @@ export function useScratchSession(onSaved: (id: number) => void) {
 
     const generation = {
       kind: 'scratch',
+      mode: answer.request.mode,
       form: answer.request.form,
       facets: answer.request.facets,
       references: answer.request.references,

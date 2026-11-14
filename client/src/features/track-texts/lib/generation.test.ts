@@ -119,6 +119,7 @@ describe('эталоны в настройках текста', () => {
 describe('настройки текста «С нуля»', () => {
   const raw = JSON.stringify({
     kind: 'scratch',
+    mode: 'ANCHORS',
     form: { intro: 0, verse: 4, hook: 1, bridge: 0 },
     facets: { moods: ['EUPHORIA', 'NOPE'], deliveries: [], energies: [] },
     references: { artistIds: [], textIds: [] },
@@ -140,6 +141,7 @@ describe('настройки текста «С нуля»', () => {
     }
 
     const summary = summarizeScratchGeneration(generation);
+    expect(summary.mode).toBe('якоря');
     expect(summary.form).toBe('куплет ×4, хук ×1');
     expect(summary.facets).toEqual(['настроение: эйфория']);
     expect(summary.references).toEqual([
@@ -159,8 +161,9 @@ describe('настройки текста «С нуля»', () => {
     ).toEqual(['Pharaoh']);
   });
 
-  test('без граней — пустой список, обычные настройки — не «С нуля»', () => {
+  test('без граней и режима — пусто, обычные настройки — не «С нуля»', () => {
     const generation = parseScratchGeneration('{"kind":"scratch"}');
+    expect(generation?.mode).toBeNull();
     expect(generation?.facets).toEqual({
       moods: [],
       deliveries: [],

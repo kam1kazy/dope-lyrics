@@ -27,12 +27,14 @@ export const WRITE_FROM_SCRATCH = gql`
     $form: TrackFormQuotas!
     $facets: ScratchFacetsInput
     $references: ReferenceFilterInput
+    $mode: ScratchMode
   ) {
     writeFromScratch(
       theme: $theme
       form: $form
       facets: $facets
       references: $references
+      mode: $mode
     ) {
       aiText
       usageId
