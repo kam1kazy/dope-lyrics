@@ -69,3 +69,13 @@
 - [x] 9.15 `scratch/close.ts`: близко ещё и при двух общих английских словах со строкой склейки или парой соседних; тест на строках из ответа по Travis Scott «TELEKINESIS» 14.11 («Storm и troopers шагают в мой сон» — близко, «Future трубит сквозь дым» — нет: одно слово-ядро разрешено)
 - [ ] 9.16 `scratch/pick.ts`: при фильтре текст даёт не больше трёх кусков (`SCRATCH_FILTERED_TEXT_CHUNKS`), лимит на артиста по-прежнему снят; тест — один выбранный текст с шестью кусками даёт три
 - [ ] 9.13 `bun run fix` в `server/` и `client/`, тесты зелёные; каждая законченная задача — свой коммит в `feat/from-scratch`
+
+## 10. Рамки 3.0.0: «Приёмы» и «Якоря»
+
+- [ ] 10.1 `server/src/modules/ai/scratch/frame.ts`: `ScratchMode`, `SCRATCH_SHELF_FRAME` (текст rc1), `SCRATCH_ANCHOR_REPLACEMENTS` → «Якоря», `SCRATCH_FRAME_VERSIONS`, `buildScratchSystem(mode)`; замены над рамкой правки удалить; тест — каждая замена нашла пункт, в «Якорях» нет перечня слов и квоты абсурда
+- [ ] 10.2 `scratch.service.ts`: `mode` во входе (по умолчанию `ANCHORS`), система и `frameVersion` по режиму; тесты сервиса
+- [ ] 10.3 GraphQL: `enum ScratchMode`, аргумент `mode` у `writeFromScratch`
+- [ ] 10.4 `scratch-probe.ts`: `--mode shelf|anchors`
+- [ ] 10.5 Клиент: переключатель «Приёмы / Якоря» в `from-scratch-page.tsx` (localStorage), `mode` в запросе и в `generation`; разбор и сводка в `track-texts/lib/generation.ts`, тест
+- [ ] 10.6 Прогон кодом: `t4-moscow`, `t2-mic`, `--mode anchors -n 2 --seed 2`; итог — в `docs/research/from-scratch-anchors.md`
+- [ ] 10.7 `bun run fix` в `server/` и `client/`, тесты зелёные
