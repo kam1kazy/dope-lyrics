@@ -11,9 +11,12 @@ import { type ITrackTextItem, TRACK_TEXTS } from '../api/queries';
 import { trackTextTitle } from '../lib/title';
 
 export function TrackTextsList({
+  scratch,
   selectedId,
   onSelect,
 }: {
+  /** `true` — тексты «С нуля», `false` — тексты генератора. */
+  scratch: boolean;
   selectedId: number | null;
   onSelect: (id: number) => void;
 }) {
@@ -34,7 +37,9 @@ export function TrackTextsList({
     return <ErrorText title="Не удалось загрузить тексты" error={error} />;
   }
 
-  if (data.trackTexts.length === 0) {
+  const items = data.trackTexts.filter((item) => item.scratch === scratch);
+
+  if (items.length === 0) {
     return (
       <p className="text-muted-foreground p-4 text-sm">
         Сохранённых текстов пока нет
@@ -44,7 +49,7 @@ export function TrackTextsList({
 
   return (
     <div className="flex flex-col gap-1 p-2">
-      {data.trackTexts.map((item) => (
+      {items.map((item) => (
         <Button
           key={item.id}
           type="button"

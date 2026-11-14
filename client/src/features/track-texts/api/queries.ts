@@ -6,6 +6,7 @@ export interface ITrackTextItem {
   theme: string | null;
   text: string;
   doneAt: string | null;
+  scratch: boolean;
 }
 
 export interface ITrackText extends ITrackTextItem {
@@ -25,6 +26,7 @@ const TRACK_TEXT_FIELDS = `
   finalText
   doneAt
   generation
+  scratch
 `;
 
 export const TRACK_TEXTS = gql`
@@ -35,6 +37,7 @@ export const TRACK_TEXTS = gql`
       theme
       text
       doneAt
+      scratch
     }
   }
 `;

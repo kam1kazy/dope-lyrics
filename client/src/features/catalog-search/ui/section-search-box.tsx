@@ -171,8 +171,10 @@ export function SectionSearchBox({
       }));
     const texts = includeSavedTexts
       ? (textQuery.data?.trackTexts ?? [])
-          .filter((item) =>
-            includesQuery(`${item.theme ?? ''}\n${item.text}`, needle)
+          .filter(
+            (item) =>
+              !item.scratch &&
+              includesQuery(`${item.theme ?? ''}\n${item.text}`, needle)
           )
           .slice(0, SUGGESTION_LIMIT)
           .map((item) => ({

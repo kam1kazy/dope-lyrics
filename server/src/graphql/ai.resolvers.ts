@@ -76,6 +76,7 @@ const trackTextDto = (row: Awaited<ReturnType<typeof getTrackText>>) => ({
   finalText: row.finalText,
   doneAt: iso(row.doneAt),
   generation: serializeGeneration(row.generation),
+  scratch: row.sourceText === '',
 });
 
 export const aiQueryResolvers = {

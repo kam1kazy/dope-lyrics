@@ -165,6 +165,9 @@ export function CatalogMenu() {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [textsOpen, setTextsOpen] = useState(false);
   const [selectedTextId, setSelectedTextId] = useState<number | null>(null);
+  const [selectedScratchTextId, setSelectedScratchTextId] = useState<
+    number | null
+  >(null);
   const [selectedArtistId, setSelectedArtistId] = useState<number | null>(null);
   const { data: profileData } = useQuery<{ profile: IProfile }>(PROFILE);
   const isOwner = profileData?.profile.role === 'OWNER';
@@ -196,8 +199,7 @@ export function CatalogMenu() {
       parseReferences
     );
   const scratchSession = useScratchSession((id) => {
-    selectSection('generator');
-    setSelectedTextId(id);
+    setSelectedScratchTextId(id);
     setTextsOpen(true);
   });
   const [selectedCollage, setSelectedCollage] = useState<ILyricCollage | null>(
@@ -669,6 +671,24 @@ export function CatalogMenu() {
                       </Button>
                     </Hint>
                   ) : null}
+                  {renderedSection === 'from-scratch' && isOwner ? (
+                    <Hint label="Сохранённые тексты «С нуля»">
+                      <Button
+                        type="button"
+                        variant={textsOpen ? 'secondary' : 'ghost'}
+                        size="icon"
+                        className="ml-auto size-8"
+                        aria-label="Тексты «С нуля»"
+                        aria-pressed={textsOpen}
+                        disabled={scratchOpen}
+                        onClick={() => {
+                          setTextsOpen((open) => !open);
+                        }}
+                      >
+                        <FileText className="size-4" />
+                      </Button>
+                    </Hint>
+                  ) : null}
                   {renderedSection === 'generator' ? (
                     <div
                       className={cn(
@@ -802,6 +822,16 @@ export function CatalogMenu() {
                         likedOnly={likedOnly}
                         onPlay={closeMenu}
                       />
+                    ) : renderedSection === 'from-scratch' &&
+                      isOwner &&
+                      selectedScratchTextId !== null ? (
+                      <TrackTextView
+                        id={selectedScratchTextId}
+                        onClose={() => {
+                          setSelectedScratchTextId(null);
+                        }}
+                        onApplySettings={() => undefined}
+                      />
                     ) : renderedSection === 'from-scratch' && isOwner ? (
                       <FromScratchPage
                         form={generatorForm}
@@ -889,8 +919,15 @@ export function CatalogMenu() {
                         />
                       ) : scratchOpen ? (
                         <ScratchResultPane session={scratchSession} />
+                      ) : renderedSection === 'from-scratch' && textsOpen ? (
+                        <TrackTextsList
+                          scratch
+                          selectedId={selectedScratchTextId}
+                          onSelect={setSelectedScratchTextId}
+                        />
                       ) : renderedSection === 'generator' && textsOpen ? (
                         <TrackTextsList
+                          scratch={false}
                           selectedId={selectedTextId}
                           onSelect={setSelectedTextId}
                         />

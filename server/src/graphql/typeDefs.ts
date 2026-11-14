@@ -508,6 +508,7 @@ export const typeDefinitions = /* GraphQL */ `
     finalText: String
     doneAt: String
     generation: String
+    scratch: Boolean!
   }
 
   enum UserRole {
