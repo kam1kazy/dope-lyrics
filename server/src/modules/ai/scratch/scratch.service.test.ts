@@ -4,7 +4,7 @@ import { sample } from '~/modules/ai/artists/fixtures';
 import type { ArtistProfile } from '~/modules/ai/artists/profiles';
 import type { RecordUsageInput } from '~/modules/ai/model/ai-usage.service';
 import { AiProviderError } from '~/modules/ai/model/polza.client';
-import { SCRATCH_FRAME_VERSION } from '~/modules/ai/scratch/frame';
+import { SCRATCH_FRAME_VERSIONS } from '~/modules/ai/scratch/frame';
 
 const recorded: RecordUsageInput[] = [];
 let calls = 0;
@@ -102,10 +102,22 @@ describe('assembleScratchRequest', () => {
     expect(request.collage).toContain('Бэнтли, Бенз и Бумер');
     expect(request.user).toContain('Склейка, из которой собрать трек:');
     expect(request.user).not.toContain('флекс');
+    expect(request.mode).toBe('ANCHORS');
+    expect(request.system).toContain('Как работать со склейкой — якоря:');
+    expect(request.promptId).toBe(5);
+  });
+
+  test('режим «Приёмы» — своя рамка', () => {
+    const request = assembleScratchRequest(
+      { theme: 'тема', form: HIT, mode: 'SHELF' },
+      pool,
+      prompt
+    );
+
+    expect(request.mode).toBe('SHELF');
     expect(request.system).toContain(
       'Дословно из склейки не оставляй ни одной'
     );
-    expect(request.promptId).toBe(5);
   });
 
   test('пустая полка — ошибка без вызова модели', () => {
@@ -132,9 +144,22 @@ describe('callScratch', () => {
     expect(recorded[0]).toMatchObject({
       kind: 'SCRATCH',
       status: 'OK',
-      frameVersion: SCRATCH_FRAME_VERSION,
+      frameVersion: SCRATCH_FRAME_VERSIONS.ANCHORS,
       promptId: 5,
     });
+  });
+
+  test('версия рамки — по режиму', async () => {
+    await callScratch(
+      1,
+      assembleScratchRequest(
+        { theme: 'тема', form: HIT, mode: 'SHELF' },
+        pool,
+        prompt
+      )
+    );
+
+    expect(recorded[0]?.frameVersion).toBe(SCRATCH_FRAME_VERSIONS.SHELF);
   });
 
   test('ошибка провайдера тоже пишется в расход', async () => {

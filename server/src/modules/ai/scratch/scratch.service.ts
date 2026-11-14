@@ -20,7 +20,8 @@ import type { RewritePrompt } from '~/modules/ai/rewrite/rewrite.service';
 import { findCloseLines } from '~/modules/ai/scratch/close';
 import {
   buildScratchSystem,
-  SCRATCH_FRAME_VERSION,
+  SCRATCH_FRAME_VERSIONS,
+  type ScratchMode,
 } from '~/modules/ai/scratch/frame';
 import { pickScratchCollage } from '~/modules/ai/scratch/pick';
 import {
@@ -47,6 +48,7 @@ export type ScratchInput = {
   form: unknown;
   facets?: ScratchFacetsInput | null;
   references?: ReferenceFilter | null;
+  mode?: ScratchMode | null;
 };
 
 export type ScratchOptions = {
@@ -92,6 +94,7 @@ export const assembleScratchRequest = (
     filtered: isReferenceFilterActive(input.references),
     random: options.random,
   });
+  const mode = input.mode ?? 'ANCHORS';
   const chunks = collageChunks(parts);
   if (chunks.length === 0) {
     throw new GraphQLError('На полке нет текстов для склейки');
@@ -99,12 +102,13 @@ export const assembleScratchRequest = (
 
   return {
     theme,
+    mode,
     promptId: prompt.id,
     parts,
     chunks,
     sources: collageSources(parts),
     collage: collageText(parts),
-    system: buildScratchSystem(),
+    system: buildScratchSystem(mode),
     user: buildScratchUser({ theme, authorPrompt: prompt.text, parts }),
   };
 };
@@ -145,7 +149,7 @@ export const callScratch = (userId: number, request: ScratchRequest) =>
     {
       userId,
       kind: 'SCRATCH',
-      frameVersion: SCRATCH_FRAME_VERSION,
+      frameVersion: SCRATCH_FRAME_VERSIONS[request.mode],
       promptId: request.promptId,
       system: request.system,
       user: request.user,

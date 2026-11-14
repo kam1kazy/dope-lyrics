@@ -1,38 +1,46 @@
 import { describe, expect, test } from 'bun:test';
 
-import { COLLAGE_REWRITE_FRAME } from '~/modules/ai/rewrite/frame';
 import {
   buildScratchSystem,
-  SCRATCH_FRAME_REPLACEMENTS,
+  SCRATCH_ANCHOR_REPLACEMENTS,
+  SCRATCH_SHELF_FRAME,
 } from '~/modules/ai/scratch/frame';
 
-describe('рамка «С нуля»', () => {
-  test('каждая замена находит свой пункт в рамке правки', () => {
-    const lines = COLLAGE_REWRITE_FRAME.split('\n');
+describe('рамки «С нуля»', () => {
+  test('каждая замена «Якорей» находит свой пункт в «Приёмах»', () => {
+    const lines = SCRATCH_SHELF_FRAME.split('\n');
 
-    for (const [from] of SCRATCH_FRAME_REPLACEMENTS) {
+    for (const [from] of SCRATCH_ANCHOR_REPLACEMENTS) {
       expect(lines).toContain(from);
     }
   });
 
-  test('дословно — ни одной строки, карточек нет, остальное как в правке', () => {
-    const system = buildScratchSystem();
+  test('«Приёмы» — полка, дословно ни одной строки', () => {
+    const system = buildScratchSystem('SHELF');
 
+    expect(system).toContain('Это не черновик трека, а полка');
     expect(system).toContain('Дословно из склейки не оставляй ни одной');
-    expect(system).toContain('Их мир, словарь и находки бери');
-    expect(system).not.toContain('не больше трети строк');
-    expect(system).not.toContain('карточки приёмов');
-    expect(system).not.toContain('Строку, которую оставляешь дословно');
-    expect(system).toContain('Хук склейки — тоже черновик');
+    expect(system).not.toContain('якорь');
   });
 
-  test('перевод чужой строки — дословная, ядро не переводить — снято', () => {
-    const system = buildScratchSystem();
+  test('«Якоря» — строка-якорь, хук из куплета, без квоты абсурда', () => {
+    const system = buildScratchSystem('ANCHORS');
 
-    expect(system).toContain('Перевод и калька чужой строки — та же дословная');
-    expect(system).toContain('С английского бери одно слово');
-    expect(system).toContain('отсылки чужого трека — не ядро');
-    expect(system).toContain('как устроен удар');
-    expect(system).not.toContain('Ядро не переводи');
+    expect(system).toContain('Как работать со склейкой — якоря:');
+    expect(system).toContain('Выбери до шести якорей');
+    expect(system).toContain(
+      'Хук развивай из самого сильного куплетного удара'
+    );
+    expect(system).toContain('оставь строку без рифмы');
+    expect(system).not.toContain('Дословно из склейки не оставляй ни одной');
+    expect(system).not.toContain('В каждом куплете одна абсурдная строка');
+    expect(system).not.toContain('Пельмени');
+  });
+
+  test('общие правила одинаковы в обоих режимах', () => {
+    const rule = '- Связь — звонок, сообщения, сеть, экран — не приноси.';
+
+    expect(buildScratchSystem('SHELF')).toContain(rule);
+    expect(buildScratchSystem('ANCHORS')).toContain(rule);
   });
 });

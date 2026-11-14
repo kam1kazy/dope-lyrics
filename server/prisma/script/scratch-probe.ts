@@ -5,7 +5,10 @@ import { parseArgs } from 'util';
 import { prisma } from '~/infrastructure/prisma';
 import { isAiConfigured } from '~/modules/ai/model/polza.client';
 import { findCloseLines } from '~/modules/ai/scratch/close';
-import { SCRATCH_FRAME_VERSION } from '~/modules/ai/scratch/frame';
+import {
+  isScratchMode,
+  SCRATCH_FRAME_VERSIONS,
+} from '~/modules/ai/scratch/frame';
 import { hasLink } from '~/modules/ai/scratch/pick';
 import {
   buildScratchRequest,
@@ -24,7 +27,7 @@ const OUT_DIR = path.resolve(__dirname, '../../.ai-probe/scratch');
 const USAGE = [
   'Прогон «С нуля» тем же запросом, что в приложении.',
   '',
-  'bun run ai:scratch --themes themes.json [--pick | --dry] [-n 3] [--only t1] [--prompt файл.txt] [--artist 3] [--text 12] [--label rc1] [--seed 1] [--system файл.txt]',
+  'bun run ai:scratch --themes themes.json [--pick | --dry] [-n 3] [--only t1] [--prompt файл.txt] [--artist 3] [--text 12] [--label rc1] [--seed 1] [--system файл.txt] [--mode anchors]',
   '',
   '  --themes         JSON: [{ "id": "t1", "theme": "…", "facets": { "moods": [...], "deliveries": [...], "energies": [...] }, "form"?: {...} }]',
   '  --only           id темы из файла, можно несколько',
@@ -36,6 +39,7 @@ const USAGE = [
   '  --label          метка файлов (по умолчанию версия рамки)',
   '  --seed           зерно подбора: прогон i берёт seed + i, одна склейка для разных вариантов',
   '  --system         файл с системной частью вместо рамки — проверить правило до правки кода',
+  '  --mode           shelf («Приёмы») или anchors («Якоря», по умолчанию)',
   '',
   'Без --pick и --dry зовёт polza — только по слову автора. Файлы — в server/.ai-probe/scratch/<тема>/.',
 ].join('\n');
@@ -53,6 +57,7 @@ const { values } = parseArgs({
     label: { type: 'string' },
     seed: { type: 'string' },
     system: { type: 'string' },
+    mode: { type: 'string', default: 'anchors' },
     help: { type: 'boolean', short: 'h', default: false },
   },
 });
@@ -120,6 +125,7 @@ const seed = values.seed === undefined ? undefined : Number(values.seed);
 const system = values.system
   ? fs.readFileSync(values.system, 'utf8')
   : undefined;
+const mode = values.mode.toUpperCase();
 const artistIds = (values.artist ?? []).map(Number);
 const textIds = (values.text ?? []).map(Number);
 
@@ -127,6 +133,7 @@ if (
   values.help ||
   !values.themes ||
   [...artistIds, ...textIds].some((id) => !Number.isInteger(id)) ||
+  !isScratchMode(mode) ||
   !Number.isInteger(runs) ||
   (seed !== undefined && !Number.isInteger(seed)) ||
   runs < 1
@@ -160,7 +167,8 @@ const options: ScratchOptions = {
     ? { id: null, text: fs.readFileSync(values.prompt, 'utf8') }
     : undefined,
 };
-const label = values.label ?? SCRATCH_FRAME_VERSION;
+const frameVersion = SCRATCH_FRAME_VERSIONS[mode];
+const label = values.label ?? frameVersion;
 
 for (const item of themes) {
   const dir = path.join(OUT_DIR, item.id);
@@ -170,6 +178,7 @@ for (const item of themes) {
     form: item.form,
     facets: item.facets,
     references: { artistIds, textIds },
+    mode,
   };
 
   if (values.pick) {
@@ -213,11 +222,11 @@ for (const item of themes) {
   const request = await requestFor(0);
   fs.writeFileSync(
     path.join(dir, `${label}.request.txt`),
-    `FRAME ${SCRATCH_FRAME_VERSION}\nИСТОЧНИКИ ${sourcesLine(request.sources)}\n\n=== SYSTEM\n${request.system}\n\n=== USER\n${request.user}\n`
+    `FRAME ${frameVersion}\nИСТОЧНИКИ ${sourcesLine(request.sources)}\n\n=== SYSTEM\n${request.system}\n\n=== USER\n${request.user}\n`
   );
 
   if (values.dry) {
-    console.log(`${item.id}: запрос рамки ${SCRATCH_FRAME_VERSION} → ${dir}`);
+    console.log(`${item.id}: запрос рамки ${frameVersion} → ${dir}`);
     continue;
   }
 

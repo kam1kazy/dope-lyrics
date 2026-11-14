@@ -388,6 +388,11 @@ export const typeDefinitions = /* GraphQL */ `
     usageId: Int!
   }
 
+  enum ScratchMode {
+    SHELF
+    ANCHORS
+  }
+
   input ScratchFacetsInput {
     moods: [LyricMood!]
     deliveries: [LyricDelivery!]
@@ -750,6 +755,7 @@ export const typeDefinitions = /* GraphQL */ `
       form: TrackFormQuotas!
       facets: ScratchFacetsInput
       references: ReferenceFilterInput
+      mode: ScratchMode = ANCHORS
     ): ScratchResult!
     createScratchTrackText(
       theme: String!
