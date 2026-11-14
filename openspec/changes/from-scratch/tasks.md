@@ -77,5 +77,5 @@
 - [x] 10.3 GraphQL: `enum ScratchMode`, аргумент `mode` у `writeFromScratch`
 - [x] 10.4 `scratch-probe.ts`: `--mode shelf|anchors`
 - [x] 10.5 Клиент: переключатель «Приёмы / Якоря» в `from-scratch-page.tsx` (localStorage), `mode` в запросе и в `generation`; разбор и сводка в `track-texts/lib/generation.ts`, тест
-- [ ] 10.6 Прогон кодом: `t4-moscow`, `t2-mic`, `--mode anchors -n 2 --seed 2`; итог — в `docs/research/from-scratch-anchors.md`
-- [ ] 10.7 `bun run fix` в `server/` и `client/`, тесты зелёные
+- [x] 10.6 Прогон кодом: `t4-moscow`, `t2-mic`, `--mode anchors -n 2 --seed 2`; итог — в `docs/research/from-scratch-anchors.md`
+- [x] 10.7 `bun run fix` в `server/` и `client/`, тесты зелёные
