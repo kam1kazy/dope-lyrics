@@ -37,6 +37,16 @@ describe('рамки «С нуля»', () => {
     expect(system).not.toContain('Пельмени');
   });
 
+  test('студия — один удар на трек, ответ на потерю действием запрещён в обоих режимах', () => {
+    for (const mode of ['SHELF', 'ANCHORS'] as const) {
+      const system = buildScratchSystem(mode);
+
+      expect(system).toContain('не больше одного удара на весь трек');
+      expect(system).toContain('Действием в ответ на потерю герой не отвечает');
+      expect(system).not.toContain('деньгами и музыкой');
+    }
+  });
+
   test('общие правила одинаковы в обоих режимах', () => {
     const rule = '- Связь — звонок, сообщения, сеть, экран — не приноси.';
 
